@@ -28,7 +28,7 @@ export const getToken = () => {
 
 	for (const cookie of cookies) {
 		if (cookie.startsWith('token')) {
-			token=cookie.split('=')[1]
+			let token=cookie.split('=')[1]
 			if (token.startsWith(`"`)){
 				token=token.substring(1)
 			}
