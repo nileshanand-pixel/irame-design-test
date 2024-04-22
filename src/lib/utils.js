@@ -28,7 +28,14 @@ export const getToken = () => {
 
 	for (const cookie of cookies) {
 		if (cookie.startsWith('token')) {
-			return cookie.split('=')[1];
+			token=cookie.split('=')[1]
+			if (token.startsWith(`"`)){
+				token=token.substring(1)
+			}
+			if (token.endsWith(`"`)){
+				token=token.substring(0, str.length - quote.length)
+			}
+			return token;
 		}
 	}
 	return tokenCookie;
