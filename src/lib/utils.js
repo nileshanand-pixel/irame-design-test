@@ -33,6 +33,7 @@ export const getToken = () => {
 				token=token.substring(1)
 			}
 			if (token.endsWith(`"`)){
+				const quote = '"';
 				token=token.substring(0, str.length - quote.length)
 			}
 			return token;
