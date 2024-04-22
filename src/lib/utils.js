@@ -28,15 +28,9 @@ export const getToken = () => {
 
 	for (const cookie of cookies) {
 		if (cookie.startsWith('token')) {
-			let token=cookie.split('=')[1]
-			if (token.startsWith(`"`)){
-				token=token.substring(1)
-			}
-			if (token.endsWith(`"`)){
-				const quote = '"';
-				token=token.substring(0, str.length - quote.length)
-			}
-			return token;
+			let tokenMatch = cookie.match(/token="([^"]+)"/);
+			let tokenValue = tokenMatch ? tokenMatch[1] : null;
+			return tokenValue;
 		}
 	}
 	return tokenCookie;
