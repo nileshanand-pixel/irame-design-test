@@ -7,7 +7,7 @@ import {
 } from './service/new-chat.service';
 import { useRouter } from '@/hooks/useRouter';
 import useGetCookie from '@/hooks/useGetCookie';
-import { tokenCookie } from '@/lib/utils';
+import { tokenCookie,getToken } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import useLocalStorage from '@/hooks/useLocalStorage';
 
@@ -36,7 +36,7 @@ const SelectPrompt = ({
 			createQuerySession(
 				query.dataSourceId,
 				question,
-				token || tokenCookie,
+				getToken(),
 			).then((res) => {
 				navigate(
 					`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
@@ -49,7 +49,7 @@ const SelectPrompt = ({
 
 	useEffect(() => {
 		if (query.dataSourceId) {
-			fetchSuggestions(query.dataSourceId, token || tokenCookie).then(
+			fetchSuggestions(query.dataSourceId, getToken()).then(
 				(resp) => {
 					console.log(resp);
 					setData(resp);

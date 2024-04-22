@@ -9,7 +9,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { tokenCookie } from '@/lib/utils';
+import { tokenCookie,getToken } from '@/lib/utils';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
@@ -31,7 +31,7 @@ const Header = () => {
 							<DropdownMenuItem
 								className="text-primary100 text-sm font-medium"
 								onClick={() => {
-									logout(tokenCookie);
+									logout(getToken());
 									setValue({
 										userName: '',
 										email: '',

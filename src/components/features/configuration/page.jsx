@@ -76,7 +76,7 @@ const Configuration = () => {
 	};
 	const createDataSource = async () => {
 		setIsLoading(true);
-		const token = Cookies.get('token') || tokenCookie;
+		const token = getToken();
 
 		const data = {
 			name: datasourceName,
@@ -101,7 +101,7 @@ const Configuration = () => {
 
 	useEffect(() => {
 		const fetchDataSources = async () => {
-			const token = Cookies.get('token') || tokenCookie;
+			const token = getToken();
 			const data = await getDataSources(token);
 			setDataSources(Array.isArray(data) ? data : []);
 		};

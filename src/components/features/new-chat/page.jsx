@@ -7,7 +7,7 @@ import InputText from '@/components/elements/InputText';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
 import useGetCookie from '@/hooks/useGetCookie';
-import { cn, tokenCookie } from '@/lib/utils';
+import { cn, tokenCookie,getToken } from '@/lib/utils';
 import ira from '@/assets/icons/ira_icon.svg';
 import { Button } from '@/components/ui/button';
 import Workspace from './Workspace';
@@ -127,7 +127,7 @@ const NewChat = () => {
 	};
 	const handleQueryAnswer = () => {
 		handleNextStep(4);
-		createQuerySession(query.dataSourceId, prompt, token || tokenCookie).then(
+		createQuerySession(query.dataSourceId, prompt, getToken()).then(
 			(res) => {
 				navigate(
 					`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
@@ -140,7 +140,7 @@ const NewChat = () => {
 		const fetchData = async () => {
 			try {
 				if (value.userName && value.email) return;
-				const userData = await getUserDetails(token || tokenCookie);
+				const userData = await getUserDetails(getToken());
 				console.log('userData', {
 					token: token,
 					userName: userData?.name,
@@ -187,7 +187,7 @@ const NewChat = () => {
 				setPrompt('');
 				let timer = 10000;
 				intervalId = setInterval(() => {
-					getQueryAnswers(query?.queryId, token || tokenCookie).then(
+					getQueryAnswers(query?.queryId, getToken()).then(
 						(res) => {
 							setAnswerResp(res);
 
@@ -210,7 +210,7 @@ const NewChat = () => {
 		return () => {
 			clearInterval(intervalId);
 		};
-	}, [query?.step, token, tokenCookie]);
+	}, [query?.step,getToken()]);
 
 	return (
 		<>

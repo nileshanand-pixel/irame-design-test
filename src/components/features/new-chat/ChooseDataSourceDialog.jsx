@@ -11,7 +11,7 @@ import {
 import { useEffect, useState } from 'react';
 import { getDataSources } from '../configuration/service/configuration.service';
 import Cookies from 'js-cookie';
-import { tokenCookie } from '@/lib/utils';
+import { tokenCookie,getToken } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -39,7 +39,7 @@ const ChooseDataSourceDialog = ({
 		setOpen(false);
 	};
 	useEffect(() => {
-		const token = getCookieToken() || tokenCookie;
+		const token = getToken();
 		if (token) {
 			getDataSources(token).then((resp) => {
 				setDataSources(Array.isArray(resp) ? resp : []);

@@ -17,6 +17,10 @@ export const formatFileSize = (size) => {
 	}
 };
 
+export const tokenCookie =
+	'';
+
+
 export const getToken = () => {
 	const cookieString = document.cookie;
 
@@ -27,10 +31,7 @@ export const getToken = () => {
 			return cookie.split('=')[1];
 		}
 	}
-	return null;
+	return tokenCookie;
 };
 
 //TODO: make a generic function to get data from cookies
-
-export const tokenCookie =
-	'';
