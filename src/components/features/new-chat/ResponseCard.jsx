@@ -26,9 +26,6 @@ const ResponseCard = ({ answerResp }) => {
 					)}
 					{value.tool_type === WorkspaceEnum?.Graph && (
 						<div className="my-4">
-							{/* <h3 className="text-primary100 font-medium max-w-full overflow-x-auto">
-								{key.charAt(0).toUpperCase() + key.slice(1)}
-							</h3> */}
 							<GraphComponent data={value.tool_data} />
 							<div className="my-4">
 								<Button
