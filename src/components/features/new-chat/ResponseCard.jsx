@@ -22,6 +22,15 @@ const ResponseCard = ({ answerResp }) => {
 							<p className="text-primary80">{value.tool_data}</p>
 						</div>
 					)}
+					{(value.tool_type === 'text' ||
+						value.tool_type === WorkspaceEnum.Planner) && (
+						<div className="my-4">
+							<h3 className="text-primary100 font-medium">
+								{key.charAt(0).toUpperCase() + key.slice(1)}
+							</h3>
+							<p className="text-primary80">{value.tool_data}</p>
+						</div>
+					)}
 					{value.tool_type === WorkspaceEnum?.Graph && (
 						<div className="my-4">
 							{/* <h3 className="text-primary100 font-medium max-w-full overflow-x-auto">
