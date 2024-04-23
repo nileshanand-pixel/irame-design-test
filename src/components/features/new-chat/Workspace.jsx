@@ -10,16 +10,37 @@ const Workspace = ({ handleTabClick, workSpaceTab, answerResp }) => {
 	const renderedComponent = useMemo(() => {
 		switch (workSpaceTab) {
 			case WorkspaceEnum.Planner:
-				return <PlannerComponent />;
+				return (
+					<PlannerComponent
+						data={answerResp?.answer?.[WorkspaceEnum.Planner]}
+					/>
+				);
 			case WorkspaceEnum.Coder: {
 				const coderData = answerResp?.answer?.[WorkspaceEnum.Coder];
 				return <CoderComponent data={coderData?.tool_data} />;
 			}
 			case WorkspaceEnum.Graph:
-				return <GraphComponent />;
+				return (
+					<GraphComponent
+						data={answerResp?.answer?.[WorkspaceEnum.Graph]}
+					/>
+				);
 			case WorkspaceEnum.Source:
 			case WorkspaceEnum.any_tool:
-				return <SourceComponent />;
+			case WorkspaceEnum.Observation:
+			case WorkspaceEnum.Answer:
+				return (
+					<SourceComponent
+						data={
+							answerResp?.answer?.[
+								WorkspaceEnum.Planner ||
+									WorkspaceEnum.Source ||
+									WorkspaceEnum.Observation ||
+									WorkspaceEnum.Answer
+							]
+						}
+					/>
+				);
 			default:
 				return null;
 		}

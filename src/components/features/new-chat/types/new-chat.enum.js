@@ -4,6 +4,7 @@ export const WorkspaceEnum = {
 	Graph: 'graph',
 	Source: 'source',
 	Observation: 'observation',
+	Answer: 'answer',
 };
 
 export const workSpaceMap = {
@@ -13,4 +14,5 @@ export const workSpaceMap = {
 	source: 'Source',
 	any_tool: 'Any Tool',
 	observation: 'Observation',
+	answer: 'Answer',
 };

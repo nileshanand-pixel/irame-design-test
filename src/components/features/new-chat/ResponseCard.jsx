@@ -13,7 +13,7 @@ const ResponseCard = ({ answerResp }) => {
 		<div className="mt-4 mb-[150px] ml-12">
 			{mainItems.map(([key, value]) => (
 				<div key={key} className="mb-4 ">
-					{(value.tool_type === 'observation' ||
+					{(value.tool_type === WorkspaceEnum.Answer ||
 						value.tool_type === WorkspaceEnum.Observation ||
 						value.tool_type === 'text' ||
 						value.tool_type === WorkspaceEnum.Planner) && (
