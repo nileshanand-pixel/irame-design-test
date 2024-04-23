@@ -189,6 +189,9 @@ const NewChat = () => {
 							timer = 5000;
 							setDoingScience(false);
 						}
+						if (res.status === 'done') {
+							clearInterval(intervalId);
+						}
 					});
 				}, timer);
 			}
@@ -204,10 +207,10 @@ const NewChat = () => {
 	return (
 		<>
 			{completedSteps.includes(4) ? (
-				<div className="grid grid-cols-12 gap-4 h-[90vh]">
+				<div className="grid grid-cols-12 gap-4 min-h-[90vh]">
 					<div
 						className={cn(
-							'border rounded-2xl py-4 px-4 shadow-1xl relative',
+							'border rounded-2xl pt-4 px-4 shadow-1xl relative',
 							showWorkspace ? 'col-span-8' : 'col-span-12 mx-[8rem]',
 						)}
 					>
@@ -255,7 +258,7 @@ const NewChat = () => {
 								<ResponseCard answerResp={answerResp} />
 							)}
 						</div>
-						<div className="absolute bottom-5 flex flex-col items-center justify-center z-20 bg-white pt-2">
+						<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white pt-2">
 							<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 								<InputText
 									placeholder="Enter a prompt here"

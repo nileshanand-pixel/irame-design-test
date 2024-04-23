@@ -1,27 +1,46 @@
 import GraphComponent from '@/components/elements/GraphComponent';
 import React from 'react';
 import CoderComponent from './CoderComponent';
-import { WorkspaceEnum } from './types/new-chat.enum';
+import { WorkspaceEnum, workSpaceMap } from './types/new-chat.enum';
 import { Button } from '@/components/ui/button';
 
 const ResponseCard = ({ answerResp }) => {
-	const mainItems = Object.entries(answerResp?.answer).filter(
-		([key, value]) => value.tool_space === 'main',
-	);
+	// Extracting main items
+	const mainItems = Object.entries(answerResp?.answer).filter(([key, value]) => {
+		return (
+			value.tool_space === 'main' && value.tool_type !== WorkspaceEnum.Answer
+		);
+	});
+
+	// Find the Answer item
+	const answerItem = Object.entries(answerResp?.answer).find(([key, value]) => {
+		return (
+			value.tool_space === 'main' && value.tool_type === WorkspaceEnum.Answer
+		);
+	});
 
 	return (
-		<div className="mt-4 mb-[150px] ml-12">
+		<div className="mt-4 mb-[145px] ml-12">
+			{/* Render 'Answer' component first if available */}
+			{answerItem && (
+				<div className="mb-8">
+					<h3 className="text-primary100 font-medium">
+						{workSpaceMap[answerItem[0]].charAt(0).toUpperCase() +
+							workSpaceMap[answerItem[0]].slice(1)}
+					</h3>
+					<p className="text-primary80">{answerItem[1]?.tool_data}</p>
+				</div>
+			)}
+			{/* Render other main items */}
 			{mainItems.map(([key, value]) => (
-				<div key={key} className="mb-4 ">
-					{(value.tool_type === WorkspaceEnum.Answer ||
-						value.tool_type === WorkspaceEnum.Observation ||
-						value.tool_type === 'text' ||
+				<div key={key} className="mb-4">
+					{(value.tool_type === WorkspaceEnum.Observation ||
 						value.tool_type === WorkspaceEnum.Planner) && (
 						<div className="my-4">
 							<h3 className="text-primary100 font-medium">
 								{key.charAt(0).toUpperCase() + key.slice(1)}
 							</h3>
-							<p className="text-primary80">{value.tool_data}</p>
+							<p className="text-primary80">{value?.tool_data}</p>
 						</div>
 					)}
 					{value.tool_type === WorkspaceEnum?.Graph && (
@@ -46,7 +65,7 @@ const ResponseCard = ({ answerResp }) => {
 					{value.tool_type === WorkspaceEnum?.Coder && (
 						<div className="my-4">
 							<h3 className="text-primary100">{key}</h3>
-							<CoderComponent data={value.tool_data} />
+							<CoderComponent data={value?.tool_data} />
 						</div>
 					)}
 				</div>

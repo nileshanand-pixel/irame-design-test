@@ -46,21 +46,23 @@ const SelectPrompt = ({
 	};
 
 	useEffect(() => {
+		let intervalId;
 		if (query.dataSourceId) {
-			fetchSuggestions(query.dataSourceId, getToken()).then((resp) => {
-				console.log(resp);
-				setData(resp);
-				setActiveTab(resp?.suggestion[0]?.type);
-			});
+			intervalId = setInterval(() => {
+				fetchSuggestions(query.dataSourceId, getToken()).then((resp) => {
+					setData(resp);
+					setActiveTab(resp?.suggestion[0]?.type);
+					if (resp.status === 200) {
+						clearInterval(intervalId); // Stop polling
+					}
+				});
+			}, 5000);
 		}
-	}, [query.dataSourceId]);
 
-	useEffect(() => {
-		// getAnswerConfig(token || tokenCookie).then((res) => {
-		// 	setAnswerResp(res);
-		// 	setAnswerConfig(res);
-		// });
-	}, []);
+		return () => {
+			clearInterval(intervalId);
+		};
+	}, [query.dataSourceId]);
 
 	return (
 		<div className="">

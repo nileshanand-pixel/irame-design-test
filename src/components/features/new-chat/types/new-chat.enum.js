@@ -15,4 +15,5 @@ export const workSpaceMap = {
 	any_tool: 'Any Tool',
 	observation: 'Observation',
 	answer: 'Answer',
+	answer: 'Observation',
 };

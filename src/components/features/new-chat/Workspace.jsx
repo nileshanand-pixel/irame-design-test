@@ -26,15 +26,13 @@ const Workspace = ({ handleTabClick, workSpaceTab, answerResp }) => {
 					/>
 				);
 			case WorkspaceEnum.Source:
-			case WorkspaceEnum.any_tool:
 			case WorkspaceEnum.Observation:
 			case WorkspaceEnum.Answer:
 				return (
 					<SourceComponent
 						data={
 							answerResp?.answer?.[
-								WorkspaceEnum.Planner ||
-									WorkspaceEnum.Source ||
+								WorkspaceEnum.Source ||
 									WorkspaceEnum.Observation ||
 									WorkspaceEnum.Answer
 							]

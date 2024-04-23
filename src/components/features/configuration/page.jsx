@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner';
 import Cookies from 'js-cookie';
 import { v4 as uuid } from 'uuid';
+import { useRouter } from '@/hooks/useRouter';
 
 const Configuration = () => {
 	const [files, setFiles] = useState([]);
@@ -22,6 +23,9 @@ const Configuration = () => {
 	const [dataSources, setDataSources] = useState([]);
 	const [showNoUpload, setShowNoUpload] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [dataSourceFetch, setDataSourceFetch] = useState(false);
+
+	const { navigate } = useRouter();
 
 	const inputRef = useRef();
 
@@ -56,9 +60,6 @@ const Configuration = () => {
 		try {
 			const { data } = await uploadFile(files, setProgress);
 			if (data) {
-				toast.success('File uploaded successfully');
-				//TODO: save s3 urls correspondng to the files
-
 				setFiles(
 					files.map((file) => ({
 						...file,
@@ -66,6 +67,7 @@ const Configuration = () => {
 						url: data[file.name] || '', // Default to empty string if not found
 					})),
 				);
+				toast.success('File uploaded successfully');
 			}
 		} catch (error) {
 			setFiles([]);
@@ -92,6 +94,7 @@ const Configuration = () => {
 		try {
 			const response = await createNewDtaSource(data, token);
 			toast.success('Data source created successfully');
+			navigate(`/app/new-chat/?step=3&dataSourceId=${response.datasource_id}`);
 		} catch (error) {
 			toast.error('Error creating data source');
 		} finally {
@@ -101,9 +104,11 @@ const Configuration = () => {
 
 	useEffect(() => {
 		const fetchDataSources = async () => {
+			setDataSourceFetch(true);
 			const token = getToken();
 			const data = await getDataSources(token);
 			setDataSources(Array.isArray(data) ? data : []);
+			setDataSourceFetch(false);
 		};
 
 		fetchDataSources();
@@ -247,7 +252,11 @@ const Configuration = () => {
 					Securely connect to a data source
 				</p>
 				<div className="mt-4 space-y-2">
-					{dataSources.length ? (
+					{dataSourceFetch ? (
+						<div className="flex items-center justify-center">
+							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
+						</div>
+					) : dataSources.length ? (
 						dataSources.map((source) => (
 							<div
 								className="flex justify-between items-center bg-purple-4 py-2 px-4 rounded-xl cursor-pointer"
