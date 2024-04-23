@@ -13,7 +13,7 @@ const initialValue = {
 		id: '',
 		name: '',
 	},
-	prompt: {
+	questionPrompt: {
 		data: '',
 	},
 };

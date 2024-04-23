@@ -7,7 +7,7 @@ import {
 } from './service/new-chat.service';
 import { useRouter } from '@/hooks/useRouter';
 import useGetCookie from '@/hooks/useGetCookie';
-import { tokenCookie,getToken } from '@/lib/utils';
+import { tokenCookie, getToken } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import useLocalStorage from '@/hooks/useLocalStorage';
 
@@ -23,7 +23,7 @@ const SelectPrompt = ({
 	const { query, navigate } = useRouter();
 	const token = useGetCookie('token');
 	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
-	const [promptQuery, setPromptQuery] = useLocalStorage('query');
+	const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 
 	const handleActiveTab = (selectedTab) => {
 		setActiveTab(selectedTab);
@@ -33,15 +33,13 @@ const SelectPrompt = ({
 			// setPrompt(question);
 			setPromptQuery({ data: question });
 			handleNextStep(4);
-			createQuerySession(
-				query.dataSourceId,
-				question,
-				getToken(),
-			).then((res) => {
-				navigate(
-					`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
-				);
-			});
+			createQuerySession(query.dataSourceId, question, getToken()).then(
+				(res) => {
+					navigate(
+						`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
+					);
+				},
+			);
 		} catch (error) {
 			console.log(error);
 		}
@@ -49,13 +47,11 @@ const SelectPrompt = ({
 
 	useEffect(() => {
 		if (query.dataSourceId) {
-			fetchSuggestions(query.dataSourceId, getToken()).then(
-				(resp) => {
-					console.log(resp);
-					setData(resp);
-					setActiveTab(resp?.suggestion[0]?.type);
-				},
-			);
+			fetchSuggestions(query.dataSourceId, getToken()).then((resp) => {
+				console.log(resp);
+				setData(resp);
+				setActiveTab(resp?.suggestion[0]?.type);
+			});
 		}
 	}, [query.dataSourceId]);
 

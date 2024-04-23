@@ -7,7 +7,7 @@ import InputText from '@/components/elements/InputText';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
 import useGetCookie from '@/hooks/useGetCookie';
-import { cn, tokenCookie,getToken } from '@/lib/utils';
+import { cn, tokenCookie, getToken } from '@/lib/utils';
 import ira from '@/assets/icons/ira_icon.svg';
 import { Button } from '@/components/ui/button';
 import Workspace from './Workspace';
@@ -24,7 +24,7 @@ const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
 	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
 	const [dataSource] = useLocalStorage('dataSource');
-	const [promptQuery] = useLocalStorage('prompt');
+	const [promptQuery] = useLocalStorage('questionPrompt');
 
 	const { query, params, navigate } = useRouter();
 	const token = useGetCookie('token');
@@ -127,13 +127,11 @@ const NewChat = () => {
 	};
 	const handleQueryAnswer = () => {
 		handleNextStep(4);
-		createQuerySession(query.dataSourceId, prompt, getToken()).then(
-			(res) => {
-				navigate(
-					`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
-				);
-			},
-		);
+		createQuerySession(query.dataSourceId, prompt, getToken()).then((res) => {
+			navigate(
+				`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
+			);
+		});
 	};
 
 	useEffect(() => {
@@ -187,20 +185,18 @@ const NewChat = () => {
 				setPrompt('');
 				let timer = 10000;
 				intervalId = setInterval(() => {
-					getQueryAnswers(query?.queryId, getToken()).then(
-						(res) => {
-							setAnswerResp(res);
+					getQueryAnswers(query?.queryId, getToken()).then((res) => {
+						setAnswerResp(res);
 
-							if (res?.answer) {
-								setAnswerConfig(res?.answer);
-							}
+						if (res?.answer) {
+							setAnswerConfig(res?.answer);
+						}
 
-							if (res.status === 'in_progress') {
-								timer = 5000;
-								setDoingScience(false);
-							}
-						},
-					);
+						if (res.status === 'in_progress') {
+							timer = 5000;
+							setDoingScience(false);
+						}
+					});
 				}, timer);
 			}
 		} else {
@@ -210,7 +206,7 @@ const NewChat = () => {
 		return () => {
 			clearInterval(intervalId);
 		};
-	}, [query?.step,getToken()]);
+	}, [query?.step, getToken()]);
 
 	return (
 		<>
@@ -222,18 +218,20 @@ const NewChat = () => {
 							showWorkspace ? 'col-span-8' : 'col-span-12 mx-[8rem]',
 						)}
 					>
-						<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-4 float-right text-primary80 font-medium">
-							<i className="bi-database-check mr-2 text-primary80"></i>
-							{dataSource.name}
-						</div>
-						<div className="max-h-[45rem] overflow-y-auto mt-14">
+						{dataSource?.name && (
+							<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-4 float-right text-primary80 font-medium max-w-[220px] truncate">
+								<i className="bi-database-check mr-2 text-primary80"></i>
+								{dataSource?.name}
+							</div>
+						)}
+						<div className="max-h-[45rem] overflow-y-auto mt-16 w-full">
 							<div className="flex items-center gap-2">
 								<Avatar className="size-9">
 									<AvatarImage src={value?.avatar} />
 									<AvatarFallback>CN</AvatarFallback>
 								</Avatar>
-								{promptQuery?.data ? (
-									<p className="ms-1">{promptQuery?.data}</p>
+								{promptQuery.data ? (
+									<p className="ms-1">{promptQuery.data}</p>
 								) : (
 									<>
 										<Skeleton className="h-6 w-[90%] bg-purple-8 ms-1" />
