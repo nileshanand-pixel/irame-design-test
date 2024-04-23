@@ -137,15 +137,8 @@ const NewChat = () => {
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				if (value.userName && value.email) return;
+				if (value.userName && value.email && value.avatar) return;
 				const userData = await getUserDetails(getToken());
-				console.log('userData', {
-					token: token,
-					userName: userData?.name,
-					email: userData?.email,
-					avatar: userData?.avatar,
-					userId: userData?._id,
-				});
 
 				// Update local state with user details
 				updateValue({

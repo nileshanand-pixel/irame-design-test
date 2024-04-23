@@ -53,6 +53,5 @@ export const getUserDetails = async (token) => {
 			Authorization: `Bearer ${token}`,
 		},
 	});
-	console.log(response.data, 'onder===');
 	return response.data;
 };
