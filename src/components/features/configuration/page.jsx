@@ -257,8 +257,8 @@ const Configuration = () => {
 									setFiles(source.filepath);
 								}}
 							>
-								<p className="text-primary80 font-medium">
-									<i className="bi-database mr-2 text-primary80 text-md"></i>
+								<p className="text-primary80 font-medium"> 
+									<i className="bi-database mr-2 text-primary80 text-md max-w-[300px] truncate"></i>
 									{source.name}
 								</p>
 							</div>
