@@ -47,16 +47,24 @@ const SelectPrompt = ({
 
 	useEffect(() => {
 		let intervalId;
+
+		const fetchData = async () => {
+			try {
+				const resp = await fetchSuggestions(query.dataSourceId, getToken());
+				setData(resp);
+				setActiveTab(resp?.suggestion[0]?.type);
+				if (resp.status === 200 || resp.suggestion.length) {
+					clearInterval(intervalId); // Stop polling
+				}
+			} catch (error) {
+				console.error('Error fetching suggestions:', error);
+			}
+		};
+
+		fetchData();
+
 		if (query.dataSourceId) {
-			intervalId = setInterval(() => {
-				fetchSuggestions(query.dataSourceId, getToken()).then((resp) => {
-					setData(resp);
-					setActiveTab(resp?.suggestion[0]?.type);
-					if (resp.status === 200) {
-						clearInterval(intervalId); // Stop polling
-					}
-				});
-			}, 5000);
+			intervalId = setInterval(fetchData, 5000);
 		}
 
 		return () => {
