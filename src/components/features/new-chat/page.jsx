@@ -177,7 +177,7 @@ const NewChat = () => {
 
 			if (query?.step === '4') {
 				setPrompt('');
-				let timer = 10000;
+				let timer = 5000;
 				intervalId = setInterval(() => {
 					getQueryAnswers(query?.queryId, getToken()).then((res) => {
 						setAnswerResp(res);
