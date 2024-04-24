@@ -1,7 +1,7 @@
 import React from 'react';
 
 const PlannerComponent = ({ data }) => {
-	console.log(data, 'planner');
+	// console.log(data, 'planner');
 	return (
 		<div className="border rounded-2xl py-4 px-4 col-span-4 text-primary80 font-medium max-h-[35rem] overflow-y-auto">
 			<div className="my-4">

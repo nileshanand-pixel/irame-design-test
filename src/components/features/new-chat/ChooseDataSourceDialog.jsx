@@ -11,7 +11,7 @@ import {
 import { useEffect, useState } from 'react';
 import { getDataSources } from '../configuration/service/configuration.service';
 import Cookies from 'js-cookie';
-import { tokenCookie,getToken } from '@/lib/utils';
+import { tokenCookie, getToken } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,7 @@ const ChooseDataSourceDialog = ({
 }) => {
 	const [dataSources, setDataSources] = useState([]);
 	const [value, setValue] = useLocalStorage('dataSource');
+	const [dataSourceFetch, setDataSourceFetch] = useState(false);
 
 	const navigate = useNavigate();
 
@@ -40,11 +41,13 @@ const ChooseDataSourceDialog = ({
 	};
 	useEffect(() => {
 		const token = getToken();
+		setDataSourceFetch(true);
 		if (token) {
 			getDataSources(token).then((resp) => {
 				setDataSources(Array.isArray(resp) ? resp : []);
 			});
 		}
+		setDataSourceFetch(false);
 	}, [getCookieToken()]);
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -56,7 +59,11 @@ const ChooseDataSourceDialog = ({
 					</DialogDescription>
 				</DialogHeader>
 				<div className="space-y-2">
-					{dataSources?.length ? (
+					{dataSourceFetch ? (
+						<div className="flex items-center justify-center">
+							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
+						</div>
+					) : dataSources?.length ? (
 						dataSources?.map((source) => (
 							<div
 								className="rounded-xl bg-purple-4 p-4 flex items-center gap-4"

@@ -19,12 +19,15 @@ import {
 	getQueryAnswers,
 	getUserDetails,
 } from './service/new-chat.service';
+import { useSearchParams } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
 	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
 	const [dataSource] = useLocalStorage('dataSource');
-	const [promptQuery] = useLocalStorage('questionPrompt');
+	const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
+	const [searchParam, setSearchParam] = useSearchParams();
 
 	const { query, params, navigate } = useRouter();
 	const token = useGetCookie('token');
@@ -54,16 +57,6 @@ const NewChat = () => {
 				tempCssClass += `bg-purple-100 cursor-pointer`;
 				return tempCssClass;
 			} else {
-				// if (
-				//   itemCurrent?.key === step ||
-				//   itemCurrent?.myStep === formProgressAndComponentMapping[step]
-				// ) {
-				//   tempCssClass += `bg-purple-16 cursor-pointer`;
-				// } else if (itemCurrent?.myStep <= isStepCompleted?.current) {
-				//   tempCssClass += `bg-purple-100 cursor-pointer`;
-				// } else {
-				//   tempCssClass += `bg-blue-16`;
-				// }
 				tempCssClass += `bg-purple-16`;
 				return tempCssClass;
 			}
@@ -127,6 +120,14 @@ const NewChat = () => {
 	};
 	const handleQueryAnswer = () => {
 		handleNextStep(4);
+		setDoingScience(true);
+		if (searchParam.has('sessionId') || searchParam.has('queryId')) {
+			const newParams = new URLSearchParams(location.search);
+			newParams.delete('sessionId');
+			newParams.delete('queryId');
+			setSearchParam(newParams.toString());
+			setAnswerResp({});
+		}
 		createQuerySession(query.dataSourceId, prompt, getToken()).then((res) => {
 			navigate(
 				`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
@@ -202,7 +203,7 @@ const NewChat = () => {
 		return () => {
 			clearInterval(intervalId);
 		};
-	}, [query?.step, getToken()]);
+	}, [query?.step, getToken(), query?.queryId]);
 
 	return (
 		<>
@@ -260,19 +261,26 @@ const NewChat = () => {
 						</div>
 						<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white pt-2">
 							<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
-								<InputText
+								<Input
 									placeholder="Enter a prompt here"
-									inputMainClass={cn(
+									className={cn(
 										'border-0 outline-none rounded-none bg-transparent ',
 										showWorkspace ? 'w-[44.2rem]' : 'w-[53rem]',
 									)}
 									value={prompt}
-									setValue={(e) => setPrompt(e)}
-									onkeyDown={(e) => {
+									onChange={(e) => {
+										setPrompt(e.target.value);
+										setPromptQuery({ data: e.target.value });
+									}}
+									onKeyDown={(e) => {
+										console.log(e.key, '===keys');
 										if (e.key === 'Enter') handleQueryAnswer();
 									}}
 								/>
-								<div className="flex gap-2 items-center pr-3 cursor-pointer">
+								<div
+									className="flex gap-2 items-center pr-3 cursor-pointer"
+									onClick={handleQueryAnswer}
+								>
 									<i className="bi-send text-primary100 text-lg rotate-45"></i>
 								</div>
 							</div>
@@ -344,7 +352,7 @@ const NewChat = () => {
 										inputMainClass="border-0 outline-none rounded-none bg-transparent !w-[46rem] !h-auto"
 										value={prompt}
 										setValue={(e) => setPrompt(e)}
-										onkeyDown={(e) => {
+										onKeyDown={(e) => {
 											if (e.key === 'Enter')
 												handleQueryAnswer();
 										}}

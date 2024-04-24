@@ -23,6 +23,7 @@ const InputText = ({
 	subLabel,
 	subLabelClassName,
 	inputMainClass,
+	onKeyDown,
 }) => {
 	return (
 		<div className={className}>
@@ -71,6 +72,7 @@ const InputText = ({
 					inputMainClass ? inputMainClass : '',
 					error ? 'border-destructive' : '',
 				)}
+				onKeyDown={onKeyDown}
 			/>
 			{error && errorText && (
 				<p className={'text-xs  text-destructive mt-1'}>{errorText}</p>

@@ -132,7 +132,12 @@ const SelectPrompt = ({
 											</div>
 											<div
 												className="absolute bottom-4 right-4 text-right mt-6 cursor-pointer"
-												onClick={() => setPrompt(question)}
+												onClick={() => {
+													setPrompt(question);
+													setPromptQuery({
+														data: question,
+													});
+												}}
 											>
 												<i className="bi-pencil-square text-primary100 bg-white py-1.5 px-2 rounded-full "></i>
 											</div>
