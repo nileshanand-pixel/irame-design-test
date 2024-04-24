@@ -52,6 +52,7 @@ module.exports = {
 					foreground: 'hsl(var(--card-foreground))',
 				},
 				purple: {
+					1: 'rgba(106, 18, 205, 0.01)',
 					2: 'rgba(106, 18, 205, 0.02)',
 					4: 'rgba(106, 18, 205, 0.04)',
 					8: 'rgba(106, 18, 205, 0.08)',
@@ -62,6 +63,7 @@ module.exports = {
 					80: 'rgba(106, 18, 205, 0.8)',
 					100: 'rgba(106, 18, 205, 1)',
 				},
+				primary60: 'rgba(38, 6, 74, 0.6)',
 				primary80: 'rgba(38, 6, 74, 0.8)',
 				primary40: 'rgba(38, 6, 74, 0.4)',
 				primary100: 'rgba(38, 6, 74, 1)',
