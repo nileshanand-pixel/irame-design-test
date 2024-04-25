@@ -188,6 +188,9 @@ const NewChat = () => {
 						if (res?.answer) {
 							setAnswerConfig(res?.answer);
 						}
+						if (!promptQuery.data) {
+							setPromptQuery({ data: res?.query });
+						}
 
 						if (res.status === 'in_progress') {
 							timer = 5000;

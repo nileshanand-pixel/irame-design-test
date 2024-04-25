@@ -17,7 +17,7 @@ export const formatFileSize = (size) => {
 	}
 };
 
-export const tokenCookie = ' ';
+export const tokenCookie = '';
 
 export const getToken = () => {
 	const cookieString = document.cookie;
