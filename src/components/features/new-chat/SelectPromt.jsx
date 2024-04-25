@@ -17,13 +17,15 @@ const SelectPrompt = ({
 	setPrompt,
 	answerResp,
 	setAnswerResp,
+	promptQuery,
+	setPromptQuery,
 }) => {
 	const [activeTab, setActiveTab] = useState('');
 	const [data, setData] = useState([]);
 	const { query, navigate } = useRouter();
 	const token = useGetCookie('token');
 	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
-	const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
+	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 
 	const handleActiveTab = (selectedTab) => {
 		setActiveTab(selectedTab);

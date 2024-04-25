@@ -26,7 +26,7 @@ const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
 	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
 	const [dataSource] = useLocalStorage('dataSource');
-	const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
+	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 	const [searchParam, setSearchParam] = useSearchParams();
 
 	const { query, params, navigate } = useRouter();
@@ -41,6 +41,7 @@ const NewChat = () => {
 	const [workSpaceTab, setWorkSpaceTab] = useState('');
 	const [doingScience, setDoingScience] = useState(true);
 	const [answerResp, setAnswerResp] = useState({});
+	const [promptQuery, setPromptQuery] = useState({ data: '' });
 
 	const gradientText = {
 		backgroundImage:
@@ -108,6 +109,8 @@ const NewChat = () => {
 						prompt={prompt}
 						setAnswerResp={setAnswerResp}
 						answerResp={answerResp}
+						setPromptQuery={setPromptQuery}
+						promptQuery={promptQuery}
 					/>
 				);
 			default:
