@@ -29,7 +29,7 @@ const SignInSignUp = () => {
 	useEffect(() => {
 		const token = Cookies.get('token');
 		if (token) {
-			navigate('/app/dashboard');
+			navigate('/app/new-chat');
 		}
 	}, []);
 
