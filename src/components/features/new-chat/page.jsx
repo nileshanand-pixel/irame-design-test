@@ -192,7 +192,7 @@ const NewChat = () => {
 							setPromptQuery({ data: res?.query });
 						}
 
-						if (res.status === 'in_progress') {
+						if (res.status === 'in_progress' || res.status === 'done') {
 							timer = 5000;
 							setDoingScience(false);
 						}
