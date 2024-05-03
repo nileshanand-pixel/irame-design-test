@@ -168,7 +168,7 @@ const Configuration = () => {
 							className="absolute top-0 w-0 -z-1 opacity-0"
 							onChange={(e) => handleFileChange(e)}
 							id="file-upload"
-							accept=".csv, .pdf"
+							accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
 						/>
 					</div>
 				)}

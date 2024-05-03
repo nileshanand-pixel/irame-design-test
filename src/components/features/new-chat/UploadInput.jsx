@@ -5,8 +5,8 @@ import PropTypes from 'prop-types';
 import { welcomeTypography } from './config';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
+import xlsIcon from '@/assets/icons/ms_excel.svg';
 import csvIcon from '@/assets/icons/csv.svg';
-import pdfIcon from '@/assets/icons/pdf.svg';
 
 const UploadInput = ({ onFileUpload, files, setFiles, progress, setOpen }) => {
 	const navigate = useNavigate();
@@ -121,12 +121,12 @@ const UploadInput = ({ onFileUpload, files, setFiles, progress, setOpen }) => {
 							{showFormats ? (
 								<div className="flex justify-center space-x-2 mt-2 w-full transition ease-in">
 									<img
-										src={pdfIcon}
+										src={csvIcon}
 										alt="pdf"
 										className="w-6 h-6"
 									/>
 									<img
-										src={csvIcon}
+										src={xlsIcon}
 										alt="csv"
 										className="w-6 h-6"
 									/>
