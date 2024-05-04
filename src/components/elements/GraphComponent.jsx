@@ -56,9 +56,21 @@ const GraphComponent = ({ data }) => {
 								Number(item[chartState.yAxis]),
 							),
 							fill: false,
-							borderColor: 'rgba(106, 18, 205, 0.04)',
+							borderColor: 'rgba(38, 6, 74, 0.8)',
+							backgroundColor: 'rgba(106, 18, 205, 1)',
 						},
 					],
+				},
+				options: {
+					plugins: {
+						title: {
+							display: true,
+							text: 'Custom Chart Title',
+							font: {
+								size: 18,
+							},
+						},
+					},
 				},
 			});
 		}

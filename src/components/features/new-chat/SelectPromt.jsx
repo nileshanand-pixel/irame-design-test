@@ -21,6 +21,7 @@ const SelectPrompt = ({
 	setAnswerResp,
 	promptQuery,
 	setPromptQuery,
+	setDoingScience,
 }) => {
 	const [activeTab, setActiveTab] = useState('');
 	const [data, setData] = useState([]);
@@ -38,6 +39,8 @@ const SelectPrompt = ({
 	const handlePrompt = (question) => {
 		try {
 			// setPrompt(question);
+			setDoingScience(true);
+			setAnswerResp({});
 			setPromptQuery({ data: question });
 			dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]));
 			handleNextStep(4);

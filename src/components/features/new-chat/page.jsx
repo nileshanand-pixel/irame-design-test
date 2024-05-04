@@ -114,6 +114,7 @@ const NewChat = () => {
 						answerResp={answerResp}
 						setPromptQuery={setPromptQuery}
 						promptQuery={promptQuery}
+						setDoingScience={setDoingScience}
 					/>
 				);
 			default:
@@ -173,6 +174,7 @@ const NewChat = () => {
 			...answerConfig,
 		});
 		for (const key in answerConfig) {
+			console.log(answerConfig[key], key, '===tool_space');
 			if (answerConfig[key].tool_space === 'secondary') {
 				setWorkSpaceTab(key);
 				break;
@@ -278,35 +280,38 @@ const NewChat = () => {
 								<ResponseCard answerResp={answerResp} />
 							)}
 						</div>
-						<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white pt-2">
-							<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
-								<Input
-									placeholder="Enter a prompt here"
-									className={cn(
-										'border-0 outline-none rounded-none bg-transparent ',
-										getInputWidth(),
-									)}
-									value={prompt}
-									onChange={(e) => {
-										setPrompt(e.target.value);
-										setPromptQuery({ data: e.target.value });
-									}}
-									onKeyDown={(e) => {
-										console.log(e.key, '===keys');
-										if (e.key === 'Enter') handleQueryAnswer();
-									}}
-								/>
-								<div
-									className="flex gap-2 items-center pr-3 cursor-pointer"
-									onClick={handleQueryAnswer}
-								>
-									<i className="bi-send text-primary100 text-lg rotate-45"></i>
+						<div className="bg-white h-4">
+							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white pt-2">
+								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
+									<Input
+										placeholder="Enter a prompt here"
+										className={cn(
+											'border-0 outline-none rounded-none bg-transparent ',
+											getInputWidth(),
+										)}
+										value={prompt}
+										onChange={(e) => {
+											setPrompt(e.target.value);
+											setPromptQuery({ data: e.target.value });
+										}}
+										onKeyDown={(e) => {
+											console.log(e.key, '===keys');
+											if (e.key === 'Enter')
+												handleQueryAnswer();
+										}}
+									/>
+									<div
+										className="flex gap-2 items-center pr-3 cursor-pointer"
+										onClick={handleQueryAnswer}
+									>
+										<i className="bi-send text-primary100 text-lg rotate-45"></i>
+									</div>
 								</div>
+								<p className="text-xs text-primary40 font-normal">
+									Irame.ai may display inaccurate info, including
+									about people, so double-check its responses.
+								</p>
 							</div>
-							<p className="text-xs text-primary40 font-normal">
-								Irame.ai may display inaccurate info, including about
-								people, so double-check its responses.
-							</p>
 						</div>
 					</div>
 					{showWorkspace ? (
@@ -325,6 +330,7 @@ const NewChat = () => {
 								handleTabClick={handleTabClick}
 								workSpaceTab={workSpaceTab}
 								answerResp={answerResp}
+								setWorkSpaceTab={setWorkSpaceTab}
 							/>
 						</div>
 					) : null}
