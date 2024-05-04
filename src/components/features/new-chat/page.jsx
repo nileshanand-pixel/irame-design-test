@@ -7,7 +7,7 @@ import InputText from '@/components/elements/InputText';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
 import useGetCookie from '@/hooks/useGetCookie';
-import { cn, tokenCookie, getToken } from '@/lib/utils';
+import { cn, tokenCookie, getToken, getInitials } from '@/lib/utils';
 import ira from '@/assets/icons/ira_icon.svg';
 import { Button } from '@/components/ui/button';
 import Workspace from './Workspace';
@@ -21,6 +21,7 @@ import {
 } from './service/new-chat.service';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
+import { useSelector } from 'react-redux';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -31,6 +32,8 @@ const NewChat = () => {
 
 	const { query, params, navigate } = useRouter();
 	const token = useGetCookie('token');
+
+	const utilReducer = useSelector((state) => state.util);
 
 	const [files, setFiles] = useState([]);
 	const [progress, setProgress] = useState(0);
@@ -231,7 +234,9 @@ const NewChat = () => {
 							<div className="flex items-center gap-2">
 								<Avatar className="size-9">
 									<AvatarImage src={value?.avatar} />
-									<AvatarFallback>CN</AvatarFallback>
+									<AvatarFallback>
+										{getInitials(value.userName)}
+									</AvatarFallback>
 								</Avatar>
 								{promptQuery.data ? (
 									<p className="ms-1">{promptQuery.data}</p>
@@ -271,7 +276,11 @@ const NewChat = () => {
 									placeholder="Enter a prompt here"
 									className={cn(
 										'border-0 outline-none rounded-none bg-transparent ',
-										showWorkspace ? 'w-[44.2rem]' : 'w-[53rem]',
+										utilReducer?.isSideNavOpen
+											? showWorkspace
+												? 'w-[44.2rem]'
+												: 'w-[53rem]'
+											: 'w-[64.5rem]',
 									)}
 									value={prompt}
 									onChange={(e) => {

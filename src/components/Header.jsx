@@ -9,7 +9,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { tokenCookie,getToken } from '@/lib/utils';
+import { tokenCookie, getToken, getInitials } from '@/lib/utils';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
@@ -23,7 +23,9 @@ const Header = () => {
 					<DropdownMenuTrigger asChild>
 						<Avatar>
 							<AvatarImage src={value.avatar} />
-							<AvatarFallback>CN</AvatarFallback>
+							<AvatarFallback>
+								{getInitials(value.userName)}
+							</AvatarFallback>
 						</Avatar>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent className="w-46 mr-5">

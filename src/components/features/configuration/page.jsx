@@ -1,7 +1,7 @@
 import InputText from '@/components/elements/InputText';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { formatFileSize, getToken, tokenCookie } from '@/lib/utils';
+import { cn, formatFileSize, getToken, tokenCookie } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import excel from '@/assets/icons/ms_excel.svg';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,16 @@ const Configuration = () => {
 					...prev,
 					datasourceName: 'Please enter a name for your datasource',
 				}));
-				return;
+				// return;
+			}
+			if (
+				dataSources.some((source) => source.name === datasourceName.trim())
+			) {
+				setFormErrors((prev) => ({
+					...prev,
+					datasourceName: 'Data source name already exists',
+				}));
+				// return
 			}
 
 			if (!e.target.files.length) return;
@@ -58,7 +67,13 @@ const Configuration = () => {
 
 	const uploadFileHelper = async () => {
 		try {
-			const { data } = await uploadFile(files, setProgress);
+			const filesToUpload = files.filter((file) => !file.url); // Filter out files with a URL
+
+			if (filesToUpload.length === 0) {
+				toast.success('All files are already uploaded');
+				return;
+			}
+			const { data } = await uploadFile(filesToUpload, setProgress);
 			if (data) {
 				setFiles(
 					files.map((file) => ({
@@ -130,8 +145,6 @@ const Configuration = () => {
 	return (
 		<div className="grid grid-cols-12 gap-4 pt-6">
 			<div className="border rounded-3xl py-4 px-6 col-span-9 shadow-1xl h-fit">
-				{' '}
-				{/*TODO: add shadow */}
 				<h3 className="text-primary80 font-semibold text-xl">
 					Connect your datasource
 				</h3>
@@ -148,9 +161,15 @@ const Configuration = () => {
 							errorText={formErrors.datasourceName}
 						/>
 						<div
-							className="w-full bg-purple-4 hover:bg-purple-8 text-purple-100 text-sm font-medium hover:text-purple-100 rounded-lg"
+							className={` w-full bg-purple-4 hover:bg-purple-8 text-purple-100 text-sm font-medium hover:text-purple-100 rounded-lg ${
+								(progress > 0 && progress < 100) || isLoading
+									? 'cursor-not-allowed opacity-80'
+									: 'cursor-pointer'
+							}`}
 							onClick={(e) => {
 								e.preventDefault();
+								if ((progress > 0 && progress < 100) || isLoading)
+									return;
 								inputRef.current.click();
 							}}
 						>
@@ -185,17 +204,18 @@ const Configuration = () => {
 										alt="file-icon"
 										className="size-6"
 									/>
-									<p className="text-sm text-purple-100 flex">
+									<div className="text-sm text-purple-100 flex">
 										{file.name || file.file_name}&nbsp;
 										{file.size ? (
 											<p className="text-sm font-medium text-primary80">{`(${formatFileSize(
 												file?.size,
 											)})`}</p>
 										) : null}
-									</p>
+									</div>
 								</div>
 								<div className="flex items-center text-sm font-medium">
-									{!showNoUpload && progress < 100 ? (
+									{(!showNoUpload || file.url) &&
+									progress < 100 ? (
 										<p className="mr-4">uploading...</p>
 									) : null}
 									<div
@@ -216,7 +236,7 @@ const Configuration = () => {
 									</div>
 								</div>
 							</div>
-							{!showNoUpload && progress <= 99 ? (
+							{(!showNoUpload || file.url) && progress <= 99 ? (
 								<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
 									<div
 										className="h-full bg-purple-100"
@@ -234,12 +254,12 @@ const Configuration = () => {
 						<Button
 							className="w-full hover:bg-purple-100 hover:text-white hover:opacity-80"
 							onClick={() => createDataSource()}
-							disabled={isLoading}
+							disabled={isLoading || progress < 100}
 						>
 							{isLoading ? (
 								<i className="bi-arrow-repeat animate-spin mr-2"></i>
 							) : null}
-							Save changes
+							Start Querying
 						</Button>
 					</div>
 				) : null}

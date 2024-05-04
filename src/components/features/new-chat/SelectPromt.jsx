@@ -10,6 +10,8 @@ import useGetCookie from '@/hooks/useGetCookie';
 import { tokenCookie, getToken } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import useLocalStorage from '@/hooks/useLocalStorage';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const SelectPrompt = ({
 	handleNextStep,
@@ -27,6 +29,9 @@ const SelectPrompt = ({
 	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
 	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 
+	const dispatch = useDispatch();
+	const utilReducer = useSelector((state) => state.util);
+
 	const handleActiveTab = (selectedTab) => {
 		setActiveTab(selectedTab);
 	};
@@ -34,6 +39,7 @@ const SelectPrompt = ({
 		try {
 			// setPrompt(question);
 			setPromptQuery({ data: question });
+			dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]));
 			handleNextStep(4);
 			createQuerySession(query.dataSourceId, question, getToken()).then(
 				(res) => {
@@ -52,11 +58,25 @@ const SelectPrompt = ({
 
 		const fetchData = async () => {
 			try {
-				const resp = await fetchSuggestions(query.dataSourceId, getToken());
-				setData(resp);
-				setActiveTab(resp?.suggestion[0]?.type);
-				if (resp.status === 200 || resp.suggestion.length) {
-					clearInterval(intervalId); // Stop polling
+				if (
+					utilReducer?.suggestionData &&
+					utilReducer?.suggestionData.suggestion.length
+				) {
+					// setData(utilReducer.suggestionData);
+					// setActiveTab(utilReducer.suggestionData?.suggestion[0].type);
+				} else {
+					const resp = await fetchSuggestions(
+						query.dataSourceId,
+						getToken(),
+					);
+					setData(resp);
+					setActiveTab(resp?.suggestion[0]?.type);
+					dispatch(
+						updateUtilProp([{ key: 'suggestionData', value: resp }]),
+					);
+					if (resp.status === 200 || resp.suggestion.length) {
+						clearInterval(intervalId); // Stop polling
+					}
 				}
 			} catch (error) {
 				console.error('Error fetching suggestions:', error);

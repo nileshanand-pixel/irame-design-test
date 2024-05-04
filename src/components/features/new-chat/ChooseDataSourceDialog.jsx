@@ -26,7 +26,7 @@ const ChooseDataSourceDialog = ({
 }) => {
 	const [dataSources, setDataSources] = useState([]);
 	const [value, setValue] = useLocalStorage('dataSource');
-	const [dataSourceFetch, setDataSourceFetch] = useState(false);
+	const [dataSourceFetch, setDataSourceFetch] = useState(true);
 
 	const navigate = useNavigate();
 
@@ -41,7 +41,6 @@ const ChooseDataSourceDialog = ({
 	};
 	useEffect(() => {
 		const token = getToken();
-		setDataSourceFetch(true);
 		if (token) {
 			getDataSources(token).then((resp) => {
 				setDataSources(Array.isArray(resp) ? resp : []);
@@ -58,8 +57,8 @@ const ChooseDataSourceDialog = ({
 						You can always change it later from the data source page
 					</DialogDescription>
 				</DialogHeader>
-				<div className="space-y-2">
-					{dataSourceFetch ? (
+				<div className="space-y-2 max-h-[30rem] overflow-auto">
+					{dataSourceFetch && dataSources.length <= 0 ? (
 						<div className="flex items-center justify-center">
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>

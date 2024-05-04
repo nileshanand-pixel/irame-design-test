@@ -17,7 +17,8 @@ export const formatFileSize = (size) => {
 	}
 };
 
-export const tokenCookie = '';
+export const tokenCookie =
+	'gAAAAABmNcBrWk7qMbFMp3SXe66MZD-TZGdil9AEXabcC3SivUsHvENLBKr3IpCDQgwRnwtZUtxp6ALgFMDTqu1ncX0ZFTD03gCZEG-cf_2l7Ff7VUIjvnCQOSo1dSLQLcPoecU88s43Q2EvayVVk480hf7LWeA7qw==';
 
 export const getToken = () => {
 	const cookieString = document.cookie;
@@ -35,3 +36,13 @@ export const getToken = () => {
 };
 
 //TODO: make a generic function to get data from cookies
+
+export const getInitials = (userName) => {
+	const words = userName.split(' ');
+
+	const initials = words.map((word) => word.charAt(0).toUpperCase());
+
+	const abbreviation = initials.join('');
+
+	return abbreviation;
+};
