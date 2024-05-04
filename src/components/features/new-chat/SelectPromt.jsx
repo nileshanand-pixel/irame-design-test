@@ -30,7 +30,7 @@ const SelectPrompt = ({
 	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 
 	const dispatch = useDispatch();
-	const utilReducer = useSelector((state) => state.util);
+	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const handleActiveTab = (selectedTab) => {
 		setActiveTab(selectedTab);
@@ -60,10 +60,12 @@ const SelectPrompt = ({
 			try {
 				if (
 					utilReducer?.suggestionData &&
-					utilReducer?.suggestionData.suggestion.length
+					utilReducer?.suggestionData?.suggestion?.length > 0
 				) {
-					// setData(utilReducer.suggestionData);
-					// setActiveTab(utilReducer.suggestionData?.suggestion[0].type);
+					setData(utilReducer.suggestionData);
+					if (activeTab === '') {
+						setActiveTab(utilReducer.suggestionData?.suggestion[0].type);
+					}
 				} else {
 					const resp = await fetchSuggestions(
 						query.dataSourceId,
@@ -137,7 +139,7 @@ const SelectPrompt = ({
 									)
 									.questions.map((question, index) => (
 										<div
-											className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] max-h-[21.75rem] p-4 hover:bg-purple-8 mb-3"
+											className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] min-h-[12.5rem] max-h-[21.75rem] p-4 hover:bg-purple-8 mb-3"
 											key={`${index}_question`}
 										>
 											<div

@@ -3,6 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
 	isSideNavOpen: true,
 	suggestionData: {},
+	dataSources: [],
 };
 
 const utilSlice = createSlice({

@@ -33,7 +33,7 @@ const NewChat = () => {
 	const { query, params, navigate } = useRouter();
 	const token = useGetCookie('token');
 
-	const utilReducer = useSelector((state) => state.util);
+	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const [files, setFiles] = useState([]);
 	const [progress, setProgress] = useState(0);
@@ -139,6 +139,14 @@ const NewChat = () => {
 				`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
 			);
 		});
+	};
+
+	const getInputWidth = () => {
+		if (utilReducer?.isSideNavOpen) {
+			return showWorkspace ? 'w-[44.2rem]' : 'w-[53rem]';
+		} else {
+			return showWorkspace ? 'w-[51.5rem]' : 'w-[64.5rem]';
+		}
 	};
 
 	useEffect(() => {
@@ -276,11 +284,7 @@ const NewChat = () => {
 									placeholder="Enter a prompt here"
 									className={cn(
 										'border-0 outline-none rounded-none bg-transparent ',
-										utilReducer?.isSideNavOpen
-											? showWorkspace
-												? 'w-[44.2rem]'
-												: 'w-[53rem]'
-											: 'w-[64.5rem]',
+										getInputWidth(),
 									)}
 									value={prompt}
 									onChange={(e) => {

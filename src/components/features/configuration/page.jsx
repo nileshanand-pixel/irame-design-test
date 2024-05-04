@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 import Cookies from 'js-cookie';
 import { v4 as uuid } from 'uuid';
 import { useRouter } from '@/hooks/useRouter';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const Configuration = () => {
 	const [files, setFiles] = useState([]);
@@ -24,6 +26,9 @@ const Configuration = () => {
 	const [showNoUpload, setShowNoUpload] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [dataSourceFetch, setDataSourceFetch] = useState(false);
+
+	const dispatch = useDispatch();
+	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const { navigate } = useRouter();
 
@@ -70,7 +75,7 @@ const Configuration = () => {
 			const filesToUpload = files.filter((file) => !file.url); // Filter out files with a URL
 
 			if (filesToUpload.length === 0) {
-				toast.success('All files are already uploaded');
+				// toast.success('All files are already uploaded');
 				return;
 			}
 			const { data } = await uploadFile(filesToUpload, setProgress);
@@ -102,7 +107,7 @@ const Configuration = () => {
 				files.map((file) => ({
 					file_name: file.name,
 					file_id: uuid(),
-					file_url: file.url, // Assuming fileUrls is an object containing file URLs
+					file_url: file.url,
 				})),
 		};
 
@@ -121,7 +126,13 @@ const Configuration = () => {
 		const fetchDataSources = async () => {
 			setDataSourceFetch(true);
 			const token = getToken();
+			if (utilReducer.dataSources.length > 0) {
+				setDataSources(utilReducer.dataSources);
+				setDataSourceFetch(false);
+				return;
+			}
 			const data = await getDataSources(token);
+			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 			setDataSources(Array.isArray(data) ? data : []);
 			setDataSourceFetch(false);
 		};

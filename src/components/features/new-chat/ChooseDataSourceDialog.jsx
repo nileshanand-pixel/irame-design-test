@@ -16,6 +16,8 @@ import { useNavigate } from 'react-router-dom';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import useLocalStorage from '@/hooks/useLocalStorage';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const ChooseDataSourceDialog = ({
 	open,
@@ -30,6 +32,9 @@ const ChooseDataSourceDialog = ({
 
 	const navigate = useNavigate();
 
+	const dispatch = useDispatch();
+	const utilReducer = useSelector((state) => state.utilReducer);
+
 	const getCookieToken = () => {
 		return Cookies.get('token');
 	};
@@ -42,8 +47,14 @@ const ChooseDataSourceDialog = ({
 	useEffect(() => {
 		const token = getToken();
 		if (token) {
+			if (utilReducer.dataSources.length > 0) {
+				setDataSources(utilReducer.dataSources);
+				setDataSourceFetch(false);
+				return;
+			}
 			getDataSources(token).then((resp) => {
 				setDataSources(Array.isArray(resp) ? resp : []);
+				dispatch(updateUtilProp([{ key: 'dataSources', value: resp }]));
 			});
 		}
 		setDataSourceFetch(false);
