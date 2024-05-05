@@ -30,10 +30,10 @@ const ResponseCard = ({ answerResp }) => {
 			{/* Render 'Answer' component first if available */}
 			{answerItem && (
 				<div className="mb-8">
-					<h3 className="text-primary100 font-medium">
+					{/* <h3 className="text-primary100 font-medium">
 						{workSpaceMap[answerItem[0]].charAt(0).toUpperCase() +
 							workSpaceMap[answerItem[0]].slice(1)}
-					</h3>
+					</h3> */}
 					<p className="text-primary80" style={{ whiteSpace: 'pre-wrap' }}>
 						{answerItem[1]?.tool_data}
 					</p>

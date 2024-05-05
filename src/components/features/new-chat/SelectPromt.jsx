@@ -63,7 +63,8 @@ const SelectPrompt = ({
 			try {
 				if (
 					utilReducer?.suggestionData &&
-					utilReducer?.suggestionData?.suggestion?.length > 0
+					utilReducer?.suggestionData?.suggestion?.length > 0 &&
+					query.dataSourceId === utilReducer.suggestionData.dataSourceId
 				) {
 					setData(utilReducer.suggestionData);
 					if (activeTab === '') {

@@ -6,7 +6,7 @@ import { welcomeTypography } from './config';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import xlsIcon from '@/assets/icons/ms_excel.svg';
-import csvIcon from '@/assets/icons/csv.svg';
+import csvIcon from '@/assets/icons/csv_icon.svg';
 
 const UploadInput = ({ onFileUpload, files, setFiles, progress, setOpen }) => {
 	const navigate = useNavigate();

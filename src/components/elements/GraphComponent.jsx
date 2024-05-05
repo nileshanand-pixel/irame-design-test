@@ -9,6 +9,9 @@ const GraphComponent = ({ data }) => {
 		xAxis: '',
 		yAxis: '',
 		type: '',
+		borderColor: '',
+		backgroundColor: '',
+		title: '',
 	});
 	const [loadedData, setLoadedData] = useState([]);
 	const [columns, setColumns] = useState([]);
@@ -21,6 +24,9 @@ const GraphComponent = ({ data }) => {
 				xAxis: data['x-axis'],
 				yAxis: data['y-axis'],
 				type: data['graph_type'],
+				borderColor: data['border_color'] || data['borderColor'],
+				backgroundColor: data['background_color'] || data['backgroundColor'],
+				title: data['chart_title'] || data['chartTitle'] || data['title'],
 			});
 		}
 	}, [data]);
@@ -56,8 +62,11 @@ const GraphComponent = ({ data }) => {
 								Number(item[chartState.yAxis]),
 							),
 							fill: false,
-							borderColor: 'rgba(38, 6, 74, 0.8)',
-							backgroundColor: 'rgba(106, 18, 205, 1)',
+							borderColor:
+								chartState.borderColor || 'rgba(38, 6, 74, 0.8)',
+							backgroundColor:
+								chartState.backgroundColor ||
+								'rgba(106, 18, 205, 1)',
 						},
 					],
 				},
@@ -65,7 +74,7 @@ const GraphComponent = ({ data }) => {
 					plugins: {
 						title: {
 							display: true,
-							text: 'Custom Chart Title',
+							text: chartState.title || 'Chart Title',
 							font: {
 								size: 18,
 							},

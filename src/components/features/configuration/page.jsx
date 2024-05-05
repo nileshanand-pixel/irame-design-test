@@ -193,7 +193,7 @@ const Configuration = () => {
 						</div>
 						<Input
 							type="file"
-							// multiple
+							multiple
 							ref={inputRef}
 							className="absolute top-0 w-0 -z-1 opacity-0"
 							onChange={(e) => handleFileChange(e)}
