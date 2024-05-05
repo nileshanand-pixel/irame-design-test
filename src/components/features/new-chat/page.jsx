@@ -9,6 +9,8 @@ import { useRouter } from '@/hooks/useRouter';
 import useGetCookie from '@/hooks/useGetCookie';
 import { cn, tokenCookie, getToken, getInitials } from '@/lib/utils';
 import ira from '@/assets/icons/ira_icon.svg';
+import failedIcon from '@/assets/icons/failed_icon.svg';
+import warningIcon from '@/assets/icons/warning_icon.svg';
 import { Button } from '@/components/ui/button';
 import Workspace from './Workspace';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,6 +47,8 @@ const NewChat = () => {
 	const [doingScience, setDoingScience] = useState(true);
 	const [answerResp, setAnswerResp] = useState({});
 	const [promptQuery, setPromptQuery] = useState({ data: '' });
+	const [showResponseDelayBanner, setShowResponseDelayBanner] = useState(false);
+	const [showFailedResponseBanner, setShowFailedResponseBanner] = useState(false);
 
 	const gradientText = {
 		backgroundImage:
@@ -184,6 +188,18 @@ const NewChat = () => {
 
 	useEffect(() => {
 		let intervalId;
+
+		const handleResponseDelay = () => {
+			if (responseTimeElapsed >= 30 && !showResponseDelayBanner) {
+				setShowResponseDelayBanner(true);
+			}
+			if (responseTimeElapsed >= 90 && !showFailedResponseBanner) {
+				setShowFailedResponseBanner(true);
+				setShowResponseDelayBanner(false);
+				clearInterval(intervalId);
+			}
+		};
+
 		if (query?.step) {
 			setCompletedSteps((prev) => [...prev, parseInt(query?.step)]);
 
@@ -213,6 +229,8 @@ const NewChat = () => {
 							clearInterval(intervalId);
 						}
 					});
+					setResponseTimeElapsed((prev) => prev + 5);
+					handleResponseDelay();
 				}, timer);
 			}
 		} else {
@@ -309,6 +327,32 @@ const NewChat = () => {
 								<ResponseCard answerResp={answerResp} />
 							)}
 						</div>
+						<div className="w-full flex flex-col justify-center mx-auto">
+							{showResponseDelayBanner && !answerResp.answer && (
+								<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+									<img
+										src={warningIcon}
+										width={40}
+										height={40}
+										className="mr-3"
+									/>
+									This is taking a bit longer than expected
+								</div>
+							)}
+							{showFailedResponseBanner && !answerResp.answer && (
+								<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+									<img
+										src={failedIcon}
+										width={40}
+										height={40}
+										className="mr-3"
+									/>
+									Failed to generate a response, please refresh the
+									page to try again.
+								</div>
+							)}
+						</div>
+
 						<div className="bg-white h-4">
 							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white pt-2">
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
