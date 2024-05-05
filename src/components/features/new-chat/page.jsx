@@ -276,7 +276,7 @@ const NewChat = () => {
 													className="darkSoul-button2"
 													type="button"
 												>
-													<i className="bi-check2-circle text-primary100 text-lg me-2"></i>
+													<i className="bi-check2-circle text-purple-100 text-lg me-2"></i>
 													Observing...
 												</button>
 											</div>
@@ -287,7 +287,7 @@ const NewChat = () => {
 													className="darkSoul-button2"
 													type="button"
 												>
-													<i className="bi-check2-circle text-primary100 text-lg me-2"></i>
+													<i className="bi-check2-circle text-purple-100 text-lg me-2"></i>
 													Generating Graph...
 												</button>
 											</div>
@@ -298,7 +298,7 @@ const NewChat = () => {
 													className="darkSoul-button2"
 													type="button"
 												>
-													<i className="bi-check2-circle text-primary100 text-lg me-2"></i>
+													<i className="bi-check2-circle text-purple-100 text-lg me-2"></i>
 													Creating Table...
 												</button>
 											</div>
