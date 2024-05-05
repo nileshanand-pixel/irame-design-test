@@ -235,4 +235,51 @@
 	.ghost-tabs li.active-tab:after {
 		@apply w-full bg-purple-2;
 	}
+
+	.darkSoul-glowing-button2 {
+		/* margin: auto; */
+		width: 250px;
+		height: 47px;
+		display: flex;
+		border-radius: 100px;
+		animation: rotation 2.5s linear 0s infinite;
+
+		background: linear-gradient(
+			var(--gradient-angle),
+			rgba(106, 18, 205, 1),
+			rgba(106, 18, 205, 0)
+		);
+	}
+
+	.darkSoul-button2 {
+		width: 98%;
+		height: 94%;
+		background-color: rgba(255, 255, 255, 0.911) !important;
+		margin: auto;
+		outline: none;
+		border: none;
+		border-radius: 35px;
+		color: rgba(38, 6, 74, 0.8);
+		font-size: 14px;
+		line-height: 20px;
+		font-weight: 600;
+		text-align: left;
+		padding: 12px 16px;
+		display: flex;
+		align-items: center;
+	}
+
+	@keyframes rotation {
+		0% {
+			--gradient-angle: 0deg;
+		}
+		100% {
+			--gradient-angle: 360deg;
+		}
+	}
+	@property --gradient-angle {
+		syntax: '<angle>';
+		initial-value: 0deg;
+		inherits: false;
+	}
 }

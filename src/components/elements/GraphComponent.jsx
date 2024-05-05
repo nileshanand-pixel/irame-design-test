@@ -74,7 +74,7 @@ const GraphComponent = ({ data }) => {
 					plugins: {
 						title: {
 							display: true,
-							text: chartState.title || 'Chart Title',
+							text: chartState.title || 'Data plot',
 							font: {
 								size: 18,
 							},

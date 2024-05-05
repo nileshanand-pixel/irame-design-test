@@ -268,13 +268,42 @@ const NewChat = () => {
 								</Button>
 							</div>
 							{doingScience ? (
-								<div className="flex flex-col space-y-3 mt-4 ml-12">
-									<div className="space-y-2">
-										<Skeleton className="h-5 w-[80%] bg-purple-8" />
-										<Skeleton className="h-5 w-[50%] bg-purple-8" />
-										<Skeleton className="h-5 w-[65%] bg-purple-8" />
+								<div className="flex flex-col space-y-3 mt-8 ml-12">
+									<div className="space-y-3">
+										{!answerResp?.answer?.answer ? (
+											<div className="darkSoul-glowing-button2">
+												<button
+													className="darkSoul-button2"
+													type="button"
+												>
+													<i className="bi-check2-circle text-primary100 text-lg me-2"></i>
+													Observing...
+												</button>
+											</div>
+										) : null}
+										{!answerResp?.answer?.graph ? (
+											<div className="darkSoul-glowing-button2">
+												<button
+													className="darkSoul-button2"
+													type="button"
+												>
+													<i className="bi-check2-circle text-primary100 text-lg me-2"></i>
+													Generating Graph...
+												</button>
+											</div>
+										) : null}
+										{!answerResp?.answer?.graph ? (
+											<div className="darkSoul-glowing-button2">
+												<button
+													className="darkSoul-button2"
+													type="button"
+												>
+													<i className="bi-check2-circle text-primary100 text-lg me-2"></i>
+													Creating Table...
+												</button>
+											</div>
+										) : null}
 									</div>
-									<Skeleton className="h-[125px] w-[250px] rounded-xl bg-purple-8" />
 								</div>
 							) : (
 								<ResponseCard answerResp={answerResp} />
