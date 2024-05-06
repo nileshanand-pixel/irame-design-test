@@ -3,10 +3,18 @@ import { Button } from './ui/button';
 import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
 import { useRouter } from '@/hooks/useRouter';
+import { useSelector } from 'react-redux';
+import { getToken } from '@/lib/utils';
+import {
+	createQuery,
+	getQuerySession,
+} from './features/new-chat/service/new-chat.service';
 
 const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const [activeTab, setActiveTab] = useState('');
-	const { pathname } = useRouter();
+	const { pathname, navigate } = useRouter();
+
+	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const bottomMenuList = [
 		{
@@ -30,6 +38,26 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			],
 		},
 	];
+
+	const getChatHistory = (sessionId) => {
+		getQuerySession(sessionId, getToken()).then((res) => {
+			navigate(
+				`/app/new-chat/?step=4&dataSourceId=${res[0].datasource_id}&sessionId=${res[0].session_id}&queryId=${res[0].query_id}`,
+			);
+			createQuery(
+				{
+					child_no: parseInt(res[0].child_no) + 1,
+					datasource_id: res[0].datasource_id,
+					parent_query_id: res[0].query_id,
+					query: res[0].query,
+					session_id: res[0].session_id,
+				},
+				getToken(),
+			).then((res) => {
+				console.log(res, 'create query===');
+			});
+		});
+	};
 	useEffect(() => {
 		if (pathname === '/app/new-chat') {
 			setActiveTab('');
@@ -64,9 +92,31 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						{isSideNavOpen ? <p>New Chat</p> : null}
 					</Link>
 					<div
-						className={`flex gap-4 items-center cursor-pointer text-sm  text-primary80 font-medium p-3 rounded-md hover:bg-purple-4`}
+						className={`flex flex-col gap-4 cursor-pointer text-primary80 font-medium p-3 rounded-md`}
 					>
-						{isSideNavOpen ? <p>Recent</p> : null}
+						{isSideNavOpen ? (
+							<>
+								<p>Recent</p>
+								<div className=" max-h-[25rem] overflow-y-auto space-y-3.5 mt-2">
+									{utilReducer?.sessionHistory.map(
+										(session, key) => (
+											<div
+												className="text-primary80 rounded-lg py-2 px-3 text-sm font-medium max-w-[200px] truncate hover:bg-purple-4 cursor-pointer"
+												key={session.session_id}
+												onClick={() =>
+													getChatHistory(
+														session.session_id,
+													)
+												}
+											>
+												<i className="bi-chat-right-text-fill me-3"></i>
+												{session.title}
+											</div>
+										),
+									)}
+								</div>
+							</>
+						) : null}
 					</div>
 				</div>
 			</div>

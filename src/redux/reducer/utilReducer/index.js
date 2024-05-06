@@ -4,6 +4,7 @@ const initialState = {
 	isSideNavOpen: true,
 	suggestionData: {},
 	dataSources: [],
+	sessionHistory: [],
 };
 
 const utilSlice = createSlice({

@@ -4,7 +4,7 @@ import Chart from 'chart.js/auto';
 import * as d3 from 'd3';
 import TableComponent from './TableComponent';
 
-const GraphComponent = ({ data }) => {
+const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading }) => {
 	const [chartState, setChartState] = useState({
 		xAxis: '',
 		yAxis: '',
@@ -19,6 +19,7 @@ const GraphComponent = ({ data }) => {
 	const chartRef = useRef(null);
 
 	useEffect(() => {
+		// console.log('graph data==', data);
 		if (data && data.response_csv_curl) {
 			setChartState({
 				xAxis: data['x-axis'],
@@ -41,6 +42,7 @@ const GraphComponent = ({ data }) => {
 			d3.csv(data.response_csv_curl).then((csvData) => {
 				setLoadedData(csvData);
 				setColumns(Object.keys(csvData[0]));
+				setIsGraphLoading(false);
 			});
 		}
 	}, [chartState, data]);

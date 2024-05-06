@@ -17,7 +17,7 @@ export const formatFileSize = (size) => {
 	}
 };
 
-export const tokenCookie = '';
+export const tokenCookie = "gAAAAABmOQRlihDU5z5NWZU2nwD_WqS6JUKcHaGNVNRfgXOkzHwMRBgz_jQCaY0EaCGhAntZHxkZDbUeICaHr2RI2ELI0FSNiiWlfzCmyK6Me6DbAZaYl-vFLMygJOHFJrtjaQqwId-PBNNVKWX4NddFIDgYjp2kAA==";
 
 export const getToken = () => {
 	const cookieString = document.cookie;
