@@ -20,10 +20,12 @@ import {
 	createQuerySession,
 	getQueryAnswers,
 	getUserDetails,
+	getUserSession,
 } from './service/new-chat.service';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -36,6 +38,7 @@ const NewChat = () => {
 	const token = useGetCookie('token');
 
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const dispatch = useDispatch();
 
 	const [files, setFiles] = useState([]);
 	const [progress, setProgress] = useState(0);
@@ -49,6 +52,8 @@ const NewChat = () => {
 	const [promptQuery, setPromptQuery] = useState({ data: '' });
 	const [showResponseDelayBanner, setShowResponseDelayBanner] = useState(false);
 	const [showFailedResponseBanner, setShowFailedResponseBanner] = useState(false);
+	const [responseTimeElapsed, setResponseTimeElapsed] = useState(0);
+	const [isGraphLoading, setIsGraphLoading] = useState(true);
 
 	const gradientText = {
 		backgroundImage:
@@ -153,6 +158,16 @@ const NewChat = () => {
 			return showWorkspace ? 'w-[51.5rem]' : 'w-[64.5rem]';
 		}
 	};
+	const fetchUserSession = () => {
+		try {
+			// if (utilReducer?.sessionHistory?.length > 0) return;
+			getUserSession(getToken()).then((res) => {
+				dispatch(updateUtilProp([{ key: 'sessionHistory', value: res }]));
+			});
+		} catch (error) {
+			console.error('Error fetching user session:', error);
+		}
+	};
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -173,12 +188,12 @@ const NewChat = () => {
 		};
 
 		fetchData();
+		fetchUserSession();
 
 		setAnswerResp({
 			...answerConfig,
 		});
 		for (const key in answerConfig) {
-			console.log(answerConfig[key], key, '===tool_space');
 			if (answerConfig[key].tool_space === 'secondary') {
 				setWorkSpaceTab(key);
 				break;
@@ -242,6 +257,13 @@ const NewChat = () => {
 		};
 	}, [query?.step, getToken(), query?.queryId]);
 
+	useEffect(() => {
+		setIsGraphLoading(true);
+		setDoingScience(true);
+		setAnswerResp({});
+		setPromptQuery({ data: '' });
+	}, [query.dataSourceId, query.sessionId, query.queryId]);
+
 	return (
 		<>
 			{completedSteps.includes(4) ? (
@@ -285,7 +307,9 @@ const NewChat = () => {
 									{showWorkspace ? 'Hide' : 'Show'} Workspace
 								</Button>
 							</div>
-							{doingScience ? (
+							{doingScience ||
+							!answerResp?.answer?.answer ||
+							!answerResp?.answer?.graph ? (
 								<div className="flex flex-col space-y-3 mt-8 ml-12">
 									<div className="space-y-3">
 										{!answerResp?.answer?.answer ? (
@@ -295,11 +319,12 @@ const NewChat = () => {
 													type="button"
 												>
 													<i className="bi-check2-circle text-purple-100 text-lg me-2"></i>
-													Observing...
+													Creating Observation...
 												</button>
 											</div>
 										) : null}
-										{!answerResp?.answer?.graph ? (
+										{!answerResp?.answer?.graph ||
+										isGraphLoading ? (
 											<div className="darkSoul-glowing-button2">
 												<button
 													className="darkSoul-button2"
@@ -310,7 +335,7 @@ const NewChat = () => {
 												</button>
 											</div>
 										) : null}
-										{!answerResp?.answer?.graph ? (
+										{/* {!answerResp?.answer?.graph ? (
 											<div className="darkSoul-glowing-button2">
 												<button
 													className="darkSoul-button2"
@@ -320,37 +345,45 @@ const NewChat = () => {
 													Creating Table...
 												</button>
 											</div>
-										) : null}
+										) : null} */}
 									</div>
 								</div>
 							) : (
-								<ResponseCard answerResp={answerResp} />
+								<ResponseCard
+									answerResp={answerResp}
+									isGraphLoading={isGraphLoading}
+									setIsGraphLoading={setIsGraphLoading}
+								/>
 							)}
 						</div>
-						<div className="w-full flex flex-col justify-center mx-auto">
-							{showResponseDelayBanner && !answerResp.answer && (
-								<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-									<img
-										src={warningIcon}
-										width={40}
-										height={40}
-										className="mr-3"
-									/>
-									This is taking a bit longer than expected
-								</div>
-							)}
-							{showFailedResponseBanner && !answerResp.answer && (
-								<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-									<img
-										src={failedIcon}
-										width={40}
-										height={40}
-										className="mr-3"
-									/>
-									Failed to generate a response, please refresh the
-									page to try again.
-								</div>
-							)}
+						<div className="w-full flex flex-col justify-center mx-auto mt-5 pl-12">
+							{showResponseDelayBanner &&
+								(!answerResp?.answer?.graph ||
+									!answerResp?.answer?.answer) && (
+									<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+										<img
+											src={warningIcon}
+											width={40}
+											height={40}
+											className="mr-3"
+										/>
+										This is taking a bit longer than expected
+									</div>
+								)}
+							{showFailedResponseBanner &&
+								(!answerResp?.answer?.graph ||
+									!answerResp?.answer?.answer) && (
+									<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+										<img
+											src={failedIcon}
+											width={40}
+											height={40}
+											className="mr-3"
+										/>
+										Failed to generate a response, please refresh
+										the page to try again.
+									</div>
+								)}
 						</div>
 
 						<div className="bg-white h-4">

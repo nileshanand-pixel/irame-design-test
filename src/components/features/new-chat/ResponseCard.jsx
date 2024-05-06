@@ -4,7 +4,7 @@ import CoderComponent from './CoderComponent';
 import { WorkspaceEnum, workSpaceMap } from './types/new-chat.enum';
 import { Button } from '@/components/ui/button';
 
-const ResponseCard = ({ answerResp }) => {
+const ResponseCard = ({ answerResp, isGraphLoading, setIsGraphLoading }) => {
 	// Extracting main items
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) => {
@@ -34,7 +34,10 @@ const ResponseCard = ({ answerResp }) => {
 						{workSpaceMap[answerItem[0]].charAt(0).toUpperCase() +
 							workSpaceMap[answerItem[0]].slice(1)}
 					</h3> */}
-					<p className="text-primary80" style={{ whiteSpace: 'pre-wrap' }}>
+					<p
+						className="text-primary80 font-medium"
+						style={{ whiteSpace: 'pre-wrap' }}
+					>
 						{answerItem[1]?.tool_data}
 					</p>
 				</div>
@@ -58,7 +61,11 @@ const ResponseCard = ({ answerResp }) => {
 					)}
 					{value.tool_type === WorkspaceEnum?.Graph && (
 						<div className="my-4">
-							<GraphComponent data={value.tool_data} />
+							<GraphComponent
+								data={value.tool_data}
+								isGraphLoading={isGraphLoading}
+								setIsGraphLoading={setIsGraphLoading}
+							/>
 							<div className="my-4">
 								<Button
 									variant="outline"

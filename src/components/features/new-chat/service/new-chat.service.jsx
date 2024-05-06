@@ -55,3 +55,30 @@ export const getUserDetails = async (token) => {
 	});
 	return response.data;
 };
+
+export const getUserSession = async (token) => {
+	const response = await axios.get(`${API_URL}/session`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+};
+
+export const getQuerySession = async (sessionId, token) => {
+	const response = await axios.get(`${API_URL}/query/session/${sessionId}`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+};
+
+export const createQuery = async (data, token) => {
+	const response = await axios.post(`${API_URL}/query`, data, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+};
