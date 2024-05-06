@@ -3,18 +3,20 @@ import { Button } from './ui/button';
 import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
 import { useRouter } from '@/hooks/useRouter';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { getToken } from '@/lib/utils';
 import {
 	createQuery,
 	getQuerySession,
 } from './features/new-chat/service/new-chat.service';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const [activeTab, setActiveTab] = useState('');
 	const { pathname, navigate } = useRouter();
 
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const dispatch = useDispatch();
 
 	const bottomMenuList = [
 		{
@@ -41,6 +43,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	const getChatHistory = (sessionId) => {
 		getQuerySession(sessionId, getToken()).then((res) => {
+			dispatch(updateUtilProp([{ key: 'queryPrompt', value: res[0].query }]));
 			navigate(
 				`/app/new-chat/?step=4&dataSourceId=${res[0].datasource_id}&sessionId=${res[0].session_id}&queryId=${res[0].query_id}`,
 			);

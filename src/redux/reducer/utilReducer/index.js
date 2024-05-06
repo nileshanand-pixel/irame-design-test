@@ -5,6 +5,7 @@ const initialState = {
 	suggestionData: {},
 	dataSources: [],
 	sessionHistory: [],
+	queryPrompt: '',
 };
 
 const utilSlice = createSlice({

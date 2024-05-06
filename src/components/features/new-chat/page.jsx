@@ -263,7 +263,7 @@ const NewChat = () => {
 		setAnswerResp({});
 		setShowResponseDelayBanner(false);
 		setShowFailedResponseBanner(false);
-		// setPromptQuery({ data: '' });
+		setPromptQuery({ data: utilReducer?.queryPrompt });
 	}, [query.dataSourceId, query.sessionId, query.queryId]);
 
 	return (
