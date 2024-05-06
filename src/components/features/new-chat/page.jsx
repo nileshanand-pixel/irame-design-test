@@ -261,7 +261,9 @@ const NewChat = () => {
 		setIsGraphLoading(true);
 		setDoingScience(true);
 		setAnswerResp({});
-		setPromptQuery({ data: '' });
+		setShowResponseDelayBanner(false);
+		setShowFailedResponseBanner(false);
+		// setPromptQuery({ data: '' });
 	}, [query.dataSourceId, query.sessionId, query.queryId]);
 
 	return (
@@ -296,7 +298,6 @@ const NewChat = () => {
 									</>
 								)}
 							</div>
-
 							<div className="mt-10 flex items-center space-x-2">
 								<img src={ira} alt="ira" className="size-10" />
 								<Button
@@ -312,19 +313,21 @@ const NewChat = () => {
 							!answerResp?.answer?.graph ? (
 								<div className="flex flex-col space-y-3 mt-8 ml-12">
 									<div className="space-y-3">
-										{!answerResp?.answer?.answer ? (
-											<div className="darkSoul-glowing-button2">
-												<button
-													className="darkSoul-button2"
-													type="button"
-												>
-													<i className="bi-check2-circle text-purple-100 text-lg me-2"></i>
-													Creating Observation...
-												</button>
-											</div>
-										) : null}
-										{!answerResp?.answer?.graph ||
-										isGraphLoading ? (
+										{!answerResp?.answer?.answer &&
+											answerResp?.answer?.graph &&
+											!isGraphLoading && (
+												<div className="darkSoul-glowing-button2">
+													<button
+														className="darkSoul-button2"
+														type="button"
+													>
+														<i className="bi-check2-circle text-purple-100 text-lg me-2"></i>
+														Creating Observation...
+													</button>
+												</div>
+											)}
+										{(!answerResp?.answer?.graph ||
+											isGraphLoading) && (
 											<div className="darkSoul-glowing-button2">
 												<button
 													className="darkSoul-button2"
@@ -334,18 +337,7 @@ const NewChat = () => {
 													Generating Graph...
 												</button>
 											</div>
-										) : null}
-										{/* {!answerResp?.answer?.graph ? (
-											<div className="darkSoul-glowing-button2">
-												<button
-													className="darkSoul-button2"
-													type="button"
-												>
-													<i className="bi-check2-circle text-purple-100 text-lg me-2"></i>
-													Creating Table...
-												</button>
-											</div>
-										) : null} */}
+										)}
 									</div>
 								</div>
 							) : (
