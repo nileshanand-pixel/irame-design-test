@@ -63,6 +63,7 @@ module.exports = {
 					80: 'rgba(106, 18, 205, 0.8)',
 					100: 'rgba(106, 18, 205, 1)',
 				},
+				primary4: 'rgba(38, 6, 74, 0.04)',
 				primary60: 'rgba(38, 6, 74, 0.6)',
 				primary80: 'rgba(38, 6, 74, 0.8)',
 				primary40: 'rgba(38, 6, 74, 0.4)',

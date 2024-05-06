@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import PlannerComponent from './PlannerComponent';
 import SourceComponent from './SourceComponent';
 import CoderComponent from './CoderComponent';
@@ -6,7 +6,22 @@ import { WorkspaceEnum, workSpaceMap } from './types/new-chat.enum';
 import GraphComponent from '@/components/elements/GraphComponent';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const Workspace = ({ handleTabClick, workSpaceTab, answerResp }) => {
+const Workspace = ({
+	handleTabClick,
+	workSpaceTab,
+	answerResp,
+	setWorkSpaceTab,
+}) => {
+	useEffect(() => {
+		if (!workSpaceTab) {
+			setWorkSpaceTab(
+				answerResp?.answer
+					? Object.keys(answerResp?.answer)[0]
+					: WorkspaceEnum.Planner,
+			);
+		}
+	}, []);
+
 	const renderedComponent = useMemo(() => {
 		switch (workSpaceTab) {
 			case WorkspaceEnum.Planner:
@@ -28,17 +43,8 @@ const Workspace = ({ handleTabClick, workSpaceTab, answerResp }) => {
 			case WorkspaceEnum.Source:
 			case WorkspaceEnum.Observation:
 			case WorkspaceEnum.Answer:
-				return (
-					<SourceComponent
-						data={
-							answerResp?.answer?.[
-								WorkspaceEnum.Source ||
-									WorkspaceEnum.Observation ||
-									WorkspaceEnum.Answer
-							]
-						}
-					/>
-				);
+			case WorkspaceEnum.Reference:
+				return <SourceComponent data={answerResp?.answer?.[workSpaceTab]} />;
 			default:
 				return null;
 		}

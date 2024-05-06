@@ -16,6 +16,8 @@ import { useNavigate } from 'react-router-dom';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import useLocalStorage from '@/hooks/useLocalStorage';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const ChooseDataSourceDialog = ({
 	open,
@@ -26,9 +28,12 @@ const ChooseDataSourceDialog = ({
 }) => {
 	const [dataSources, setDataSources] = useState([]);
 	const [value, setValue] = useLocalStorage('dataSource');
-	const [dataSourceFetch, setDataSourceFetch] = useState(false);
+	const [dataSourceFetch, setDataSourceFetch] = useState(true);
 
 	const navigate = useNavigate();
+
+	const dispatch = useDispatch();
+	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const getCookieToken = () => {
 		return Cookies.get('token');
@@ -41,10 +46,15 @@ const ChooseDataSourceDialog = ({
 	};
 	useEffect(() => {
 		const token = getToken();
-		setDataSourceFetch(true);
 		if (token) {
+			if (utilReducer.dataSources.length > 0) {
+				setDataSources(utilReducer.dataSources);
+				setDataSourceFetch(false);
+				return;
+			}
 			getDataSources(token).then((resp) => {
 				setDataSources(Array.isArray(resp) ? resp : []);
+				dispatch(updateUtilProp([{ key: 'dataSources', value: resp }]));
 			});
 		}
 		setDataSourceFetch(false);
@@ -58,8 +68,8 @@ const ChooseDataSourceDialog = ({
 						You can always change it later from the data source page
 					</DialogDescription>
 				</DialogHeader>
-				<div className="space-y-2">
-					{dataSourceFetch ? (
+				<div className="space-y-2 max-h-[30rem] overflow-auto">
+					{dataSourceFetch && dataSources.length <= 0 ? (
 						<div className="flex items-center justify-center">
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>

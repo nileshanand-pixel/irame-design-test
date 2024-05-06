@@ -22,7 +22,9 @@ const TableComponent = ({ data, columns }) => {
 							columns?.map((column, index) => (
 								<TableHead
 									key={index}
-									className={cn('px-4 py-2  font-semibold')}
+									className={cn(
+										'px-4 py-2  font-semibold text-primary80',
+									)}
 								>
 									{column.charAt(0).toUpperCase() +
 										column.slice(1)}

@@ -10,6 +10,8 @@ import useGetCookie from '@/hooks/useGetCookie';
 import { tokenCookie, getToken } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import useLocalStorage from '@/hooks/useLocalStorage';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const SelectPrompt = ({
 	handleNextStep,
@@ -19,6 +21,7 @@ const SelectPrompt = ({
 	setAnswerResp,
 	promptQuery,
 	setPromptQuery,
+	setDoingScience,
 }) => {
 	const [activeTab, setActiveTab] = useState('');
 	const [data, setData] = useState([]);
@@ -27,13 +30,19 @@ const SelectPrompt = ({
 	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
 	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 
+	const dispatch = useDispatch();
+	const utilReducer = useSelector((state) => state.utilReducer);
+
 	const handleActiveTab = (selectedTab) => {
 		setActiveTab(selectedTab);
 	};
 	const handlePrompt = (question) => {
 		try {
 			// setPrompt(question);
+			setDoingScience(true);
+			setAnswerResp({});
 			setPromptQuery({ data: question });
+			dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]));
 			handleNextStep(4);
 			createQuerySession(query.dataSourceId, question, getToken()).then(
 				(res) => {
@@ -52,11 +61,28 @@ const SelectPrompt = ({
 
 		const fetchData = async () => {
 			try {
-				const resp = await fetchSuggestions(query.dataSourceId, getToken());
-				setData(resp);
-				setActiveTab(resp?.suggestion[0]?.type);
-				if (resp.status === 200 || resp.suggestion.length) {
-					clearInterval(intervalId); // Stop polling
+				if (
+					utilReducer?.suggestionData &&
+					utilReducer?.suggestionData?.suggestion?.length > 0 &&
+					query.dataSourceId === utilReducer.suggestionData.dataSourceId
+				) {
+					setData(utilReducer.suggestionData);
+					if (activeTab === '') {
+						setActiveTab(utilReducer.suggestionData?.suggestion[0].type);
+					}
+				} else {
+					const resp = await fetchSuggestions(
+						query.dataSourceId,
+						getToken(),
+					);
+					setData(resp);
+					setActiveTab(resp?.suggestion[0]?.type);
+					dispatch(
+						updateUtilProp([{ key: 'suggestionData', value: resp }]),
+					);
+					if (resp.status === 200 || resp.suggestion.length) {
+						clearInterval(intervalId); // Stop polling
+					}
 				}
 			} catch (error) {
 				console.error('Error fetching suggestions:', error);
@@ -117,7 +143,7 @@ const SelectPrompt = ({
 									)
 									.questions.map((question, index) => (
 										<div
-											className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] max-h-[21.75rem] p-4 hover:bg-purple-8 mb-3"
+											className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] min-h-[12.5rem] max-h-[21.75rem] p-4 hover:bg-purple-8 mb-3"
 											key={`${index}_question`}
 										>
 											<div

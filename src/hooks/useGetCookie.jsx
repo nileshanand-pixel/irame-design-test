@@ -7,7 +7,7 @@ const useGetCookie = (name) => {
 		// Function to get the value of a cookie by name
 		const getCookieValue = (name) => {
 			const cookies = document.cookie.split(';');
-			console.log(cookies, 'cookies===inside');
+			// console.log(cookies, 'cookies===inside');
 			for (let cookie of cookies) {
 				const [cookieName, cookieVal] = cookie.split('=');
 				if (cookieName.trim() === name) {

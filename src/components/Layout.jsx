@@ -2,19 +2,31 @@ import { useState } from 'react';
 import Header from './Header';
 import SideNav from './SideNav';
 import PropTypes from 'prop-types';
+import { useSelector, useDispatch } from 'react-redux';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const Layout = ({ children }) => {
-	const [isSideNavOpen, setIsSideNavOpen] = useState(true);
+	// const [isSideNavOpen, setIsSideNavOpen] = useState(true);
+	const utilReducer = useSelector((state) => state.utilReducer);
+	const dispatch = useDispatch();
 
 	const toggleSideNav = () => {
-		setIsSideNavOpen(!isSideNavOpen);
+		// setIsSideNavOpen(!isSideNavOpen);
+		dispatch(
+			updateUtilProp([
+				{ key: 'isSideNavOpen', value: !utilReducer.isSideNavOpen },
+			]),
+		);
 	};
 	return (
 		<div className={`flex items-start justify-between`}>
-			<SideNav toggleSideNav={toggleSideNav} isSideNavOpen={isSideNavOpen} />
+			<SideNav
+				toggleSideNav={toggleSideNav}
+				isSideNavOpen={utilReducer?.isSideNavOpen}
+			/>
 			<main
 				className={`grid w-full h-full ${
-					isSideNavOpen ? 'pl-[250px]' : 'pl-[72px]'
+					utilReducer?.isSideNavOpen ? 'pl-[250px]' : 'pl-[72px]'
 				} `}
 			>
 				<Header />

@@ -35,3 +35,13 @@ export const getToken = () => {
 };
 
 //TODO: make a generic function to get data from cookies
+
+export const getInitials = (userName) => {
+	const words = userName.split(' ');
+
+	const initials = words.map((word) => word.charAt(0).toUpperCase());
+
+	const abbreviation = initials.join('');
+
+	return abbreviation;
+};

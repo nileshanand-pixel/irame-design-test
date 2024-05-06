@@ -7,8 +7,10 @@ import InputText from '@/components/elements/InputText';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
 import useGetCookie from '@/hooks/useGetCookie';
-import { cn, tokenCookie, getToken } from '@/lib/utils';
+import { cn, tokenCookie, getToken, getInitials } from '@/lib/utils';
 import ira from '@/assets/icons/ira_icon.svg';
+import failedIcon from '@/assets/icons/failed_icon.svg';
+import warningIcon from '@/assets/icons/warning_icon.svg';
 import { Button } from '@/components/ui/button';
 import Workspace from './Workspace';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,6 +23,7 @@ import {
 } from './service/new-chat.service';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
+import { useSelector } from 'react-redux';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -32,6 +35,8 @@ const NewChat = () => {
 	const { query, params, navigate } = useRouter();
 	const token = useGetCookie('token');
 
+	const utilReducer = useSelector((state) => state.utilReducer);
+
 	const [files, setFiles] = useState([]);
 	const [progress, setProgress] = useState(0);
 	const [showRenameDialog, setShowRenameDialog] = useState(false);
@@ -42,6 +47,8 @@ const NewChat = () => {
 	const [doingScience, setDoingScience] = useState(true);
 	const [answerResp, setAnswerResp] = useState({});
 	const [promptQuery, setPromptQuery] = useState({ data: '' });
+	const [showResponseDelayBanner, setShowResponseDelayBanner] = useState(false);
+	const [showFailedResponseBanner, setShowFailedResponseBanner] = useState(false);
 
 	const gradientText = {
 		backgroundImage:
@@ -111,6 +118,7 @@ const NewChat = () => {
 						answerResp={answerResp}
 						setPromptQuery={setPromptQuery}
 						promptQuery={promptQuery}
+						setDoingScience={setDoingScience}
 					/>
 				);
 			default:
@@ -138,6 +146,14 @@ const NewChat = () => {
 		});
 	};
 
+	const getInputWidth = () => {
+		if (utilReducer?.isSideNavOpen) {
+			return showWorkspace ? 'w-[44.2rem]' : 'w-[53rem]';
+		} else {
+			return showWorkspace ? 'w-[51.5rem]' : 'w-[64.5rem]';
+		}
+	};
+
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
@@ -162,6 +178,7 @@ const NewChat = () => {
 			...answerConfig,
 		});
 		for (const key in answerConfig) {
+			console.log(answerConfig[key], key, '===tool_space');
 			if (answerConfig[key].tool_space === 'secondary') {
 				setWorkSpaceTab(key);
 				break;
@@ -171,6 +188,18 @@ const NewChat = () => {
 
 	useEffect(() => {
 		let intervalId;
+
+		const handleResponseDelay = () => {
+			if (responseTimeElapsed >= 30 && !showResponseDelayBanner) {
+				setShowResponseDelayBanner(true);
+			}
+			if (responseTimeElapsed >= 90 && !showFailedResponseBanner) {
+				setShowFailedResponseBanner(true);
+				setShowResponseDelayBanner(false);
+				clearInterval(intervalId);
+			}
+		};
+
 		if (query?.step) {
 			setCompletedSteps((prev) => [...prev, parseInt(query?.step)]);
 
@@ -200,6 +229,8 @@ const NewChat = () => {
 							clearInterval(intervalId);
 						}
 					});
+					setResponseTimeElapsed((prev) => prev + 5);
+					handleResponseDelay();
 				}, timer);
 			}
 		} else {
@@ -231,7 +262,9 @@ const NewChat = () => {
 							<div className="flex items-center gap-2">
 								<Avatar className="size-9">
 									<AvatarImage src={value?.avatar} />
-									<AvatarFallback>CN</AvatarFallback>
+									<AvatarFallback>
+										{getInitials(value.userName)}
+									</AvatarFallback>
 								</Avatar>
 								{promptQuery.data ? (
 									<p className="ms-1">{promptQuery.data}</p>
@@ -253,47 +286,105 @@ const NewChat = () => {
 								</Button>
 							</div>
 							{doingScience ? (
-								<div className="flex flex-col space-y-3 mt-4 ml-12">
-									<div className="space-y-2">
-										<Skeleton className="h-5 w-[80%] bg-purple-8" />
-										<Skeleton className="h-5 w-[50%] bg-purple-8" />
-										<Skeleton className="h-5 w-[65%] bg-purple-8" />
+								<div className="flex flex-col space-y-3 mt-8 ml-12">
+									<div className="space-y-3">
+										{!answerResp?.answer?.answer ? (
+											<div className="darkSoul-glowing-button2">
+												<button
+													className="darkSoul-button2"
+													type="button"
+												>
+													<i className="bi-check2-circle text-purple-100 text-lg me-2"></i>
+													Observing...
+												</button>
+											</div>
+										) : null}
+										{!answerResp?.answer?.graph ? (
+											<div className="darkSoul-glowing-button2">
+												<button
+													className="darkSoul-button2"
+													type="button"
+												>
+													<i className="bi-check2-circle text-purple-100 text-lg me-2"></i>
+													Generating Graph...
+												</button>
+											</div>
+										) : null}
+										{!answerResp?.answer?.graph ? (
+											<div className="darkSoul-glowing-button2">
+												<button
+													className="darkSoul-button2"
+													type="button"
+												>
+													<i className="bi-check2-circle text-purple-100 text-lg me-2"></i>
+													Creating Table...
+												</button>
+											</div>
+										) : null}
 									</div>
-									<Skeleton className="h-[125px] w-[250px] rounded-xl bg-purple-8" />
 								</div>
 							) : (
 								<ResponseCard answerResp={answerResp} />
 							)}
 						</div>
-						<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white pt-2">
-							<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
-								<Input
-									placeholder="Enter a prompt here"
-									className={cn(
-										'border-0 outline-none rounded-none bg-transparent ',
-										showWorkspace ? 'w-[44.2rem]' : 'w-[53rem]',
-									)}
-									value={prompt}
-									onChange={(e) => {
-										setPrompt(e.target.value);
-										setPromptQuery({ data: e.target.value });
-									}}
-									onKeyDown={(e) => {
-										console.log(e.key, '===keys');
-										if (e.key === 'Enter') handleQueryAnswer();
-									}}
-								/>
-								<div
-									className="flex gap-2 items-center pr-3 cursor-pointer"
-									onClick={handleQueryAnswer}
-								>
-									<i className="bi-send text-primary100 text-lg rotate-45"></i>
+						<div className="w-full flex flex-col justify-center mx-auto">
+							{showResponseDelayBanner && !answerResp.answer && (
+								<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+									<img
+										src={warningIcon}
+										width={40}
+										height={40}
+										className="mr-3"
+									/>
+									This is taking a bit longer than expected
 								</div>
+							)}
+							{showFailedResponseBanner && !answerResp.answer && (
+								<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+									<img
+										src={failedIcon}
+										width={40}
+										height={40}
+										className="mr-3"
+									/>
+									Failed to generate a response, please refresh the
+									page to try again.
+								</div>
+							)}
+						</div>
+
+						<div className="bg-white h-4">
+							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white pt-2">
+								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
+									<Input
+										placeholder="Enter a prompt here"
+										className={cn(
+											'border-0 outline-none rounded-none bg-transparent ',
+											getInputWidth(),
+										)}
+										value={prompt}
+										onChange={(e) => {
+											setPrompt(e.target.value);
+											setPromptQuery({ data: e.target.value });
+										}}
+										onKeyDown={(e) => {
+											console.log(e.key, '===keys');
+											if (e.key === 'Enter')
+												handleQueryAnswer();
+										}}
+									/>
+									<div
+										className="flex gap-2 items-center pr-3 cursor-pointer"
+										onClick={handleQueryAnswer}
+									>
+										<i className="bi-send text-primary100 text-lg rotate-45"></i>
+									</div>
+								</div>
+								<p className="text-xs text-primary40 font-normal">
+									Irame.ai may display inaccurate info, including
+									about people, so double-check its responses.
+								</p>
 							</div>
-							<p className="text-xs text-primary40 font-normal">
-								Irame.ai may display inaccurate info, including about
-								people, so double-check its responses.
-							</p>
 						</div>
 					</div>
 					{showWorkspace ? (
@@ -312,6 +403,7 @@ const NewChat = () => {
 								handleTabClick={handleTabClick}
 								workSpaceTab={workSpaceTab}
 								answerResp={answerResp}
+								setWorkSpaceTab={setWorkSpaceTab}
 							/>
 						</div>
 					) : null}

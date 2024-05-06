@@ -5,6 +5,7 @@ export const WorkspaceEnum = {
 	Source: 'source',
 	Observation: 'observation',
 	Answer: 'answer',
+	Reference: 'reference',
 };
 
 export const workSpaceMap = {
@@ -16,4 +17,5 @@ export const workSpaceMap = {
 	observation: 'Observation',
 	answer: 'Answer',
 	answer: 'Observation',
+	reference: 'Reference',
 };
