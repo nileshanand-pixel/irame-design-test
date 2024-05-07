@@ -210,13 +210,14 @@ const NewChat = () => {
 	useEffect(() => {
 		let intervalId;
 
-		const handleResponseDelay = () => {
-			if (responseTimeElapsed >= 30 && !showResponseDelayBanner) {
+		const handleResponseDelay = (newElapsedTime) => {
+			console.log('responseTimeElapsed=', responseTimeElapsed, newElapsedTime);
+			if (newElapsedTime >= 30 && !showResponseDelayBanner) {
 				setShowResponseDelayBanner(true);
 			}
-			if (responseTimeElapsed >= 600 && !showFailedResponseBanner) {
+			if (newElapsedTime >= 600 && !showFailedResponseBanner) {
 				setShowFailedResponseBanner(true);
-				setShowResponseDelayBanner(false);
+				setShowResponseDelayBanner(false); // Reset delay banner when failed response banner is shown
 				clearInterval(intervalId);
 			}
 		};
@@ -238,7 +239,10 @@ const NewChat = () => {
 						if (res?.answer) {
 							setAnswerConfig(res?.answer);
 						}
-						if (!promptQuery.data) {
+						if (
+							!promptQuery.data ||
+							utilReducer?.promptQuery !== res?.query
+						) {
 							setPromptQuery({ data: res?.query });
 							dispatch(
 								updateUtilProp([
@@ -255,8 +259,11 @@ const NewChat = () => {
 							clearInterval(intervalId);
 						}
 					});
-					setResponseTimeElapsed((prev) => prev + 5);
-					handleResponseDelay();
+					setResponseTimeElapsed((prev) => {
+						const newElapsedTime = prev + 5;
+						handleResponseDelay(newElapsedTime);
+						return newElapsedTime;
+					});
 				}, timer);
 			}
 		} else {
@@ -274,6 +281,7 @@ const NewChat = () => {
 		setAnswerResp({});
 		setShowResponseDelayBanner(false);
 		setShowFailedResponseBanner(false);
+		setResponseTimeElapsed(0);
 		setPromptQuery({ data: utilReducer?.queryPrompt });
 	}, [query.dataSourceId, query.sessionId, query.queryId]);
 
@@ -356,6 +364,9 @@ const NewChat = () => {
 									answerResp={answerResp}
 									isGraphLoading={isGraphLoading}
 									setIsGraphLoading={setIsGraphLoading}
+									setShowFailedResponseBanner={
+										setShowFailedResponseBanner
+									}
 								/>
 							)}
 						</div>

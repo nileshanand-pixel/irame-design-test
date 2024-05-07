@@ -4,7 +4,12 @@ import CoderComponent from './CoderComponent';
 import { WorkspaceEnum, workSpaceMap } from './types/new-chat.enum';
 import { Button } from '@/components/ui/button';
 
-const ResponseCard = ({ answerResp, isGraphLoading, setIsGraphLoading }) => {
+const ResponseCard = ({
+	answerResp,
+	isGraphLoading,
+	setIsGraphLoading,
+	setShowFailedResponseBanner,
+}) => {
 	// Extracting main items
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) => {
@@ -24,6 +29,11 @@ const ResponseCard = ({ answerResp, isGraphLoading, setIsGraphLoading }) => {
 			);
 		},
 	);
+
+	// if (!mainItems.length) {
+	// 	setShowFailedResponseBanner(true);
+	// 	return <></>;
+	// }
 
 	return (
 		<div className="mt-4 mb-[145px] ml-12">
