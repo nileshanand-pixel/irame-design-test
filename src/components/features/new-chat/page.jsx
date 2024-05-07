@@ -391,9 +391,16 @@ const NewChat = () => {
 										onChange={(e) => {
 											setPrompt(e.target.value);
 											setPromptQuery({ data: e.target.value });
+											dispatch(
+												updateUtilProp([
+													{
+														key: 'queryPrompt',
+														value: e.target.value,
+													},
+												]),
+											);
 										}}
 										onKeyDown={(e) => {
-											console.log(e.key, '===keys');
 											if (e.key === 'Enter')
 												handleQueryAnswer();
 										}}
