@@ -202,13 +202,19 @@ const NewChat = () => {
 	}, []);
 
 	useEffect(() => {
+		if (!promptQuery.data) {
+			setPromptQuery({ data: utilReducer?.promptQuery });
+		}
+	}, [utilReducer?.promptQuery]);
+
+	useEffect(() => {
 		let intervalId;
 
 		const handleResponseDelay = () => {
 			if (responseTimeElapsed >= 30 && !showResponseDelayBanner) {
 				setShowResponseDelayBanner(true);
 			}
-			if (responseTimeElapsed >= 90 && !showFailedResponseBanner) {
+			if (responseTimeElapsed >= 600 && !showFailedResponseBanner) {
 				setShowFailedResponseBanner(true);
 				setShowResponseDelayBanner(false);
 				clearInterval(intervalId);
@@ -234,6 +240,11 @@ const NewChat = () => {
 						}
 						if (!promptQuery.data) {
 							setPromptQuery({ data: res?.query });
+							dispatch(
+								updateUtilProp([
+									{ key: 'queryPrompt', value: res?.query },
+								]),
+							);
 						}
 
 						if (res.status === 'in_progress' || res.status === 'done') {
