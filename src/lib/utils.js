@@ -17,8 +17,7 @@ export const formatFileSize = (size) => {
 	}
 };
 
-export const tokenCookie = '';
-
+export const tokenCookie = "";
 export const getToken = () => {
 	const cookieString = document.cookie;
 
@@ -33,8 +32,6 @@ export const getToken = () => {
 	}
 	return tokenCookie;
 };
-
-//TODO: make a generic function to get data from cookies
 
 export const getInitials = (userName) => {
 	const words = userName.split(' ');
