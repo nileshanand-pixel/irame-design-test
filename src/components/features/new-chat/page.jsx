@@ -159,6 +159,8 @@ const NewChat = () => {
 			return showWorkspace ? 'w-[51.5rem]' : 'w-[64.5rem]';
 		}
 	};
+
+	const resetStates = () => {};
 	const fetchUserSession = () => {
 		try {
 			// if (utilReducer?.sessionHistory?.length > 0) return;
@@ -289,7 +291,7 @@ const NewChat = () => {
 	return (
 		<>
 			{completedSteps.includes(4) ? (
-				<div className="grid grid-cols-12 gap-4 min-h-[90vh]">
+				<div className="grid grid-cols-12 gap-4 min-h-[90vh] max-h-[90vh]">
 					<div
 						className={cn(
 							'border rounded-2xl pt-4 px-4 shadow-1xl relative',
@@ -373,6 +375,12 @@ const NewChat = () => {
 										setAnswerResp={setAnswerResp}
 										setPromptQuery={setPromptQuery}
 										setDoingScience={setDoingScience}
+										setResponseTimeElapsed={
+											setResponseTimeElapsed
+										}
+										setShowResponseDelayBanner={
+											setShowResponseDelayBanner
+										}
 									/>
 								</>
 							)}

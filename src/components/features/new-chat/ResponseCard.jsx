@@ -14,6 +14,8 @@ const ResponseCard = ({
 	setAnswerResp,
 	setPromptQuery,
 	setDoingScience,
+	setResponseTimeElapsed,
+	setShowResponseDelayBanner,
 }) => {
 	// Extracting main items
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
@@ -103,7 +105,7 @@ const ResponseCard = ({
 			))}
 
 			<div className="mt-14 border-t border-purple-10"></div>
-			<div className="mt-8 flex flex-wrap gap-4">
+			<div className="mt-8 flex gap-4 overflow-x-auto">
 				{answerResp?.answer?.follow_up &&
 					answerResp?.answer?.follow_up?.tool_data?.questions &&
 					answerResp?.answer?.follow_up?.tool_data?.questions?.length >
@@ -117,6 +119,13 @@ const ResponseCard = ({
 								setAnswerResp={setAnswerResp}
 								setPromptQuery={setPromptQuery}
 								setDoingScience={setDoingScience}
+								setResponseTimeElapsed={setResponseTimeElapsed}
+								setShowResponseDelayBanner={
+									setShowResponseDelayBanner
+								}
+								setShowFailedResponseBanner={
+									setShowFailedResponseBanner
+								}
 							/>
 						),
 					)}
