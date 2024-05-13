@@ -3,12 +3,17 @@ import React from 'react';
 import CoderComponent from './CoderComponent';
 import { WorkspaceEnum, workSpaceMap } from './types/new-chat.enum';
 import { Button } from '@/components/ui/button';
+import FollowUpQuestions from './FollowUpQuestions';
 
 const ResponseCard = ({
 	answerResp,
 	isGraphLoading,
 	setIsGraphLoading,
 	setShowFailedResponseBanner,
+	handleNextStep,
+	setAnswerResp,
+	setPromptQuery,
+	setDoingScience,
 }) => {
 	// Extracting main items
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
@@ -30,11 +35,7 @@ const ResponseCard = ({
 		},
 	);
 
-	// if (!mainItems.length) {
-	// 	setShowFailedResponseBanner(true);
-	// 	return <></>;
-	// }
-
+	console.log(answerResp);
 	return (
 		<div className="mt-4 mb-[145px] ml-12">
 			{/* Render 'Answer' component first if available */}
@@ -100,6 +101,26 @@ const ResponseCard = ({
 					)}
 				</div>
 			))}
+
+			<div className="mt-14 border-t border-purple-10"></div>
+			<div className="mt-8 flex flex-wrap gap-4">
+				{answerResp?.answer?.follow_up &&
+					answerResp?.answer?.follow_up?.tool_data?.questions &&
+					answerResp?.answer?.follow_up?.tool_data?.questions?.length >
+						0 &&
+					answerResp?.answer?.follow_up?.tool_data?.questions?.map(
+						(question, index) => (
+							<FollowUpQuestions
+								question={question}
+								index={index}
+								handleNextStep={handleNextStep}
+								setAnswerResp={setAnswerResp}
+								setPromptQuery={setPromptQuery}
+								setDoingScience={setDoingScience}
+							/>
+						),
+					)}
+			</div>
 		</div>
 	);
 };

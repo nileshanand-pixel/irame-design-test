@@ -17,7 +17,8 @@ export const formatFileSize = (size) => {
 	}
 };
 
-export const tokenCookie = '';
+export const tokenCookie =
+	'gAAAAABmQkfz3f3TnkmDUhLh8vWPWAzXSBi81HTTM7lMxgOrASyz1475oiIETz_V37kQF4zG8jkOE-mOg_Y3L7_01XcLJG8-vmWdTm_su9kjlrXTNQhqBadw7G-Bu1XGrHS7UWgGrp-Nw4zwhw3PS0VJm9iHVLDAQA==';
 
 export const getToken = () => {
 	const cookieString = document.cookie;
@@ -33,8 +34,6 @@ export const getToken = () => {
 	}
 	return tokenCookie;
 };
-
-//TODO: make a generic function to get data from cookies
 
 export const getInitials = (userName) => {
 	const words = userName.split(' ');

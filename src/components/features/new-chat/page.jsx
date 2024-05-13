@@ -26,6 +26,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import FollowUpQuestions from './FollowUpQuestions';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -360,14 +361,20 @@ const NewChat = () => {
 									</div>
 								</div>
 							) : (
-								<ResponseCard
-									answerResp={answerResp}
-									isGraphLoading={isGraphLoading}
-									setIsGraphLoading={setIsGraphLoading}
-									setShowFailedResponseBanner={
-										setShowFailedResponseBanner
-									}
-								/>
+								<>
+									<ResponseCard
+										answerResp={answerResp}
+										isGraphLoading={isGraphLoading}
+										setIsGraphLoading={setIsGraphLoading}
+										setShowFailedResponseBanner={
+											setShowFailedResponseBanner
+										}
+										handleNextStep={handleNextStep}
+										setAnswerResp={setAnswerResp}
+										setPromptQuery={setPromptQuery}
+										setDoingScience={setDoingScience}
+									/>
+								</>
 							)}
 						</div>
 						<div className="w-full flex flex-col justify-center mx-auto mt-5 pl-12">
