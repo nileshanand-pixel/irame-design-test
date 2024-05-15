@@ -16,6 +16,7 @@ const ResponseCard = ({
 	setDoingScience,
 	setResponseTimeElapsed,
 	setShowResponseDelayBanner,
+	promptQuery,
 }) => {
 	// Extracting main items
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
@@ -126,6 +127,7 @@ const ResponseCard = ({
 								setShowFailedResponseBanner={
 									setShowFailedResponseBanner
 								}
+								answerResp={answerResp}
 							/>
 						),
 					)}

@@ -42,7 +42,12 @@ const SelectPrompt = ({
 			setDoingScience(true);
 			setAnswerResp({});
 			setPromptQuery({ data: question });
-			dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]));
+			dispatch(
+				updateUtilProp([
+					{ key: 'isSideNavOpen', value: false },
+					{ key: 'queryPrompt', value: question },
+				]),
+			);
 			handleNextStep(4);
 			createQuerySession(query.dataSourceId, question, getToken()).then(
 				(res) => {

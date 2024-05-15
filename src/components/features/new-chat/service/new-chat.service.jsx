@@ -1,5 +1,6 @@
 import { API_URL } from '@/config';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 export const fetchSuggestions = async (dataSourceId, token) => {
 	const response = await axios.get(
@@ -81,4 +82,20 @@ export const createQuery = async (data, token) => {
 		},
 	});
 	return response.data;
+};
+
+export const deleteSession = async (sessionId, token) => {
+	try {
+		const response = await axios.delete(`${API_URL}/session/${sessionId}`, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
+		toast.success('Session deleted successfully');
+
+		return response.data;
+	} catch (error) {
+		toast.error('Failed to delete session');
+		throw error;
+	}
 };
