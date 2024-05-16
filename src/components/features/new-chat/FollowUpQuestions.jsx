@@ -1,5 +1,5 @@
 import React from 'react';
-import { createQuerySession } from './service/new-chat.service';
+import { createQuery, createQuerySession } from './service/new-chat.service';
 import { useRouter } from '@/hooks/useRouter';
 import { getToken } from '@/lib/utils';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
@@ -15,8 +15,9 @@ const FollowUpQuestions = ({
 	setResponseTimeElapsed,
 	setShowResponseDelayBanner,
 	setShowFailedResponseBanner,
+	answerResp,
 }) => {
-	const { query } = useRouter();
+	const { query, navigate } = useRouter();
 	const dispatch = useDispatch();
 
 	const handlePrompt = () => {
@@ -25,15 +26,28 @@ const FollowUpQuestions = ({
 			setDoingScience(true);
 			setAnswerResp({});
 			setPromptQuery({ data: question });
-			dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]));
-			handleNextStep(4);
-			createQuerySession(query.dataSourceId, question, getToken()).then(
-				(res) => {
-					navigate(
-						`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
-					);
-				},
+			dispatch(
+				updateUtilProp([
+					{ key: 'isSideNavOpen', value: false },
+					{ key: 'queryPrompt', value: question },
+				]),
 			);
+			handleNextStep(4);
+			createQuery(
+				{
+					child_no: parseInt(answerResp.child_no) + 1,
+					datasource_id: query.dataSourceId,
+					parent_query_id: query.queryId,
+					query: question,
+					session_id: query.sessionId,
+				},
+				getToken(),
+			).then((res) => {
+				navigate(
+					`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${query.sessionId}&queryId=${res.query_id}`,
+				);
+			});
+
 			setResponseTimeElapsed(0);
 			setShowFailedResponseBanner(false);
 			setShowResponseDelayBanner(false);
@@ -50,11 +64,9 @@ const FollowUpQuestions = ({
 				className="overflow-y-auto text-base font-medium text-primary80"
 				onClick={() => handlePrompt()}
 			>
-				<ul className="divide-y-[24px] divide-transparent line-clamp-3">
-					<li className="flex items-center gap-2 hover:cursor-pointer hover:text-purple-80">
-						{question}
-					</li>
-				</ul>
+				<p className="flex items-center gap-2 hover:cursor-pointer hover:text-purple-80 !line-clamp-6">
+					{question}
+				</p>
 			</div>
 		</div>
 	);

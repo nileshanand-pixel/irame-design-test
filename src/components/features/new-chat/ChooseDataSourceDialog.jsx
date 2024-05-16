@@ -27,7 +27,7 @@ const ChooseDataSourceDialog = ({
 	handleNextStep,
 }) => {
 	const [dataSources, setDataSources] = useState([]);
-	const [value, setValue] = useLocalStorage('dataSource');
+	// const [value, setValue] = useLocalStorage('dataSource');
 	const [dataSourceFetch, setDataSourceFetch] = useState(true);
 
 	const navigate = useNavigate();
@@ -43,6 +43,17 @@ const ChooseDataSourceDialog = ({
 		navigate(`/app/new-chat/?step=3&dataSourceId=${selectedDataSource}`);
 		handleNextStep(3);
 		setOpen(false);
+	};
+	const handleSelectedDS = (dataSourceId, dataSourceName) => {
+		setSelectedDataSource(dataSourceId);
+		dispatch(
+			updateUtilProp([
+				{
+					key: 'selectedDataSource',
+					value: dataSourceName,
+				},
+			]),
+		);
 	};
 	useEffect(() => {
 		const token = getToken();
@@ -74,39 +85,39 @@ const ChooseDataSourceDialog = ({
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>
 					) : dataSources?.length ? (
-						dataSources?.map((source) => (
-							<div
-								className="rounded-xl bg-purple-4 p-4 flex items-center gap-4"
-								key={source.datasource_id}
-							>
-								<RadioGroup
-									className="w-full"
-									onClick={() => {
-										setSelectedDataSource(source.datasource_id);
-										setValue({
-											...value,
-											id: selectedDataSource,
-											name: source.name,
-										});
-									}}
+						dataSources?.map((source) => {
+							return (
+								<div
+									className="rounded-xl bg-purple-4 p-4 flex items-center gap-4"
+									key={source.datasource_id}
 								>
-									<div className="flex items-center justify-between space-x-2">
-										<Label
-											htmlFor={source.datasource_id}
-											className="w-full text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-7 cursor-pointer"
-										>
-											<i className="bi-database text-purple-100 me-2 text-base"></i>
-											{source.name}
-										</Label>
-										<RadioGroupItem
-											value={selectedDataSource}
-											id={source.datasource_id}
-										/>
-									</div>
-								</RadioGroup>
-							</div>
+									<RadioGroup
+										className="w-full"
+										onClick={() => {
+											handleSelectedDS(
+												source.datasource_id,
+												source.name,
+											);
+										}}
+									>
+										<div className="flex items-center justify-between space-x-2">
+											<Label
+												htmlFor={source.datasource_id}
+												className="w-full text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-7 cursor-pointer"
+											>
+												<i className="bi-database text-purple-100 me-2 text-base"></i>
+												{source.name}
+											</Label>
+											<RadioGroupItem
+												value={selectedDataSource}
+												id={source.datasource_id}
+											/>
+										</div>
+									</RadioGroup>
+								</div>
+							);
 							// </div>
-						))
+						})
 					) : (
 						<p className="text-primary40 text-sm">
 							No data sources found

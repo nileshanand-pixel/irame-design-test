@@ -6,6 +6,7 @@ const initialState = {
 	dataSources: [],
 	sessionHistory: [],
 	queryPrompt: '',
+	selectedDataSource: '',
 };
 
 const utilSlice = createSlice({
@@ -16,10 +17,13 @@ const utilSlice = createSlice({
 			return (state = action.payload);
 		},
 		updateUtilProp(state, action) {
-			action.payload.forEach((authProp) => {
-				state[authProp['key']] = authProp['value'];
-			});
-			return state;
+			return {
+				...state,
+				...action.payload.reduce((acc, prop) => {
+					acc[prop.key] = prop.value;
+					return acc;
+				}, {}),
+			};
 		},
 		resetUtil(state, action) {
 			state = initialState;

@@ -1,18 +1,29 @@
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import PropTypes from 'prop-types';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
-import { getToken } from '@/lib/utils';
+import { cn, getToken } from '@/lib/utils';
 import {
 	createQuery,
+	deleteSession,
 	getQuerySession,
 } from './features/new-chat/service/new-chat.service';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import InputText from './elements/InputText';
 
 const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const [activeTab, setActiveTab] = useState('');
+	const [isEditing, setIsEditing] = useState(-1);
+	const [sessionTitle, setSessionTitle] = useState('');
+
 	const { pathname, navigate } = useRouter();
 
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -61,6 +72,23 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			});
 		});
 	};
+	const handleUpdateSession = (sessionId, title) => {
+		// dispatch(updateUtilProp([{ key: 'sessionHistory', value: title }]));
+	};
+	const handleDeleteChatSession = async (e, sessionId) => {
+		e.stopPropagation();
+		try {
+			const updatedList = utilReducer?.sessionHistory.filter((session) => {
+				if (session.session_id !== sessionId) {
+					return session;
+				}
+			});
+			await deleteSession(sessionId, getToken());
+			dispatch(
+				updateUtilProp([{ key: 'sessionHistory', value: updatedList }]),
+			);
+		} catch (error) {}
+	};
 	useEffect(() => {
 		if (pathname === '/app/new-chat') {
 			setActiveTab('');
@@ -68,6 +96,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			setActiveTab(pathname);
 		}
 	}, [pathname]);
+
 	return (
 		<div
 			className={`fixed flex flex-col gap-4 ${
@@ -104,16 +133,85 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 									{utilReducer?.sessionHistory.map(
 										(session, key) => (
 											<div
-												className="text-primary80 rounded-lg py-2 px-3 text-sm font-medium max-w-[200px] truncate hover:bg-purple-4 cursor-pointer"
+												className="flex items-center text-primary80 w-full rounded-lg py-2 text-sm font-medium  cursor-pointer "
 												key={session.session_id}
-												onClick={() =>
+												onClick={() => {
+													if (
+														isEditing ===
+														session.session_id
+													)
+														return;
 													getChatHistory(
 														session.session_id,
-													)
-												}
+													);
+												}}
 											>
-												<i className="bi-chat-right-text-fill me-3"></i>
-												{session.title}
+												<div
+													className={cn(
+														'flex items-center max-w-[200px] truncate',
+														isEditing ===
+															session.session_id
+															? ''
+															: ' px-2 py-1 hover:bg-purple-4',
+													)}
+												>
+													<i className="bi-chat-right-text-fill me-3"></i>
+													{isEditing ===
+													session.session_id ? (
+														<InputText
+															value={sessionTitle}
+															setValue={(value, e) => {
+																e.stopPropagation();
+																setSessionTitle(
+																	value,
+																);
+															}}
+															className="flex bg-transparent border-none text-primary80 font-medium"
+														/>
+													) : (
+														<p className="flex  ">
+															{session.title}
+														</p>
+													)}
+												</div>
+
+												<DropdownMenu>
+													<DropdownMenuTrigger asChild>
+														<i
+															className="bi-three-dots-vertical ms-3 items-end hover:bg-purple-4"
+															onClick={(e) => {
+																e.stopPropagation();
+															}}
+														></i>
+													</DropdownMenuTrigger>
+													<DropdownMenuContent
+														align="start"
+														className=""
+													>
+														{/* <DropdownMenuItem
+															className="text-primary80 font-medium hover:!bg-purple-4"
+															onClick={(e) => {
+																e.stopPropagation();
+																setIsEditing(
+																	session.session_id,
+																);
+															}}
+														>
+															Rename
+														</DropdownMenuItem> */}
+														<DropdownMenuItem
+															className="text-primary80 font-medium hover:!bg-purple-2"
+															onClick={(e) => {
+																handleDeleteChatSession(
+																	e,
+																	session.session_id,
+																);
+															}}
+														>
+															Delete
+														</DropdownMenuItem>
+													</DropdownMenuContent>
+												</DropdownMenu>
 											</div>
 										),
 									)}

@@ -31,7 +31,7 @@ import FollowUpQuestions from './FollowUpQuestions';
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
 	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
-	const [dataSource] = useLocalStorage('dataSource');
+	// const [dataSource] = useLocalStorage('dataSource');
 	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 	const [searchParam, setSearchParam] = useSearchParams();
 
@@ -214,7 +214,6 @@ const NewChat = () => {
 		let intervalId;
 
 		const handleResponseDelay = (newElapsedTime) => {
-			console.log('responseTimeElapsed=', responseTimeElapsed, newElapsedTime);
 			if (newElapsedTime >= 30 && !showResponseDelayBanner) {
 				setShowResponseDelayBanner(true);
 			}
@@ -298,10 +297,10 @@ const NewChat = () => {
 							showWorkspace ? 'col-span-8' : 'col-span-12 mx-[8rem]',
 						)}
 					>
-						{dataSource?.name && (
+						{utilReducer?.selectedDataSource && (
 							<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-4 float-right text-primary80 font-medium max-w-[220px] truncate">
 								<i className="bi-database-check mr-2 text-primary80"></i>
-								{dataSource?.name}
+								{utilReducer?.selectedDataSource}
 							</div>
 						)}
 						<div className="max-h-[45rem] overflow-y-auto mt-16 w-full">
