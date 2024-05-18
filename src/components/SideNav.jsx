@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import PropTypes from 'prop-types';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { cn, getToken } from '@/lib/utils';
@@ -18,6 +18,7 @@ import {
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import InputText from './elements/InputText';
+import { getDataSources } from './features/configuration/service/configuration.service';
 
 const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const [activeTab, setActiveTab] = useState('');
@@ -51,8 +52,16 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			],
 		},
 	];
-
 	const getChatHistoryDataSourceName = (dataSourceId) => {
+		if (!utilReducer?.dataSources || utilReducer?.dataSources?.length <= 0) {
+			getDataSources(getToken()).then((res) => {
+				dispatch(updateUtilProp([{ key: 'dataSources', value: res }]));
+				const dataSource = res.find(
+					(source) => source.datasource_id === dataSourceId,
+				);
+				return dataSource?.name;
+			});
+		}
 		const dataSource = utilReducer?.dataSources.find(
 			(source) => source.datasource_id === dataSourceId,
 		);
@@ -60,6 +69,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	};
 
 	const getChatHistory = (sessionId) => {
+		dispatch(updateUtilProp([{ key: 'resetChat', value: true }]));
+
 		getQuerySession(sessionId, getToken()).then((res) => {
 			dispatch(
 				updateUtilProp([
@@ -70,6 +81,13 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					},
 				]),
 			);
+			// setValue((prev) => {
+			// 	return {
+			// 		...prev,
+			// 		id: res[0]?.datasource_id,
+			// 		name: getChatHistoryDataSourceName(res[0]?.datasource_id),
+			// 	};
+			// });
 			navigate(
 				`/app/new-chat/?step=4&dataSourceId=${res[0]?.datasource_id}&sessionId=${res[0]?.session_id}&queryId=${res[0]?.query_id}`,
 			);
@@ -83,7 +101,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				},
 				getToken(),
 			).then((res) => {
-				console.log(res, 'create query===');
+				// console.log(res, 'create query===');
 			});
 		});
 	};
@@ -145,65 +163,70 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							<>
 								<p>Recent</p>
 								<div className=" max-h-[25rem] overflow-y-auto space-y-3.5 mt-2">
-									{utilReducer?.sessionHistory.map(
-										(session, key) => (
-											<div
-												className="flex items-center text-primary80 w-full rounded-lg py-2 text-sm font-medium  cursor-pointer "
-												key={session.session_id}
-												onClick={() => {
-													if (
-														isEditing ===
-														session.session_id
-													)
-														return;
-													getChatHistory(
-														session.session_id,
-													);
-												}}
-											>
+									{utilReducer?.sessionHistory &&
+										Array.isArray(utilReducer?.sessionHistory) &&
+										utilReducer?.sessionHistory.map(
+											(session, key) => (
 												<div
-													className={cn(
-														'flex items-center max-w-[200px] truncate',
-														isEditing ===
+													className="flex items-center text-primary80 w-full rounded-lg py-2 text-sm font-medium  cursor-pointer "
+													key={session.session_id}
+													onClick={() => {
+														if (
+															isEditing ===
 															session.session_id
-															? ''
-															: ' px-2 py-1 hover:bg-purple-4',
-													)}
+														)
+															return;
+														getChatHistory(
+															session.session_id,
+														);
+													}}
 												>
-													<i className="bi-chat-right-text-fill me-3"></i>
-													{isEditing ===
-													session.session_id ? (
-														<InputText
-															value={sessionTitle}
-															setValue={(value, e) => {
-																e.stopPropagation();
-																setSessionTitle(
-																	value,
-																);
-															}}
-															className="flex bg-transparent border-none text-primary80 font-medium"
-														/>
-													) : (
-														<p className="flex  ">
-															{session.title}
-														</p>
-													)}
-												</div>
-
-												<DropdownMenu>
-													<DropdownMenuTrigger asChild>
-														<i
-															className="bi-three-dots-vertical ms-3 items-end hover:bg-purple-4"
-															onClick={(e) => {
-																e.stopPropagation();
-															}}
-														></i>
-													</DropdownMenuTrigger>
-													<DropdownMenuContent
-														align="start"
-														className=""
+													<div
+														className={cn(
+															'flex items-center max-w-[200px] truncate',
+															isEditing ===
+																session.session_id
+																? ''
+																: ' px-2 py-1 hover:bg-purple-4',
+														)}
 													>
-														{/* <DropdownMenuItem
+														<i className="bi-chat-right-text-fill me-3"></i>
+														{isEditing ===
+														session.session_id ? (
+															<InputText
+																value={sessionTitle}
+																setValue={(
+																	value,
+																	e,
+																) => {
+																	e.stopPropagation();
+																	setSessionTitle(
+																		value,
+																	);
+																}}
+																className="flex bg-transparent border-none text-primary80 font-medium"
+															/>
+														) : (
+															<p className="flex  ">
+																{session.title}
+															</p>
+														)}
+													</div>
+
+													<DropdownMenu>
+														<DropdownMenuTrigger asChild>
+															<i
+																className="bi-three-dots-vertical ms-3 items-end hover:bg-purple-4"
+																onClick={(e) => {
+																	e.stopPropagation();
+																}}
+															></i>
+														</DropdownMenuTrigger>
+														<DropdownMenuContent
+															align="start"
+															className=""
+														>
+															{/* <DropdownMenuItem
 															className="text-primary80 font-medium hover:!bg-purple-4"
 															onClick={(e) => {
 																e.stopPropagation();
@@ -214,22 +237,22 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 														>
 															Rename
 														</DropdownMenuItem> */}
-														<DropdownMenuItem
-															className="text-primary80 font-medium hover:!bg-purple-2"
-															onClick={(e) => {
-																handleDeleteChatSession(
-																	e,
-																	session.session_id,
-																);
-															}}
-														>
-															Delete
-														</DropdownMenuItem>
-													</DropdownMenuContent>
-												</DropdownMenu>
-											</div>
-										),
-									)}
+															<DropdownMenuItem
+																className="text-primary80 font-medium hover:!bg-purple-2"
+																onClick={(e) => {
+																	handleDeleteChatSession(
+																		e,
+																		session.session_id,
+																	);
+																}}
+															>
+																Delete
+															</DropdownMenuItem>
+														</DropdownMenuContent>
+													</DropdownMenu>
+												</div>
+											),
+										)}
 								</div>
 							</>
 						) : null}

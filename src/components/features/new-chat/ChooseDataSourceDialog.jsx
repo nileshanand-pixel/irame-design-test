@@ -27,13 +27,13 @@ const ChooseDataSourceDialog = ({
 	handleNextStep,
 }) => {
 	const [dataSources, setDataSources] = useState([]);
-	// const [value, setValue] = useLocalStorage('dataSource');
 	const [dataSourceFetch, setDataSourceFetch] = useState(true);
 
 	const navigate = useNavigate();
 
 	const dispatch = useDispatch();
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const [value, setValue] = useLocalStorage('dataSource');
 
 	const getCookieToken = () => {
 		return Cookies.get('token');
@@ -54,6 +54,13 @@ const ChooseDataSourceDialog = ({
 				},
 			]),
 		);
+		// setValue((prev) => {
+		// 	return {
+		// 		...prev,
+		// 		dataSourceId,
+		// 		dataSourceName,
+		// 	};
+		// });
 	};
 	useEffect(() => {
 		const token = getToken();

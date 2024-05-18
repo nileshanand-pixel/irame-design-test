@@ -7,7 +7,7 @@ import InputText from '@/components/elements/InputText';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
 import useGetCookie from '@/hooks/useGetCookie';
-import { cn, tokenCookie, getToken, getInitials } from '@/lib/utils';
+import { cn, getToken, getInitials } from '@/lib/utils';
 import ira from '@/assets/icons/ira_icon.svg';
 import failedIcon from '@/assets/icons/failed_icon.svg';
 import warningIcon from '@/assets/icons/warning_icon.svg';
@@ -26,12 +26,12 @@ import { useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
-import FollowUpQuestions from './FollowUpQuestions';
+import { getDataSources } from '../configuration/service/configuration.service';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
 	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
-	// const [dataSource] = useLocalStorage('dataSource');
+	const [dataSource] = useLocalStorage('dataSource');
 	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 	const [searchParam, setSearchParam] = useSearchParams();
 
@@ -172,6 +172,23 @@ const NewChat = () => {
 		}
 	};
 
+	const getChatHistoryDataSourceName = (dataSourceId) => {
+		if (!utilReducer?.dataSources || utilReducer?.dataSources?.length <= 0) {
+			getDataSources(getToken()).then((res) => {
+				dispatch(updateUtilProp([{ key: 'dataSources', value: res }]));
+
+				const dataSource = res.find(
+					(source) => source.datasource_id === dataSourceId,
+				);
+				return dataSource?.name;
+			});
+		}
+		const dataSource = utilReducer?.dataSources.find(
+			(source) => source.datasource_id === dataSourceId,
+		);
+		return dataSource?.name;
+	};
+
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
@@ -256,6 +273,9 @@ const NewChat = () => {
 						if (res.status === 'in_progress' || res.status === 'done') {
 							timer = 5000;
 							setDoingScience(false);
+							dispatch(
+								updateUtilProp([{ key: 'resetChat', value: false }]),
+							);
 						}
 						if (res.status === 'done') {
 							clearInterval(intervalId);
@@ -287,6 +307,28 @@ const NewChat = () => {
 		setPromptQuery({ data: utilReducer?.queryPrompt });
 	}, [query.dataSourceId, query.sessionId, query.queryId]);
 
+	useEffect(() => {
+		if (!utilReducer?.selectedDataSource && dataSource?.name) {
+			dispatch(
+				updateUtilProp([
+					{ key: 'selectedDataSource', value: dataSource?.name },
+				]),
+			);
+		} else {
+			dispatch(
+				updateUtilProp([
+					{
+						key: 'selectedDataSource',
+						value: getChatHistoryDataSourceName(query.dataSourceId),
+					},
+				]),
+			);
+		}
+		if (utilReducer?.resetChat) {
+			setDoingScience(true);
+		}
+	}, [utilReducer?.dataSources, utilReducer?.resetChat]);
+
 	return (
 		<>
 			{completedSteps.includes(4) ? (
@@ -312,7 +354,9 @@ const NewChat = () => {
 									</AvatarFallback>
 								</Avatar>
 								{promptQuery.data ? (
-									<p className="ms-1">{promptQuery.data}</p>
+									<p className="ms-1 bg-purple-4 px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
+										{promptQuery.data}
+									</p>
 								) : (
 									<>
 										<Skeleton className="h-6 w-[90%] bg-purple-8 ms-1" />
@@ -435,7 +479,7 @@ const NewChat = () => {
 								)}
 						</div>
 
-						<div className="bg-white h-4">
+						<div className="">
 							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white pt-2">
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 									<Input
