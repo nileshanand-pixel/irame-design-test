@@ -1,22 +1,29 @@
 import React from 'react';
+import DOMPurify from 'dompurify';
 
 const PlannerComponent = ({ data }) => {
-	// console.log(data, 'planner');
+	let segments = [];
+	if (data && data.tool_data) {
+		const rawSegments = data.tool_data.replace(/\\n/g, '\n').split('<slice/>');
+		segments = rawSegments.map((segment) => DOMPurify.sanitize(segment.trim()));
+	}
+
 	return (
-		<div className="border rounded-2xl py-4 px-4 col-span-4 text-primary80 font-medium max-h-[35rem] overflow-y-auto">
-			<div className="my-4">
-				<h3 className="text-primary100 font-medium">
-					{/* {data?.charAt(0).toUpperCase() + data.slice(1)} */}
-				</h3>
-				{data?.tool_data ? (
+		<div className="my-4 col-span-4 max-h-[37rem] overflow-y-auto space-y-4">
+			{segments.length > 0 ? (
+				segments.map((segment, index) => (
 					<div
-						className="text-primary80"
+						key={index}
+						className="text-primary80 border rounded-2xl py-4 px-4 font-medium my-2"
 						style={{ whiteSpace: 'pre-wrap' }}
-					>
-						{data?.tool_data}
-					</div>
-				) : null}
-			</div>
+						dangerouslySetInnerHTML={{ __html: segment }}
+					></div>
+				))
+			) : (
+				<div className="text-primary80 border rounded-2xl py-4 px-4 font-medium my-2">
+					No content available.
+				</div>
+			)}
 		</div>
 	);
 };

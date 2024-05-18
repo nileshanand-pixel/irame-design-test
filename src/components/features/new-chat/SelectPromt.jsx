@@ -157,8 +157,8 @@ const SelectPrompt = ({
 													handlePrompt(question)
 												}
 											>
-												<ul className="divide-y-[24px] divide-transparent line-clamp-3">
-													<li className="flex items-center gap-2 hover:cursor-pointer hover:text-purple-80">
+												<ul className="divide-y-[24px] divide-transparent ">
+													<li className="flex items-center gap-2 hover:cursor-pointer hover:text-purple-80 !line-clamp-5 ">
 														{question}
 													</li>
 												</ul>

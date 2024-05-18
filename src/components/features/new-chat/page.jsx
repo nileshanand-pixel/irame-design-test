@@ -329,40 +329,19 @@ const NewChat = () => {
 									{showWorkspace ? 'Hide' : 'Show'} Workspace
 								</Button>
 							</div>
-							{doingScience ||
-							!answerResp?.answer?.answer ||
-							!answerResp?.answer?.graph ? (
-								<div className="flex flex-col space-y-3 mt-8 ml-12">
-									<div className="space-y-3">
-										{!answerResp?.answer?.answer &&
-											answerResp?.answer?.graph &&
-											!isGraphLoading && (
-												<div className="darkSoul-glowing-button2">
-													<button
-														className="darkSoul-button2"
-														type="button"
-													>
-														<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-														Creating Observation...
-													</button>
-												</div>
-											)}
-										{(!answerResp?.answer?.graph ||
-											isGraphLoading) && (
-											<div className="darkSoul-glowing-button2">
-												<button
-													className="darkSoul-button2"
-													type="button"
-												>
-													<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-													Generating Graph...
-												</button>
-											</div>
-										)}
+							<div className="mt-8">
+								{doingScience &&
+								(!answerResp?.answer?.graph || isGraphLoading) ? (
+									<div className="darkSoul-glowing-button2 ml-12">
+										<button
+											className="darkSoul-button2"
+											type="button"
+										>
+											<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+											Generating Graph...
+										</button>
 									</div>
-								</div>
-							) : (
-								<>
+								) : (
 									<ResponseCard
 										answerResp={answerResp}
 										isGraphLoading={isGraphLoading}
@@ -380,9 +359,51 @@ const NewChat = () => {
 										setShowResponseDelayBanner={
 											setShowResponseDelayBanner
 										}
+										doingScience={doingScience}
 									/>
-								</>
-							)}
+								)}
+
+								{!answerResp?.answer?.answer && (
+									<div className="flex flex-col space-y-3 mt-8 ml-12">
+										<div className="space-y-3">
+											{!answerResp?.answer?.answer &&
+											answerResp?.answer?.graph &&
+											!isGraphLoading ? (
+												<div className="darkSoul-glowing-button2 ml-12">
+													<button
+														className="darkSoul-button2"
+														type="button"
+													>
+														<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+														Creating Observation...
+													</button>
+												</div>
+											) : (
+												<ResponseCard
+													answerResp={answerResp}
+													isGraphLoading={isGraphLoading}
+													setIsGraphLoading={
+														setIsGraphLoading
+													}
+													setShowFailedResponseBanner={
+														setShowFailedResponseBanner
+													}
+													handleNextStep={handleNextStep}
+													setAnswerResp={setAnswerResp}
+													setPromptQuery={setPromptQuery}
+													setDoingScience={setDoingScience}
+													setResponseTimeElapsed={
+														setResponseTimeElapsed
+													}
+													setShowResponseDelayBanner={
+														setShowResponseDelayBanner
+													}
+												/>
+											)}
+										</div>
+									</div>
+								)}
+							</div>
 						</div>
 						<div className="w-full flex flex-col justify-center mx-auto mt-5 pl-12">
 							{showResponseDelayBanner &&

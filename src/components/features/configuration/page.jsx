@@ -7,6 +7,7 @@ import excel from '@/assets/icons/ms_excel.svg';
 import { Button } from '@/components/ui/button';
 import {
 	createNewDtaSource,
+	deleteDataSource,
 	getDataSources,
 	uploadFile,
 } from './service/configuration.service';
@@ -50,7 +51,6 @@ const Configuration = () => {
 					...prev,
 					datasourceName: 'Please enter a name for your datasource',
 				}));
-				// return;
 			}
 			if (
 				dataSources.some((source) => source.name === datasourceName.trim())
@@ -59,7 +59,6 @@ const Configuration = () => {
 					...prev,
 					datasourceName: 'Data source name already exists',
 				}));
-				// return
 			}
 
 			if (!e.target.files.length) return;
@@ -78,22 +77,31 @@ const Configuration = () => {
 				// toast.success('All files are already uploaded');
 				return;
 			}
-			const { data } = await uploadFile(filesToUpload, setProgress);
-			if (data) {
-				setFiles(
-					files.map((file) => ({
-						...file,
-						name: file.name,
-						url: data[file.name] || '', // Default to empty string if not found
-					})),
+
+			const uploadPromises = filesToUpload.map((file) =>
+				uploadFile(file, setProgress, getToken()),
+			);
+
+			const uploadedData = await Promise.all(uploadPromises);
+
+			const newFiles = files.map((file) => {
+				const uploadedFile = uploadedData.find(
+					(data) => data.name === file.name,
 				);
-				toast.success('File uploaded successfully');
-			}
+				return {
+					...file,
+					url: uploadedFile ? uploadedFile.url : '',
+				};
+			});
+
+			setFiles(newFiles);
+			toast.success('Files uploaded successfully');
 		} catch (error) {
 			setFiles([]);
-			toast.error('Error uploading file');
+			toast.error('Error uploading files');
+			console.error('Error uploading files', error);
 		} finally {
-			// setProgress(0);
+			setProgress(0);
 		}
 	};
 	const createDataSource = async () => {
@@ -120,6 +128,19 @@ const Configuration = () => {
 		} finally {
 			setIsLoading(false);
 		}
+	};
+	const handleDeleteDataSource = async (e, dataSourceId) => {
+		e.stopPropagation();
+		try {
+			const updatedList = utilReducer?.dataSources.filter((source) => {
+				if (source.datasource_id !== dataSourceId) {
+					return source;
+				}
+			});
+			await deleteDataSource(dataSourceId, getToken());
+			dispatch(updateUtilProp([{ key: 'dataSources', value: updatedList }]));
+			setDataSources(updatedList);
+		} catch (error) {}
 	};
 
 	useEffect(() => {
@@ -275,14 +296,14 @@ const Configuration = () => {
 					</div>
 				) : null}
 			</div>
-			<div className="border rounded-3xl py-4 px-6 col-span-3 shadow-1xl h-fit">
+			<div className="border rounded-3xl py-4 px-6 col-span-3 shadow-1xl max-h-[86vh] min-h-fit">
 				<h3 className="text-primary80 font-semibold text-xl">
 					Manage Data Source
 				</h3>
 				<p className="text-primary40 text-sm">
 					Securely connect to a data source
 				</p>
-				<div className="mt-4 space-y-2">
+				<div className="mt-4 space-y-2 max-h-[90%] overflow-y-auto">
 					{dataSourceFetch ? (
 						<div className="flex items-center justify-center">
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
@@ -297,10 +318,19 @@ const Configuration = () => {
 									setFiles(source.filepath);
 								}}
 							>
-								<p className="text-primary80 font-medium max-w-[200px] truncate">
+								<p className="text-primary80 font-medium max-w-[180px] truncate">
 									<i className="bi-database mr-2 text-primary80 text-md "></i>
 									{source.name}
 								</p>
+								<i
+									className="bi-trash text-primary80 text-sm cursor-pointer hover:bg-purple-8 rounded-md p-1"
+									onClick={(e) =>
+										handleDeleteDataSource(
+											e,
+											source.datasource_id,
+										)
+									}
+								></i>
 							</div>
 						))
 					) : (

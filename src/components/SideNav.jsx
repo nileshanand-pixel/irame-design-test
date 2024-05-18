@@ -52,19 +52,34 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		},
 	];
 
+	const getChatHistoryDataSourceName = (dataSourceId) => {
+		const dataSource = utilReducer?.dataSources.find(
+			(source) => source.datasource_id === dataSourceId,
+		);
+		return dataSource?.name;
+	};
+
 	const getChatHistory = (sessionId) => {
 		getQuerySession(sessionId, getToken()).then((res) => {
-			dispatch(updateUtilProp([{ key: 'queryPrompt', value: res[0].query }]));
+			dispatch(
+				updateUtilProp([
+					{ key: 'queryPrompt', value: res[0]?.query },
+					{
+						key: 'selectedDataSource',
+						value: getChatHistoryDataSourceName(res[0]?.datasource_id),
+					},
+				]),
+			);
 			navigate(
-				`/app/new-chat/?step=4&dataSourceId=${res[0].datasource_id}&sessionId=${res[0].session_id}&queryId=${res[0].query_id}`,
+				`/app/new-chat/?step=4&dataSourceId=${res[0]?.datasource_id}&sessionId=${res[0]?.session_id}&queryId=${res[0]?.query_id}`,
 			);
 			createQuery(
 				{
-					child_no: parseInt(res[0].child_no) + 1,
-					datasource_id: res[0].datasource_id,
-					parent_query_id: res[0].query_id,
-					query: res[0].query,
-					session_id: res[0].session_id,
+					child_no: parseInt(res[0]?.child_no) + 1,
+					datasource_id: res[0]?.datasource_id,
+					parent_query_id: res[0]?.query_id,
+					query: res[0]?.query,
+					session_id: res[0]?.session_id,
 				},
 				getToken(),
 			).then((res) => {
