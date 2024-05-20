@@ -1,6 +1,4 @@
-import { getDataSources } from '@/components/features/configuration/service/configuration.service';
 import { clsx } from 'clsx';
-import { useSelector } from 'react-redux';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs) {
@@ -19,8 +17,7 @@ export const formatFileSize = (size) => {
 	}
 };
 
-export const tokenCookie =
-	'gAAAAABmSY6_eG5joJsXgmdrwWDk4lLg08C79RHunPsLxFLhbDZL00ZvX77XT4qkvGzXb0c4TAq7jTJhLmB2V_t3M8jRXfOT2YHyRQTZs98W3BGwZkzvf3DGibjFMukxhgfRbL8QbJlK1tcPvnyAQjWjjFKS8wjTrA==';
+export const tokenCookie = '';
 
 export const getToken = () => {
 	const cookieString = document.cookie;
