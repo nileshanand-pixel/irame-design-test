@@ -7,7 +7,7 @@ import InputText from '@/components/elements/InputText';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
 import useGetCookie from '@/hooks/useGetCookie';
-import { cn, tokenCookie, getToken, getInitials } from '@/lib/utils';
+import { cn, getToken, getInitials } from '@/lib/utils';
 import ira from '@/assets/icons/ira_icon.svg';
 import failedIcon from '@/assets/icons/failed_icon.svg';
 import warningIcon from '@/assets/icons/warning_icon.svg';
@@ -26,12 +26,12 @@ import { useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
-import FollowUpQuestions from './FollowUpQuestions';
+import { getDataSources } from '../configuration/service/configuration.service';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
 	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
-	// const [dataSource] = useLocalStorage('dataSource');
+	const [dataSource] = useLocalStorage('dataSource');
 	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 	const [searchParam, setSearchParam] = useSearchParams();
 
@@ -55,6 +55,7 @@ const NewChat = () => {
 	const [showFailedResponseBanner, setShowFailedResponseBanner] = useState(false);
 	const [responseTimeElapsed, setResponseTimeElapsed] = useState(0);
 	const [isGraphLoading, setIsGraphLoading] = useState(true);
+	const [visitedTabs, setVisitedTabs] = useState({});
 
 	const gradientText = {
 		backgroundImage:
@@ -133,6 +134,7 @@ const NewChat = () => {
 	};
 
 	const handleTabClick = (tab) => {
+		setVisitedTabs({ ...visitedTabs, [tab]: true });
 		setWorkSpaceTab(tab);
 	};
 	const handleQueryAnswer = () => {
@@ -170,6 +172,23 @@ const NewChat = () => {
 		} catch (error) {
 			console.error('Error fetching user session:', error);
 		}
+	};
+
+	const getChatHistoryDataSourceName = (dataSourceId) => {
+		if (!utilReducer?.dataSources || utilReducer?.dataSources?.length <= 0) {
+			getDataSources(getToken()).then((res) => {
+				dispatch(updateUtilProp([{ key: 'dataSources', value: res }]));
+
+				const dataSource = res.find(
+					(source) => source.datasource_id === dataSourceId,
+				);
+				return dataSource?.name;
+			});
+		}
+		const dataSource = utilReducer?.dataSources.find(
+			(source) => source.datasource_id === dataSourceId,
+		);
+		return dataSource?.name;
 	};
 
 	useEffect(() => {
@@ -225,42 +244,58 @@ const NewChat = () => {
 		};
 
 		if (query?.step) {
-			setCompletedSteps((prev) => [...prev, parseInt(query?.step)]);
+			setCompletedSteps((prev) => [...prev, parseInt(query.step)]);
 
-			if (query?.step === '3') {
+			if (query.step === '3') {
 				setCompletedSteps([1, 3]);
 			}
 
-			if (query?.step === '4') {
+			if (query.step === '4') {
 				setPrompt('');
 				let timer = 5000;
 				intervalId = setInterval(() => {
-					getQueryAnswers(query?.queryId, getToken()).then((res) => {
-						setAnswerResp(res);
+					getQueryAnswers(query.queryId, getToken())
+						.then((res) => {
+							setAnswerResp(res);
 
-						if (res?.answer) {
-							setAnswerConfig(res?.answer);
-						}
-						if (
-							!promptQuery.data ||
-							utilReducer?.promptQuery !== res?.query
-						) {
-							setPromptQuery({ data: res?.query });
-							dispatch(
-								updateUtilProp([
-									{ key: 'queryPrompt', value: res?.query },
-								]),
-							);
-						}
+							if (res?.answer) {
+								setAnswerConfig(res.answer);
+							}
+							if (
+								!promptQuery.data ||
+								utilReducer?.promptQuery !== res.query
+							) {
+								setPromptQuery({ data: res.query });
+								dispatch(
+									updateUtilProp([
+										{ key: 'queryPrompt', value: res.query },
+									]),
+								);
+							}
 
-						if (res.status === 'in_progress' || res.status === 'done') {
-							timer = 5000;
-							setDoingScience(false);
-						}
-						if (res.status === 'done') {
+							if (
+								res.status === 'in_progress' ||
+								res.status === 'done'
+							) {
+								timer = 5000;
+								setDoingScience(false);
+								dispatch(
+									updateUtilProp([
+										{ key: 'resetChat', value: false },
+									]),
+								);
+							}
+							if (res.status === 'done') {
+								clearInterval(intervalId);
+							}
+						})
+						.catch((error) => {
+							console.error('Error fetching query answers:', error);
+							setShowFailedResponseBanner(true);
+							setShowResponseDelayBanner(false); // Reset delay banner when failed response banner is shown
 							clearInterval(intervalId);
-						}
-					});
+						});
+
 					setResponseTimeElapsed((prev) => {
 						const newElapsedTime = prev + 5;
 						handleResponseDelay(newElapsedTime);
@@ -275,7 +310,14 @@ const NewChat = () => {
 		return () => {
 			clearInterval(intervalId);
 		};
-	}, [query?.step, getToken(), query?.queryId]);
+	}, [
+		query?.step,
+		query?.queryId,
+		dispatch,
+		getToken(),
+		promptQuery.data,
+		utilReducer?.promptQuery,
+	]);
 
 	useEffect(() => {
 		setIsGraphLoading(true);
@@ -286,6 +328,28 @@ const NewChat = () => {
 		setResponseTimeElapsed(0);
 		setPromptQuery({ data: utilReducer?.queryPrompt });
 	}, [query.dataSourceId, query.sessionId, query.queryId]);
+
+	useEffect(() => {
+		if (!utilReducer?.selectedDataSource && dataSource?.name) {
+			dispatch(
+				updateUtilProp([
+					{ key: 'selectedDataSource', value: dataSource?.name },
+				]),
+			);
+		} else {
+			dispatch(
+				updateUtilProp([
+					{
+						key: 'selectedDataSource',
+						value: getChatHistoryDataSourceName(query.dataSourceId),
+					},
+				]),
+			);
+		}
+		if (utilReducer?.resetChat) {
+			setDoingScience(true);
+		}
+	}, [utilReducer?.dataSources, utilReducer?.resetChat]);
 
 	return (
 		<>
@@ -312,7 +376,9 @@ const NewChat = () => {
 									</AvatarFallback>
 								</Avatar>
 								{promptQuery.data ? (
-									<p className="ms-1">{promptQuery.data}</p>
+									<p className="ms-1 bg-purple-4 px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
+										{promptQuery.data}
+									</p>
 								) : (
 									<>
 										<Skeleton className="h-6 w-[90%] bg-purple-8 ms-1" />
@@ -323,46 +389,27 @@ const NewChat = () => {
 								<img src={ira} alt="ira" className="size-10" />
 								<Button
 									variant="outline"
-									className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80"
+									className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
 									onClick={() => setShowWorkspace(!showWorkspace)}
 								>
+									<span className="material-symbols-outlined me-1">
+										category
+									</span>
 									{showWorkspace ? 'Hide' : 'Show'} Workspace
 								</Button>
 							</div>
-							{doingScience ||
-							!answerResp?.answer?.answer ||
-							!answerResp?.answer?.graph ? (
-								<div className="flex flex-col space-y-3 mt-8 ml-12">
-									<div className="space-y-3">
-										{!answerResp?.answer?.answer &&
-											answerResp?.answer?.graph &&
-											!isGraphLoading && (
-												<div className="darkSoul-glowing-button2">
-													<button
-														className="darkSoul-button2"
-														type="button"
-													>
-														<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-														Creating Observation...
-													</button>
-												</div>
-											)}
-										{(!answerResp?.answer?.graph ||
-											isGraphLoading) && (
-											<div className="darkSoul-glowing-button2">
-												<button
-													className="darkSoul-button2"
-													type="button"
-												>
-													<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-													Generating Graph...
-												</button>
-											</div>
-										)}
+							<div className="mt-8">
+								{doingScience || !answerResp?.answer?.graph ? (
+									<div className="darkSoul-glowing-button2 ml-12">
+										<button
+											className="darkSoul-button2"
+											type="button"
+										>
+											<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+											Generating Graph...
+										</button>
 									</div>
-								</div>
-							) : (
-								<>
+								) : (
 									<ResponseCard
 										answerResp={answerResp}
 										isGraphLoading={isGraphLoading}
@@ -380,9 +427,58 @@ const NewChat = () => {
 										setShowResponseDelayBanner={
 											setShowResponseDelayBanner
 										}
+										doingScience={doingScience}
 									/>
-								</>
-							)}
+								)}
+
+								{doingScience ||
+									(!answerResp?.answer?.answer && (
+										<div className="flex flex-col space-y-3 mt-8 ml-12">
+											<div className="space-y-3">
+												{answerResp?.answer?.graph ? (
+													<div className="darkSoul-glowing-button2 ml-12">
+														<button
+															className="darkSoul-button2"
+															type="button"
+														>
+															<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+															Creating Observation...
+														</button>
+													</div>
+												) : (
+													<ResponseCard
+														answerResp={answerResp}
+														isGraphLoading={
+															isGraphLoading
+														}
+														setIsGraphLoading={
+															setIsGraphLoading
+														}
+														setShowFailedResponseBanner={
+															setShowFailedResponseBanner
+														}
+														handleNextStep={
+															handleNextStep
+														}
+														setAnswerResp={setAnswerResp}
+														setPromptQuery={
+															setPromptQuery
+														}
+														setDoingScience={
+															setDoingScience
+														}
+														setResponseTimeElapsed={
+															setResponseTimeElapsed
+														}
+														setShowResponseDelayBanner={
+															setShowResponseDelayBanner
+														}
+													/>
+												)}
+											</div>
+										</div>
+									))}
+							</div>
 						</div>
 						<div className="w-full flex flex-col justify-center mx-auto mt-5 pl-12">
 							{showResponseDelayBanner &&
@@ -414,7 +510,7 @@ const NewChat = () => {
 								)}
 						</div>
 
-						<div className="bg-white h-4">
+						<div className="">
 							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white pt-2">
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 									<Input
@@ -458,9 +554,14 @@ const NewChat = () => {
 					{showWorkspace ? (
 						<div className="border rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-fit">
 							<div className="flex justify-between">
-								<h3 className="text-primary80 font-semibold text-xl">
-									Ira's Workspace
-								</h3>
+								<div className="flex items-center gap-1">
+									<span className="material-symbols-outlined me-1">
+										category
+									</span>
+									<h3 className="text-primary80 font-semibold text-xl">
+										Ira's Workspace
+									</h3>
+								</div>
 								<i
 									className="bi-x text-2xl cursor-pointer"
 									onClick={() => setShowWorkspace(false)}
@@ -472,6 +573,8 @@ const NewChat = () => {
 								workSpaceTab={workSpaceTab}
 								answerResp={answerResp}
 								setWorkSpaceTab={setWorkSpaceTab}
+								visitedTabs={visitedTabs}
+								setVisitedTabs={setVisitedTabs}
 							/>
 						</div>
 					) : null}

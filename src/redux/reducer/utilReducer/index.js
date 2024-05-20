@@ -7,6 +7,7 @@ const initialState = {
 	sessionHistory: [],
 	queryPrompt: '',
 	selectedDataSource: '',
+	resetChat: false,
 };
 
 const utilSlice = createSlice({

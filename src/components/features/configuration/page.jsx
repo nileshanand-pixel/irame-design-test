@@ -7,6 +7,7 @@ import excel from '@/assets/icons/ms_excel.svg';
 import { Button } from '@/components/ui/button';
 import {
 	createNewDtaSource,
+	deleteDataSource,
 	getDataSources,
 	uploadFile,
 } from './service/configuration.service';
@@ -19,7 +20,7 @@ import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const Configuration = () => {
 	const [files, setFiles] = useState([]);
-	const [progress, setProgress] = useState(0);
+	const [progress, setProgress] = useState({});
 	const [datasourceName, setDatasourceName] = useState('');
 	const [formErrors, setFormErrors] = useState({});
 	const [dataSources, setDataSources] = useState([]);
@@ -50,7 +51,6 @@ const Configuration = () => {
 					...prev,
 					datasourceName: 'Please enter a name for your datasource',
 				}));
-				// return;
 			}
 			if (
 				dataSources.some((source) => source.name === datasourceName.trim())
@@ -59,7 +59,6 @@ const Configuration = () => {
 					...prev,
 					datasourceName: 'Data source name already exists',
 				}));
-				// return
 			}
 
 			if (!e.target.files.length) return;
@@ -78,22 +77,34 @@ const Configuration = () => {
 				// toast.success('All files are already uploaded');
 				return;
 			}
-			const { data } = await uploadFile(filesToUpload, setProgress);
-			if (data) {
-				setFiles(
-					files.map((file) => ({
-						...file,
-						name: file.name,
-						url: data[file.name] || '', // Default to empty string if not found
-					})),
+
+			const uploadPromises = filesToUpload.map((file) =>
+				uploadFile(file, setProgress, getToken()),
+			);
+
+			const uploadedData = await Promise.all(uploadPromises);
+
+			console.log('uploadedData===', uploadedData);
+
+			const newFiles = files.map((file) => {
+				const uploadedFile = uploadedData.find(
+					(data) => data.name === file.name,
 				);
-				toast.success('File uploaded successfully');
-			}
+				return {
+					...file,
+					url: uploadedFile ? uploadedFile.url : '',
+					name: uploadedFile ? uploadedFile.name : file.name,
+				};
+			});
+
+			setFiles(newFiles);
+			toast.success('Files uploaded successfully');
 		} catch (error) {
 			setFiles([]);
-			toast.error('Error uploading file');
+			toast.error('Error uploading files');
+			console.error('Error uploading files', error);
 		} finally {
-			// setProgress(0);
+			setProgress({});
 		}
 	};
 	const createDataSource = async () => {
@@ -105,9 +116,9 @@ const Configuration = () => {
 			filepath:
 				Array.isArray(files) &&
 				files.map((file) => ({
-					file_name: file.name,
+					file_name: file.name || file.file_name,
 					file_id: uuid(),
-					file_url: file.url,
+					file_url: file.url || file.file_url,
 				})),
 		};
 
@@ -120,6 +131,23 @@ const Configuration = () => {
 		} finally {
 			setIsLoading(false);
 		}
+	};
+	const handleDeleteDataSource = async (e, dataSourceId) => {
+		e.stopPropagation();
+		try {
+			const updatedList = utilReducer?.dataSources.filter((source) => {
+				if (source.datasource_id !== dataSourceId) {
+					return source;
+				}
+			});
+			await deleteDataSource(dataSourceId, getToken());
+			dispatch(updateUtilProp([{ key: 'dataSources', value: updatedList }]));
+			setDataSources(updatedList);
+		} catch (error) {}
+	};
+
+	const isAllFilesUploaded = () => {
+		return Object.values(progress).every((value) => value === 100);
 	};
 
 	useEffect(() => {
@@ -173,14 +201,13 @@ const Configuration = () => {
 						/>
 						<div
 							className={` w-full bg-purple-4 hover:bg-purple-8 text-purple-100 text-sm font-medium hover:text-purple-100 rounded-lg ${
-								(progress > 0 && progress < 100) || isLoading
+								!isAllFilesUploaded || isLoading
 									? 'cursor-not-allowed opacity-80'
 									: 'cursor-pointer'
 							}`}
 							onClick={(e) => {
 								e.preventDefault();
-								if ((progress > 0 && progress < 100) || isLoading)
-									return;
+								if (!isAllFilesUploaded || isLoading) return;
 								inputRef.current.click();
 							}}
 						>
@@ -226,7 +253,7 @@ const Configuration = () => {
 								</div>
 								<div className="flex items-center text-sm font-medium">
 									{(!showNoUpload || file.url) &&
-									progress < 100 ? (
+									progress[file.name] < 100 ? (
 										<p className="mr-4">uploading...</p>
 									) : null}
 									<div
@@ -247,25 +274,23 @@ const Configuration = () => {
 									</div>
 								</div>
 							</div>
-							{(!showNoUpload || file.url) && progress <= 99 ? (
+							{(!showNoUpload || file.url) &&
+							progress[file.name] <= 99 ? (
 								<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
 									<div
 										className="h-full bg-purple-100"
-										style={{ width: `${progress}%` }}
+										style={{ width: `${progress[file.name]}%` }}
 									></div>
 								</div>
 							) : null}
 						</div>
 					))}
-				{!showNoUpload &&
-				Array.isArray(files) &&
-				files?.length &&
-				progress === 100 ? (
+				{Array.isArray(files) && files?.length && isAllFilesUploaded ? (
 					<div className="mt-4">
 						<Button
 							className="w-full hover:bg-purple-100 hover:text-white hover:opacity-80"
 							onClick={() => createDataSource()}
-							disabled={isLoading || progress < 100}
+							disabled={isLoading || !isAllFilesUploaded}
 						>
 							{isLoading ? (
 								<i className="bi-arrow-repeat animate-spin mr-2"></i>
@@ -275,16 +300,16 @@ const Configuration = () => {
 					</div>
 				) : null}
 			</div>
-			<div className="border rounded-3xl py-4 px-6 col-span-3 shadow-1xl h-fit">
+			<div className="border rounded-3xl py-4 px-6 col-span-3 shadow-1xl max-h-[86vh] min-h-fit">
 				<h3 className="text-primary80 font-semibold text-xl">
 					Manage Data Source
 				</h3>
 				<p className="text-primary40 text-sm">
 					Securely connect to a data source
 				</p>
-				<div className="mt-4 space-y-2">
+				<div className="mt-4 space-y-2 max-h-[90%] overflow-y-auto">
 					{dataSourceFetch ? (
-						<div className="flex items-center justify-center">
+						<div className="flex items-center justify-center w-[14.84rem]">
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>
 					) : dataSources.length ? (
@@ -297,10 +322,19 @@ const Configuration = () => {
 									setFiles(source.filepath);
 								}}
 							>
-								<p className="text-primary80 font-medium max-w-[200px] truncate">
+								<p className="text-primary80 font-medium max-w-[180px] truncate">
 									<i className="bi-database mr-2 text-primary80 text-md "></i>
 									{source.name}
 								</p>
+								<i
+									className="bi-trash text-primary80 text-sm cursor-pointer hover:bg-purple-8 rounded-md p-1"
+									onClick={(e) =>
+										handleDeleteDataSource(
+											e,
+											source.datasource_id,
+										)
+									}
+								></i>
 							</div>
 						))
 					) : (

@@ -11,16 +11,17 @@ const Workspace = ({
 	workSpaceTab,
 	answerResp,
 	setWorkSpaceTab,
+	visitedTabs,
+	setVisitedTabs,
 }) => {
 	useEffect(() => {
-		if (!workSpaceTab) {
-			setWorkSpaceTab(
-				answerResp?.answer
-					? Object.keys(answerResp?.answer)[0]
-					: WorkspaceEnum.Planner,
-			);
+		if (!workSpaceTab && answerResp?.answer) {
+			const firstTab = Object.keys(answerResp.answer)[0];
+			setWorkSpaceTab(firstTab);
+			setVisitedTabs((prev) => ({ ...prev, [firstTab]: true }));
 		}
-	}, []);
+		setVisitedTabs((prev) => ({ ...prev, ['planner']: true }));
+	}, [answerResp, setWorkSpaceTab, setVisitedTabs, workSpaceTab]);
 
 	const renderedComponent = useMemo(() => {
 		switch (workSpaceTab) {
@@ -63,7 +64,7 @@ const Workspace = ({
 								<li
 									key={indx}
 									className={[
-										'!pb-0',
+										'!pb-0 flex items-center gap-2',
 										workSpaceTab === items
 											? 'active-tab'
 											: 'default-tab',
@@ -71,6 +72,12 @@ const Workspace = ({
 									onClick={() => handleTabClick(items)}
 								>
 									{workSpaceMap[items]}
+									{visitedTabs[items] ? null : (
+										<span className="relative flex size-2">
+											<span className="absolute inline-flex h-full w-full rounded-full bg-purple-100 opacity-75"></span>
+											<span className="relative inline-flex rounded-full size-2 bg-purple-100"></span>
+										</span>
+									)}
 								</li>
 							))
 					: [...Array(4)]?.map((_, index) => (

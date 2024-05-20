@@ -108,11 +108,19 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading }) => {
 				))}
 			</ul>
 			<div className="rounded-3xl border border-primary4 bg-purple-4 p-4 mt-2">
-				{activeTab === 'Graphical View' && (
-					<div className="bg-white rounded-3xl p-2">
-						<canvas id="canvas" width="380" height="250"></canvas>
-					</div>
-				)}
+				{activeTab === 'Graphical View' &&
+					(isGraphLoading ? (
+						<div className="darkSoul-glowing-button2 ml-12">
+							<button className="darkSoul-button2" type="button">
+								<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+								Generating Graph...
+							</button>
+						</div>
+					) : (
+						<div className="bg-white rounded-3xl p-2">
+							<canvas id="canvas" width="380" height="250"></canvas>
+						</div>
+					))}
 				{activeTab === 'Tabular View' && (
 					<div className="bg-white rounded-3xl p-2">
 						<TableComponent data={loadedData} columns={columns} />
