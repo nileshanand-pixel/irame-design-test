@@ -510,8 +510,8 @@ const NewChat = () => {
 								)}
 						</div>
 
-						<div className="">
-							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white pt-2">
+						<div className="bg-white pt-2">
+							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 ">
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 									<Input
 										placeholder="Enter a prompt here"
