@@ -193,14 +193,14 @@ const NewChat = () => {
 
 	const handlePromptChange = (e) => {
 		try {
-			console.log('prompt:', e.target.value);
-			setPrompt(e.target.value);
-			setPromptQuery({ data: e.target.value });
+			const { value } = e.target;
+			console.log('prompt:', value);
+			setPrompt(value);
 			dispatch(
 				updateUtilProp([
 					{
 						key: 'queryPrompt',
-						value: e.target.value,
+						value: prompt,
 					},
 				]),
 			);
