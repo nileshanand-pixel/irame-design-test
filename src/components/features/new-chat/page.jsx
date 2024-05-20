@@ -55,6 +55,7 @@ const NewChat = () => {
 	const [showFailedResponseBanner, setShowFailedResponseBanner] = useState(false);
 	const [responseTimeElapsed, setResponseTimeElapsed] = useState(0);
 	const [isGraphLoading, setIsGraphLoading] = useState(true);
+	const [visitedTabs, setVisitedTabs] = useState({});
 
 	const gradientText = {
 		backgroundImage:
@@ -133,6 +134,7 @@ const NewChat = () => {
 	};
 
 	const handleTabClick = (tab) => {
+		setVisitedTabs({ ...visitedTabs, [tab]: true });
 		setWorkSpaceTab(tab);
 	};
 	const handleQueryAnswer = () => {
@@ -242,45 +244,58 @@ const NewChat = () => {
 		};
 
 		if (query?.step) {
-			setCompletedSteps((prev) => [...prev, parseInt(query?.step)]);
+			setCompletedSteps((prev) => [...prev, parseInt(query.step)]);
 
-			if (query?.step === '3') {
+			if (query.step === '3') {
 				setCompletedSteps([1, 3]);
 			}
 
-			if (query?.step === '4') {
+			if (query.step === '4') {
 				setPrompt('');
 				let timer = 5000;
 				intervalId = setInterval(() => {
-					getQueryAnswers(query?.queryId, getToken()).then((res) => {
-						setAnswerResp(res);
+					getQueryAnswers(query.queryId, getToken())
+						.then((res) => {
+							setAnswerResp(res);
 
-						if (res?.answer) {
-							setAnswerConfig(res?.answer);
-						}
-						if (
-							!promptQuery.data ||
-							utilReducer?.promptQuery !== res?.query
-						) {
-							setPromptQuery({ data: res?.query });
-							dispatch(
-								updateUtilProp([
-									{ key: 'queryPrompt', value: res?.query },
-								]),
-							);
-						}
+							if (res?.answer) {
+								setAnswerConfig(res.answer);
+							}
+							if (
+								!promptQuery.data ||
+								utilReducer?.promptQuery !== res.query
+							) {
+								setPromptQuery({ data: res.query });
+								dispatch(
+									updateUtilProp([
+										{ key: 'queryPrompt', value: res.query },
+									]),
+								);
+							}
 
-						if (res.status === 'in_progress' || res.status === 'done') {
-							timer = 5000;
-							setDoingScience(false);
-							dispatch(
-								updateUtilProp([{ key: 'resetChat', value: false }]),
-							);
-						}
-						if (res.status === 'done') {
+							if (
+								res.status === 'in_progress' ||
+								res.status === 'done'
+							) {
+								timer = 5000;
+								setDoingScience(false);
+								dispatch(
+									updateUtilProp([
+										{ key: 'resetChat', value: false },
+									]),
+								);
+							}
+							if (res.status === 'done') {
+								clearInterval(intervalId);
+							}
+						})
+						.catch((error) => {
+							console.error('Error fetching query answers:', error);
+							setShowFailedResponseBanner(true);
+							setShowResponseDelayBanner(false); // Reset delay banner when failed response banner is shown
 							clearInterval(intervalId);
-						}
-					});
+						});
+
 					setResponseTimeElapsed((prev) => {
 						const newElapsedTime = prev + 5;
 						handleResponseDelay(newElapsedTime);
@@ -295,7 +310,14 @@ const NewChat = () => {
 		return () => {
 			clearInterval(intervalId);
 		};
-	}, [query?.step, getToken(), query?.queryId]);
+	}, [
+		query?.step,
+		query?.queryId,
+		dispatch,
+		getToken(),
+		promptQuery.data,
+		utilReducer?.promptQuery,
+	]);
 
 	useEffect(() => {
 		setIsGraphLoading(true);
@@ -367,15 +389,17 @@ const NewChat = () => {
 								<img src={ira} alt="ira" className="size-10" />
 								<Button
 									variant="outline"
-									className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80"
+									className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
 									onClick={() => setShowWorkspace(!showWorkspace)}
 								>
+									<span className="material-symbols-outlined me-1">
+										category
+									</span>
 									{showWorkspace ? 'Hide' : 'Show'} Workspace
 								</Button>
 							</div>
 							<div className="mt-8">
-								{doingScience &&
-								(!answerResp?.answer?.graph || isGraphLoading) ? (
+								{doingScience || !answerResp?.answer?.graph ? (
 									<div className="darkSoul-glowing-button2 ml-12">
 										<button
 											className="darkSoul-button2"
@@ -407,46 +431,53 @@ const NewChat = () => {
 									/>
 								)}
 
-								{!answerResp?.answer?.answer && (
-									<div className="flex flex-col space-y-3 mt-8 ml-12">
-										<div className="space-y-3">
-											{!answerResp?.answer?.answer &&
-											answerResp?.answer?.graph &&
-											!isGraphLoading ? (
-												<div className="darkSoul-glowing-button2 ml-12">
-													<button
-														className="darkSoul-button2"
-														type="button"
-													>
-														<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-														Creating Observation...
-													</button>
-												</div>
-											) : (
-												<ResponseCard
-													answerResp={answerResp}
-													isGraphLoading={isGraphLoading}
-													setIsGraphLoading={
-														setIsGraphLoading
-													}
-													setShowFailedResponseBanner={
-														setShowFailedResponseBanner
-													}
-													handleNextStep={handleNextStep}
-													setAnswerResp={setAnswerResp}
-													setPromptQuery={setPromptQuery}
-													setDoingScience={setDoingScience}
-													setResponseTimeElapsed={
-														setResponseTimeElapsed
-													}
-													setShowResponseDelayBanner={
-														setShowResponseDelayBanner
-													}
-												/>
-											)}
+								{doingScience ||
+									(!answerResp?.answer?.answer && (
+										<div className="flex flex-col space-y-3 mt-8 ml-12">
+											<div className="space-y-3">
+												{answerResp?.answer?.graph ? (
+													<div className="darkSoul-glowing-button2 ml-12">
+														<button
+															className="darkSoul-button2"
+															type="button"
+														>
+															<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+															Creating Observation...
+														</button>
+													</div>
+												) : (
+													<ResponseCard
+														answerResp={answerResp}
+														isGraphLoading={
+															isGraphLoading
+														}
+														setIsGraphLoading={
+															setIsGraphLoading
+														}
+														setShowFailedResponseBanner={
+															setShowFailedResponseBanner
+														}
+														handleNextStep={
+															handleNextStep
+														}
+														setAnswerResp={setAnswerResp}
+														setPromptQuery={
+															setPromptQuery
+														}
+														setDoingScience={
+															setDoingScience
+														}
+														setResponseTimeElapsed={
+															setResponseTimeElapsed
+														}
+														setShowResponseDelayBanner={
+															setShowResponseDelayBanner
+														}
+													/>
+												)}
+											</div>
 										</div>
-									</div>
-								)}
+									))}
 							</div>
 						</div>
 						<div className="w-full flex flex-col justify-center mx-auto mt-5 pl-12">
@@ -523,9 +554,14 @@ const NewChat = () => {
 					{showWorkspace ? (
 						<div className="border rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-fit">
 							<div className="flex justify-between">
-								<h3 className="text-primary80 font-semibold text-xl">
-									Ira's Workspace
-								</h3>
+								<div className="flex items-center gap-1">
+									<span className="material-symbols-outlined me-1">
+										category
+									</span>
+									<h3 className="text-primary80 font-semibold text-xl">
+										Ira's Workspace
+									</h3>
+								</div>
 								<i
 									className="bi-x text-2xl cursor-pointer"
 									onClick={() => setShowWorkspace(false)}
@@ -537,6 +573,8 @@ const NewChat = () => {
 								workSpaceTab={workSpaceTab}
 								answerResp={answerResp}
 								setWorkSpaceTab={setWorkSpaceTab}
+								visitedTabs={visitedTabs}
+								setVisitedTabs={setVisitedTabs}
 							/>
 						</div>
 					) : null}
