@@ -191,6 +191,24 @@ const NewChat = () => {
 		return dataSource?.name;
 	};
 
+	const handlePromptChange = (e) => {
+		try {
+			console.log('prompt:', e.target.value);
+			setPrompt(e.target.value);
+			setPromptQuery({ data: e.target.value });
+			dispatch(
+				updateUtilProp([
+					{
+						key: 'queryPrompt',
+						value: e.target.value,
+					},
+				]),
+			);
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
@@ -286,12 +304,19 @@ const NewChat = () => {
 								);
 							}
 							if (res.status === 'done') {
+								if (!res.answer?.graph && !res.answer?.answer) {
+									setShowFailedResponseBanner(true);
+									setDoingScience(false);
+									setIsGraphLoading(false);
+								}
 								clearInterval(intervalId);
 							}
 						})
 						.catch((error) => {
 							console.error('Error fetching query answers:', error);
 							setShowFailedResponseBanner(true);
+							setDoingScience(false);
+							setIsGraphLoading(false);
 							setShowResponseDelayBanner(false); // Reset delay banner when failed response banner is shown
 							clearInterval(intervalId);
 						});
@@ -376,7 +401,7 @@ const NewChat = () => {
 									</AvatarFallback>
 								</Avatar>
 								{promptQuery.data ? (
-									<p className="ms-1 bg-purple-4 px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
+									<p className="ms-1 bg-purple-4 text-primary80 font-normal px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
 										{promptQuery.data}
 									</p>
 								) : (
@@ -400,15 +425,28 @@ const NewChat = () => {
 							</div>
 							<div className="mt-8">
 								{doingScience || !answerResp?.answer?.graph ? (
-									<div className="darkSoul-glowing-button2 ml-12">
-										<button
-											className="darkSoul-button2"
-											type="button"
-										>
-											<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-											Generating Graph...
-										</button>
-									</div>
+									showFailedResponseBanner ? (
+										<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+											<img
+												src={failedIcon}
+												width={40}
+												height={40}
+												className="mr-3"
+											/>
+											Failed to generate a response, please
+											refresh the page to try again.
+										</div>
+									) : (
+										<div className="darkSoul-glowing-button2 ml-12">
+											<button
+												className="darkSoul-button2"
+												type="button"
+											>
+												<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+												Generating Graph...
+											</button>
+										</div>
+									)
 								) : (
 									<ResponseCard
 										answerResp={answerResp}
@@ -436,15 +474,30 @@ const NewChat = () => {
 										<div className="flex flex-col space-y-3 mt-8 ml-12">
 											<div className="space-y-3">
 												{answerResp?.answer?.graph ? (
-													<div className="darkSoul-glowing-button2 ml-12">
-														<button
-															className="darkSoul-button2"
-															type="button"
-														>
-															<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-															Creating Observation...
-														</button>
-													</div>
+													showFailedResponseBanner ? (
+														<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+															<img
+																src={failedIcon}
+																width={40}
+																height={40}
+																className="mr-3"
+															/>
+															Failed to generate a
+															response, please refresh
+															the page to try again.
+														</div>
+													) : (
+														<div className="darkSoul-glowing-button2 ml-12">
+															<button
+																className="darkSoul-button2"
+																type="button"
+															>
+																<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+																Creating
+																Observation...
+															</button>
+														</div>
+													)
 												) : (
 													<ResponseCard
 														answerResp={answerResp}
@@ -494,7 +547,7 @@ const NewChat = () => {
 										This is taking a bit longer than expected
 									</div>
 								)}
-							{showFailedResponseBanner &&
+							{/* {showFailedResponseBanner &&
 								(!answerResp?.answer?.graph ||
 									!answerResp?.answer?.answer) && (
 									<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
@@ -507,7 +560,7 @@ const NewChat = () => {
 										Failed to generate a response, please refresh
 										the page to try again.
 									</div>
-								)}
+								)} */}
 						</div>
 
 						<div className="bg-white pt-2">
@@ -520,18 +573,7 @@ const NewChat = () => {
 											getInputWidth(),
 										)}
 										value={prompt}
-										onChange={(e) => {
-											setPrompt(e.target.value);
-											setPromptQuery({ data: e.target.value });
-											dispatch(
-												updateUtilProp([
-													{
-														key: 'queryPrompt',
-														value: e.target.value,
-													},
-												]),
-											);
-										}}
+										onChange={(e) => handlePromptChange(e)}
 										onKeyDown={(e) => {
 											if (e.key === 'Enter')
 												handleQueryAnswer();
@@ -616,11 +658,13 @@ const NewChat = () => {
 						{completedSteps.includes(2) || completedSteps.includes(3) ? (
 							<div className="fixed bottom-1 flex flex-col items-center justify-center !w-[51.875rem] max-h-[30rem] overflow-x-auto z-20">
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 w-full">
-									<InputText
+									<Input
 										placeholder="Enter a prompt here"
-										inputMainClass="border-0 outline-none rounded-none bg-transparent !w-[46rem] !h-auto"
+										className="border-0 outline-none rounded-none bg-transparent !w-[46rem] !h-auto"
 										value={prompt}
-										setValue={(e) => setPrompt(e)}
+										onChange={(e) => {
+											handlePromptChange(e);
+										}}
 										onKeyDown={(e) => {
 											if (e.key === 'Enter')
 												handleQueryAnswer();
