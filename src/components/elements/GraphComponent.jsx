@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import * as d3 from 'd3';
 import TableComponent from './TableComponent';
@@ -18,34 +18,48 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading }) => {
 	const [activeTab, setActiveTab] = useState('Graphical View');
 	const chartRef = useRef(null);
 
-	useEffect(() => {
-		// console.log('graph data==', data);
+	const memoizedChartState = useMemo(() => {
 		if (data && data.response_csv_curl) {
-			setChartState({
+			return {
 				xAxis: data['x-axis'],
 				yAxis: data['y-axis'],
 				type: data['graph_type'],
 				borderColor: data['border_color'] || data['borderColor'],
 				backgroundColor: data['background_color'] || data['backgroundColor'],
 				title: data['chart_title'] || data['chartTitle'] || data['title'],
-			});
+			};
 		}
+		return chartState;
 	}, [data]);
 
 	useEffect(() => {
-		if (
-			chartState.type &&
-			chartState.xAxis &&
-			chartState.yAxis &&
-			data?.response_csv_curl
-		) {
-			d3.csv(data.response_csv_curl).then((csvData) => {
-				setLoadedData(csvData);
-				setColumns(Object.keys(csvData[0]));
-				setIsGraphLoading(false);
-			});
+		setChartState(memoizedChartState);
+	}, [memoizedChartState]);
+
+	useEffect(() => {
+		const fetchData = async () => {
+			if (
+				chartState.type &&
+				chartState.xAxis &&
+				chartState.yAxis &&
+				data?.response_csv_curl
+			) {
+				try {
+					const csvData = await d3.csv(data.response_csv_curl);
+					setLoadedData(csvData);
+					setColumns(Object.keys(csvData[0]));
+				} catch (error) {
+					console.error('Error loading CSV data:', error);
+				} finally {
+					setIsGraphLoading(false);
+				}
+			}
+		};
+
+		if (loadedData.length === 0) {
+			fetchData();
 		}
-	}, [chartState, data]);
+	}, [chartState, data, loadedData.length, setIsGraphLoading]);
 
 	useEffect(() => {
 		if (activeTab === 'Graphical View' && loadedData.length > 0) {

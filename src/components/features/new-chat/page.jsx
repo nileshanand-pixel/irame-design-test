@@ -423,8 +423,11 @@ const NewChat = () => {
 									{showWorkspace ? 'Hide' : 'Show'} Workspace
 								</Button>
 							</div>
-							<div className="mt-8">
-								{doingScience || !answerResp?.answer?.graph ? (
+							<div className="mt-8 mb-20">
+								{doingScience ||
+								(answerResp?.answer &&
+									!answerResp?.answer?.graph &&
+									answerResp?.status !== 'done') ? (
 									showFailedResponseBanner ? (
 										<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
 											<img
@@ -471,33 +474,34 @@ const NewChat = () => {
 
 								{doingScience ||
 									(!answerResp?.answer?.answer && (
-										<div className="flex flex-col space-y-3 mt-8 ml-12">
+										<div className="flex flex-col space-y-3 my-8 ml-12">
 											<div className="space-y-3">
-												{answerResp?.answer?.graph ? (
-													showFailedResponseBanner ? (
-														<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-															<img
-																src={failedIcon}
-																width={40}
-																height={40}
-																className="mr-3"
-															/>
-															Failed to generate a
-															response, please refresh
-															the page to try again.
-														</div>
-													) : (
-														<div className="darkSoul-glowing-button2 ml-12">
-															<button
-																className="darkSoul-button2"
-																type="button"
-															>
-																<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-																Creating
-																Observation...
-															</button>
-														</div>
-													)
+												{showFailedResponseBanner ? (
+													<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+														<img
+															src={failedIcon}
+															width={40}
+															height={40}
+															className="mr-3"
+														/>
+														Failed to generate a
+														response, please refresh the
+														page to try again.
+													</div>
+												) : answerResp?.answer?.graph ||
+												  (!answerResp?.answer?.graph &&
+														!isGraphLoading &&
+														answerResp?.status ===
+															'done') ? (
+													<div className="darkSoul-glowing-button2">
+														<button
+															className="darkSoul-button2"
+															type="button"
+														>
+															<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+															Creating Observation...
+														</button>
+													</div>
 												) : (
 													<ResponseCard
 														answerResp={answerResp}
@@ -564,7 +568,7 @@ const NewChat = () => {
 						</div>
 
 						<div className="bg-white pt-2">
-							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 ">
+							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white">
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 									<Input
 										placeholder="Enter a prompt here"
