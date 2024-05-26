@@ -24,6 +24,7 @@ const InputText = ({
 	subLabelClassName,
 	inputMainClass,
 	onKeyDown,
+	onBlur,
 }) => {
 	return (
 		<div className={className}>
@@ -73,6 +74,7 @@ const InputText = ({
 					error ? 'border-destructive' : '',
 				)}
 				onKeyDown={onKeyDown}
+				onBlur={onBlur}
 			/>
 			{error && errorText && (
 				<p className={'text-xs  text-destructive mt-1'}>{errorText}</p>

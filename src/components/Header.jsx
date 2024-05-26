@@ -9,12 +9,19 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { tokenCookie, getToken, getInitials } from '@/lib/utils';
+import { tokenCookie, getToken, getInitials, cn } from '@/lib/utils';
+import { useRouter } from '@/hooks/useRouter';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
+	const { pathname } = useRouter();
 	return (
-		<header className="flex justify-between px-5 py-4 text-lg text-primary100">
+		<header
+			className={cn(
+				'flex justify-between px-5 py-4 text-lg text-primary100',
+				pathname.includes('/dashboard') ? 'bg-gray-muted' : 'bg-white',
+			)}
+		>
 			<span>{'Irame.ai'}</span>
 			<div className="flex gap-6">
 				{/* <ThemeToggle /> */}

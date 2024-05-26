@@ -64,7 +64,10 @@ module.exports = {
 					80: 'rgba(106, 18, 205, 0.8)',
 					100: 'rgba(106, 18, 205, 1)',
 				},
+				primary1: 'rgba(38, 6, 74, 0.01)',
+				primary2: 'rgba(38, 6, 74, 0.02)',
 				primary4: 'rgba(38, 6, 74, 0.04)',
+				primary20: 'rgba(38, 6, 74, 0.2)',
 				primary60: 'rgba(38, 6, 74, 0.6)',
 				primary80: 'rgba(38, 6, 74, 0.8)',
 				primary40: 'rgba(38, 6, 74, 0.4)',
@@ -73,6 +76,7 @@ module.exports = {
 				primary20: 'rgba(38, 6, 74, 0.2)',
 				gray: {
 					1: 'rgba(78, 78, 78, 0.1)',
+					muted: 'rgba(242, 244, 249, 1)',
 				},
 			},
 			// borderRadius: {

@@ -39,6 +39,7 @@ const SelectPrompt = ({
 	const handlePrompt = (question) => {
 		try {
 			// setPrompt(question);
+			navigate(`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}`);
 			setDoingScience(true);
 			setAnswerResp({});
 			setPromptQuery({ data: question });
