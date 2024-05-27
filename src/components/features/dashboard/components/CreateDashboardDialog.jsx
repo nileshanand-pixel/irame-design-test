@@ -9,6 +9,7 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import React from 'react';
+import dashboardIcon from '@/assets/icons/dashboard-create-dialog.svg';
 
 const CreateDashboardDialog = ({
 	open,
@@ -23,8 +24,11 @@ const CreateDashboardDialog = ({
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogContent className="sm:max-w-[500px] ">
 				<DialogHeader className="border-b pb-3">
+					{/* <img src={dashboardIcon} width={48} height={48} /> */}
+					{/* <div> */}
 					<DialogTitle>New Dashboard</DialogTitle>
 					<DialogDescription>Name your new dashboard</DialogDescription>
+					{/* </div> */}
 				</DialogHeader>
 				<div className="my-4">
 					<InputText

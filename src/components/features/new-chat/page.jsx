@@ -685,7 +685,6 @@ const NewChat = () => {
 							isLoading={isCreatingDashboard}
 						/>
 					) : null}
-					s
 				</div>
 			) : (
 				<div className="flex justify-center pt-8">
