@@ -614,7 +614,7 @@ const NewChat = () => {
 							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white">
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 									<Input
-										placeholder="Enter a prompt here"
+										placeholder="Ask IRA"
 										className={cn(
 											'border-0 outline-none rounded-none bg-transparent ',
 											getInputWidth(),
@@ -724,7 +724,7 @@ const NewChat = () => {
 							<div className="fixed bottom-1 flex flex-col items-center justify-center !w-[51.875rem] max-h-[30rem] overflow-x-auto z-20">
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 w-full">
 									<Input
-										placeholder="Enter a prompt here"
+										placeholder="Ask IRA"
 										className="border-0 outline-none rounded-none bg-transparent !w-[46rem] !h-auto"
 										value={prompt}
 										onChange={(e) => {

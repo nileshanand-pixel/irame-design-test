@@ -155,7 +155,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						} mt-10 mb-8 bg-purple-4`}
 					>
 						<i className="bi-plus-lg"></i>
-						{isSideNavOpen ? <p>New Chat</p> : null}
+						{isSideNavOpen ? <p>Ask IRA</p> : null}
 					</Link>
 					<div
 						className={`flex flex-col gap-4 cursor-pointer text-primary80 font-medium p-3 rounded-md`}
