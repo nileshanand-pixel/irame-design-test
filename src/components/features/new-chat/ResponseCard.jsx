@@ -19,6 +19,7 @@ const ResponseCard = ({
 	setResponseTimeElapsed,
 	setShowResponseDelayBanner,
 	promptQuery,
+	setShowAddToDashboard,
 }) => {
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
@@ -58,7 +59,7 @@ const ResponseCard = ({
 											isGraphLoading={isGraphLoading}
 											setIsGraphLoading={setIsGraphLoading}
 										/>
-										<div className="my-4">
+										<div className="mt-6 mb-14 flex justify-between">
 											<Button
 												variant="outline"
 												className="text-muted-foreground cursor-pointer"
@@ -72,6 +73,14 @@ const ResponseCard = ({
 											>
 												<i className="bi-download mr-2"></i>
 												Download CSV
+											</Button>
+											<Button
+												className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+												onClick={() => {
+													setShowAddToDashboard(true);
+												}}
+											>
+												+ Add to Dashboard
 											</Button>
 										</div>
 									</div>

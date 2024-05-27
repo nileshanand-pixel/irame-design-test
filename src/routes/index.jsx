@@ -6,6 +6,7 @@ import Help from '@/components/features/help/page';
 import Layout from '@/components/Layout';
 import Configuration from '@/components/features/configuration/page';
 import useAuth from '@/hooks/useAuth';
+import DashboardDetailsPage from '@/components/features/dashboard/components/DashboardDetailsPage';
 
 const ProtectedRoute = ({ element, ...rest }) => {
 	const { isAuthenticated } = useAuth();
@@ -29,6 +30,11 @@ const AppRoutes = () => {
 							<Route path="/" element={<Navigate to="new-chat" />} />
 							<Route path="new-chat/*" element={<NewChat />} />
 							<Route path="dashboard" element={<Dashboard />} />
+							<Route
+								path="dashboard/content"
+								element={<DashboardDetailsPage />}
+							/>
+							<Route path="dashboard/*" element={<Dashboard />} />
 							<Route
 								path="configuration"
 								element={<Configuration />}

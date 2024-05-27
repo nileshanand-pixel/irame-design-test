@@ -27,6 +27,10 @@ import { Input } from '@/components/ui/input';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { getDataSources } from '../configuration/service/configuration.service';
+import AddQueryToDashboard from './AddQueryToDashboard';
+import { createDashboard } from '../dashboard/service/dashboard.service';
+import { toast } from 'sonner';
+import CreateDashboardDialog from '../dashboard/components/CreateDashboardDialog';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -56,6 +60,11 @@ const NewChat = () => {
 	const [responseTimeElapsed, setResponseTimeElapsed] = useState(0);
 	const [isGraphLoading, setIsGraphLoading] = useState(true);
 	const [visitedTabs, setVisitedTabs] = useState({});
+	const [showAddToDashboard, setShowAddToDashboard] = useState(false);
+	const [showCreateDashboard, setShowCreateDashboard] = useState(false);
+	const [errors, setErrors] = useState({});
+	const [dashboardName, setDashboardName] = useState('');
+	const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
 
 	const gradientText = {
 		backgroundImage:
@@ -138,7 +147,9 @@ const NewChat = () => {
 		setWorkSpaceTab(tab);
 	};
 	const handleQueryAnswer = () => {
+		navigate(`/app/new-chat/?step=4`);
 		handleNextStep(4);
+
 		setDoingScience(true);
 		if (searchParam.has('sessionId') || searchParam.has('queryId')) {
 			const newParams = new URLSearchParams(location.search);
@@ -147,11 +158,18 @@ const NewChat = () => {
 			setSearchParam(newParams.toString());
 			setAnswerResp({});
 		}
-		createQuerySession(query.dataSourceId, prompt, getToken()).then((res) => {
-			navigate(
-				`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
-			);
-		});
+		createQuerySession(query.dataSourceId, prompt, getToken())
+			.then((res) => {
+				const newParams = new URLSearchParams(location.search);
+				newParams.set('dataSourceId', query.dataSourceId);
+				newParams.set('sessionId', res.session_id);
+				newParams.set('queryId', res.query_id);
+				navigate(`/app/new-chat/?${newParams.toString()}`);
+			})
+			.catch((error) => {
+				console.error('Error creating query session:', error);
+				navigate(`/app/new-chat`);
+			});
 	};
 
 	const getInputWidth = () => {
@@ -206,6 +224,27 @@ const NewChat = () => {
 			);
 		} catch (error) {
 			console.log(error);
+		}
+	};
+
+	const handleCreateNewDashboard = async () => {
+		try {
+			if (!dashboardName) {
+				setErrors({ dashboardName: 'Please enter dashboard name' });
+				return;
+			}
+			setIsCreatingDashboard(true);
+			const resp = await createDashboard(getToken(), dashboardName);
+			if (resp) {
+				setIsCreatingDashboard(false);
+				setShowCreateDashboard(false);
+				toast.success('Dashboard created successfully');
+				navigate(`/app/new-chat`);
+			}
+		} catch (error) {
+			setIsCreatingDashboard(false);
+			console.log('dashboard create error', error);
+			toast.error('Something went wrong while creating dashboard');
 		}
 	};
 
@@ -387,7 +426,7 @@ const NewChat = () => {
 						)}
 					>
 						{utilReducer?.selectedDataSource && (
-							<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-4 float-right text-primary80 font-medium max-w-[220px] truncate">
+							<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-10 float-right text-primary80 font-medium max-w-[220px] truncate">
 								<i className="bi-database-check mr-2 text-primary80"></i>
 								{utilReducer?.selectedDataSource}
 							</div>
@@ -401,7 +440,7 @@ const NewChat = () => {
 									</AvatarFallback>
 								</Avatar>
 								{promptQuery.data ? (
-									<p className="ms-1 bg-purple-4 text-primary80 font-normal px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
+									<p className="ms-1 bg-purple-10 text-primary80 font-normal px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
 										{promptQuery.data}
 									</p>
 								) : (
@@ -469,6 +508,7 @@ const NewChat = () => {
 											setShowResponseDelayBanner
 										}
 										doingScience={doingScience}
+										setShowAddToDashboard={setShowAddToDashboard}
 									/>
 								)}
 
@@ -529,6 +569,9 @@ const NewChat = () => {
 														}
 														setShowResponseDelayBanner={
 															setShowResponseDelayBanner
+														}
+														setShowAddToDashboard={
+															setShowAddToDashboard
 														}
 													/>
 												)}
@@ -624,6 +667,25 @@ const NewChat = () => {
 							/>
 						</div>
 					) : null}
+					{showAddToDashboard ? (
+						<AddQueryToDashboard
+							open={showAddToDashboard}
+							setOpen={setShowAddToDashboard}
+							setShowCreateDashboard={setShowCreateDashboard}
+						/>
+					) : null}
+					{showCreateDashboard ? (
+						<CreateDashboardDialog
+							open={showCreateDashboard}
+							setOpen={setShowCreateDashboard}
+							name={dashboardName}
+							setDashboardName={setDashboardName}
+							handleCreateNewDashboard={handleCreateNewDashboard}
+							errors={errors}
+							isLoading={isCreatingDashboard}
+						/>
+					) : null}
+					s
 				</div>
 			) : (
 				<div className="flex justify-center pt-8">

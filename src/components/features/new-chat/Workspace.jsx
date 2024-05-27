@@ -73,9 +73,9 @@ const Workspace = ({
 								>
 									{workSpaceMap[items]}
 									{visitedTabs[items] ? null : (
-										<span className="relative flex size-2">
-											<span className="absolute inline-flex h-full w-full rounded-full bg-purple-100 opacity-75"></span>
-											<span className="relative inline-flex rounded-full size-2 bg-purple-100"></span>
+										<span className="relative flex size-2 ">
+											<span className="absolute inline-flex h-full w-full rounded-full bg-purple-100"></span>
+											<span className="animate-ping relative inline-flex rounded-full size-2 bg-purple-100"></span>
 										</span>
 									)}
 								</li>
