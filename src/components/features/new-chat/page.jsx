@@ -440,7 +440,7 @@ const NewChat = () => {
 									</AvatarFallback>
 								</Avatar>
 								{promptQuery.data ? (
-									<p className="ms-1 bg-purple-10 text-primary80 font-normal px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
+									<p className="ms-1 bg-purple-10 text-primary80 font-medium px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
 										{promptQuery.data}
 									</p>
 								) : (
