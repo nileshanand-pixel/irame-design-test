@@ -70,6 +70,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	const getChatHistory = (sessionId) => {
 		dispatch(updateUtilProp([{ key: 'resetChat', value: true }]));
+		// navigate(`/app/new-chat/?step=4`);
 
 		getQuerySession(sessionId, getToken()).then((res) => {
 			dispatch(

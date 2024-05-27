@@ -38,11 +38,13 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 			.then(
 				(res) => toast.success('Dashboard updated successfully'),
 				setIsEditing(false),
-				setRefetch((prevRefetch) => !prevRefetch),
 			)
 			.catch((err) => {
 				console.log('Error updating dashboard', err);
 				toast.error('Something went wrong while updating dashboard');
+			})
+			.finally(() => {
+				setRefetch((prevRefetch) => !prevRefetch);
 			});
 	};
 	return (
