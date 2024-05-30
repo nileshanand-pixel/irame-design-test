@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import * as d3 from 'd3';
@@ -15,6 +14,7 @@ const GraphCard = ({ data, isGraphLoading, setIsGraphLoading }) => {
 	const [loadedData, setLoadedData] = useState([]);
 	const [columns, setColumns] = useState([]);
 	const chartRef = useRef(null);
+	const canvasRef = useRef(null);
 
 	const memoizedChartState = useMemo(() => {
 		if (data && data.response_csv_curl) {
@@ -64,7 +64,7 @@ const GraphCard = ({ data, isGraphLoading, setIsGraphLoading }) => {
 			if (chartRef.current) {
 				chartRef.current.destroy();
 			}
-			const ctx = document.getElementById('canvas');
+			const ctx = canvasRef.current.getContext('2d');
 			chartRef.current = new Chart(ctx, {
 				type: chartState.type,
 				data: {
@@ -104,8 +104,9 @@ const GraphCard = ({ data, isGraphLoading, setIsGraphLoading }) => {
 			}
 		};
 	}, [loadedData, chartState]);
+
 	return (
-		<div className="mb-4">
+		<div className="mb-4 w-full h-full">
 			{isGraphLoading ? (
 				<div className="darkSoul-glowing-button2 mb-10 mt-5 ml-4">
 					<button className="darkSoul-button2" type="button">
@@ -114,8 +115,8 @@ const GraphCard = ({ data, isGraphLoading, setIsGraphLoading }) => {
 					</button>
 				</div>
 			) : (
-				<div className="px-4 py-1 w-[30rem] h-[20rem]">
-					<canvas id="canvas" width="380" height="250"></canvas>
+				<div className="px-5 py-1 size-full">
+					<canvas ref={canvasRef}></canvas>
 				</div>
 			)}
 		</div>

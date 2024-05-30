@@ -1,18 +1,19 @@
 import { useRouter } from '@/hooks/useRouter';
 import React, { useEffect, useState } from 'react';
 import { getDashboardContent } from '../service/dashboard.service';
-import { getToken } from '@/lib/utils';
+import { cn, getToken } from '@/lib/utils';
 import DOMPurify from 'dompurify';
 import GraphCard from './GraphCard';
 import { Button } from '@/components/ui/button';
 import TooltipWrapper from '@/components/elements/TooltipWrapper';
+import LoadingChatBubble from '@/components/elements/LoadingChatBubble';
 
 const DashboardDetailsPage = () => {
 	const [dashboard, setDashboard] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [selectedItem, setSelectedItem] = useState(null);
 	const [isFetching, setIsFetching] = useState(false);
-	const { query } = useRouter();
+	const { query, navigate } = useRouter();
 
 	let safeHTML = '';
 	if (selectedItem && selectedItem?.content?.summary) {
@@ -36,9 +37,12 @@ const DashboardDetailsPage = () => {
 	}, [query]);
 	return (
 		<div className="w-full h-full">
-			<div className="w-fit flex flex-col justify-between mt-2 ">
-				<div className="flex items-end gap-2 relative">
-					<h2 className="text-2xl font-semibold text-primary80 ">
+			<div className="w-full flex flex-col justify-between mt-2 ">
+				<div className="w-fit flex items-end gap-2 relative">
+					<h2
+						className="text-2xl font-semibold text-primary80 cursor-pointer"
+						onClick={() => navigate('/app/dashboard')}
+					>
 						Dashboard
 					</h2>
 					{dashboard[0]?.tittle ? (
@@ -47,7 +51,12 @@ const DashboardDetailsPage = () => {
 						</p>
 					) : null}
 				</div>
-				<div className="grid grid-cols-2 gap-4 my-6">
+				<div
+					className={cn(
+						'grid grid-cols-2 gap-4 my-6 aspect-auto',
+						selectedItem ? 'width-[70%]' : 'w-full h-full',
+					)}
+				>
 					{dashboard?.length > 0 ? (
 						Array.isArray(dashboard) &&
 						dashboard.map((item) => {
@@ -57,7 +66,7 @@ const DashboardDetailsPage = () => {
 										className="bg-white rounded-3xl p-2 cursor-pointer"
 										onClick={() => handleItemClick(item)}
 									>
-										<div className="flex flex-col items-center justify-center">
+										<div className="flex flex-col items-center justify-center ">
 											<GraphCard
 												data={item?.content?.graph}
 												isGraphLoading={isLoading}
@@ -91,7 +100,7 @@ const DashboardDetailsPage = () => {
 
 				{selectedItem && (
 					<div
-						className={`fixed top-[15%] right-4 w-[400px] h-fit p-4 bg-white border-l border-primary8 rounded-3xl transition-transform transform ${
+						className={`absolute top-[15%] right-4 w-[400px] min-h-fit max-h-[720px] p-4 bg-white border-l border-primary8 rounded-3xl transition-transform transform ${
 							selectedItem ? 'translate-x-0' : 'translate-x-full'
 						}`}
 						style={{ transition: 'transform 0.3s ease-in-out' }}
@@ -140,7 +149,7 @@ const DashboardDetailsPage = () => {
 									{selectedItem?.content?.query}
 								</p>
 							</div>
-							<div className="max-h-[450px] overflow-y-auto">
+							<div className="max-h-[380px] overflow-y-auto">
 								{selectedItem?.content?.summary ? (
 									<p
 										className="text-primary80 font-normal mt-2"

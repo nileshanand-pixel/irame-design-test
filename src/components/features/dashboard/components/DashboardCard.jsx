@@ -8,6 +8,7 @@ import { getToken } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import InputText from '@/components/elements/InputText';
 import { toast } from 'sonner';
+import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
 
 const DashboardCard = ({ data, refetch, setRefetch }) => {
 	const [isEditing, setIsEditing] = useState(false);
@@ -58,8 +59,8 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 			}
 		>
 			<div className="flex gap-6">
-				<div className="bg-purple-4 w-[100px] h-16 rounded-xl">
-					{data?.placeholder}
+				<div className="bg-purple-4 w-[100px] h-16 rounded-xl flex items-center justify-center pt-1.5">
+					<img src={graphPlaceholder} alt="graph-placeholder" />
 				</div>
 				<div className="flex flex-col gap-2">
 					{isEditing ? (

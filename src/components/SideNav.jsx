@@ -9,6 +9,7 @@ import {
 	createQuery,
 	deleteSession,
 	getQuerySession,
+	getUserSession,
 } from './features/new-chat/service/new-chat.service';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import {
@@ -123,6 +124,17 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			);
 		} catch (error) {}
 	};
+
+	const fetchUserSession = () => {
+		try {
+			// if (utilReducer?.sessionHistory?.length > 0) return;
+			getUserSession(getToken()).then((res) => {
+				dispatch(updateUtilProp([{ key: 'sessionHistory', value: res }]));
+			});
+		} catch (error) {
+			console.error('Error fetching user session:', error);
+		}
+	};
 	useEffect(() => {
 		if (pathname === '/app/new-chat') {
 			setActiveTab('');
@@ -130,6 +142,9 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			setActiveTab(pathname);
 		}
 	}, [pathname]);
+	useEffect(() => {
+		fetchUserSession();
+	}, []);
 
 	return (
 		<div
