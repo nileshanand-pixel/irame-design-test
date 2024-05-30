@@ -6,7 +6,6 @@ import DOMPurify from 'dompurify';
 import GraphCard from './GraphCard';
 import { Button } from '@/components/ui/button';
 import TooltipWrapper from '@/components/elements/TooltipWrapper';
-import LoadingChatBubble from '@/components/elements/LoadingChatBubble';
 
 const DashboardDetailsPage = () => {
 	const [dashboard, setDashboard] = useState([]);

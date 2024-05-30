@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import * as d3 from 'd3';
 import TableComponent from './TableComponent';
-import LoadingChatBubble from './LoadingChatBubble';
 
 const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading }) => {
 	const [chartState, setChartState] = useState({
@@ -117,7 +116,6 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading }) => {
 					</button>
 				</div>
 			) : (
-				// <LoadingChatBubble />
 				<>
 					<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
 						{['Graphical View', 'Tabular View'].map((item, indx) => (
