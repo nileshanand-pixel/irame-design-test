@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import * as d3 from 'd3';
 
-const GraphCard = ({ data, isGraphLoading, setIsGraphLoading }) => {
+const GraphCard = ({ data, isGraphLoading, setIsGraphLoading, selectedItem }) => {
 	const [chartState, setChartState] = useState({
 		xAxis: '',
 		yAxis: '',
@@ -103,7 +103,7 @@ const GraphCard = ({ data, isGraphLoading, setIsGraphLoading }) => {
 				chartRef.current.destroy();
 			}
 		};
-	}, [loadedData, chartState]);
+	}, [loadedData, chartState, selectedItem]);
 
 	return (
 		<div className="mb-4 w-full h-full">
@@ -115,7 +115,7 @@ const GraphCard = ({ data, isGraphLoading, setIsGraphLoading }) => {
 					</button>
 				</div>
 			) : (
-				<div className="px-5 py-1 size-full">
+				<div className="px-5 py-1 size-[90%] mx-auto">
 					<canvas ref={canvasRef}></canvas>
 				</div>
 			)}
