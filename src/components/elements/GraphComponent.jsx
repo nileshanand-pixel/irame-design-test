@@ -159,7 +159,7 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading }) => {
 							</div>
 						)}
 						{activeTab === 'Tabular View' && (
-							<div className="bg-white rounded-3xl p-2">
+							<div className="bg-white rounded-3xl py-2">
 								<TableComponent
 									data={loadedData}
 									columns={columns}

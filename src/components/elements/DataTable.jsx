@@ -75,7 +75,7 @@ export function DataTable({
 	});
 	return (
 		<div className="w-full space-y-2.5 overflow-auto">
-			<div className="rounded-md border">
+			<div className="text-primary100">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
