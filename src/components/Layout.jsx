@@ -37,7 +37,7 @@ const Layout = ({ children }) => {
 					className={cn(
 						'px-8 pt-0',
 						pathname.includes('/dashboard')
-							? 'bg-gray-muted h-[92vh] overflow-y-auto'
+							? 'bg-gray-muted min-h-[92vh] overflow-y-auto'
 							: 'bg-white',
 					)}
 				>

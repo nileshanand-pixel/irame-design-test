@@ -31,6 +31,7 @@ import AddQueryToDashboard from './AddQueryToDashboard';
 import { createDashboard } from '../dashboard/service/dashboard.service';
 import { toast } from 'sonner';
 import CreateDashboardDialog from '../dashboard/components/CreateDashboardDialog';
+import { queryClient } from '@/lib/react-query';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -39,7 +40,7 @@ const NewChat = () => {
 	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 	const [searchParam, setSearchParam] = useSearchParams();
 
-	const { query, params, navigate } = useRouter();
+	const { query, params, navigate, pathname } = useRouter();
 	const token = useGetCookie('token');
 
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -239,7 +240,11 @@ const NewChat = () => {
 				setIsCreatingDashboard(false);
 				setShowCreateDashboard(false);
 				toast.success('Dashboard created successfully');
-				navigate(`/app/new-chat`);
+				if (pathname == '/app/dashboard') {
+					navigate(`/app/new-chat`);
+				} else if (pathname == '/app/new-chat/') {
+					queryClient.invalidateQueries('user-dashboard');
+				}
 			}
 		} catch (error) {
 			setIsCreatingDashboard(false);

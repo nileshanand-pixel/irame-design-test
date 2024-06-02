@@ -115,7 +115,7 @@ const GraphCard = ({ data, isGraphLoading, setIsGraphLoading, selectedItem }) =>
 					</button>
 				</div>
 			) : (
-				<div className="px-5 py-1 size-[90%] mx-auto">
+				<div className="px-5 py-1 mx-auto w-full h-full">
 					<canvas ref={canvasRef}></canvas>
 				</div>
 			)}

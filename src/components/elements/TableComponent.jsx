@@ -6,6 +6,7 @@ import { TableRow } from '../ui/table';
 import { TableBody } from '../ui/table';
 import { TableCell } from '../ui/table';
 import { cn } from '@/lib/utils';
+import { DataTable } from './DataTable';
 
 const TableComponent = ({ data, columns }) => {
 	if (!data || !data.length) {
@@ -14,7 +15,8 @@ const TableComponent = ({ data, columns }) => {
 
 	return (
 		<div className="h-[45rem] overflow-auto">
-			<Table>
+			<DataTable columns={columns} data={data} />
+			{/* <Table>
 				<TableHeader>
 					<TableRow>
 						{columns &&
@@ -48,7 +50,7 @@ const TableComponent = ({ data, columns }) => {
 						</TableRow>
 					))}
 				</TableBody>
-			</Table>
+			</Table> */}
 		</div>
 	);
 };

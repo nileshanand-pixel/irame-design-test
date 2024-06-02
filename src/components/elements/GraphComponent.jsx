@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import * as d3 from 'd3';
 import TableComponent from './TableComponent';
+import { DataTableColumnHeader } from './data-table/components/data-table-column-header';
 
 const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading }) => {
 	const [chartState, setChartState] = useState({
@@ -32,6 +33,22 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading }) => {
 		return chartState;
 	}, [data]);
 
+	function generateColumns(keys) {
+		return keys.map((key) => {
+			let headerTitle = key.replace(/_/g, ' ').toUpperCase();
+
+			return {
+				accessorKey: key,
+				header: ({ column }) => (
+					<DataTableColumnHeader column={column} title={headerTitle} />
+				),
+				cell: ({ row }) => <div className="p-1">{row?.original?.[key]}</div>,
+				enableSorting: true,
+				enableHiding: false,
+			};
+		});
+	}
+
 	useEffect(() => {
 		setChartState(memoizedChartState);
 	}, [memoizedChartState]);
@@ -47,7 +64,8 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading }) => {
 				try {
 					const csvData = await d3.csv(data.response_csv_curl);
 					setLoadedData(csvData);
-					setColumns(Object.keys(csvData[0]));
+
+					setColumns(generateColumns(Object.keys(csvData[0])));
 				} catch (error) {
 					console.error('Error loading CSV data:', error);
 				} finally {

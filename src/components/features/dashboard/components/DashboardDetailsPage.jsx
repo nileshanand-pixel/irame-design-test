@@ -6,12 +6,12 @@ import DOMPurify from 'dompurify';
 import GraphCard from './GraphCard';
 import { Button } from '@/components/ui/button';
 import TooltipWrapper from '@/components/elements/TooltipWrapper';
+import { useQuery } from '@tanstack/react-query';
 
 const DashboardDetailsPage = () => {
 	const [dashboard, setDashboard] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [selectedItem, setSelectedItem] = useState(null);
-	const [isFetching, setIsFetching] = useState(false);
 	const { query, navigate } = useRouter();
 
 	let safeHTML = '';
@@ -19,21 +19,19 @@ const DashboardDetailsPage = () => {
 		safeHTML = DOMPurify.sanitize(selectedItem?.content?.summary);
 	}
 
-	const getDashboardDetails = async (dashboardId) => {
-		const resp = await getDashboardContent(
-			getToken(),
-			dashboardId,
-			setIsFetching,
-		);
-		setDashboard(resp);
-	};
+	const dashboardDetailsQuery = useQuery({
+		queryKey: 'dashboard-details',
+		queryFn: () => getDashboardContent(getToken(), query.id),
+	});
 	const handleItemClick = (item) => {
 		setSelectedItem(item);
 	};
 
 	useEffect(() => {
-		getDashboardDetails(query.id);
-	}, [query]);
+		if (query.id) {
+			setDashboard(dashboardDetailsQuery.data);
+		}
+	}, [query, dashboardDetailsQuery.data]);
 	return (
 		<div className="w-full h-full">
 			<div className="w-full flex flex-col justify-between mt-2 ">
@@ -44,7 +42,7 @@ const DashboardDetailsPage = () => {
 					>
 						Dashboard
 					</h2>
-					{dashboard[0]?.tittle ? (
+					{dashboard && dashboard[0]?.tittle ? (
 						<p className="text-sm font-normal text-primary80 pb-1">
 							/ {dashboard[0]?.tittle}
 						</p>
@@ -53,39 +51,46 @@ const DashboardDetailsPage = () => {
 				<div className="flex gap-4">
 					<div
 						className={cn(
-							'grid grid-cols-2 gap-4 my-6 aspect-auto w-full',
+							'grid gap-4 my-6 w-full h-full',
+							selectedItem ? 'grid-cols-1' : 'grid-cols-2',
+							'2xl:grid-cols-2', // Two columns on double extra-large screens (1281px and up)
 						)}
 					>
 						{dashboard?.length > 0 ? (
 							Array.isArray(dashboard) &&
 							dashboard.map((item) => {
 								return (
-									<div key={item.dashboard_content_id}>
+									<div
+										key={item.dashboard_content_id}
+										className="w-full h-full"
+									>
 										<div
-											className="bg-white rounded-3xl p-2 cursor-pointer"
+											className="bg-white rounded-3xl p-2 cursor-pointer w-full h-full"
 											onClick={() => handleItemClick(item)}
 										>
-											<div className="flex flex-col items-center justify-center ">
+											<div className="flex flex-col items-center justify-center w-full h-full">
 												<GraphCard
 													data={item?.content?.graph}
 													isGraphLoading={isLoading}
 													setIsGraphLoading={setIsLoading}
 													selectedItem={!!selectedItem}
 												/>
-												<p
-													className="text-primary80 font-medium mb-4 px-4 line-clamp-2"
-													style={{
-														whiteSpace: 'pre-wrap',
-													}}
-												>
-													{item?.content?.query}
-												</p>
+												{false ? (
+													<p
+														className="text-primary80 font-medium mb-2 px-4 line-clamp-2"
+														style={{
+															whiteSpace: 'pre-wrap',
+														}}
+													>
+														{item?.content?.query}
+													</p>
+												) : null}
 											</div>
 										</div>
 									</div>
 								);
 							})
-						) : isFetching ? (
+						) : dashboardDetailsQuery?.isLoading ? (
 							<div className="darkSoul-glowing-button2 mb-10 mt-5 ml-4">
 								<button className="darkSoul-button2" type="button">
 									<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>

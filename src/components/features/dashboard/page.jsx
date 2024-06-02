@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from '@/hooks/useRouter';
 import CreateDashboardDialog from './components/CreateDashboardDialog';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
 const Dashboard = () => {
 	const [dashboard, setDashboard] = useState([]);
@@ -26,10 +27,11 @@ const Dashboard = () => {
 
 	const { navigate } = useRouter();
 
-	const fetchDashboardHelper = async () => {
-		const resp = await getUserDashboard(getToken());
-		setDashboard(resp);
-	};
+	const userDashboardQuery = useQuery({
+		queryKey: 'user-dashboard',
+		queryFn: () => getUserDashboard(getToken()),
+	});
+
 	const handleCreateNewDashboard = async () => {
 		try {
 			if (!dashboardName) {
@@ -58,8 +60,10 @@ const Dashboard = () => {
 	}, [search, dashboard]);
 
 	useEffect(() => {
-		fetchDashboardHelper();
-	}, [refetch]);
+		if (userDashboardQuery.data) {
+			setDashboard(userDashboardQuery.data);
+		}
+	}, [refetch, userDashboardQuery.data]);
 
 	useEffect(() => {
 		setErrors({});
