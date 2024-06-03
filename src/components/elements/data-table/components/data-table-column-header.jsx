@@ -86,8 +86,8 @@ export function DataTableColumnHeader({ column, title, className }) {
 						/>
 						Desc
 					</DropdownMenuItem>
-					<DropdownMenuSeparator />
-					<DropdownMenuItem
+					{/* <DropdownMenuSeparator /> */}
+					{/* <DropdownMenuItem
 						aria-label="Hide column"
 						onClick={() => column.toggleVisibility(false)}
 					>
@@ -96,7 +96,7 @@ export function DataTableColumnHeader({ column, title, className }) {
 							aria-hidden="true"
 						/>
 						Hide
-					</DropdownMenuItem>
+					</DropdownMenuItem> */}
 				</DropdownMenuContent>
 			</DropdownMenu>
 		</div>

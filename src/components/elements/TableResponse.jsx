@@ -5,7 +5,7 @@ import * as d3 from 'd3';
 import { DataTableColumnHeader } from './data-table/components/data-table-column-header';
 import TableComponent from './TableComponent';
 
-const TableResponse = ({ data, isGraphLoading, setIsGraphLoading }) => {
+const TableResponse = ({ data, isGraphLoading, noStyles }) => {
 	// const [chartState, setChartState] = useState({
 	// 	xAxis: '',
 	// 	yAxis: '',
@@ -43,7 +43,6 @@ const TableResponse = ({ data, isGraphLoading, setIsGraphLoading }) => {
 				),
 				cell: ({ row }) => <div className="p-1">{row?.original?.[key]}</div>,
 				enableSorting: true,
-				enableHiding: false,
 			};
 		});
 	}
@@ -63,7 +62,7 @@ const TableResponse = ({ data, isGraphLoading, setIsGraphLoading }) => {
 				} catch (error) {
 					console.error('Error loading CSV data:', error);
 				} finally {
-					setIsGraphLoading(false);
+					// setIsGraphLoading(false);
 				}
 			}
 		};
@@ -71,9 +70,9 @@ const TableResponse = ({ data, isGraphLoading, setIsGraphLoading }) => {
 		if (loadedData.length === 0) {
 			fetchData();
 		}
-	}, [data, loadedData.length, setIsGraphLoading]);
+	}, [data, loadedData.length]);
 
-	console.log('TableResponse', data, loadedData, columns);
+	// console.log('TableResponse', data, loadedData, columns);
 
 	return (
 		<div className="mb-4">
@@ -86,24 +85,35 @@ const TableResponse = ({ data, isGraphLoading, setIsGraphLoading }) => {
 				</div>
 			) : (
 				<>
-					<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
-						{['Tabular View'].map((item, indx) => (
-							<li
-								key={indx}
-								className={`!pb-0 ${
-									activeTab === item ? 'active-tab' : 'default-tab'
-								}`}
-								onClick={() => setActiveTab(item)}
-							>
-								{item}
-							</li>
-						))}
-					</ul>
-					<div className="rounded-3xl border border-primary4 bg-purple-4 p-4 mt-2">
-						<div className="bg-white rounded-3xl py-2">
-							<TableComponent data={loadedData} columns={columns} />
-						</div>
-					</div>
+					{noStyles ? (
+						<TableComponent data={loadedData} columns={columns} />
+					) : (
+						<>
+							<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
+								{['Tabular View'].map((item, indx) => (
+									<li
+										key={indx}
+										className={`!pb-0 ${
+											activeTab === item
+												? 'active-tab'
+												: 'default-tab'
+										}`}
+										onClick={() => setActiveTab(item)}
+									>
+										{item}
+									</li>
+								))}
+							</ul>
+							<div className="rounded-3xl border border-primary4 bg-purple-4 p-4 mt-2">
+								<div className="bg-white rounded-3xl py-2">
+									<TableComponent
+										data={loadedData}
+										columns={columns}
+									/>
+								</div>
+							</div>
+						</>
+					)}
 				</>
 			)}
 		</div>

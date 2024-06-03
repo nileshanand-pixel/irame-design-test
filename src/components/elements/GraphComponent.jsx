@@ -135,63 +135,24 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable }) 
 				</div>
 			) : (
 				<>
-					{showTable ? (
-						<>
-							<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
-								{['Graphical View', 'Tabular View'].map(
-									(item, indx) => (
-										<li
-											key={indx}
-											className={`!pb-0 ${
-												activeTab === item
-													? 'active-tab'
-													: 'default-tab'
-											}`}
-											onClick={() => setActiveTab(item)}
-										>
-											{item}
-										</li>
-									),
-								)}
-							</ul>
-							<div className="rounded-3xl border border-primary4 bg-purple-4 p-4 mt-2">
-								{activeTab === 'Graphical View' && (
-									<div className="bg-white rounded-3xl p-2">
-										<canvas
-											id="canvas"
-											width="380"
-											height="250"
-										></canvas>
-									</div>
-								)}
-								{activeTab === 'Tabular View' && (
-									<div className="bg-white rounded-3xl py-2">
-										<TableComponent
-											data={loadedData}
-											columns={columns}
-										/>
-									</div>
-								)}
-							</div>
-						</>
-					) : (
-						<>
-							<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
-								{['Graphical View'].map((item, indx) => (
-									<li
-										key={indx}
-										className={`!pb-0 ${
-											activeTab === item
-												? 'active-tab'
-												: 'default-tab'
-										}`}
-										onClick={() => setActiveTab(item)}
-									>
-										{item}
-									</li>
-								))}
-							</ul>
-							<div className="rounded-3xl border border-primary4 bg-purple-4 p-4 mt-2">
+					<>
+						<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
+							{['Graphical View', 'Tabular View'].map((item, indx) => (
+								<li
+									key={indx}
+									className={`!pb-0 ${
+										activeTab === item
+											? 'active-tab'
+											: 'default-tab'
+									}`}
+									onClick={() => setActiveTab(item)}
+								>
+									{item}
+								</li>
+							))}
+						</ul>
+						<div className="rounded-3xl border border-primary4 bg-purple-4 p-4 mt-2">
+							{activeTab === 'Graphical View' && (
 								<div className="bg-white rounded-3xl p-2">
 									<canvas
 										id="canvas"
@@ -199,9 +160,30 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable }) 
 										height="250"
 									></canvas>
 								</div>
-							</div>
-						</>
-					)}
+							)}
+							{activeTab === 'Tabular View' && (
+								<div className="bg-white rounded-3xl py-2">
+									{/* {showTable ? (
+										<TableComponent
+											data={loadedData}
+											columns={columns}
+										/>
+									) : (
+										<TableResponse
+											data={data}
+											isGraphLoading={false}
+											// setIsGraphLoading={setIsGraphLoading}
+											noStyles
+										/>
+									)} */}
+									<TableComponent
+										data={loadedData}
+										columns={columns}
+									/>
+								</div>
+							)}
+						</div>
+					</>
 				</>
 			)}
 		</div>

@@ -1,5 +1,5 @@
 import { useRouter } from '@/hooks/useRouter';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getDashboardContent } from '../service/dashboard.service';
 import { cn, getToken } from '@/lib/utils';
 import DOMPurify from 'dompurify';
@@ -7,12 +7,15 @@ import GraphCard from './GraphCard';
 import { Button } from '@/components/ui/button';
 import TooltipWrapper from '@/components/elements/TooltipWrapper';
 import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '@/lib/react-query';
 
 const DashboardDetailsPage = () => {
 	const [dashboard, setDashboard] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [selectedItem, setSelectedItem] = useState(null);
 	const { query, navigate } = useRouter();
+
+	const elementRef = useRef(null);
 
 	let safeHTML = '';
 	if (selectedItem && selectedItem?.content?.summary) {
@@ -24,16 +27,29 @@ const DashboardDetailsPage = () => {
 		queryFn: () => getDashboardContent(getToken(), query.id),
 	});
 	const handleItemClick = (item) => {
+		scrollToElement();
 		setSelectedItem(item);
+	};
+
+	const scrollToElement = () => {
+		if (elementRef.current) {
+			elementRef.current.scrollIntoView({
+				behavior: 'smooth',
+				block: 'start',
+			});
+		}
 	};
 
 	useEffect(() => {
 		if (query.id) {
 			setDashboard(dashboardDetailsQuery.data);
 		}
+		return () => {
+			queryClient.invalidateQueries('dashboard-details');
+		};
 	}, [query, dashboardDetailsQuery.data]);
 	return (
-		<div className="w-full h-full">
+		<div className="w-full h-full" ref={elementRef}>
 			<div className="w-full flex flex-col justify-between mt-2 ">
 				<div className="w-fit flex items-end gap-2 relative">
 					<h2
@@ -155,7 +171,7 @@ const DashboardDetailsPage = () => {
 										{selectedItem?.content?.query}
 									</p>
 								</div>
-								<div className="max-h-[380px] overflow-y-auto">
+								<div className="max-h-[400px] overflow-y-auto">
 									{selectedItem?.content?.summary ? (
 										<p
 											className="text-primary80 font-normal mt-2"

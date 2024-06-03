@@ -515,7 +515,9 @@ const NewChat = () => {
 										doingScience={doingScience}
 										setShowAddToDashboard={setShowAddToDashboard}
 										showTable={
-											!answerResp?.answer?.response_dataframe
+											!answerResp?.answer
+												?.response_dataframe &&
+											answerResp?.answer?.graph
 										}
 									/>
 								)}
@@ -583,7 +585,8 @@ const NewChat = () => {
 														}
 														showTable={
 															!answerResp?.answer
-																?.response_dataframe
+																?.response_dataframe &&
+															answerResp?.answer?.graph
 														}
 													/>
 												)}

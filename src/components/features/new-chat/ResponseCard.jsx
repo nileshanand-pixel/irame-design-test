@@ -40,10 +40,11 @@ const ResponseCard = ({
 
 	const isGraphDataPresent = useMemo(() => {
 		if (mainItems?.length > 0) {
-			mainItems.map(([key, value]) => {
-				return value.tool_type === WorkspaceEnum.Graph;
-			});
+			return mainItems.some(
+				([key, value]) => value.tool_type === WorkspaceEnum.Graph,
+			);
 		}
+		return false;
 	}, [mainItems]);
 
 	return (
@@ -62,14 +63,33 @@ const ResponseCard = ({
 					{Array.isArray(mainItems) &&
 						mainItems.map(([key, value]) => (
 							<div key={key} className="mb-4">
-								{value.tool_type === WorkspaceEnum.Graph && (
+								{(value.tool_type === WorkspaceEnum.Graph ||
+									value.tool_type === WorkspaceEnum.DataFrame) && (
 									<div className="my-4">
-										<GraphComponent
-											data={value.tool_data}
-											isGraphLoading={isGraphLoading}
-											setIsGraphLoading={setIsGraphLoading}
-											showTable={showTable}
-										/>
+										{value.tool_type === WorkspaceEnum.Graph && (
+											<GraphComponent
+												data={value.tool_data}
+												isGraphLoading={isGraphLoading}
+												setIsGraphLoading={setIsGraphLoading}
+												showTable={
+													showTable &&
+													value.tool_type ===
+														WorkspaceEnum.Graph
+												}
+											/>
+										)}
+										{value.tool_type ===
+											WorkspaceEnum.DataFrame &&
+											!isGraphDataPresent && (
+												<TableResponse
+													data={value.tool_data}
+													isGraphLoading={isGraphLoading}
+													setIsGraphLoading={
+														setIsGraphLoading
+													}
+													showTable={showTable}
+												/>
+											)}
 										<div className="mt-6 mb-14 flex justify-between">
 											<Button
 												variant="outline"
@@ -94,48 +114,6 @@ const ResponseCard = ({
 												+ Add to Dashboard
 											</Button>
 										</div>
-									</div>
-								)}
-								{value.tool_type === WorkspaceEnum.DataFrame && (
-									<div className="my-4">
-										<TableResponse
-											data={value.tool_data}
-											isGraphLoading={isGraphLoading}
-											setIsGraphLoading={setIsGraphLoading}
-											// showTable={showTable}
-										/>
-										{!isGraphDataPresent ? (
-											<div className="mt-6 mb-14 flex justify-between">
-												<Button
-													variant="outline"
-													className="text-muted-foreground cursor-pointer"
-													onClick={() =>
-														window.open(
-															value?.tool_data
-																?.response_csv_curl,
-															'_blank',
-														)
-													}
-												>
-													<i className="bi-download mr-2"></i>
-													Download CSV
-												</Button>
-												<Button
-													className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
-													onClick={() => {
-														setShowAddToDashboard(true);
-													}}
-												>
-													+ Add to Dashboard
-												</Button>
-											</div>
-										) : null}
-									</div>
-								)}
-								{value.tool_type === WorkspaceEnum.Coder && (
-									<div className="my-4">
-										<h3 className="text-primary100">{key}</h3>
-										<CoderComponent data={value?.tool_data} />
 									</div>
 								)}
 							</div>
