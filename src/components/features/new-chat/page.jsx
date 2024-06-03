@@ -514,6 +514,9 @@ const NewChat = () => {
 										}
 										doingScience={doingScience}
 										setShowAddToDashboard={setShowAddToDashboard}
+										showTable={
+											!answerResp?.answer?.response_dataframe
+										}
 									/>
 								)}
 
@@ -578,6 +581,10 @@ const NewChat = () => {
 														setShowAddToDashboard={
 															setShowAddToDashboard
 														}
+														showTable={
+															!answerResp?.answer
+																?.response_dataframe
+														}
 													/>
 												)}
 											</div>
@@ -588,7 +595,8 @@ const NewChat = () => {
 						<div className="w-full flex flex-col justify-center mx-auto mt-5 pl-12">
 							{showResponseDelayBanner &&
 								(!answerResp?.answer?.graph ||
-									!answerResp?.answer?.answer) && (
+									!answerResp?.answer?.answer ||
+									!answerResp?.answer?.response_dataframe) && (
 									<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
 										<img
 											src={warningIcon}
@@ -599,20 +607,6 @@ const NewChat = () => {
 										This is taking a bit longer than expected
 									</div>
 								)}
-							{/* {showFailedResponseBanner &&
-								(!answerResp?.answer?.graph ||
-									!answerResp?.answer?.answer) && (
-									<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-										<img
-											src={failedIcon}
-											width={40}
-											height={40}
-											className="mr-3"
-										/>
-										Failed to generate a response, please refresh
-										the page to try again.
-									</div>
-								)} */}
 						</div>
 
 						<div className="bg-white pt-2">
@@ -646,7 +640,7 @@ const NewChat = () => {
 						</div>
 					</div>
 					{showWorkspace ? (
-						<div className="border rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-fit">
+						<div className="border rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-[90%]">
 							<div className="flex justify-between">
 								<div className="flex items-center gap-1">
 									<span className="material-symbols-outlined me-1">

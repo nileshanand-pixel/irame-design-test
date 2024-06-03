@@ -103,7 +103,7 @@ const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 											alt="graph-placeholder"
 										/>
 									</div>
-									<div className="flex flex-col gap-2">
+									<div className="flex flex-col">
 										<h4 className="text-primary80 text-base font-semibold max-w-[16rem] truncate">
 											{dashboard.tittle}
 										</h4>

@@ -42,9 +42,9 @@ const DashboardDetailsPage = () => {
 					>
 						Dashboard
 					</h2>
-					{dashboard && dashboard[0]?.tittle ? (
+					{query.name ? (
 						<p className="text-sm font-normal text-primary80 pb-1">
-							/ {dashboard[0]?.tittle}
+							/ {query.name}
 						</p>
 					) : null}
 				</div>

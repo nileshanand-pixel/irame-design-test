@@ -1,10 +1,11 @@
 import GraphComponent from '@/components/elements/GraphComponent';
-import React from 'react';
+import React, { useMemo } from 'react';
 import CoderComponent from './CoderComponent';
 import { WorkspaceEnum } from './types/new-chat.enum';
 import { Button } from '@/components/ui/button';
 import FollowUpQuestions from './FollowUpQuestions';
 import DOMPurify from 'dompurify';
+import TableResponse from '@/components/elements/TableResponse';
 
 const ResponseCard = ({
 	answerResp,
@@ -20,6 +21,7 @@ const ResponseCard = ({
 	setShowResponseDelayBanner,
 	promptQuery,
 	setShowAddToDashboard,
+	showTable,
 }) => {
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
@@ -35,6 +37,14 @@ const ResponseCard = ({
 	if (answerItem && answerItem[1]?.tool_data) {
 		safeHTML = DOMPurify.sanitize(answerItem[1]?.tool_data);
 	}
+
+	const isGraphDataPresent = useMemo(() => {
+		if (mainItems?.length > 0) {
+			mainItems.map(([key, value]) => {
+				return value.tool_type === WorkspaceEnum.Graph;
+			});
+		}
+	}, [mainItems]);
 
 	return (
 		<>
@@ -58,6 +68,7 @@ const ResponseCard = ({
 											data={value.tool_data}
 											isGraphLoading={isGraphLoading}
 											setIsGraphLoading={setIsGraphLoading}
+											showTable={showTable}
 										/>
 										<div className="mt-6 mb-14 flex justify-between">
 											<Button
@@ -83,6 +94,42 @@ const ResponseCard = ({
 												+ Add to Dashboard
 											</Button>
 										</div>
+									</div>
+								)}
+								{value.tool_type === WorkspaceEnum.DataFrame && (
+									<div className="my-4">
+										<TableResponse
+											data={value.tool_data}
+											isGraphLoading={isGraphLoading}
+											setIsGraphLoading={setIsGraphLoading}
+											// showTable={showTable}
+										/>
+										{!isGraphDataPresent ? (
+											<div className="mt-6 mb-14 flex justify-between">
+												<Button
+													variant="outline"
+													className="text-muted-foreground cursor-pointer"
+													onClick={() =>
+														window.open(
+															value?.tool_data
+																?.response_csv_curl,
+															'_blank',
+														)
+													}
+												>
+													<i className="bi-download mr-2"></i>
+													Download CSV
+												</Button>
+												<Button
+													className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+													onClick={() => {
+														setShowAddToDashboard(true);
+													}}
+												>
+													+ Add to Dashboard
+												</Button>
+											</div>
+										) : null}
 									</div>
 								)}
 								{value.tool_type === WorkspaceEnum.Coder && (

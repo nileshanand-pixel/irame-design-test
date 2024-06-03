@@ -69,14 +69,16 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 			onClick={() =>
 				isEditing
 					? null
-					: navigate(`/app/dashboard/content?id=${data?.dasboard_id}`)
+					: navigate(
+							`/app/dashboard/content?id=${data?.dasboard_id}&name=${data?.tittle}`,
+					  )
 			}
 		>
 			<div className="flex gap-6">
 				<div className="bg-purple-4 w-[100px] h-16 rounded-xl flex items-center justify-center pt-1.5">
 					<img src={graphPlaceholder} alt="graph-placeholder" />
 				</div>
-				<div className="flex flex-col gap-2">
+				<div className="flex flex-col">
 					{isEditing ? (
 						<InputText
 							value={editedTitle}
