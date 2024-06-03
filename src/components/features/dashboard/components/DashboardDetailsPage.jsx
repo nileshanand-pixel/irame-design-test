@@ -53,7 +53,7 @@ const DashboardDetailsPage = () => {
 						className={cn(
 							'grid gap-4 my-6 w-full h-full',
 							selectedItem ? 'grid-cols-1' : 'grid-cols-2',
-							'2xl:grid-cols-2', // Two columns on double extra-large screens (1281px and up)
+							// '2xl:grid-cols-2', // Two columns on double extra-large screens (1281px and up)
 						)}
 					>
 						{dashboard?.length > 0 ? (
