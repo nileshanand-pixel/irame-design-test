@@ -38,14 +38,15 @@ const ResponseCard = ({
 		safeHTML = DOMPurify.sanitize(answerItem[1]?.tool_data);
 	}
 
-	const isGraphDataPresent = useMemo(() => {
-		if (mainItems?.length > 0) {
-			return mainItems.some(
-				([key, value]) => value.tool_type === WorkspaceEnum.Graph,
-			);
-		}
-		return false;
-	}, [mainItems]);
+	const graphDataItem = mainItems.find(
+		([key, value]) => value.tool_type === WorkspaceEnum.Graph,
+	);
+	const dataFrameItem = mainItems.find(
+		([key, value]) => value.tool_type === WorkspaceEnum.DataFrame,
+	);
+
+	const showGraph = !!graphDataItem;
+	const showTableOnly = !showGraph && !!dataFrameItem;
 
 	return (
 		<>
@@ -60,64 +61,74 @@ const ResponseCard = ({
 							></p>
 						</div>
 					)}
-					{Array.isArray(mainItems) &&
-						mainItems.map(([key, value]) => (
-							<div key={key} className="mb-4">
-								{(value.tool_type === WorkspaceEnum.Graph ||
-									value.tool_type === WorkspaceEnum.DataFrame) && (
-									<div className="my-4">
-										{value.tool_type === WorkspaceEnum.Graph && (
-											<GraphComponent
-												data={value.tool_data}
-												isGraphLoading={isGraphLoading}
-												setIsGraphLoading={setIsGraphLoading}
-												showTable={
-													showTable &&
-													value.tool_type ===
-														WorkspaceEnum.Graph
-												}
-											/>
-										)}
-										{value.tool_type ===
-											WorkspaceEnum.DataFrame &&
-											!isGraphDataPresent && (
-												<TableResponse
-													data={value.tool_data}
-													isGraphLoading={isGraphLoading}
-													setIsGraphLoading={
-														setIsGraphLoading
-													}
-													showTable={showTable}
-												/>
-											)}
-										<div className="mt-6 mb-14 flex justify-between">
-											<Button
-												variant="outline"
-												className="text-muted-foreground cursor-pointer"
-												onClick={() =>
-													window.open(
-														value?.tool_data
-															?.response_csv_curl,
-														'_blank',
-													)
-												}
-											>
-												<i className="bi-download mr-2"></i>
-												Download CSV
-											</Button>
-											<Button
-												className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
-												onClick={() => {
-													setShowAddToDashboard(true);
-												}}
-											>
-												+ Add to Dashboard
-											</Button>
-										</div>
-									</div>
-								)}
+					{showGraph && (
+						<div className="mb-4">
+							<GraphComponent
+								data={graphDataItem[1].tool_data}
+								isGraphLoading={isGraphLoading}
+								setIsGraphLoading={setIsGraphLoading}
+								showTable={showTable}
+							/>
+							<div className="mt-6 mb-14 flex justify-between">
+								<Button
+									variant="outline"
+									className="text-muted-foreground cursor-pointer"
+									onClick={() =>
+										window.open(
+											graphDataItem[1]?.tool_data
+												?.response_csv_curl,
+											'_blank',
+										)
+									}
+								>
+									<i className="bi-download mr-2"></i>
+									Download CSV
+								</Button>
+								<Button
+									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+									onClick={() => {
+										setShowAddToDashboard(true);
+									}}
+								>
+									+ Add to Dashboard
+								</Button>
 							</div>
-						))}
+						</div>
+					)}
+					{showTableOnly && (
+						<div className="mb-4">
+							<TableResponse
+								data={dataFrameItem[1].tool_data}
+								isGraphLoading={isGraphLoading}
+								setIsGraphLoading={setIsGraphLoading}
+								showTable={showTable}
+							/>
+							<div className="mt-6 mb-14 flex justify-between">
+								<Button
+									variant="outline"
+									className="text-muted-foreground cursor-pointer"
+									onClick={() =>
+										window.open(
+											dataFrameItem[1]?.tool_data
+												?.response_csv_curl,
+											'_blank',
+										)
+									}
+								>
+									<i className="bi-download mr-2"></i>
+									Download CSV
+								</Button>
+								<Button
+									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+									onClick={() => {
+										setShowAddToDashboard(true);
+									}}
+								>
+									+ Add to Dashboard
+								</Button>
+							</div>
+						</div>
+					)}
 				</div>
 			)}
 			{answerResp?.answer?.follow_up && !doingScience && !isGraphLoading && (
