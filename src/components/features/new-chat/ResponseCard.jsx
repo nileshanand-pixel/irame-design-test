@@ -22,6 +22,8 @@ const ResponseCard = ({
 	promptQuery,
 	setShowAddToDashboard,
 	showTable,
+	setIsTableLoading,
+	isTableLoading,
 }) => {
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
@@ -99,8 +101,8 @@ const ResponseCard = ({
 						<div className="mb-4">
 							<TableResponse
 								data={dataFrameItem[1].tool_data}
-								isGraphLoading={isGraphLoading}
-								setIsGraphLoading={setIsGraphLoading}
+								isGraphLoading={isTableLoading}
+								setIsGraphLoading={setIsTableLoading}
 								showTable={showTable}
 							/>
 							<div className="mt-6 mb-14 flex justify-between">

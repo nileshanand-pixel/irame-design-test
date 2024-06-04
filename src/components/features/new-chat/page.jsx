@@ -66,6 +66,7 @@ const NewChat = () => {
 	const [errors, setErrors] = useState({});
 	const [dashboardName, setDashboardName] = useState('');
 	const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
+	const [isTableLoading, setIsTableLoading] = useState(false);
 
 	const gradientText = {
 		backgroundImage:
@@ -519,6 +520,8 @@ const NewChat = () => {
 												?.response_dataframe &&
 											answerResp?.answer?.graph
 										}
+										setIsTableLoading={setIsTableLoading}
+										isTableLoading={isTableLoading}
 									/>
 								)}
 
@@ -587,6 +590,12 @@ const NewChat = () => {
 															!answerResp?.answer
 																?.response_dataframe &&
 															answerResp?.answer?.graph
+														}
+														setIsTableLoading={
+															setIsTableLoading
+														}
+														isTableLoading={
+															isTableLoading
 														}
 													/>
 												)}

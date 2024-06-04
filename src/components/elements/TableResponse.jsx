@@ -5,7 +5,7 @@ import * as d3 from 'd3';
 import { DataTableColumnHeader } from './data-table/components/data-table-column-header';
 import TableComponent from './TableComponent';
 
-const TableResponse = ({ data, isGraphLoading, noStyles }) => {
+const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) => {
 	// const [chartState, setChartState] = useState({
 	// 	xAxis: '',
 	// 	yAxis: '',
@@ -62,7 +62,7 @@ const TableResponse = ({ data, isGraphLoading, noStyles }) => {
 				} catch (error) {
 					console.error('Error loading CSV data:', error);
 				} finally {
-					// setIsGraphLoading(false);
+					setIsGraphLoading(false);
 				}
 			}
 		};
