@@ -51,7 +51,7 @@ const Workspace = ({
 		}
 	}, [workSpaceTab, answerResp?.answer]);
 	return (
-		<div className=" rounded-2xl mt-6">
+		<div className=" rounded-2xl mt-6 max-w-[24rem]">
 			<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">
 				{answerResp?.answer
 					? Object.keys(answerResp?.answer)

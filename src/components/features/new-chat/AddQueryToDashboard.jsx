@@ -27,7 +27,7 @@ const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 	const [search, setSearch] = useState('');
 	const [selectedDashboard, setSelectedDashboard] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
-	const { query } = useRouter();
+	const { query, navigate } = useRouter();
 
 	const userDashboardQuery = useQuery({
 		queryKey: 'user-dashboard',
@@ -40,7 +40,21 @@ const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 			query_id: query?.queryId,
 		})
 			.then((res) => {
-				toast.success('Query added to dashboard successfully');
+				toast('Query added to dashboard successfully', {
+					duration: 5000,
+					action: (
+						<Button
+							onClick={() => {
+								navigate(
+									`/app/dashboard/content?id=${res?.dashboard_id}&name=${selectedDashboard?.tittle}`,
+								);
+							}}
+							className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+						>
+							View Dashboard
+						</Button>
+					),
+				});
 				setOpen(false);
 			})
 			.catch((err) => {

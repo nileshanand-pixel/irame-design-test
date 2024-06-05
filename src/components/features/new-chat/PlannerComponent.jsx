@@ -14,7 +14,7 @@ const PlannerComponent = ({ data }) => {
 				segments.map((segment, index) => (
 					<div
 						key={index}
-						className="text-primary80 border rounded-2xl py-4 px-4 font-medium my-2"
+						className="text-primary80 border rounded-2xl py-4 px-4 font-medium my-2 max-w-[24rem] truncate"
 						style={{ whiteSpace: 'pre-wrap' }}
 						dangerouslySetInnerHTML={{ __html: segment }}
 					></div>
