@@ -313,7 +313,7 @@ const NewChat = () => {
 				setCompletedSteps([1, 3]);
 			}
 
-			if (query.step === '4') {
+			if (query.step === '4' && query.src !== 'history') {
 				setPrompt('');
 				let timer = 5000;
 				intervalId = setInterval(() => {
@@ -397,7 +397,21 @@ const NewChat = () => {
 		setShowFailedResponseBanner(false);
 		setResponseTimeElapsed(0);
 		setPromptQuery({ data: utilReducer?.queryPrompt });
-	}, [query.dataSourceId, query.sessionId, query.queryId]);
+		if (query.step === '4' && query.src === 'history') {
+			setAnswerResp(utilReducer?.answerFromHistory);
+			setPromptQuery({ data: utilReducer?.queryPrompt });
+			setDoingScience(false);
+			if (utilReducer?.answerFromHistory?.status === 'done') {
+				setIsGraphLoading(false);
+			}
+			setAnswerConfig(utilReducer?.answerFromHistory?.answer);
+		}
+	}, [
+		query.dataSourceId,
+		query.sessionId,
+		query.queryId,
+		utilReducer?.answerFromHistory,
+	]);
 
 	useEffect(() => {
 		if (!utilReducer?.selectedDataSource && dataSource?.name) {

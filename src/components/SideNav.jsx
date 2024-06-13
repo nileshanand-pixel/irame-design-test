@@ -69,17 +69,27 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		return dataSource?.name;
 	};
 
-	const getChatHistory = (sessionId) => {
-		dispatch(updateUtilProp([{ key: 'resetChat', value: true }]));
-		// navigate(`/app/new-chat/?step=4`);
+	const getChatHistory = (sessionId, sessionTitle) => {
+		dispatch(
+			updateUtilProp([
+				{ key: 'resetChat', value: true },
+				{ key: 'queryPrompt', value: sessionTitle },
+			]),
+		);
+		navigate(`/app/new-chat/?step=4&src=history`);
 
 		getQuerySession(sessionId, getToken()).then((res) => {
 			dispatch(
 				updateUtilProp([
-					{ key: 'queryPrompt', value: res[0]?.query },
 					{
 						key: 'selectedDataSource',
-						value: getChatHistoryDataSourceName(res[0]?.datasource_id),
+						value: getChatHistoryDataSourceName(
+							res[res.length - 1]?.datasource_id,
+						),
+					},
+					{
+						key: 'answerFromHistory',
+						value: res[res.length - 1],
 					},
 				]),
 			);
@@ -91,20 +101,20 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			// 	};
 			// });
 			navigate(
-				`/app/new-chat/?step=4&dataSourceId=${res[0]?.datasource_id}&sessionId=${res[0]?.session_id}&queryId=${res[0]?.query_id}`,
+				`/app/new-chat/?step=4&&src=history&dataSourceId=${res[0]?.datasource_id}&sessionId=${res[0]?.session_id}&queryId=${res[0]?.query_id}`,
 			);
-			createQuery(
-				{
-					child_no: parseInt(res[0]?.child_no) + 1,
-					datasource_id: res[0]?.datasource_id,
-					parent_query_id: res[0]?.query_id,
-					query: res[0]?.query,
-					session_id: res[0]?.session_id,
-				},
-				getToken(),
-			).then((res) => {
-				// console.log(res, 'create query===');
-			});
+			// createQuery(
+			// 	{
+			// 		child_no: parseInt(res[0]?.child_no) + 1,
+			// 		datasource_id: res[0]?.datasource_id,
+			// 		parent_query_id: res[0]?.query_id,
+			// 		query: res[0]?.query,
+			// 		session_id: res[0]?.session_id,
+			// 	},
+			// 	getToken(),
+			// ).then((res) => {
+			// 	// console.log(res, 'create query===');
+			// });
 		});
 	};
 	const handleUpdateSession = (sessionId, title) => {
@@ -194,6 +204,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 															return;
 														getChatHistory(
 															session.session_id,
+															session.title,
 														);
 													}}
 												>
