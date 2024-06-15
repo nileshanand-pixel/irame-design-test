@@ -1,7 +1,6 @@
 import InputText from '@/components/elements/InputText';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
-import { cn, formatFileSize, getToken, tokenCookie } from '@/lib/utils';
+import { formatFileSize, getToken } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import excel from '@/assets/icons/ms_excel.svg';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,6 @@ import {
 	uploadFile,
 } from './service/configuration.service';
 import { toast } from 'sonner';
-import Cookies from 'js-cookie';
 import { v4 as uuid } from 'uuid';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
@@ -24,10 +22,10 @@ const Configuration = () => {
 	const [datasourceName, setDatasourceName] = useState('');
 	const [formErrors, setFormErrors] = useState({});
 	const [dataSources, setDataSources] = useState([]);
-	const [showNoUpload, setShowNoUpload] = useState(false);
+	const [hideUpload, setHideUpload] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [dataSourceFetch, setDataSourceFetch] = useState(false);
-
+	const [existingDatasourceId, setExistingDataSourceId] = useState(null);
 	const dispatch = useDispatch();
 	const utilReducer = useSelector((state) => state.utilReducer);
 
@@ -40,46 +38,48 @@ const Configuration = () => {
 		e.stopPropagation();
 		let tempArr = [...files];
 		tempArr = tempArr.filter((tempFile) => {
-			if(tempFile.name !== file.name)return true;
-		})
+			if (tempFile.name !== file.name) return true;
+		});
 		setFiles(tempArr);
 		setProgress((prevProgress) => {
-			let tempProgress = {...prevProgress};
+			let tempProgress = { ...prevProgress };
 			delete tempProgress[file.name];
 			return tempProgress;
-		})
-		setShowNoUpload(false);
+		});
+		setHideUpload(false);
 	};
 
 	const handleFileChange = (e) => {
-    try {
-      if (!datasourceName) {
-        setFormErrors((prev) => ({
-          ...prev,
-          datasourceName: "Please enter a name for your datasource",
-        }));
-      }
-      if (dataSources.some((source) => source.name === datasourceName.trim())) {
-        setFormErrors((prev) => ({
-          ...prev,
-          datasourceName: "Data source name already exists",
-        }));
-      }
+		try {
+			if (!datasourceName) {
+				setFormErrors((prev) => ({
+					...prev,
+					datasourceName: 'Please enter a name for your datasource',
+				}));
+			}
+			if (
+				dataSources.some((source) => source.name === datasourceName.trim())
+			) {
+				setFormErrors((prev) => ({
+					...prev,
+					datasourceName: 'Data source name already exists',
+				}));
+			}
 
-      if (!e.target.files.length) return;
-      const selectedFiles = Array.from(e.target.files);
-      setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
-      setProgress((prevProgress) => {
-        const progessState = {};
-        selectedFiles.forEach((file) => {
-          progessState[file.name] = 0;
-        });
-        return progessState;
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
+			if (!e.target.files.length) return;
+			const selectedFiles = Array.from(e.target.files);
+			setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+			setProgress((prevProgress) => {
+				const progessState = {};
+				selectedFiles.forEach((file) => {
+					progessState[file.name] = 0;
+				});
+				return progessState;
+			});
+		} catch (error) {
+			console.log(error);
+		}
+	};
 
 	const uploadFileHelper = async () => {
 		try {
@@ -109,7 +109,7 @@ const Configuration = () => {
 				};
 			});
 
-			setFiles(newFiles)
+			setFiles(newFiles);
 			toast.success('Files uploaded successfully');
 		} catch (error) {
 			setFiles([]);
@@ -118,6 +118,10 @@ const Configuration = () => {
 		}
 	};
 	const createDataSource = async () => {
+		if (hideUpload && existingDatasourceId) {
+			navigate(`/app/new-chat/?step=3&dataSourceId=${existingDatasourceId}`);
+			return;
+		}
 		setIsLoading(true);
 		const token = getToken();
 
@@ -159,9 +163,14 @@ const Configuration = () => {
 
 	const isAllFilesUploaded = () => {
 		let filesPresent = Array.isArray(files) && files.length > 0;
-		if(!filesPresent)return true;
-		if(Object.keys(progress).length === 0)return false;
+		if (!filesPresent) return true;
+		if (files.every((item) => item.file_url)) return true;
+		if (Object.keys(progress).length === 0) return false;
 		return Object.values(progress).every((value) => value === 100);
+	};
+
+	const checkIfExistingDatasourceUsed = () => {
+		return hideUpload && existingDatasourceId;
 	};
 
 	useEffect(() => {
@@ -183,7 +192,7 @@ const Configuration = () => {
 	}, [files]);
 
 	useEffect(() => {
-		if (files.length && !showNoUpload) {
+		if (files.length && !hideUpload) {
 			uploadFileHelper();
 		}
 	}, [files.length, isLoading]);
@@ -199,13 +208,27 @@ const Configuration = () => {
 		<div className="grid grid-cols-12 gap-4 pt-6">
 			{/* Upload Section */}
 			<div className="border rounded-3xl py-4 px-6 col-span-9 shadow-1xl h-fit">
-				<h3 className="text-primary80 font-semibold text-xl">
-					Connect your datasource
-				</h3>
+				<div className="flex justify-between items-center">
+					<h3 className="text-primary80 font-semibold text-xl">
+						Connect your datasource
+					</h3>
+					{checkIfExistingDatasourceUsed() && (
+						<div
+							className="text-purple-100 text-sm font-medium cursor-pointer hover:opacity-80"
+							onClick={() => {
+								setHideUpload(false);
+								setExistingDataSourceId(null);
+								setFiles([]);
+							}}
+						>
+							Create new datasource?
+						</div>
+					)}
+				</div>
 				<p className="text-primary40 text-sm">
 					Securely connect to a data source
 				</p>
-				{!showNoUpload && (
+				{!hideUpload && (
 					<div className="mt-4 space-y-2 mb-10">
 						<InputText
 							placeholder="Name your data source"
@@ -268,7 +291,7 @@ const Configuration = () => {
 									</div>
 								</div>
 								<div className="flex items-center text-sm font-medium">
-									{(!showNoUpload || file.url) &&
+									{(!hideUpload || file.url) &&
 									progress[file.name] < 100 ? (
 										<p className="mr-4">uploading...</p>
 									) : null}
@@ -280,17 +303,20 @@ const Configuration = () => {
 									>
 										<i className="bi-download text-lg text-primary80  font-semibold cursor-pointer "></i>
 									</div>
-									<div
-										onClick={(e) =>
-											handleRemoveFile(e, file, idx)
-										}
-										className="text-md px-2 py-1 rounded-md bg-purple-8  hover:bg-purple-8 ml-2"
-									>
-										<i className="bi-x text-xl text-primary80  font-semibold cursor-pointer"></i>
-									</div>
+									{!checkIfExistingDatasourceUsed() &&
+										file.url && (
+											<div
+												onClick={(e) =>
+													handleRemoveFile(e, file, idx)
+												}
+												className="text-md px-2 py-1 rounded-md bg-purple-8  hover:bg-purple-8 ml-2"
+											>
+												<i className="bi-x text-xl text-primary80  font-semibold cursor-pointer"></i>
+											</div>
+										)}
 								</div>
 							</div>
-							{(!showNoUpload || file.url) &&
+							{(!hideUpload || file.url) &&
 							progress[file.name] <= 99 ? (
 								<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
 									<div
@@ -336,7 +362,8 @@ const Configuration = () => {
 								className="flex justify-between items-center bg-purple-4 py-2 px-4 rounded-xl cursor-pointer"
 								key={source.datasource_id}
 								onClick={() => {
-									setShowNoUpload(true);
+									setExistingDataSourceId(source.datasource_id);
+									setHideUpload(true);
 									setFiles(source.filepath);
 								}}
 							>
