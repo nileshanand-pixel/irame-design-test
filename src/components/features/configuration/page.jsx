@@ -39,35 +39,47 @@ const Configuration = () => {
 		e.preventDefault();
 		e.stopPropagation();
 		let tempArr = [...files];
-		tempArr.splice(idx, 1);
+		tempArr = tempArr.filter((tempFile) => {
+			if(tempFile.name !== file.name)return true;
+		})
 		setFiles(tempArr);
+		setProgress((prevProgress) => {
+			let tempProgress = {...prevProgress};
+			delete tempProgress[file.name];
+			return tempProgress;
+		})
 		setShowNoUpload(false);
 	};
 
 	const handleFileChange = (e) => {
-		try {
-			if (!datasourceName) {
-				setFormErrors((prev) => ({
-					...prev,
-					datasourceName: 'Please enter a name for your datasource',
-				}));
-			}
-			if (
-				dataSources.some((source) => source.name === datasourceName.trim())
-			) {
-				setFormErrors((prev) => ({
-					...prev,
-					datasourceName: 'Data source name already exists',
-				}));
-			}
+    try {
+      if (!datasourceName) {
+        setFormErrors((prev) => ({
+          ...prev,
+          datasourceName: "Please enter a name for your datasource",
+        }));
+      }
+      if (dataSources.some((source) => source.name === datasourceName.trim())) {
+        setFormErrors((prev) => ({
+          ...prev,
+          datasourceName: "Data source name already exists",
+        }));
+      }
 
-			if (!e.target.files.length) return;
-			const selectedFiles = Array.from(e.target.files);
-			setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
-		} catch (error) {
-			console.log(error);
-		}
-	};
+      if (!e.target.files.length) return;
+      const selectedFiles = Array.from(e.target.files);
+      setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+      setProgress((prevProgress) => {
+        const progessState = {};
+        selectedFiles.forEach((file) => {
+          progessState[file.name] = 0;
+        });
+        return progessState;
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
 	const uploadFileHelper = async () => {
 		try {
@@ -97,14 +109,12 @@ const Configuration = () => {
 				};
 			});
 
-			setFiles(newFiles);
+			setFiles(newFiles)
 			toast.success('Files uploaded successfully');
 		} catch (error) {
 			setFiles([]);
 			toast.error('Error uploading files');
 			console.error('Error uploading files', error);
-		} finally {
-			setProgress({});
 		}
 	};
 	const createDataSource = async () => {
@@ -130,6 +140,7 @@ const Configuration = () => {
 			toast.error('Error creating data source');
 		} finally {
 			setIsLoading(false);
+			setProgress({});
 		}
 	};
 	const handleDeleteDataSource = async (e, dataSourceId) => {
@@ -147,6 +158,9 @@ const Configuration = () => {
 	};
 
 	const isAllFilesUploaded = () => {
+		let filesPresent = Array.isArray(files) && files.length > 0;
+		if(!filesPresent)return true;
+		if(Object.keys(progress).length === 0)return false;
 		return Object.values(progress).every((value) => value === 100);
 	};
 
@@ -172,7 +186,7 @@ const Configuration = () => {
 		if (files.length && !showNoUpload) {
 			uploadFileHelper();
 		}
-	}, [files.length]);
+	}, [files.length, isLoading]);
 
 	useEffect(() => {
 		setFormErrors((prev) => ({
@@ -183,6 +197,7 @@ const Configuration = () => {
 
 	return (
 		<div className="grid grid-cols-12 gap-4 pt-6">
+			{/* Upload Section */}
 			<div className="border rounded-3xl py-4 px-6 col-span-9 shadow-1xl h-fit">
 				<h3 className="text-primary80 font-semibold text-xl">
 					Connect your datasource
@@ -201,13 +216,13 @@ const Configuration = () => {
 						/>
 						<div
 							className={` w-full bg-purple-4 hover:bg-purple-8 text-purple-100 text-sm font-medium hover:text-purple-100 rounded-lg ${
-								!isAllFilesUploaded || isLoading
+								!isAllFilesUploaded() || isLoading
 									? 'cursor-not-allowed opacity-80'
 									: 'cursor-pointer'
 							}`}
 							onClick={(e) => {
 								e.preventDefault();
-								if (!isAllFilesUploaded || isLoading) return;
+								if (!isAllFilesUploaded() || isLoading) return;
 								inputRef.current.click();
 							}}
 						>
@@ -229,6 +244,7 @@ const Configuration = () => {
 						/>
 					</div>
 				)}
+				{/* Render Files and their progress */}
 				{Array.isArray(files) &&
 					files?.map((file, idx) => (
 						<div
@@ -285,12 +301,13 @@ const Configuration = () => {
 							) : null}
 						</div>
 					))}
-				{Array.isArray(files) && files?.length && isAllFilesUploaded ? (
+				{/*  Start Querying Button */}
+				{Array.isArray(files) && files?.length ? (
 					<div className="mt-4">
 						<Button
 							className="w-full hover:bg-purple-100 hover:text-white hover:opacity-80"
 							onClick={() => createDataSource()}
-							disabled={isLoading || !isAllFilesUploaded}
+							disabled={isLoading || !isAllFilesUploaded()}
 						>
 							{isLoading ? (
 								<i className="bi-arrow-repeat animate-spin mr-2"></i>
@@ -300,6 +317,7 @@ const Configuration = () => {
 					</div>
 				) : null}
 			</div>
+			{/* Right Section Manage Data Source */}
 			<div className="border rounded-3xl py-4 px-6 col-span-3 shadow-1xl max-h-[86vh] min-h-fit">
 				<h3 className="text-primary80 font-semibold text-xl">
 					Manage Data Source
