@@ -26,9 +26,8 @@ export const deleteUserDashboard = async (token, id) => {
 	}
 };
 
-export const getDashboardContent = async (token, id, setIsLoading) => {
+export const getDashboardContent = async (token, id) => {
 	try {
-		setIsLoading(true);
 		const response = await axios.get(`${API_URL}/dashboard/${id}/content`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -39,8 +38,6 @@ export const getDashboardContent = async (token, id, setIsLoading) => {
 	} catch (error) {
 		console.error('Error fetching dashboard content', error);
 		throw error;
-	} finally {
-		setIsLoading(false);
 	}
 };
 

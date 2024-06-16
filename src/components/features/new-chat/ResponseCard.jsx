@@ -1,10 +1,11 @@
 import GraphComponent from '@/components/elements/GraphComponent';
-import React from 'react';
+import React, { useMemo } from 'react';
 import CoderComponent from './CoderComponent';
 import { WorkspaceEnum } from './types/new-chat.enum';
 import { Button } from '@/components/ui/button';
 import FollowUpQuestions from './FollowUpQuestions';
 import DOMPurify from 'dompurify';
+import TableResponse from '@/components/elements/TableResponse';
 
 const ResponseCard = ({
 	answerResp,
@@ -20,6 +21,9 @@ const ResponseCard = ({
 	setShowResponseDelayBanner,
 	promptQuery,
 	setShowAddToDashboard,
+	showTable,
+	setIsTableLoading,
+	isTableLoading,
 }) => {
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
@@ -36,12 +40,22 @@ const ResponseCard = ({
 		safeHTML = DOMPurify.sanitize(answerItem[1]?.tool_data);
 	}
 
+	const graphDataItem = mainItems.find(
+		([key, value]) => value.tool_type === WorkspaceEnum.Graph,
+	);
+	const dataFrameItem = mainItems.find(
+		([key, value]) => value.tool_type === WorkspaceEnum.DataFrame,
+	);
+
+	const showGraph = !!graphDataItem;
+	const showTableOnly = !showGraph && !!dataFrameItem;
+
 	return (
 		<>
 			{(answerItem || (mainItems && mainItems.length > 0)) && (
 				<div className="mt-4 ml-12">
 					{answerItem && (
-						<div className="mb-8">
+						<div className="mb-8 bg-purple-8 p-4 rounded-tl-md rounded-e-xl rounded-bl-xl">
 							<p
 								className="text-primary80 font-medium"
 								style={{ whiteSpace: 'pre-wrap' }}
@@ -49,50 +63,74 @@ const ResponseCard = ({
 							></p>
 						</div>
 					)}
-					{Array.isArray(mainItems) &&
-						mainItems.map(([key, value]) => (
-							<div key={key} className="mb-4">
-								{value.tool_type === WorkspaceEnum.Graph && (
-									<div className="my-4">
-										<GraphComponent
-											data={value.tool_data}
-											isGraphLoading={isGraphLoading}
-											setIsGraphLoading={setIsGraphLoading}
-										/>
-										<div className="mt-6 mb-14 flex justify-between">
-											<Button
-												variant="outline"
-												className="text-muted-foreground cursor-pointer"
-												onClick={() =>
-													window.open(
-														value?.tool_data
-															?.response_csv_curl,
-														'_blank',
-													)
-												}
-											>
-												<i className="bi-download mr-2"></i>
-												Download CSV
-											</Button>
-											<Button
-												className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
-												onClick={() => {
-													setShowAddToDashboard(true);
-												}}
-											>
-												+ Add to Dashboard
-											</Button>
-										</div>
-									</div>
-								)}
-								{value.tool_type === WorkspaceEnum.Coder && (
-									<div className="my-4">
-										<h3 className="text-primary100">{key}</h3>
-										<CoderComponent data={value?.tool_data} />
-									</div>
-								)}
+					{showGraph && (
+						<div className="mb-4">
+							<GraphComponent
+								data={graphDataItem[1].tool_data}
+								isGraphLoading={isGraphLoading}
+								setIsGraphLoading={setIsGraphLoading}
+								showTable={showTable}
+							/>
+							<div className="mt-6 mb-14 flex justify-between">
+								<Button
+									variant="outline"
+									className="text-muted-foreground cursor-pointer"
+									onClick={() =>
+										window.open(
+											graphDataItem[1]?.tool_data
+												?.response_csv_curl,
+											'_blank',
+										)
+									}
+								>
+									<i className="bi-download mr-2"></i>
+									Download CSV
+								</Button>
+								<Button
+									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+									onClick={() => {
+										setShowAddToDashboard(true);
+									}}
+								>
+									+ Add to Dashboard
+								</Button>
 							</div>
-						))}
+						</div>
+					)}
+					{showTableOnly && (
+						<div className="mb-4">
+							<TableResponse
+								data={dataFrameItem[1].tool_data}
+								isGraphLoading={isTableLoading}
+								setIsGraphLoading={setIsTableLoading}
+								showTable={showTable}
+							/>
+							<div className="mt-6 mb-14 flex justify-between">
+								<Button
+									variant="outline"
+									className="text-muted-foreground cursor-pointer"
+									onClick={() =>
+										window.open(
+											dataFrameItem[1]?.tool_data
+												?.response_csv_curl,
+											'_blank',
+										)
+									}
+								>
+									<i className="bi-download mr-2"></i>
+									Download CSV
+								</Button>
+								<Button
+									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+									onClick={() => {
+										setShowAddToDashboard(true);
+									}}
+								>
+									+ Add to Dashboard
+								</Button>
+							</div>
+						</div>
+					)}
 				</div>
 			)}
 			{answerResp?.answer?.follow_up && !doingScience && !isGraphLoading && (

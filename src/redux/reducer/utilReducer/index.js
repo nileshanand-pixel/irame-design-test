@@ -8,6 +8,7 @@ const initialState = {
 	queryPrompt: '',
 	selectedDataSource: '',
 	resetChat: false,
+	answerFromHistory: {},
 };
 
 const utilSlice = createSlice({

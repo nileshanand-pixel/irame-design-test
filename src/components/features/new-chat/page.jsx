@@ -31,6 +31,7 @@ import AddQueryToDashboard from './AddQueryToDashboard';
 import { createDashboard } from '../dashboard/service/dashboard.service';
 import { toast } from 'sonner';
 import CreateDashboardDialog from '../dashboard/components/CreateDashboardDialog';
+import { queryClient } from '@/lib/react-query';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -39,7 +40,7 @@ const NewChat = () => {
 	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 	const [searchParam, setSearchParam] = useSearchParams();
 
-	const { query, params, navigate } = useRouter();
+	const { query, params, navigate, pathname } = useRouter();
 	const token = useGetCookie('token');
 
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -65,6 +66,7 @@ const NewChat = () => {
 	const [errors, setErrors] = useState({});
 	const [dashboardName, setDashboardName] = useState('');
 	const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
+	const [isTableLoading, setIsTableLoading] = useState(false);
 
 	const gradientText = {
 		backgroundImage:
@@ -239,7 +241,11 @@ const NewChat = () => {
 				setIsCreatingDashboard(false);
 				setShowCreateDashboard(false);
 				toast.success('Dashboard created successfully');
-				navigate(`/app/new-chat`);
+				if (pathname == '/app/dashboard') {
+					navigate(`/app/new-chat`);
+				} else if (pathname == '/app/new-chat/') {
+					queryClient.invalidateQueries('user-dashboard');
+				}
 			}
 		} catch (error) {
 			setIsCreatingDashboard(false);
@@ -307,7 +313,7 @@ const NewChat = () => {
 				setCompletedSteps([1, 3]);
 			}
 
-			if (query.step === '4') {
+			if (query.step === '4' && query.src !== 'history') {
 				setPrompt('');
 				let timer = 5000;
 				intervalId = setInterval(() => {
@@ -391,7 +397,21 @@ const NewChat = () => {
 		setShowFailedResponseBanner(false);
 		setResponseTimeElapsed(0);
 		setPromptQuery({ data: utilReducer?.queryPrompt });
-	}, [query.dataSourceId, query.sessionId, query.queryId]);
+		if (query.step === '4' && query.src === 'history') {
+			setAnswerResp(utilReducer?.answerFromHistory);
+			setPromptQuery({ data: utilReducer?.queryPrompt });
+			setDoingScience(false);
+			if (utilReducer?.answerFromHistory?.status === 'done') {
+				setIsGraphLoading(false);
+			}
+			setAnswerConfig(utilReducer?.answerFromHistory?.answer);
+		}
+	}, [
+		query.dataSourceId,
+		query.sessionId,
+		query.queryId,
+		utilReducer?.answerFromHistory,
+	]);
 
 	useEffect(() => {
 		if (!utilReducer?.selectedDataSource && dataSource?.name) {
@@ -440,7 +460,7 @@ const NewChat = () => {
 									</AvatarFallback>
 								</Avatar>
 								{promptQuery.data ? (
-									<p className="ms-1 bg-purple-10 text-primary80 font-normal px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
+									<p className="ms-1 bg-purple-10 text-primary80 font-medium px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
 										{promptQuery.data}
 									</p>
 								) : (
@@ -509,6 +529,13 @@ const NewChat = () => {
 										}
 										doingScience={doingScience}
 										setShowAddToDashboard={setShowAddToDashboard}
+										showTable={
+											!answerResp?.answer
+												?.response_dataframe &&
+											answerResp?.answer?.graph
+										}
+										setIsTableLoading={setIsTableLoading}
+										isTableLoading={isTableLoading}
 									/>
 								)}
 
@@ -573,6 +600,17 @@ const NewChat = () => {
 														setShowAddToDashboard={
 															setShowAddToDashboard
 														}
+														showTable={
+															!answerResp?.answer
+																?.response_dataframe &&
+															answerResp?.answer?.graph
+														}
+														setIsTableLoading={
+															setIsTableLoading
+														}
+														isTableLoading={
+															isTableLoading
+														}
 													/>
 												)}
 											</div>
@@ -583,7 +621,8 @@ const NewChat = () => {
 						<div className="w-full flex flex-col justify-center mx-auto mt-5 pl-12">
 							{showResponseDelayBanner &&
 								(!answerResp?.answer?.graph ||
-									!answerResp?.answer?.answer) && (
+									!answerResp?.answer?.answer ||
+									!answerResp?.answer?.response_dataframe) && (
 									<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
 										<img
 											src={warningIcon}
@@ -594,27 +633,13 @@ const NewChat = () => {
 										This is taking a bit longer than expected
 									</div>
 								)}
-							{/* {showFailedResponseBanner &&
-								(!answerResp?.answer?.graph ||
-									!answerResp?.answer?.answer) && (
-									<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-										<img
-											src={failedIcon}
-											width={40}
-											height={40}
-											className="mr-3"
-										/>
-										Failed to generate a response, please refresh
-										the page to try again.
-									</div>
-								)} */}
 						</div>
 
 						<div className="bg-white pt-2">
 							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white">
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 									<Input
-										placeholder="Enter a prompt here"
+										placeholder="Ask IRA"
 										className={cn(
 											'border-0 outline-none rounded-none bg-transparent ',
 											getInputWidth(),
@@ -641,7 +666,7 @@ const NewChat = () => {
 						</div>
 					</div>
 					{showWorkspace ? (
-						<div className="border rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-fit">
+						<div className="border rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-[90%]">
 							<div className="flex justify-between">
 								<div className="flex items-center gap-1">
 									<span className="material-symbols-outlined me-1">
@@ -724,7 +749,7 @@ const NewChat = () => {
 							<div className="fixed bottom-1 flex flex-col items-center justify-center !w-[51.875rem] max-h-[30rem] overflow-x-auto z-20">
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 w-full">
 									<Input
-										placeholder="Enter a prompt here"
+										placeholder="Ask IRA"
 										className="border-0 outline-none rounded-none bg-transparent !w-[46rem] !h-auto"
 										value={prompt}
 										onChange={(e) => {

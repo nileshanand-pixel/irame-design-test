@@ -19,18 +19,20 @@ import { useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from '@/hooks/useRouter';
 import { toast } from 'sonner';
+import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
+import { useQuery } from '@tanstack/react-query';
 
 const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 	const [dashboards, setDashboards] = useState([]);
 	const [search, setSearch] = useState('');
 	const [selectedDashboard, setSelectedDashboard] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
-	const { query } = useRouter();
+	const { query, navigate } = useRouter();
 
-	const fetchDashboards = async () => {
-		const resp = await getUserDashboard(getToken());
-		setDashboards(resp);
-	};
+	const userDashboardQuery = useQuery({
+		queryKey: 'user-dashboard',
+		queryFn: () => getUserDashboard(getToken()),
+	});
 
 	const handleAddQueryToDashboard = () => {
 		setIsLoading(true);
@@ -38,7 +40,21 @@ const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 			query_id: query?.queryId,
 		})
 			.then((res) => {
-				toast.success('Query added to dashboard successfully');
+				toast('Query added to dashboard successfully', {
+					duration: 5000,
+					action: (
+						<Button
+							onClick={() => {
+								navigate(
+									`/app/dashboard/content?id=${res?.dashboard_id}&name=${selectedDashboard?.tittle}`,
+								);
+							}}
+							className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+						>
+							View Dashboard
+						</Button>
+					),
+				});
 				setOpen(false);
 			})
 			.catch((err) => {
@@ -56,8 +72,10 @@ const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 	}, [search, dashboards]);
 
 	useEffect(() => {
-		fetchDashboards();
-	}, []);
+		if (userDashboardQuery.data) {
+			setDashboards(userDashboardQuery.data);
+		}
+	}, [userDashboardQuery.data]);
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogContent className="sm:max-w-[500px] ">
@@ -93,10 +111,13 @@ const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 								onClick={() => setSelectedDashboard(dashboard)}
 							>
 								<div className="flex items-center gap-2 w-full">
-									<div className="bg-purple-4 w-[100px] h-16 rounded-xl">
-										{dashboard.placeholder}
+									<div className="bg-purple-4 w-[100px] h-16 rounded-xl flex items-center justify-center pt-1.5">
+										<img
+											src={graphPlaceholder}
+											alt="graph-placeholder"
+										/>
 									</div>
-									<div className="flex flex-col gap-2">
+									<div className="flex flex-col">
 										<h4 className="text-primary80 text-base font-semibold max-w-[16rem] truncate">
 											{dashboard.tittle}
 										</h4>
