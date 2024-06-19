@@ -5,23 +5,27 @@ import PropTypes from 'prop-types';
 import { Toaster } from '@/components/ui/sonner';
 import { Provider } from 'react-redux';
 import reduxStore from '@/redux/GlobalStore';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/lib/react-query';
 
 function AppProvider({ children }) {
 	return (
-		<Provider store={reduxStore}>
-			<Router>
-				<ErrorBoundary FallbackComponent={ErrorFallback}>
-					{children}
-					<Toaster
-						toastOptions={{
-							classNames: {
-								toast: 'py-2 px-4 bg-white text-primary100',
-							},
-						}}
-					/>
-				</ErrorBoundary>
-			</Router>
-		</Provider>
+		<QueryClientProvider client={queryClient}>
+			<Provider store={reduxStore}>
+				<Router>
+					<ErrorBoundary FallbackComponent={ErrorFallback}>
+						{children}
+						<Toaster
+							toastOptions={{
+								classNames: {
+									toast: 'py-2 px-4 bg-white text-primary100',
+								},
+							}}
+						/>
+					</ErrorBoundary>
+				</Router>
+			</Provider>
+		</QueryClientProvider>
 	);
 }
 

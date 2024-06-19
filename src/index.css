@@ -81,8 +81,10 @@
 	body {
 		@apply bg-background text-foreground;
 	}
+
 	/*scroll-bar-styles-START*/
 
+	/* WebKit scrollbar styles (Chrome, Safari) */
 	::-webkit-scrollbar {
 		width: 4px;
 		height: 4px;
@@ -104,6 +106,11 @@
 		background: transparent;
 	}
 
+	/* Firefox scrollbar styles */
+	* {
+		scrollbar-width: thin; /* "auto" or "thin" */
+		scrollbar-color: transparent transparent; /* scroll thumb and track */
+	}
 	/*scroll-bar-styles-END*/
 
 	.or-tagline {

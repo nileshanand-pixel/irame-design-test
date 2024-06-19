@@ -8,12 +8,38 @@ import { getToken } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import InputText from '@/components/elements/InputText';
 import { toast } from 'sonner';
+import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
+import { useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/lib/react-query';
 
 const DashboardCard = ({ data, refetch, setRefetch }) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [editedTitle, setEditedTitle] = useState(data.tittle);
 
 	const { navigate } = useRouter();
+
+	const userToken = getToken();
+
+	const deleteMutation = useMutation({
+		mutationFn: (id) => deleteUserDashboard(userToken, id),
+		onSuccess: () => {
+			toast.success('Dashboard deleted successfully');
+			queryClient.invalidateQueries('user-dashboard');
+		},
+	});
+	const editMutation = useMutation({
+		mutationFn: ({ id, name }) => updateDashboardName(userToken, id, name),
+		onSuccess: () => {
+			setIsEditing(false);
+			toast.success('Dashboard updated successfully');
+			queryClient.invalidateQueries('user-dashboard');
+		},
+		onError: (err) => {
+			console.log('Error updating dashboard', err);
+			toast.error('Something went wrong while updating dashboard');
+		},
+	});
+
 	const dashboardMutations = [
 		// {
 		//     type: 'item',
@@ -28,22 +54,13 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 			label: 'Delete',
 			onClick: (e) => {
 				e.stopPropagation();
-				deleteUserDashboard(getToken(), data?.dasboard_id);
+				deleteMutation.mutateAsync(data?.dasboard_id);
 			},
 		},
 	];
 
 	const handleEdit = () => {
-		updateDashboardName(getToken(), data?.dasboard_id, editedTitle)
-			.then(
-				(res) => toast.success('Dashboard updated successfully'),
-				setIsEditing(false),
-				setRefetch((prevRefetch) => !prevRefetch),
-			)
-			.catch((err) => {
-				console.log('Error updating dashboard', err);
-				toast.error('Something went wrong while updating dashboard');
-			});
+		editMutation.mutateAsync({ id: data.dasboard_id, name: editedTitle });
 	};
 	return (
 		<div
@@ -52,14 +69,16 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 			onClick={() =>
 				isEditing
 					? null
-					: navigate(`/app/dashboard/content?id=${data?.dasboard_id}`)
+					: navigate(
+							`/app/dashboard/content?id=${data?.dasboard_id}&name=${data?.tittle}`,
+					  )
 			}
 		>
 			<div className="flex gap-6">
-				<div className="bg-purple-4 w-[100px] h-16 rounded-xl">
-					{data?.placeholder}
+				<div className="bg-purple-4 w-[100px] h-16 rounded-xl flex items-center justify-center pt-1.5">
+					<img src={graphPlaceholder} alt="graph-placeholder" />
 				</div>
-				<div className="flex flex-col gap-2">
+				<div className="flex flex-col">
 					{isEditing ? (
 						<InputText
 							value={editedTitle}

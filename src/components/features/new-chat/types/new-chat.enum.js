@@ -6,6 +6,7 @@ export const WorkspaceEnum = {
 	Observation: 'observation',
 	Answer: 'answer',
 	Reference: 'reference',
+	DataFrame: 'response_dataframe',
 };
 
 export const workSpaceMap = {
@@ -18,4 +19,5 @@ export const workSpaceMap = {
 	answer: 'Answer',
 	answer: 'Observation',
 	reference: 'Reference',
+	response_dataframe: 'Table',
 };

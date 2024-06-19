@@ -6,16 +6,16 @@ export const loginWithGoogle = async (data) => {
 	return response.data;
 };
 export const logout = async (token) => {
-	// const response = await axios.get(`${API_URL}/oauth/google/logout`, {
-	// 	headers: {
-	// 		Authorization: `Bearer ${token}`,
-	// 	},
-	// });
-	document.cookie.split(';').forEach((c) => {
-		document.cookie = c
-			.replace(/^ +/, '')
-			.replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+	const response = await axios.get(`${API_URL}/oauth/google/logout`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
 	});
+	// document.cookie.split(';').forEach((c) => {
+	// 	document.cookie = c
+	// 		.replace(/^ +/, '')
+	// 		.replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+	// });
 	localStorage.clear();
 
 	window.location.href = '/';

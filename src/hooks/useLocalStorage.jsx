@@ -20,7 +20,13 @@ const initialValue = {
 
 const useLocalStorage = (key) => {
 	const storedValue = localStorage.getItem(key);
-	const initial = storedValue ? JSON.parse(storedValue) : initialValue[key];
+	let initial;
+
+	try {
+		initial = storedValue ? JSON.parse(storedValue) : initialValue[key] || {};
+	} catch (error) {
+		initial = initialValue[key] || {};
+	}
 
 	const [value, setValue] = useState(initial);
 
