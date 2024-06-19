@@ -31,10 +31,19 @@ export const uploadFile = async (file, setProgress, authToken) => {
 				const uploadProgress = Math.round(
 					(progressEvent.loaded / progressEvent.total) * 100,
 				);
-				setProgress((prevProgress) => ({
-					...prevProgress,
-					[file.name]: uploadProgress,
-				}));
+				//Handle cancelled files progress
+				setProgress((prevProgress) => {
+					// Check if the file name is present in the previous state
+					if (prevProgress[file.name] !== undefined) {
+						return {
+							...prevProgress,
+							[file.name]: uploadProgress,
+						};
+					}
+
+					// Return the previous state if the file name is not present
+					return {...prevProgress};
+				});
 			},
 		});
 
