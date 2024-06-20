@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { queryClient } from '@/lib/react-query';
 
 const SelectPrompt = ({
 	handleNextStep,
@@ -52,6 +53,10 @@ const SelectPrompt = ({
 			handleNextStep(4);
 			createQuerySession(query.dataSourceId, question, getToken()).then(
 				(res) => {
+					queryClient.invalidateQueries(['chat-history'], {
+						refetchActive: true,
+						refetchInactive: true,
+					});
 					navigate(
 						`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
 					);
@@ -181,7 +186,7 @@ const SelectPrompt = ({
 									<div className="flex space-x-2" key={index}>
 										<Skeleton className="h-[125px] w-[250px] rounded-xl bg-purple-4" />
 									</div>
-							  ))}
+								))}
 					</div>
 				) : (
 					<div className="flex space-x-2 mt-4">

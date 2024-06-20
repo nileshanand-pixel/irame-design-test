@@ -18,6 +18,8 @@ import { Label } from '@/components/ui/label';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { queryClient } from '@/lib/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const ChooseDataSourceDialog = ({
 	open,
@@ -27,7 +29,6 @@ const ChooseDataSourceDialog = ({
 	handleNextStep,
 }) => {
 	const [dataSources, setDataSources] = useState([]);
-	const [dataSourceFetch, setDataSourceFetch] = useState(true);
 
 	const navigate = useNavigate();
 
@@ -35,9 +36,6 @@ const ChooseDataSourceDialog = ({
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const [value, setValue] = useLocalStorage('dataSource');
 
-	const getCookieToken = () => {
-		return Cookies.get('token');
-	};
 	const handleSelect = () => {
 		if (!selectedDataSource) return;
 		navigate(`/app/new-chat/?step=3&dataSourceId=${selectedDataSource}`);
@@ -62,21 +60,24 @@ const ChooseDataSourceDialog = ({
 		// 	};
 		// });
 	};
-	useEffect(() => {
+	const fetchDataSources = async () => {
 		const token = getToken();
-		if (token) {
-			if (utilReducer.dataSources.length > 0) {
-				setDataSources(utilReducer.dataSources);
-				setDataSourceFetch(false);
-				return;
-			}
-			getDataSources(token).then((resp) => {
-				setDataSources(Array.isArray(resp) ? resp : []);
-				dispatch(updateUtilProp([{ key: 'dataSources', value: resp }]));
-			});
+		const data = await getDataSources(token);
+		return Array.isArray(data) ? data : [];
+	};
+
+	const { data, isLoading: dataSourceFetch } = useQuery({
+		queryKey: ['data-sources'],
+		queryFn: fetchDataSources,
+	});
+
+	useEffect(() => {
+		if (data?.length > 0) {
+			setDataSources(data);
+			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		}
-		setDataSourceFetch(false);
-	}, [getCookieToken()]);
+	}, [data]);
+
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogContent className="sm:max-w-[525px] ">

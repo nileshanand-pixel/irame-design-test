@@ -15,6 +15,8 @@ import { v4 as uuid } from 'uuid';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { queryClient } from '@/lib/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const Configuration = () => {
 	const [files, setFiles] = useState([]);
@@ -24,7 +26,6 @@ const Configuration = () => {
 	const [dataSources, setDataSources] = useState([]);
 	const [hideUpload, setHideUpload] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
-	const [dataSourceFetch, setDataSourceFetch] = useState(false);
 	const [existingDatasourceId, setExistingDataSourceId] = useState(null);
 	const dispatch = useDispatch();
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -138,6 +139,10 @@ const Configuration = () => {
 
 		try {
 			const response = await createNewDtaSource(data, token);
+			queryClient.invalidateQueries(['data-sources'], {
+				refetchActive: true,
+				refetchInactive: true,
+			});
 			toast.success('Data source created successfully');
 			navigate(`/app/new-chat/?step=3&dataSourceId=${response.datasource_id}`);
 		} catch (error) {
@@ -173,23 +178,23 @@ const Configuration = () => {
 		return hideUpload && existingDatasourceId;
 	};
 
-	useEffect(() => {
-		const fetchDataSources = async () => {
-			setDataSourceFetch(true);
-			const token = getToken();
-			if (utilReducer.dataSources.length > 0) {
-				setDataSources(utilReducer.dataSources);
-				setDataSourceFetch(false);
-				return;
-			}
-			const data = await getDataSources(token);
-			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
-			setDataSources(Array.isArray(data) ? data : []);
-			setDataSourceFetch(false);
-		};
+	const fetchDataSources = async () => {
+		const token = getToken();
+		const data = await getDataSources(token);
+		return Array.isArray(data) ? data : [];
+	};
 
-		fetchDataSources();
-	}, [files]);
+	const { data, isLoading: isFetchingData } = useQuery({
+		queryKey: ['data-sources'],
+		queryFn: fetchDataSources,
+	});
+
+	useEffect(() => {
+		if (data?.length > 0) {
+			setDataSources(data);
+			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
+		}
+	}, [files, data]);
 
 	useEffect(() => {
 		if (files.length && !hideUpload) {
@@ -352,7 +357,7 @@ const Configuration = () => {
 					Securely connect to a data source
 				</p>
 				<div className="mt-4 space-y-2 max-h-[90%] overflow-y-auto">
-					{dataSourceFetch ? (
+					{isFetchingData ? (
 						<div className="flex items-center justify-center w-[14.84rem]">
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>

@@ -20,6 +20,8 @@ import {
 } from './ui/dropdown-menu';
 import InputText from './elements/InputText';
 import { getDataSources } from './features/configuration/service/configuration.service';
+import { useQuery } from '@tanstack/react-query';
+import Spinner from './elements/Spinner';
 
 const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const [activeTab, setActiveTab] = useState('');
@@ -30,6 +32,19 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const dispatch = useDispatch();
+
+	const fetchUserSession = async () => {
+		try {
+			return getUserSession(getToken());
+		} catch (error) {
+			console.error('Error fetching user session:', error);
+		}
+	};
+
+	const { data, isLoading } = useQuery({
+		queryKey: ['chat-history'],
+		queryFn: fetchUserSession,
+	});
 
 	const bottomMenuList = [
 		{
@@ -53,17 +68,30 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			],
 		},
 	];
-	const getChatHistoryDataSourceName = (dataSourceId) => {
-		if (!utilReducer?.dataSources || utilReducer?.dataSources?.length <= 0) {
-			getDataSources(getToken()).then((res) => {
-				dispatch(updateUtilProp([{ key: 'dataSources', value: res }]));
-				const dataSource = res.find(
-					(source) => source.datasource_id === dataSourceId,
-				);
-				return dataSource?.name;
-			});
+	const fetchDataSources = async () => {
+		const token = getToken();
+		if (!token) {
+			throw new Error('No token available');
 		}
-		const dataSource = utilReducer?.dataSources.find(
+		const data = await getDataSources(token);
+		return Array.isArray(data) ? data : [];
+	};
+
+	const {
+		data: dataSources,
+		isLoading: isLoadingDataSources,
+		error,
+	} = useQuery({
+		queryKey: 'data-sources',
+		queryFn: fetchDataSources,
+		onSuccess: (data) => {
+			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
+		},
+		enabled: !!getToken(), // Only run the query if the token exists
+	});
+
+	const getChatHistoryDataSourceName = (dataSourceId) => {
+		const dataSource = dataSources?.find(
 			(source) => source.datasource_id === dataSourceId,
 		);
 		return dataSource?.name;
@@ -74,6 +102,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			updateUtilProp([
 				{ key: 'resetChat', value: true },
 				{ key: 'queryPrompt', value: sessionTitle },
+				{ key: 'selectedDataSource', value: '' },
 			]),
 		);
 		navigate(`/app/new-chat/?step=4&src=history`);
@@ -93,33 +122,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					},
 				]),
 			);
-			// setValue((prev) => {
-			// 	return {
-			// 		...prev,
-			// 		id: res[0]?.datasource_id,
-			// 		name: getChatHistoryDataSourceName(res[0]?.datasource_id),
-			// 	};
-			// });
 			navigate(
 				`/app/new-chat/?step=4&&src=history&dataSourceId=${res[0]?.datasource_id}&sessionId=${res[0]?.session_id}&queryId=${res[0]?.query_id}`,
 			);
-			// createQuery(
-			// 	{
-			// 		child_no: parseInt(res[0]?.child_no) + 1,
-			// 		datasource_id: res[0]?.datasource_id,
-			// 		parent_query_id: res[0]?.query_id,
-			// 		query: res[0]?.query,
-			// 		session_id: res[0]?.session_id,
-			// 	},
-			// 	getToken(),
-			// ).then((res) => {
-			// 	// console.log(res, 'create query===');
-			// });
 		});
 	};
-	const handleUpdateSession = (sessionId, title) => {
-		// dispatch(updateUtilProp([{ key: 'sessionHistory', value: title }]));
-	};
+
 	const handleDeleteChatSession = async (e, sessionId) => {
 		e.stopPropagation();
 		try {
@@ -135,16 +143,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		} catch (error) {}
 	};
 
-	const fetchUserSession = () => {
-		try {
-			// if (utilReducer?.sessionHistory?.length > 0) return;
-			getUserSession(getToken()).then((res) => {
-				dispatch(updateUtilProp([{ key: 'sessionHistory', value: res }]));
-			});
-		} catch (error) {
-			console.error('Error fetching user session:', error);
-		}
-	};
 	useEffect(() => {
 		if (pathname === '/app/new-chat') {
 			setActiveTab('');
@@ -152,9 +150,10 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			setActiveTab(pathname);
 		}
 	}, [pathname]);
+
 	useEffect(() => {
-		fetchUserSession();
-	}, []);
+		dispatch(updateUtilProp([{ key: 'sessionHistory', value: data || [] }]));
+	}, [data]);
 
 	return (
 		<div
@@ -189,7 +188,10 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							<>
 								<p>Recent</p>
 								<div className=" max-h-[25rem] overflow-y-auto space-y-3.5 mt-2">
-									{utilReducer?.sessionHistory &&
+									{isLoading ? (
+										<Spinner />
+									) : (
+										utilReducer?.sessionHistory &&
 										Array.isArray(utilReducer?.sessionHistory) &&
 										utilReducer?.sessionHistory.map(
 											(session, key) => (
@@ -279,7 +281,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 													</DropdownMenu>
 												</div>
 											),
-										)}
+										)
+									)}
 								</div>
 							</>
 						) : null}
