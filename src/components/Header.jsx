@@ -11,7 +11,6 @@ import {
 } from './ui/dropdown-menu';
 import { tokenCookie, getToken, getInitials, cn } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
-import { API_URL } from '@/config';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
@@ -40,11 +39,16 @@ const Header = () => {
 						<DropdownMenuGroup>
 							<DropdownMenuItem
 								className="text-primary100 text-sm font-medium"
-								onClick={() =>
-									window.location.replace(
-										`${API_URL}/oauth/google/logout`,
-									)
-								}
+								onClick={() => {
+									logout(getToken());
+									setValue({
+										userName: '',
+										email: '',
+										userId: '',
+										token: '',
+										avatar: '',
+									});
+								}}
 							>
 								<i className="bi-box-arrow-left mr-2 text-primary100"></i>
 								Logout

@@ -19,6 +19,5 @@ export const logout = async (token) => {
 	window.location.href = `${API_URL}/oauth/google/logout`;
 	localStorage.clear();
 
-	console.log(response.data, '===');
 	// return response.data;
 };
