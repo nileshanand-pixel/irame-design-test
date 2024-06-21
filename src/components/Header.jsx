@@ -39,16 +39,9 @@ const Header = () => {
 						<DropdownMenuGroup>
 							<DropdownMenuItem
 								className="text-primary100 text-sm font-medium"
-								onClick={() => {
-									logout(getToken());
-									setValue({
-										userName: '',
-										email: '',
-										userId: '',
-										token: '',
-										avatar: '',
-									});
-								}} //TODO: change and fetch from cookie
+								onClick={() =>
+									(window.location.href = `${API_URL}/oauth/google/logout`)
+								}
 							>
 								<i className="bi-box-arrow-left mr-2 text-primary100"></i>
 								Logout

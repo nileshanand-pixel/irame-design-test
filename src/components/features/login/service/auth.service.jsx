@@ -16,9 +16,9 @@ export const logout = async (token) => {
 	// 		.replace(/^ +/, '')
 	// 		.replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
 	// });
-	window.open(`${API_URL}/oauth/google/logout`, '_blank');
+	window.location.href = `${API_URL}/oauth/google/logout`;
 	localStorage.clear();
 
-	// console.log(response.data, '===');
+	console.log(response.data, '===');
 	// return response.data;
 };
