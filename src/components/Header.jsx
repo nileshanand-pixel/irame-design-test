@@ -11,6 +11,7 @@ import {
 } from './ui/dropdown-menu';
 import { tokenCookie, getToken, getInitials, cn } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
+import { API_URL } from '@/config';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
