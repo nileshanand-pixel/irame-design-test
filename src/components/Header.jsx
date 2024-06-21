@@ -40,7 +40,9 @@ const Header = () => {
 							<DropdownMenuItem
 								className="text-primary100 text-sm font-medium"
 								onClick={() =>
-									(window.location.replace = `${API_URL}/oauth/google/logout`)
+									window.location.replace(
+										`${API_URL}/oauth/google/logout`,
+									)
 								}
 							>
 								<i className="bi-box-arrow-left mr-2 text-primary100"></i>
