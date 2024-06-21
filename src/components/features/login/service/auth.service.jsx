@@ -11,13 +11,14 @@ export const logout = async (token) => {
 			Authorization: `Bearer ${token}`,
 		},
 	});
-	// document.cookie.split(';').forEach((c) => {
-	// 	document.cookie = c
-	// 		.replace(/^ +/, '')
-	// 		.replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
-	// });
+	document.cookie.split(';').forEach((c) => {
+		document.cookie = c
+			.replace(/^ +/, '')
+			.replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+	});
 	localStorage.clear();
 
-	window.location.href = '/';
+	// window.location.href = '/';
+	console.log(response.data, '===');
 	return response.data;
 };
