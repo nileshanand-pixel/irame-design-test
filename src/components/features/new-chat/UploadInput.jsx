@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
 import xlsIcon from '@/assets/icons/ms_excel.svg';
 import csvIcon from '@/assets/icons/csv_icon.svg';
+import pdfIcon from '@/assets/icons/pdf_icon.svg';
 
 const UploadInput = ({ onFileUpload, files, setFiles, progress, setOpen }) => {
 	const navigate = useNavigate();
@@ -128,6 +129,11 @@ const UploadInput = ({ onFileUpload, files, setFiles, progress, setOpen }) => {
 									<img
 										src={xlsIcon}
 										alt="csv"
+										className="w-6 h-6"
+									/>
+									<img
+										src={pdfIcon}
+										alt="pdf"
 										className="w-6 h-6"
 									/>
 								</div>
