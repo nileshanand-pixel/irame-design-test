@@ -6,9 +6,7 @@ import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { cn, getToken } from '@/lib/utils';
 import {
-	createQuery,
 	deleteSession,
-	getQuerySession,
 	getUserSession,
 } from './features/new-chat/service/new-chat.service';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
@@ -20,6 +18,7 @@ import {
 } from './ui/dropdown-menu';
 import InputText from './elements/InputText';
 import { getDataSources } from './features/configuration/service/configuration.service';
+import { resetChatStore, updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
 import Spinner from './elements/Spinner';
 
@@ -31,6 +30,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const { pathname, navigate } = useRouter();
 
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+
 	const dispatch = useDispatch();
 
 	const fetchUserSession = async () => {
@@ -97,35 +98,39 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		return dataSource?.name;
 	};
 
-	const getChatHistory = (sessionId, sessionTitle) => {
+	const getChatHistory = (session) => {
+		dispatch(resetChatStore());
 		dispatch(
 			updateUtilProp([
-				{ key: 'resetChat', value: true },
-				{ key: 'queryPrompt', value: sessionTitle },
-				{ key: 'selectedDataSource', value: '' },
+				{
+					key: 'selectedDataSource',
+					value: {},
+				},
 			]),
 		);
-		navigate(`/app/new-chat/?step=4&src=history`);
+		navigate('/app/new-chat/session');
 
-		getQuerySession(sessionId, getToken()).then((res) => {
-			dispatch(
-				updateUtilProp([
-					{
-						key: 'selectedDataSource',
-						value: getChatHistoryDataSourceName(
-							res[res.length - 1]?.datasource_id,
-						),
-					},
-					{
-						key: 'answerFromHistory',
-						value: res[res.length - 1],
-					},
-				]),
-			);
-			navigate(
-				`/app/new-chat/?step=4&&src=history&dataSourceId=${res[0]?.datasource_id}&sessionId=${res[0]?.session_id}&queryId=${res[0]?.query_id}`,
-			);
-		});
+		dispatch(
+			updateChatStoreProp([
+				{
+					key: 'activeChatSession',
+					value: { id: session.session_id, title: session.title },
+				},
+				{ key: 'refreshChat', value: true },
+				{ key: 'resetIra', value: !chatStoreReducer?.resetIra },
+			]),
+		);
+
+		const datasourceId = session?.datasource_id;
+		const datasourceName = getChatHistoryDataSourceName(datasourceId);
+		dispatch(
+			updateUtilProp([
+				{
+					key: 'selectedDataSource',
+					value: { id: datasourceId, name: datasourceName },
+				},
+			]),
+		);
 	};
 
 	const handleDeleteChatSession = async (e, sessionId) => {
@@ -143,6 +148,17 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		} catch (error) {}
 	};
 
+	const askIra = (e) => {
+		if (e) e.preventDefault();
+		dispatch(resetChatStore());
+		dispatch(
+			updateUtilProp([
+				{ key: 'selectedDataSource', value: {} },
+				{ key: 'answerFromHistory', value: {} },
+			]),
+		);
+		navigate('/app/new-chat');
+	};
 	useEffect(() => {
 		if (pathname === '/app/new-chat') {
 			setActiveTab('');
@@ -159,7 +175,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		<div
 			className={`fixed flex flex-col gap-4 ${
 				isSideNavOpen ? 'w-[250px] min-w-[250px]' : 'w-[72px] min-w-[72px]'
-			} border-r min-h-screen p-4 bg-purple-8`}
+			} border-r h-screen p-4 bg-purple-8`}
 		>
 			<div className="grow">
 				<Button
@@ -172,6 +188,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				<div>
 					<Link
 						to={'/app/new-chat'}
+						onClick={askIra}
 						className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
 							isSideNavOpen
 								? 'rounded-[200px] px-5 py-3'
@@ -196,7 +213,15 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 										utilReducer?.sessionHistory.map(
 											(session, key) => (
 												<div
-													className="flex items-center text-primary80 w-full rounded-lg py-2 text-sm font-medium  cursor-pointer "
+													className={cn(
+														'flex items-center justify-between text-primary80 w-full rounded-lg py-2 text-sm font-medium  cursor-pointer hover:bg-purple-4',
+														chatStoreReducer
+															?.activeChatSession
+															?.id ===
+															session.session_id
+															? "bg-purple-10"
+															: '',
+													)}
 													key={session.session_id}
 													onClick={() => {
 														if (
@@ -204,10 +229,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 															session.session_id
 														)
 															return;
-														getChatHistory(
-															session.session_id,
-															session.title,
-														);
+														getChatHistory(session);
 													}}
 												>
 													<div
@@ -216,7 +238,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 															isEditing ===
 																session.session_id
 																? ''
-																: ' px-2 py-1 hover:bg-purple-4',
+																: ' px-2 py-1',
 														)}
 													>
 														<i className="bi-chat-right-text-fill me-3"></i>
@@ -245,7 +267,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 													<DropdownMenu>
 														<DropdownMenuTrigger asChild>
 															<i
-																className="bi-three-dots-vertical ms-3 items-end hover:bg-purple-4"
+																className="bi-three-dots-vertical ms-3 items-end hover:bg-purple-8"
 																onClick={(e) => {
 																	e.stopPropagation();
 																}}

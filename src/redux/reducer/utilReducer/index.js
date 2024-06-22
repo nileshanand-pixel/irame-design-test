@@ -5,7 +5,6 @@ const initialState = {
 	suggestionData: {},
 	dataSources: [],
 	sessionHistory: [],
-	queryPrompt: '',
 	selectedDataSource: '',
 	resetChat: false,
 	answerFromHistory: {},

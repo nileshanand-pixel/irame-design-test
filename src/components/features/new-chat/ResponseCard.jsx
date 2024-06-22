@@ -6,25 +6,25 @@ import { Button } from '@/components/ui/button';
 import FollowUpQuestions from './FollowUpQuestions';
 import DOMPurify from 'dompurify';
 import TableResponse from '@/components/elements/TableResponse';
+import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
+import { useDispatch, useSelector } from 'react-redux';
 
 const ResponseCard = ({
 	answerResp,
 	isGraphLoading,
 	setIsGraphLoading,
-	setShowFailedResponseBanner,
-	handleNextStep,
 	setAnswerResp,
-	setPromptQuery,
 	doingScience,
 	setDoingScience,
+	setBanners,
 	setResponseTimeElapsed,
-	setShowResponseDelayBanner,
-	promptQuery,
-	setShowAddToDashboard,
+	setDashboard,
 	showTable,
 	setIsTableLoading,
 	isTableLoading,
 }) => {
+	const dispatch = useDispatch();
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
 			value.tool_space === 'main' && value.tool_type !== WorkspaceEnum.Answer,
@@ -50,6 +50,9 @@ const ResponseCard = ({
 	const showGraph = !!graphDataItem;
 	const showTableOnly = !showGraph && !!dataFrameItem;
 
+	// show follwup questions only for last query
+	const showFollowup = answerResp?.query_id === chatStoreReducer?.queries?.[chatStoreReducer?.queries?.length - 1]?.id
+
 	return (
 		<>
 			{(answerItem || (mainItems && mainItems.length > 0)) && (
@@ -70,6 +73,7 @@ const ResponseCard = ({
 								isGraphLoading={isGraphLoading}
 								setIsGraphLoading={setIsGraphLoading}
 								showTable={showTable}
+								queryId={answerResp?.query_id}
 							/>
 							<div className="mt-6 mb-14 flex justify-between">
 								<Button
@@ -89,7 +93,18 @@ const ResponseCard = ({
 								<Button
 									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 									onClick={() => {
-										setShowAddToDashboard(true);
+										dispatch(
+											updateChatStoreProp([
+												{
+													key: 'activeQueryId',
+													value: answerResp?.query_id,
+												},
+											]),
+										);
+										setDashboard((prevState) => ({
+											...prevState,
+											showAdd: true,
+										}));
 									}}
 								>
 									+ Add to Dashboard
@@ -123,7 +138,10 @@ const ResponseCard = ({
 								<Button
 									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 									onClick={() => {
-										setShowAddToDashboard(true);
+										setDashboard((prevState) => ({
+											...prevState,
+											showAdd: true,
+										}));
 									}}
 								>
 									+ Add to Dashboard
@@ -140,26 +158,19 @@ const ResponseCard = ({
 						{answerResp?.answer?.follow_up?.tool_data?.questions &&
 							Array.isArray(
 								answerResp?.answer?.follow_up?.tool_data?.questions,
-							) &&
+							) && showFollowup && 
 							answerResp?.answer?.follow_up?.tool_data?.questions?.map(
 								(question, index) => (
 									<FollowUpQuestions
 										key={index}
 										question={question}
 										index={index}
-										handleNextStep={handleNextStep}
 										setAnswerResp={setAnswerResp}
-										setPromptQuery={setPromptQuery}
 										setDoingScience={setDoingScience}
 										setResponseTimeElapsed={
 											setResponseTimeElapsed
 										}
-										setShowResponseDelayBanner={
-											setShowResponseDelayBanner
-										}
-										setShowFailedResponseBanner={
-											setShowFailedResponseBanner
-										}
+										setBanners={setBanners}
 										answerResp={answerResp}
 									/>
 								),

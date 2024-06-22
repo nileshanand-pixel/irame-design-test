@@ -5,7 +5,7 @@ import * as d3 from 'd3';
 import TableComponent from './TableComponent';
 import { DataTableColumnHeader } from './data-table/components/data-table-column-header';
 
-const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable }) => {
+const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable, queryId }) => {
 	const [chartState, setChartState] = useState({
 		xAxis: '',
 		yAxis: '',
@@ -84,7 +84,7 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable }) 
 			if (chartRef.current) {
 				chartRef.current.destroy();
 			}
-			const ctx = document.getElementById('canvas');
+			const ctx = document.getElementById(`canvas_${queryId}`);
 			chartRef.current = new Chart(ctx, {
 				type: chartState.type,
 				data: {
@@ -139,7 +139,7 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable }) 
 						<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
 							{['Graphical View', 'Tabular View'].map((item, indx) => (
 								<li
-									key={indx}
+									key={`${queryId}_${indx}`}
 									className={`!pb-0 ${
 										activeTab === item
 											? 'active-tab'
@@ -155,7 +155,7 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable }) 
 							{activeTab === 'Graphical View' && (
 								<div className="bg-white rounded-3xl p-2">
 									<canvas
-										id="canvas"
+										id={`canvas_${queryId}`}
 										width="380"
 										height="250"
 									></canvas>

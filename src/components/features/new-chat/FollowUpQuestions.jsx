@@ -2,55 +2,63 @@ import React from 'react';
 import { createQuery } from './service/new-chat.service';
 import { useRouter } from '@/hooks/useRouter';
 import { getToken } from '@/lib/utils';
-import { updateUtilProp } from '@/redux/reducer/utilReducer';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 
 const FollowUpQuestions = ({
 	question,
 	index,
-	setAnswerResp,
-	setPromptQuery,
-	handleNextStep,
 	setDoingScience,
 	setResponseTimeElapsed,
-	setShowResponseDelayBanner,
-	setShowFailedResponseBanner,
+	setBanners,
 	answerResp,
 }) => {
 	const { query, navigate } = useRouter();
 	const dispatch = useDispatch();
-
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const handlePrompt = () => {
 		try {
-			setResponseTimeElapsed(0);
-			setDoingScience(true);
-			setAnswerResp({});
-			setPromptQuery({ data: question });
+			const tempCurrentQueries = [
+				...chatStoreReducer?.queries,
+				{ id: '', question: question, parentQueryId: answerResp?.query_id },
+			];
 			dispatch(
-				updateUtilProp([
-					{ key: 'isSideNavOpen', value: false },
-					{ key: 'queryPrompt', value: question },
-				]),
+				updateChatStoreProp([{ key: 'queries', value: tempCurrentQueries }]),
 			);
-			handleNextStep(4);
 			createQuery(
 				{
 					child_no: parseInt(answerResp.child_no) + 1,
-					datasource_id: query.dataSourceId,
-					parent_query_id: query.queryId,
+					datasource_id: answerResp?.datasource_id,
+					parent_query_id: answerResp?.query_id,
 					query: question,
-					session_id: query.sessionId,
+					session_id: answerResp?.session_id,
 				},
 				getToken(),
 			).then((res) => {
-				navigate(
-					`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${query.sessionId}&queryId=${res.query_id}`,
+				const updatedQueries = tempCurrentQueries?.map((item) => {
+					if (item?.parentQueryId === answerResp?.query_id) {
+						return { id: res.query_id, question };
+					}
+					return { ...item };
+				});
+				dispatch(
+					updateChatStoreProp([
+						{
+							key: 'refreshChat',
+							value: !chatStoreReducer?.refreshChat,
+						},
+						{ key: 'queries', value: updatedQueries },
+						{ key: 'activeQueryId', value: res?.query_id },
+					]),
 				);
 			});
 
 			setResponseTimeElapsed(0);
-			setShowFailedResponseBanner(false);
-			setShowResponseDelayBanner(false);
+			setBanners((prevState) => ({
+				...prevState,
+				showFailedResponse: false,
+				showDelay: false,
+			}));
 		} catch (error) {
 			console.log(error);
 		}

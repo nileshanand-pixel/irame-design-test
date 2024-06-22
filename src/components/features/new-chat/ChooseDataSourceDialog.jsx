@@ -48,7 +48,7 @@ const ChooseDataSourceDialog = ({
 			updateUtilProp([
 				{
 					key: 'selectedDataSource',
-					value: dataSourceName,
+					value: {id: dataSourceId, name: dataSourceName},
 				},
 			]),
 		);
