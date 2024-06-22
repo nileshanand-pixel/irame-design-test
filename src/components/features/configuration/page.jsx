@@ -66,7 +66,6 @@ const Configuration = () => {
 					datasourceName: 'Data source name already exists',
 				}));
 			}
-
 			if (!e.target.files.length) return;
 			const selectedFiles = Array.from(e.target.files);
 			setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
@@ -75,7 +74,7 @@ const Configuration = () => {
 				selectedFiles.forEach((file) => {
 					progessState[file.name] = 0;
 				});
-				return progessState;
+				return {...prevProgress, ...progessState};
 			});
 		} catch (error) {
 			console.log(error);
@@ -105,7 +104,7 @@ const Configuration = () => {
 				);
 				return {
 					...file,
-					url: uploadedFile ? uploadedFile.url : '',
+					url: uploadedFile ? uploadedFile.url : file.url || '',
 					name: uploadedFile ? uploadedFile.name : file.name,
 				};
 			});
@@ -194,7 +193,7 @@ const Configuration = () => {
 			setDataSources(data);
 			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		}
-	}, [files, data]);
+	}, [data]);
 
 	useEffect(() => {
 		if (files.length && !hideUpload) {
@@ -268,7 +267,7 @@ const Configuration = () => {
 							className="absolute top-0 w-0 -z-1 opacity-0"
 							onChange={(e) => handleFileChange(e)}
 							id="file-upload"
-							accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, application/vnd.ms-excel.sheet.binary.macroEnabled.12"
+							accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, application/vnd.ms-excel.sheet.binary.macroEnabled.12, .pdf"
 						/>
 					</div>
 				)}
