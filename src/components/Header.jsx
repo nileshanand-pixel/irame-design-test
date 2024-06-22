@@ -48,7 +48,7 @@ const Header = () => {
 										token: '',
 										avatar: '',
 									});
-								}} //TODO: change and fetch from cookie
+								}}
 							>
 								<i className="bi-box-arrow-left mr-2 text-primary100"></i>
 								Logout

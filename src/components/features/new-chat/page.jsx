@@ -32,6 +32,7 @@ import { createDashboard } from '../dashboard/service/dashboard.service';
 import { toast } from 'sonner';
 import CreateDashboardDialog from '../dashboard/components/CreateDashboardDialog';
 import { queryClient } from '@/lib/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -166,6 +167,10 @@ const NewChat = () => {
 				newParams.set('dataSourceId', query.dataSourceId);
 				newParams.set('sessionId', res.session_id);
 				newParams.set('queryId', res.query_id);
+				queryClient.invalidateQueries(['chat-history'], {
+					refetchActive: true,
+					refetchInactive: true,
+				});
 				navigate(`/app/new-chat/?${newParams.toString()}`);
 			})
 			.catch((error) => {
@@ -182,7 +187,6 @@ const NewChat = () => {
 		}
 	};
 
-	const resetStates = () => {};
 	const fetchUserSession = () => {
 		try {
 			// if (utilReducer?.sessionHistory?.length > 0) return;
@@ -194,18 +198,30 @@ const NewChat = () => {
 		}
 	};
 
-	const getChatHistoryDataSourceName = (dataSourceId) => {
-		if (!utilReducer?.dataSources || utilReducer?.dataSources?.length <= 0) {
-			getDataSources(getToken()).then((res) => {
-				dispatch(updateUtilProp([{ key: 'dataSources', value: res }]));
-
-				const dataSource = res.find(
-					(source) => source.datasource_id === dataSourceId,
-				);
-				return dataSource?.name;
-			});
+	const fetchDataSources = async () => {
+		const token = getToken();
+		if (!token) {
+			throw new Error('No token available');
 		}
-		const dataSource = utilReducer?.dataSources.find(
+		const data = await getDataSources(token);
+		return Array.isArray(data) ? data : [];
+	};
+
+	const {
+		data: dataSources,
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: 'data-sources',
+		queryFn: fetchDataSources,
+		onSuccess: (data) => {
+			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
+		},
+		enabled: !!getToken(), // Only run the query if the token exists
+	});
+
+	const getChatHistoryDataSourceName = (dataSourceId) => {
+		const dataSource = dataSources?.find(
 			(source) => source.datasource_id === dataSourceId,
 		);
 		return dataSource?.name;
@@ -445,7 +461,9 @@ const NewChat = () => {
 							showWorkspace ? 'col-span-8' : 'col-span-12 mx-[8rem]',
 						)}
 					>
-						{utilReducer?.selectedDataSource && (
+						{isLoading || !utilReducer?.selectedDataSource ? (
+							<Skeleton className="h-10 w-[20%] bg-purple-8 ms-1 float-right mt-2 mb-8 rounded-lg" />
+						) : (
 							<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-10 float-right text-primary80 font-medium max-w-[220px] truncate">
 								<i className="bi-database-check mr-2 text-primary80"></i>
 								{utilReducer?.selectedDataSource}

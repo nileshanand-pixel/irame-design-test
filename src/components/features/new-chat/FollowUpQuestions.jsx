@@ -1,5 +1,5 @@
 import React from 'react';
-import { createQuery, createQuerySession } from './service/new-chat.service';
+import { createQuery } from './service/new-chat.service';
 import { useRouter } from '@/hooks/useRouter';
 import { getToken } from '@/lib/utils';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
