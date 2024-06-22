@@ -3,7 +3,6 @@ import { welcomeTypography } from './config';
 import { useEffect, useState } from 'react';
 import ConnectDataSource from './ConnectDataSource';
 import SelectPrompt from './SelectPromt';
-import InputText from '@/components/elements/InputText';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
 import useGetCookie from '@/hooks/useGetCookie';
@@ -17,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import ResponseCard from './ResponseCard';
 import {
+	createQuery,
 	createQuerySession,
 	getQueryAnswers,
 	getUserDetails,
@@ -32,10 +32,12 @@ import { createDashboard } from '../dashboard/service/dashboard.service';
 import { toast } from 'sonner';
 import CreateDashboardDialog from '../dashboard/components/CreateDashboardDialog';
 import { queryClient } from '@/lib/react-query';
+import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
+import { useQuery } from '@tanstack/react-query';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
-	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
+	// const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
 	const [dataSource] = useLocalStorage('dataSource');
 	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 	const [searchParam, setSearchParam] = useSearchParams();
@@ -44,6 +46,7 @@ const NewChat = () => {
 	const token = useGetCookie('token');
 
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const dispatch = useDispatch();
 
 	const [files, setFiles] = useState([]);
@@ -54,7 +57,7 @@ const NewChat = () => {
 	const [showWorkspace, setShowWorkspace] = useState(true);
 	const [workSpaceTab, setWorkSpaceTab] = useState('');
 	const [doingScience, setDoingScience] = useState(true);
-	const [answerResp, setAnswerResp] = useState({});
+	const [answersList, setAnswersList] = useState([]);
 	const [promptQuery, setPromptQuery] = useState({ data: '' });
 	const [showResponseDelayBanner, setShowResponseDelayBanner] = useState(false);
 	const [showFailedResponseBanner, setShowFailedResponseBanner] = useState(false);
@@ -67,6 +70,8 @@ const NewChat = () => {
 	const [dashboardName, setDashboardName] = useState('');
 	const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
 	const [isTableLoading, setIsTableLoading] = useState(false);
+	const [activeQuery, setActiveQuery] = useState({id: query.queryId || null})
+	
 
 	const gradientText = {
 		backgroundImage:
@@ -131,11 +136,8 @@ const NewChat = () => {
 					<SelectPrompt
 						handleNextStep={handleNextStep}
 						setPrompt={setPrompt}
-						prompt={prompt}
-						setAnswerResp={setAnswerResp}
-						answerResp={answerResp}
+						setAnswerResp={setAnswersList}
 						setPromptQuery={setPromptQuery}
-						promptQuery={promptQuery}
 						setDoingScience={setDoingScience}
 					/>
 				);
@@ -148,30 +150,50 @@ const NewChat = () => {
 		setVisitedTabs({ ...visitedTabs, [tab]: true });
 		setWorkSpaceTab(tab);
 	};
-	const handleQueryAnswer = () => {
-		navigate(`/app/new-chat/?step=4`);
-		handleNextStep(4);
 
+	const handleAppendQuery = () => {
 		setDoingScience(true);
-		if (searchParam.has('sessionId') || searchParam.has('queryId')) {
-			const newParams = new URLSearchParams(location.search);
-			newParams.delete('sessionId');
-			newParams.delete('queryId');
-			setSearchParam(newParams.toString());
-			setAnswerResp({});
+		setPromptQuery({data: prompt})
+		let parentQueryId = query?.queryId;
+		let lastQueryAnsObj = getCurrentQueryAns(parentQueryId);
+		createQuery(
+			{
+				child_no: parseInt(lastQueryAnsObj.child_no) + 1,
+				datasource_id: query.dataSourceId,
+				parent_query_id: query.queryId,
+				query: prompt,
+				session_id: query.sessionId,
+			},
+			getToken(),
+		).then((res) => {
+			setActiveQuery((prevState) => ({...prevState, id: res.query_id}));
+		});
+	};
+
+	const handleQueryAnswer = () => {
+		try {
+			navigate(`/app/new-chat/session`);
+			dispatch(
+				updateChatStoreProp([
+					{ key: 'queries', value: [{id: '', question: prompt }] },
+					{ key: 'refreshChat', value: !chatStoreReducer?.refreshChat},
+
+				]),
+			);
+			createQuerySession(query.dataSourceId, prompt, getToken()).then(
+				(res) => {
+					dispatch(
+						updateChatStoreProp([
+							{ key: 'queries', value: [{id: res?.query_id || '', question: res?.query || prompt }] },
+							{ key: 'activeChatSession', value: {id: res?.session_id, title: res?.query || ''} },
+							{ key: 'activeQueryId', value: res?.query_id }
+						]),
+					);
+				},
+			);
+		} catch (error) {
+			console.log(error);
 		}
-		createQuerySession(query.dataSourceId, prompt, getToken())
-			.then((res) => {
-				const newParams = new URLSearchParams(location.search);
-				newParams.set('dataSourceId', query.dataSourceId);
-				newParams.set('sessionId', res.session_id);
-				newParams.set('queryId', res.query_id);
-				navigate(`/app/new-chat/?${newParams.toString()}`);
-			})
-			.catch((error) => {
-				console.error('Error creating query session:', error);
-				navigate(`/app/new-chat`);
-			});
 	};
 
 	const getInputWidth = () => {
@@ -182,7 +204,6 @@ const NewChat = () => {
 		}
 	};
 
-	const resetStates = () => {};
 	const fetchUserSession = () => {
 		try {
 			// if (utilReducer?.sessionHistory?.length > 0) return;
@@ -194,18 +215,30 @@ const NewChat = () => {
 		}
 	};
 
-	const getChatHistoryDataSourceName = (dataSourceId) => {
-		if (!utilReducer?.dataSources || utilReducer?.dataSources?.length <= 0) {
-			getDataSources(getToken()).then((res) => {
-				dispatch(updateUtilProp([{ key: 'dataSources', value: res }]));
-
-				const dataSource = res.find(
-					(source) => source.datasource_id === dataSourceId,
-				);
-				return dataSource?.name;
-			});
+	const fetchDataSources = async () => {
+		const token = getToken();
+		if (!token) {
+			throw new Error('No token available');
 		}
-		const dataSource = utilReducer?.dataSources.find(
+		const data = await getDataSources(token);
+		return Array.isArray(data) ? data : [];
+	};
+
+	const {
+		data: dataSources,
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: 'data-sources',
+		queryFn: fetchDataSources,
+		onSuccess: (data) => {
+			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
+		},
+		enabled: !!getToken(), // Only run the query if the token exists
+	});
+
+	const getChatHistoryDataSourceName = (dataSourceId) => {
+		const dataSource = dataSources?.find(
 			(source) => source.datasource_id === dataSourceId,
 		);
 		return dataSource?.name;
@@ -216,14 +249,6 @@ const NewChat = () => {
 			const { value } = e.target;
 			console.log('prompt:', value);
 			setPrompt(value);
-			dispatch(
-				updateUtilProp([
-					{
-						key: 'queryPrompt',
-						value: prompt,
-					},
-				]),
-			);
 		} catch (error) {
 			console.log(error);
 		}
@@ -275,22 +300,17 @@ const NewChat = () => {
 		fetchData();
 		fetchUserSession();
 
-		setAnswerResp({
-			...answerConfig,
-		});
-		for (const key in answerConfig) {
-			if (answerConfig[key].tool_space === 'secondary') {
-				setWorkSpaceTab(key);
-				break;
-			}
-		}
+		// setAnswerResp({
+		// 	...answerConfig,
+		// });
+		// for (const key in answerConfig) {
+		// 	if (answerConfig[key].tool_space === 'secondary') {
+		// 		setWorkSpaceTab(key);
+		// 		break;
+		// 	}
+		// }
 	}, []);
 
-	useEffect(() => {
-		if (!promptQuery.data) {
-			setPromptQuery({ data: utilReducer?.promptQuery });
-		}
-	}, [utilReducer?.promptQuery]);
 
 	useEffect(() => {
 		let intervalId;
@@ -319,11 +339,18 @@ const NewChat = () => {
 				intervalId = setInterval(() => {
 					getQueryAnswers(query.queryId, getToken())
 						.then((res) => {
-							setAnswerResp(res);
+							setAnswersList((prevState) => {
+								console.log(res)
+								if(prevState.length <= 0)return [...prevState, res];
+								return prevState.map((item) => {
+									if(item?.query_id === res.query_id)return {...res}
+									return {...item}
+								})
+							});
 
-							if (res?.answer) {
-								setAnswerConfig(res.answer);
-							}
+							// if (res?.answer) {
+							// 	setAnswerConfig(res.answer);
+							// }
 							if (
 								!promptQuery.data ||
 								utilReducer?.promptQuery !== res.query
@@ -392,19 +419,19 @@ const NewChat = () => {
 	useEffect(() => {
 		setIsGraphLoading(true);
 		setDoingScience(true);
-		setAnswerResp({});
+		// setAnswerResp([]);
 		setShowResponseDelayBanner(false);
 		setShowFailedResponseBanner(false);
 		setResponseTimeElapsed(0);
 		setPromptQuery({ data: utilReducer?.queryPrompt });
 		if (query.step === '4' && query.src === 'history') {
-			setAnswerResp(utilReducer?.answerFromHistory);
+			// setAnswerResp(utilReducer?.answerFromHistory);
 			setPromptQuery({ data: utilReducer?.queryPrompt });
 			setDoingScience(false);
 			if (utilReducer?.answerFromHistory?.status === 'done') {
 				setIsGraphLoading(false);
 			}
-			setAnswerConfig(utilReducer?.answerFromHistory?.answer);
+			// setAnswerConfig(utilReducer?.answerFromHistory?.answer);
 		}
 	}, [
 		query.dataSourceId,
@@ -435,6 +462,207 @@ const NewChat = () => {
 		}
 	}, [utilReducer?.dataSources, utilReducer?.resetChat]);
 
+	const renderConversation = () => {
+		return answersList?.map((answerElem, key) => {
+			const hasIraGeneratedReply = answerElem?.answer; // complete initial reply object.
+			const hasIraGeneratedGraph = answerElem?.answer?.graph;
+			const isIraGeneratingGraph = hasIraGeneratedReply && !hasIraGeneratedGraph && answerElem?.status !== 'done'; 
+			const hasIraGeneratedMainReply =  answerElem?.answer?.answer // text reply of asked query
+			const isGraphProcessed = answerElem?.answer?.graph || (!answerElem?.answer?.graph && !isGraphLoading && answerElem?.status === 'done'); //either graph present or graph not availble for this query
+			const isGettingLateInReply = (!hasIraGeneratedGraph || !hasIraGeneratedMainReply || !answerElem?.answer?.response_dataframe)
+			return (
+				<div
+					key={answerElem.query_id}
+				>
+					{utilReducer?.selectedDataSource?.name && (
+						<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-10 float-right text-primary80 font-medium max-w-[220px] truncate">
+							<i className="bi-database-check mr-2 text-primary80"></i>
+							{utilReducer?.selectedDataSource?.name}
+						</div>
+					)}
+					<div className="max-h-[45rem] overflow-y-auto mt-16 w-full">
+						<div className="flex items-center gap-2">
+							<Avatar className="size-9">
+								<AvatarImage src={value?.avatar} />
+								<AvatarFallback>
+									{getInitials(value.userName)}
+								</AvatarFallback>
+							</Avatar>
+							{answerElem?.query ? (
+								<p className="ms-1 bg-purple-10 text-primary80 font-medium px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
+									{answerElem.query}
+								</p>
+							) : (
+								<>
+									<Skeleton className="h-6 w-[90%] bg-purple-8 ms-1" />
+								</>
+							)}
+						</div>
+						<div className="mt-10 flex items-center space-x-2">
+							<img src={ira} alt="ira" className="size-10" />
+							<Button
+								variant="outline"
+								className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
+								onClick={() => setShowWorkspace(!showWorkspace)}
+							>
+								<span className="material-symbols-outlined me-1">
+									category
+								</span>
+								{showWorkspace ? 'Hide' : 'Show'} Workspace
+							</Button>
+						</div>
+						<div className="mt-8 mb-20">
+							{/* Generating Graph Loader */}
+							{ answerElem.query_id === activeQuery.id && doingScience || isIraGeneratingGraph ? (
+								showFailedResponseBanner ? (
+									<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+										<img
+											src={failedIcon}
+											width={40}
+											height={40}
+											className="mr-3"
+										/>
+										Failed to generate a response, please refresh
+										the page to try again.
+									</div>
+								) : (
+									<div className="darkSoul-glowing-button2 ml-12">
+										<button
+											className="darkSoul-button2"
+											type="button"
+										>
+											<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+											Generating Graph...
+										</button>
+									</div>
+								)
+							) : (
+								<ResponseCard
+									answerResp={answerElem}
+									isGraphLoading={isGraphLoading}
+									setIsGraphLoading={setIsGraphLoading}
+									setShowFailedResponseBanner={
+										setShowFailedResponseBanner
+									}
+									handleNextStep={handleNextStep}
+									setAnswerResp={setAnswersList}
+									setPromptQuery={setPromptQuery}
+									setDoingScience={setDoingScience}
+									setResponseTimeElapsed={setResponseTimeElapsed}
+									setShowResponseDelayBanner={
+										setShowResponseDelayBanner
+									}
+									doingScience={doingScience}
+									setShowAddToDashboard={setShowAddToDashboard}
+									showTable={
+										!answerElem?.answer?.response_dataframe &&
+										answerElem?.answer?.graph
+									}
+									setIsTableLoading={setIsTableLoading}
+									isTableLoading={isTableLoading}
+								/>
+							)}
+							
+							{/* Generating Observation Loader */}
+							{/* Only Rendered Ira doing science is false and Ira has not given main text reply yet */}
+							{( answerElem.query_id === activeQuery.id && !doingScience) &&
+								(!hasIraGeneratedMainReply && 
+									(
+									<div className="flex flex-col space-y-3 my-8 ml-12">
+										<div className="space-y-3">
+											{showFailedResponseBanner ? (
+												<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+													<img
+														src={failedIcon}
+														width={40}
+														height={40}
+														className="mr-3"
+													/>
+													Failed to generate a response,
+													please refresh the page to try
+													again.
+												</div>
+											) : 
+											// show creating observation
+											isGraphProcessed ? (
+												<div className="darkSoul-glowing-button2">
+													<button
+														className="darkSoul-button2"
+														type="button"
+													>
+														<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+														Creating Observation...
+													</button>
+												</div>
+											) : (
+												<ResponseCard
+													answerResp={answerElem}
+													isGraphLoading={isGraphLoading}
+													setIsGraphLoading={
+														setIsGraphLoading
+													}
+													setShowFailedResponseBanner={
+														setShowFailedResponseBanner
+													}
+													handleNextStep={handleNextStep}
+													setAnswerResp={setAnswersList}
+													setPromptQuery={setPromptQuery}
+													setDoingScience={setDoingScience}
+													setResponseTimeElapsed={
+														setResponseTimeElapsed
+													}
+													setShowResponseDelayBanner={
+														setShowResponseDelayBanner
+													}
+													setShowAddToDashboard={
+														setShowAddToDashboard
+													}
+													showTable={
+														!answerElem?.answer
+															?.response_dataframe &&
+														answerElem?.answer?.graph
+													}
+													setIsTableLoading={
+														setIsTableLoading
+													}
+													isTableLoading={isTableLoading}
+												/>
+											)}
+										</div>
+									</div>
+									)
+								)
+							}
+						</div>
+					</div>
+					<div className="w-full flex flex-col justify-center mx-auto mt-5 pl-12">
+						{showResponseDelayBanner &&
+							isGettingLateInReply && (
+								<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+									<img
+										src={warningIcon}
+										width={40}
+										height={40}
+										className="mr-3"
+									/>
+									This is taking a bit longer than expected
+								</div>
+							)}
+					</div>
+				</div>
+			);
+		});
+	};
+
+	/**
+	 * Gives data of current queryId response from state
+	 * @param {*} queryId 
+	 * @returns 
+	 */
+	const getCurrentQueryAns = (queryId) => {
+		return answersList.find((item) => item.query_id === queryId);
+	}
+
 	return (
 		<>
 			{completedSteps.includes(4) ? (
@@ -445,196 +673,7 @@ const NewChat = () => {
 							showWorkspace ? 'col-span-8' : 'col-span-12 mx-[8rem]',
 						)}
 					>
-						{utilReducer?.selectedDataSource && (
-							<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-10 float-right text-primary80 font-medium max-w-[220px] truncate">
-								<i className="bi-database-check mr-2 text-primary80"></i>
-								{utilReducer?.selectedDataSource}
-							</div>
-						)}
-						<div className="max-h-[45rem] overflow-y-auto mt-16 w-full">
-							<div className="flex items-center gap-2">
-								<Avatar className="size-9">
-									<AvatarImage src={value?.avatar} />
-									<AvatarFallback>
-										{getInitials(value.userName)}
-									</AvatarFallback>
-								</Avatar>
-								{promptQuery.data ? (
-									<p className="ms-1 bg-purple-10 text-primary80 font-medium px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
-										{promptQuery.data}
-									</p>
-								) : (
-									<>
-										<Skeleton className="h-6 w-[90%] bg-purple-8 ms-1" />
-									</>
-								)}
-							</div>
-							<div className="mt-10 flex items-center space-x-2">
-								<img src={ira} alt="ira" className="size-10" />
-								<Button
-									variant="outline"
-									className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
-									onClick={() => setShowWorkspace(!showWorkspace)}
-								>
-									<span className="material-symbols-outlined me-1">
-										category
-									</span>
-									{showWorkspace ? 'Hide' : 'Show'} Workspace
-								</Button>
-							</div>
-							<div className="mt-8 mb-20">
-								{doingScience ||
-								(answerResp?.answer &&
-									!answerResp?.answer?.graph &&
-									answerResp?.status !== 'done') ? (
-									showFailedResponseBanner ? (
-										<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-											<img
-												src={failedIcon}
-												width={40}
-												height={40}
-												className="mr-3"
-											/>
-											Failed to generate a response, please
-											refresh the page to try again.
-										</div>
-									) : (
-										<div className="darkSoul-glowing-button2 ml-12">
-											<button
-												className="darkSoul-button2"
-												type="button"
-											>
-												<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-												Generating Graph...
-											</button>
-										</div>
-									)
-								) : (
-									<ResponseCard
-										answerResp={answerResp}
-										isGraphLoading={isGraphLoading}
-										setIsGraphLoading={setIsGraphLoading}
-										setShowFailedResponseBanner={
-											setShowFailedResponseBanner
-										}
-										handleNextStep={handleNextStep}
-										setAnswerResp={setAnswerResp}
-										setPromptQuery={setPromptQuery}
-										setDoingScience={setDoingScience}
-										setResponseTimeElapsed={
-											setResponseTimeElapsed
-										}
-										setShowResponseDelayBanner={
-											setShowResponseDelayBanner
-										}
-										doingScience={doingScience}
-										setShowAddToDashboard={setShowAddToDashboard}
-										showTable={
-											!answerResp?.answer
-												?.response_dataframe &&
-											answerResp?.answer?.graph
-										}
-										setIsTableLoading={setIsTableLoading}
-										isTableLoading={isTableLoading}
-									/>
-								)}
-
-								{doingScience ||
-									(!answerResp?.answer?.answer && (
-										<div className="flex flex-col space-y-3 my-8 ml-12">
-											<div className="space-y-3">
-												{showFailedResponseBanner ? (
-													<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-														<img
-															src={failedIcon}
-															width={40}
-															height={40}
-															className="mr-3"
-														/>
-														Failed to generate a
-														response, please refresh the
-														page to try again.
-													</div>
-												) : answerResp?.answer?.graph ||
-												  (!answerResp?.answer?.graph &&
-														!isGraphLoading &&
-														answerResp?.status ===
-															'done') ? (
-													<div className="darkSoul-glowing-button2">
-														<button
-															className="darkSoul-button2"
-															type="button"
-														>
-															<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-															Creating Observation...
-														</button>
-													</div>
-												) : (
-													<ResponseCard
-														answerResp={answerResp}
-														isGraphLoading={
-															isGraphLoading
-														}
-														setIsGraphLoading={
-															setIsGraphLoading
-														}
-														setShowFailedResponseBanner={
-															setShowFailedResponseBanner
-														}
-														handleNextStep={
-															handleNextStep
-														}
-														setAnswerResp={setAnswerResp}
-														setPromptQuery={
-															setPromptQuery
-														}
-														setDoingScience={
-															setDoingScience
-														}
-														setResponseTimeElapsed={
-															setResponseTimeElapsed
-														}
-														setShowResponseDelayBanner={
-															setShowResponseDelayBanner
-														}
-														setShowAddToDashboard={
-															setShowAddToDashboard
-														}
-														showTable={
-															!answerResp?.answer
-																?.response_dataframe &&
-															answerResp?.answer?.graph
-														}
-														setIsTableLoading={
-															setIsTableLoading
-														}
-														isTableLoading={
-															isTableLoading
-														}
-													/>
-												)}
-											</div>
-										</div>
-									))}
-							</div>
-						</div>
-						<div className="w-full flex flex-col justify-center mx-auto mt-5 pl-12">
-							{showResponseDelayBanner &&
-								(!answerResp?.answer?.graph ||
-									!answerResp?.answer?.answer ||
-									!answerResp?.answer?.response_dataframe) && (
-									<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-										<img
-											src={warningIcon}
-											width={40}
-											height={40}
-											className="mr-3"
-										/>
-										This is taking a bit longer than expected
-									</div>
-								)}
-						</div>
-
+						{renderConversation()}
 						<div className="bg-white pt-2">
 							<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white">
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
@@ -648,12 +687,12 @@ const NewChat = () => {
 										onChange={(e) => handlePromptChange(e)}
 										onKeyDown={(e) => {
 											if (e.key === 'Enter')
-												handleQueryAnswer();
+												handleAppendQuery();
 										}}
 									/>
 									<div
 										className="flex gap-2 items-center pr-3 cursor-pointer"
-										onClick={handleQueryAnswer}
+										onClick={handleAppendQuery}
 									>
 										<i className="bi-send text-primary100 text-lg rotate-45"></i>
 									</div>
@@ -665,6 +704,7 @@ const NewChat = () => {
 							</div>
 						</div>
 					</div>
+
 					{showWorkspace ? (
 						<div className="border rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-[90%]">
 							<div className="flex justify-between">
@@ -685,7 +725,7 @@ const NewChat = () => {
 							<Workspace
 								handleTabClick={handleTabClick}
 								workSpaceTab={workSpaceTab}
-								answerResp={answerResp}
+								answerResp={getCurrentQueryAns()}
 								setWorkSpaceTab={setWorkSpaceTab}
 								visitedTabs={visitedTabs}
 								setVisitedTabs={setVisitedTabs}

@@ -136,7 +136,7 @@ const Dashboard = () => {
 				<CreateDashboardDialog
 					open={showCreateDashboard}
 					setOpen={setShowCreateDashboard}
-					name={dashboardName}
+					dashboardName={dashboardName}
 					setDashboardName={setDashboardName}
 					handleCreateNewDashboard={handleCreateNewDashboard}
 					errors={errors}

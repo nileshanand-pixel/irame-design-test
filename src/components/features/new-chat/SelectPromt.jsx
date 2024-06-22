@@ -12,14 +12,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
+import { queryClient } from '@/lib/react-query';
 
 const SelectPrompt = ({
 	handleNextStep,
-	prompt,
 	setPrompt,
-	answerResp,
 	setAnswerResp,
-	promptQuery,
 	setPromptQuery,
 	setDoingScience,
 }) => {
@@ -27,34 +26,37 @@ const SelectPrompt = ({
 	const [data, setData] = useState([]);
 	const { query, navigate } = useRouter();
 	const token = useGetCookie('token');
-	const [answerConfig, setAnswerConfig] = useLocalStorage('answerRespConfig');
-	// const [promptQuery, setPromptQuery] = useLocalStorage('questionPrompt');
 
 	const dispatch = useDispatch();
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
 	const handleActiveTab = (selectedTab) => {
 		setActiveTab(selectedTab);
 	};
+	
 	const handlePrompt = (question) => {
 		try {
-			// setPrompt(question);
-			navigate(`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}`);
-			setDoingScience(true);
-			setAnswerResp({});
-			setPromptQuery({ data: question });
+			navigate(`/app/new-chat/session`);
 			dispatch(
-				updateUtilProp([
-					{ key: 'isSideNavOpen', value: false },
-					{ key: 'queryPrompt', value: question },
+				updateChatStoreProp([
+					{ key: 'queries', value: [{id: '', query: question }] },
+					{ key: 'refreshChat', value: !chatStoreReducer?.refreshChat},
 				]),
 			);
-			handleNextStep(4);
 			createQuerySession(query.dataSourceId, question, getToken()).then(
 				(res) => {
-					navigate(
-						`/app/new-chat/?step=4&dataSourceId=${query.dataSourceId}&sessionId=${res.session_id}&queryId=${res.query_id}`,
-					);
+					dispatch(
+						updateChatStoreProp([
+							{ key: 'initialQuery', value: {id: res?.query_id || '', question} },
+							{ key: 'queries', value: [{id: res?.query_id || '', question: res?.query || question }] },
+							{ key: 'activeChatSession', value: {id: res?.session_id, title: res?.query || ''} },
+							{ key: 'activeQueryId', value: res?.query_id }
+						])),
+					queryClient.invalidateQueries(['chat-history'], {
+						refetchActive: true,
+						refetchInactive: true,
+					});
 				},
 			);
 		} catch (error) {
@@ -167,10 +169,11 @@ const SelectPrompt = ({
 											<div
 												className="absolute bottom-4 right-4 text-right mt-6 cursor-pointer"
 												onClick={() => {
-													setPrompt(question);
-													setPromptQuery({
-														data: question,
-													});
+													dispatch(
+														updateChatStoreProp([
+															{ key: 'inputPrompt', value: question },
+														]),
+													);
 												}}
 											>
 												<i className="bi-pencil-square text-primary100 bg-white py-1.5 px-2 rounded-full "></i>
@@ -181,7 +184,7 @@ const SelectPrompt = ({
 									<div className="flex space-x-2" key={index}>
 										<Skeleton className="h-[125px] w-[250px] rounded-xl bg-purple-4" />
 									</div>
-							  ))}
+								))}
 					</div>
 				) : (
 					<div className="flex space-x-2 mt-4">

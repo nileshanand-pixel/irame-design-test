@@ -6,25 +6,26 @@ import { WorkspaceEnum, workSpaceMap } from './types/new-chat.enum';
 import GraphComponent from '@/components/elements/GraphComponent';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const Workspace = ({
-	handleTabClick,
-	workSpaceTab,
-	answerResp,
-	setWorkSpaceTab,
-	visitedTabs,
-	setVisitedTabs,
-}) => {
+const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 	useEffect(() => {
-		if (!workSpaceTab && answerResp?.answer) {
+		if (!workspace?.activeTab && answerResp?.answer) {
 			const firstTab = Object.keys(answerResp.answer)[0];
-			setWorkSpaceTab(firstTab);
-			setVisitedTabs((prev) => ({ ...prev, [firstTab]: true }));
+			setWorkspace((prevState) => ({
+				...prevState,
+				activeTab: firstTab,
+				visitedTabs: { ...prevState.visitedTabs, [firstTab]: true },
+			}));
 		}
-		setVisitedTabs((prev) => ({ ...prev, ['planner']: true }));
-	}, [answerResp, setWorkSpaceTab, setVisitedTabs, workSpaceTab]);
+		if(setWorkspace){
+			setWorkspace((prevState) => ({
+				...prevState,
+				visitedTabs: { ...prevState.visitedTabs, planner: true },
+			}));
+		}
+	}, [answerResp, workspace?.activeTab]);
 
 	const renderedComponent = useMemo(() => {
-		switch (workSpaceTab) {
+		switch (workspace?.activeTab) {
 			case WorkspaceEnum.Planner:
 				return (
 					<PlannerComponent
@@ -45,13 +46,17 @@ const Workspace = ({
 			case WorkspaceEnum.Observation:
 			case WorkspaceEnum.Answer:
 			case WorkspaceEnum.Reference:
-				return <SourceComponent data={answerResp?.answer?.[workSpaceTab]} />;
+				return (
+					<SourceComponent
+						data={answerResp?.answer?.[workspace.activeTab]}
+					/>
+				);
 			default:
 				return null;
 		}
-	}, [workSpaceTab, answerResp?.answer]);
+	}, [workspace?.activeTab, answerResp?.answer]);
 	return (
-		<div className=" rounded-2xl mt-6 max-w-[24rem]">
+		<div className=" rounded-2xl mt-6 max-w-[24rem] h-full overflow-y-auto">
 			<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">
 				{answerResp?.answer
 					? Object.keys(answerResp?.answer)
@@ -65,14 +70,14 @@ const Workspace = ({
 									key={indx}
 									className={[
 										'!pb-0 flex items-center gap-2',
-										workSpaceTab === items
+										workspace.activeTab === items
 											? 'active-tab'
 											: 'default-tab',
 									].join(' ')}
 									onClick={() => handleTabClick(items)}
 								>
 									{workSpaceMap[items]}
-									{visitedTabs[items] ? null : (
+									{workspace.visitedTabs[items] ? null : (
 										<span className="relative flex size-2 ">
 											<span className="absolute inline-flex h-full w-full rounded-full bg-purple-100"></span>
 											<span className="animate-ping relative inline-flex rounded-full size-2 bg-purple-100"></span>
@@ -85,7 +90,7 @@ const Workspace = ({
 								key={index}
 								className="h-4 w-[150px] space-x-2 mr-2 bg-purple-8 rounded-lg mb-1"
 							/>
-					  ))}
+						))}
 			</ul>
 			{answerResp?.answer ? (
 				renderedComponent

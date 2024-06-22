@@ -11,13 +11,13 @@ export const logout = async (token) => {
 	// 		Authorization: `Bearer ${token}`,
 	// 	},
 	// });
-	document.cookie.split(';').forEach((c) => {
-		document.cookie = c
-			.replace(/^ +/, '')
-			.replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
-	});
+	// document.cookie.split(';').forEach((c) => {
+	// 	document.cookie = c
+	// 		.replace(/^ +/, '')
+	// 		.replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
+	// });
+	window.location.href = `${API_URL}/oauth/google/logout`;
 	localStorage.clear();
 
-	window.location.href = '/';
-	return response.data;
+	// return response.data;
 };

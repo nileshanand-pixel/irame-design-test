@@ -7,6 +7,7 @@ import Layout from '@/components/Layout';
 import Configuration from '@/components/features/configuration/page';
 import useAuth from '@/hooks/useAuth';
 import DashboardDetailsPage from '@/components/features/dashboard/components/DashboardDetailsPage';
+import Workzone from '@/components/features/new-chat/session/Page';
 
 const ProtectedRoute = ({ element, ...rest }) => {
 	const { isAuthenticated } = useAuth();
@@ -28,6 +29,10 @@ const AppRoutes = () => {
 					<Layout>
 						<Routes>
 							<Route path="/" element={<Navigate to="new-chat" />} />
+							<Route
+								path="/new-chat/session"
+								element={<Workzone />}
+							/>
 							<Route path="new-chat/*" element={<NewChat />} />
 							<Route path="dashboard" element={<Dashboard />} />
 							<Route
