@@ -52,6 +52,7 @@ const Workzone = () => {
 	const [isTableLoading, setIsTableLoading] = useState(false);
 	const [isGraphLoading, setIsGraphLoading] = useState(true);
 	const [responseTimeElapsed, setResponseTimeElapsed] = useState(0);
+	const [inputDisabled, setInputDisabled] = useState(false);
 	const queries = chatStoreReducer?.queries;
 
 	const scrollToBottom = () => {
@@ -123,7 +124,15 @@ const Workzone = () => {
 				);
 
 				// Update answers
-				setAnswers(res);
+				setAnswers((prevAnswers) => {
+					return res.map((newAnswer) => {
+						const existingAnswer = prevAnswers.find(answer => answer.query_id === newAnswer.query_id);
+						if (existingAnswer && existingAnswer.status === 'done') {
+							return existingAnswer;
+						}
+						return newAnswer;
+					});
+				});
 
 				setDoingScience((prevState) => {
 					const tempDoingScience = prevState.filter((item) => item.id);
@@ -145,6 +154,7 @@ const Workzone = () => {
 							showDelay: false,
 							showFailedResponse: true,
 						}));
+						setInputDisabled(false);
 						resetDoingScience(false);
 						setIsGraphLoading(false);
 					}
@@ -154,6 +164,7 @@ const Workzone = () => {
 				console.error('Error fetching session queries:', error);
 				resetDoingScience(false);
 				setIsGraphLoading(false);
+				setInputDisabled(false);
 				setBanners((prevState) => ({
 					...prevState,
 					showDelay: false,
@@ -175,6 +186,7 @@ const Workzone = () => {
 
 	const handleAppendQuery = () => {
 		try {
+			if(inputDisabled)return;
 			const lastAns = answers[answers.length - 1];
 			const tempPrompt = prompt;
 			const tempCurrentQueries = [
@@ -314,8 +326,8 @@ const Workzone = () => {
 				doingScience.find((loadingObj) => loadingObj.queryId === query?.id)
 					?.status || !!query?.parentQueryId;
 			return (
-				<div key={query.id}>
-					<div className="mt-2 w-full">
+				<>
+					<div key={query.id} className="my-2 w-full">
 						<div className="flex items-center gap-2 flex-row-reverse">
 							<Avatar className="size-9">
 								<AvatarImage src={value?.avatar} />
@@ -324,7 +336,7 @@ const Workzone = () => {
 								</AvatarFallback>
 							</Avatar>
 							{query?.question ? (
-								<p className="ms-1 bg-purple-10 text-primary80 font-medium px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
+								<p className="ms-1 bg-purple-10 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px]">
 									{query.question}
 								</p>
 							) : (
@@ -346,7 +358,7 @@ const Workzone = () => {
 								{workspace.show && chatStoreReducer?.activeQueryId === query?.id ? 'Hide' : 'Show'} Workspace
 							</Button>
 						</div>
-						<div className="mt-8 mb-16">
+						<div className={cn("mt-8", currentDoingScience ? 'mb-16': '')}>
 							{/* Generating Graph Loader */}
 							{currentDoingScience && isIraGeneratingGraph ? (
 								banners?.showFailedResponse ? (
@@ -461,7 +473,7 @@ const Workzone = () => {
 								</div>
 							)}
 					</div>
-				</div>
+				</>
 			);
 		});
 	};
@@ -476,8 +488,10 @@ const Workzone = () => {
 			clearPolling();
 			scrollToBottom();
 			dispatch(updateChatStoreProp([
-				{ key: 'activeQueryId', value: answers?.[answers?.length - 1]?.query_id}
+				{ key: 'activeQueryId', value: answers?.[answers?.length - 1]?.query_id},
+				{ key: 'activateGraphOnLast', value: true}
 			]))
+			setInputDisabled(false);
 			return;
 		}
 		intervalRef.current = setInterval(() => {
@@ -486,6 +500,7 @@ const Workzone = () => {
 				hasPendingQueries = false;
 			}
 			if (hasPendingQueries) {
+				setInputDisabled(true);
 				fetchQueries();
 			} else {
 				clearPolling();
@@ -501,6 +516,7 @@ const Workzone = () => {
 		if(!query?.sessionId && chatStoreReducer?.activeChatSession?.id){
 			navigate(`/app/new-chat/session/?sessionId=${chatStoreReducer?.activeChatSession?.id}`, {replace: true});
 		}
+		setInputDisabled(true);
 		fetchQueries();
 	}, [chatStoreReducer?.activeChatSession, chatStoreReducer?.refreshChat]);
 
@@ -509,8 +525,13 @@ const Workzone = () => {
 	}, [chatStoreReducer?.resetIra]);
 
 	useEffect(() => {
-		scrollToBottom();
-	}, [chatStoreReducer?.queries])
+		setInputDisabled(true);
+		dispatch(updateChatStoreProp([
+			{
+				key: 'activateGraphOnLast', value: false
+			}
+		]))
+	}, [chatStoreReducer?.queries?.length])
 
 	useEffect(() => {
 		// sessionId Present in Url params, absent in Redux
@@ -535,13 +556,13 @@ const Workzone = () => {
 						{utilReducer?.selectedDataSource?.name}
 					</div>
 				)}
-				<div ref={scrollRef} className="h-[60vh] overflow-y-auto w-full">
-					{renderConversation()}
+				<div ref={scrollRef} className="mb-[4vh] h-[60vh] h-sm:h-[64vh] h-md:h-[68vh] h-lg:h-[70vh] h-xl:h-[74vh] overflow-y-auto w-full">
+				{renderConversation()}
 				</div>
 
-				<div className="bg-white pt-2">
-					<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white">
-						<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
+				<div className="bg-white flex justify-center mt-4 pt-2">
+					<div className="absolute bottom-4 w-[96%] flex flex-col items-center justify-center z-20 bg-white">
+						<div className="rounded-[100px] w-full flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 							<Input
 								placeholder="Ask IRA"
 								className={cn(
@@ -554,12 +575,18 @@ const Workzone = () => {
 									if (e.key === 'Enter') handleAppendQuery();
 								}}
 							/>
-							<div
+							{!inputDisabled ? (<div
 								className="flex gap-2 items-center pr-3 cursor-pointer"
 								onClick={handleAppendQuery}
 							>
 								<i className="bi-send text-primary100 text-lg rotate-45"></i>
-							</div>
+							</div>):
+							(<div
+								className="flex gap-2 items-center pr-3 cursor-not-allowed"
+							>
+								<i className="bi bi-arrow-repeat animate-spin text-purple-40 text-xl"></i>
+							</div>)
+							}
 						</div>
 						<p className="text-xs text-primary40 font-normal">
 							Irame.ai may display inaccurate info, including about
@@ -570,7 +597,7 @@ const Workzone = () => {
 			</div>
 
 			{workspace.show ? (
-				<div className="border rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-[90vh]">
+				<div className="border sticky rounded-3xl py-4 px-4 col-span-4 shadow-1xl overflow-y-auto h-[90vh]">
 					<div className="flex justify-between">
 						<div className="flex items-center gap-1">
 							<span className="material-symbols-outlined me-1">

@@ -16,7 +16,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 				visitedTabs: { ...prevState.visitedTabs, [firstTab]: true },
 			}));
 		}
-		if(setWorkspace){
+		if (setWorkspace) {
 			setWorkspace((prevState) => ({
 				...prevState,
 				visitedTabs: { ...prevState.visitedTabs, planner: true },
@@ -56,7 +56,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 		}
 	}, [workspace?.activeTab, answerResp?.answer]);
 	return (
-		<div className=" rounded-2xl mt-6 max-w-[24rem] h-full overflow-y-auto">
+		<div className=" rounded-2xl my-6 w-[100%] h-full ">
 			<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">
 				{answerResp?.answer
 					? Object.keys(answerResp?.answer)
@@ -93,7 +93,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 						))}
 			</ul>
 			{answerResp?.answer ? (
-				renderedComponent
+				<div className="w-full h-[98%] overflow-y-auto">{renderedComponent}</div>
 			) : (
 				// <Skeleton className="h-96 w-full bg-purple-8 rounded-2xl" />
 				<div className="flex flex-col space-y-3">

@@ -65,7 +65,7 @@ const FollowUpQuestions = ({
 	};
 	return (
 		<div
-			className="relative bg-purple-4 rounded-xl min-w-[12.5rem] max-w-[12.5rem] h-[12rem] p-4 hover:bg-purple-8 mb-3"
+			className="relative bg-purple-4 rounded-xl min-w-[12.5rem] max-w-[12.5rem] h-[12rem] p-4 hover:bg-purple-8"
 			key={`${index}_question`}
 		>
 			<div

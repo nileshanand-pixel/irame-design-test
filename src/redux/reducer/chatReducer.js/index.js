@@ -18,7 +18,8 @@ const initialState = {
 	inputPrompt: '',
 	refreshChat: false,
 	activeQueryId: '',
-	resetIra: false
+	resetIra: false,
+	activateGraphOnLatest: false,
 };
 
 const chatStoreSlice = createSlice({

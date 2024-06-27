@@ -28,7 +28,7 @@ const Layout = ({ children }) => {
 				isSideNavOpen={utilReducer?.isSideNavOpen}
 			/>
 			<main
-				className={`grid w-full h-full ${
+				className={`grid w-full h-screen ${
 					utilReducer?.isSideNavOpen ? 'pl-[250px]' : 'pl-[72px]'
 				} `}
 			>
