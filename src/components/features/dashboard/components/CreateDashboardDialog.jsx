@@ -9,6 +9,7 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import React from 'react';
+import dashboardIcon from '@/assets/icons/dashboard-create-dialog.svg';
 
 const CreateDashboardDialog = ({
 	open,
@@ -19,12 +20,18 @@ const CreateDashboardDialog = ({
 	errors,
 	isLoading,
 }) => {
+	const closeModal = () => {
+		setOpen(false);
+	};
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog open={open} onOpenChange={closeModal}>
 			<DialogContent className="sm:max-w-[500px] ">
 				<DialogHeader className="border-b pb-3">
+					{/* <img src={dashboardIcon} width={48} height={48} /> */}
+					{/* <div> */}
 					<DialogTitle>New Dashboard</DialogTitle>
 					<DialogDescription>Name your new dashboard</DialogDescription>
+					{/* </div> */}
 				</DialogHeader>
 				<div className="my-4">
 					<InputText
@@ -32,18 +39,13 @@ const CreateDashboardDialog = ({
 						placeholder="Enter dashboard name"
 						className="w-full"
 						value={dashboardName}
-						setValue={(e) => setDashboardName(e)}
+						setValue={(val) => setDashboardName(val)}
 						error={errors?.dashboardName}
 						errorText={errors?.dashboardName}
 					/>
 				</div>
 				<DialogFooter className="flex justify-between w-full">
-					<Button
-						variant="outline"
-						onClick={() => {
-							setOpen(false);
-						}}
-					>
+					<Button variant="outline" onClick={closeModal}>
 						Cancel
 					</Button>
 					<Button

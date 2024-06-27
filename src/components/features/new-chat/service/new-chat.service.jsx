@@ -99,3 +99,21 @@ export const deleteSession = async (sessionId, token) => {
 		throw error;
 	}
 };
+
+export const getQueriesOfSession = async (sessionId, token) => {
+	try {
+		const response = await axios.get(`${API_URL}/query/session/${sessionId}`, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+			params: {
+				sort_param: 'created_at',
+				sort_order: 'asc',
+			},
+		});
+		return response.data;
+	} catch (error) {
+		toast.error('Failed to get session');
+		throw error;
+	}
+};

@@ -21,13 +21,15 @@ import { useRouter } from '@/hooks/useRouter';
 import { toast } from 'sonner';
 import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
 import { useQuery } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 
-const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
+const AddQueryToDashboard = ({ open, setDashboard }) => {
 	const [dashboards, setDashboards] = useState([]);
 	const [search, setSearch] = useState('');
 	const [selectedDashboard, setSelectedDashboard] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const { query, navigate } = useRouter();
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
 	const userDashboardQuery = useQuery({
 		queryKey: 'user-dashboard',
@@ -37,7 +39,7 @@ const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 	const handleAddQueryToDashboard = () => {
 		setIsLoading(true);
 		createDashboardContent(getToken(), selectedDashboard.dasboard_id, {
-			query_id: query?.queryId,
+			query_id: chatStoreReducer?.activeQueryId,
 		})
 			.then((res) => {
 				toast('Query added to dashboard successfully', {
@@ -55,7 +57,11 @@ const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 						</Button>
 					),
 				});
-				setOpen(false);
+				setDashboard((prev) => ({
+					...prev,
+					showAdd: false,
+					isAdding: false,
+				}));
 			})
 			.catch((err) => {
 				toast.error('Something went wrong while adding query to dashboard');
@@ -71,13 +77,17 @@ const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 		);
 	}, [search, dashboards]);
 
+	const closeModal = () => {
+		setDashboard((prev) => ({ ...prev, showAdd: false, isAdding: false }));
+	};
+
 	useEffect(() => {
 		if (userDashboardQuery.data) {
 			setDashboards(userDashboardQuery.data);
 		}
 	}, [userDashboardQuery.data]);
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog open={open} onOpenChange={closeModal}>
 			<DialogContent className="sm:max-w-[500px] ">
 				<DialogHeader className="border-b pb-3">
 					<DialogTitle>Choose Dashboard</DialogTitle>
@@ -91,13 +101,13 @@ const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 						className="w-full"
 						value={search}
 						setValue={(e) => setSearch(e)}
-						// error={errors?.dashboardName}
-						// errorText={errors?.dashboardName}
 					/>
 					<Button
 						variant="secondary"
 						className="w-fit rounded-lg bg-purple-8 hover:bg-purple-16 text-purple-100 font-medium"
-						onClick={() => setShowCreateDashboard(true)}
+						onClick={() =>
+							setDashboard((prev) => ({ ...prev, showCreate: true }))
+						}
 					>
 						+ New Dashboard
 					</Button>
@@ -157,12 +167,7 @@ const AddQueryToDashboard = ({ open, setOpen, setShowCreateDashboard }) => {
 					)}
 				</div>
 				<DialogFooter className="flex justify-between w-full">
-					<Button
-						variant="outline"
-						onClick={() => {
-							setOpen(false);
-						}}
-					>
+					<Button variant="outline" onClick={closeModal}>
 						Cancel
 					</Button>
 					<Button

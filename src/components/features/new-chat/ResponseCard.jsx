@@ -1,30 +1,30 @@
 import GraphComponent from '@/components/elements/GraphComponent';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import CoderComponent from './CoderComponent';
 import { WorkspaceEnum } from './types/new-chat.enum';
 import { Button } from '@/components/ui/button';
 import FollowUpQuestions from './FollowUpQuestions';
 import DOMPurify from 'dompurify';
 import TableResponse from '@/components/elements/TableResponse';
+import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
+import { useDispatch, useSelector } from 'react-redux';
 
 const ResponseCard = ({
 	answerResp,
 	isGraphLoading,
 	setIsGraphLoading,
-	setShowFailedResponseBanner,
-	handleNextStep,
 	setAnswerResp,
-	setPromptQuery,
 	doingScience,
 	setDoingScience,
+	setBanners,
 	setResponseTimeElapsed,
-	setShowResponseDelayBanner,
-	promptQuery,
-	setShowAddToDashboard,
+	setDashboard,
 	showTable,
 	setIsTableLoading,
 	isTableLoading,
 }) => {
+	const dispatch = useDispatch();
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
 			value.tool_space === 'main' && value.tool_type !== WorkspaceEnum.Answer,
@@ -50,6 +50,12 @@ const ResponseCard = ({
 	const showGraph = !!graphDataItem;
 	const showTableOnly = !showGraph && !!dataFrameItem;
 
+	// show followup questions only for last query
+	const showFollowup =
+		answerResp?.query_id ===
+			chatStoreReducer?.queries?.[chatStoreReducer?.queries?.length - 1]?.id &&
+		answerResp?.status === 'done';
+
 	return (
 		<>
 			{(answerItem || (mainItems && mainItems.length > 0)) && (
@@ -70,6 +76,12 @@ const ResponseCard = ({
 								isGraphLoading={isGraphLoading}
 								setIsGraphLoading={setIsGraphLoading}
 								showTable={showTable}
+								queryId={answerResp?.query_id}
+								tab={
+									answerResp?.status === 'done'
+										? 'Graphical View'
+										: 'Tabular View'
+								}
 							/>
 							<div className="mt-6 mb-14 flex justify-between">
 								<Button
@@ -89,7 +101,18 @@ const ResponseCard = ({
 								<Button
 									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 									onClick={() => {
-										setShowAddToDashboard(true);
+										dispatch(
+											updateChatStoreProp([
+												{
+													key: 'activeQueryId',
+													value: answerResp?.query_id,
+												},
+											]),
+										);
+										setDashboard((prevState) => ({
+											...prevState,
+											showAdd: true,
+										}));
 									}}
 								>
 									+ Add to Dashboard
@@ -120,53 +143,43 @@ const ResponseCard = ({
 									<i className="bi-download mr-2"></i>
 									Download CSV
 								</Button>
-								<Button
-									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
-									onClick={() => {
-										setShowAddToDashboard(true);
-									}}
-								>
-									+ Add to Dashboard
-								</Button>
 							</div>
 						</div>
 					)}
 				</div>
 			)}
-			{answerResp?.answer?.follow_up && !doingScience && !isGraphLoading && (
-				<>
-					<div className="mt-2 ml-12 border-t border-purple-10"></div>
-					<div className="!mt-8 ml-12 flex gap-4 overflow-x-auto">
-						{answerResp?.answer?.follow_up?.tool_data?.questions &&
-							Array.isArray(
-								answerResp?.answer?.follow_up?.tool_data?.questions,
-							) &&
-							answerResp?.answer?.follow_up?.tool_data?.questions?.map(
-								(question, index) => (
-									<FollowUpQuestions
-										key={index}
-										question={question}
-										index={index}
-										handleNextStep={handleNextStep}
-										setAnswerResp={setAnswerResp}
-										setPromptQuery={setPromptQuery}
-										setDoingScience={setDoingScience}
-										setResponseTimeElapsed={
-											setResponseTimeElapsed
-										}
-										setShowResponseDelayBanner={
-											setShowResponseDelayBanner
-										}
-										setShowFailedResponseBanner={
-											setShowFailedResponseBanner
-										}
-										answerResp={answerResp}
-									/>
-								),
-							)}
-					</div>
-				</>
-			)}
+			{answerResp?.answer?.follow_up &&
+				showFollowup &&
+				!doingScience &&
+				!isGraphLoading && (
+					<>
+						<div className="mt-2 ml-12 border-t border-purple-10"></div>
+						<div className="!mt-8 ml-12 flex gap-4 overflow-x-auto">
+							{answerResp?.answer?.follow_up?.tool_data?.questions &&
+								Array.isArray(
+									answerResp?.answer?.follow_up?.tool_data
+										?.questions,
+								) &&
+								showFollowup &&
+								answerResp?.answer?.follow_up?.tool_data?.questions?.map(
+									(question, index) => (
+										<FollowUpQuestions
+											key={index}
+											question={question}
+											index={index}
+											setAnswerResp={setAnswerResp}
+											setDoingScience={setDoingScience}
+											setResponseTimeElapsed={
+												setResponseTimeElapsed
+											}
+											setBanners={setBanners}
+											answerResp={answerResp}
+										/>
+									),
+								)}
+						</div>
+					</>
+				)}
 		</>
 	);
 };
