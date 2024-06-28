@@ -20,7 +20,13 @@ import InputText from './elements/InputText';
 import { getDataSources } from './features/configuration/service/configuration.service';
 import { resetChatStore, updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
-import Spinner from './elements/Spinner';
+import Spinner from './elements/loading/Spinner';
+import dayjs from 'dayjs';
+import isToday from 'dayjs/plugin/isToday';
+import isYesterday from 'dayjs/plugin/isYesterday';
+
+dayjs.extend(isToday);
+dayjs.extend(isYesterday);
 
 const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const [activeTab, setActiveTab] = useState('');
@@ -159,6 +165,87 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		);
 		navigate('/app/new-chat');
 	};
+
+	const groupSessionsByDate = (sessions) => {
+		const today = [];
+		const yesterday = [];
+		const last7Days = [];
+		const earlier = [];
+
+		sessions.forEach((session) => {
+			const sessionDate = dayjs(session.created_at);
+
+			if (sessionDate.isToday()) {
+				today.push(session);
+			} else if (sessionDate.isYesterday()) {
+				yesterday.push(session);
+			} else if (sessionDate.isAfter(dayjs().subtract(7, 'day'))) {
+				last7Days.push(session);
+			} else {
+				earlier.push(session);
+			}
+		});
+
+		return { today, yesterday, last7Days, earlier };
+	};
+
+	const renderSession = (session) => (
+		<div
+			className={cn(
+				'flex items-center justify-between text-primary80 w-full rounded-lg py-2 pl-1 text-sm font-medium cursor-pointer hover:bg-purple-4',
+				chatStoreReducer?.activeChatSession?.id === session.session_id
+					? 'bg-purple-10'
+					: '',
+			)}
+			key={session.session_id}
+			onClick={() => {
+				if (isEditing === session.session_id) return;
+				getChatHistory(session);
+			}}
+		>
+			<div
+				className={cn(
+					'flex items-center max-w-[200px] truncate',
+					isEditing === session.session_id ? '' : ' px-2 py-1',
+				)}
+			>
+				<i className="bi-chat-right-text-fill me-3"></i>
+				{isEditing === session.session_id ? (
+					<InputText
+						value={sessionTitle}
+						setValue={(value, e) => {
+							e.stopPropagation();
+							setSessionTitle(value);
+						}}
+						className="flex bg-transparent border-none text-primary80 font-medium"
+					/>
+				) : (
+					<p className="flex">{session.title}</p>
+				)}
+			</div>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<i
+						className="bi-three-dots-vertical ms-3 me-3 items-end hover:bg-purple-4 rounded-[4px] py-1"
+						onClick={(e) => e.stopPropagation()}
+					></i>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="start">
+					<DropdownMenuItem
+						className="text-primary80 font-medium hover:!bg-purple-2"
+						onClick={(e) =>
+							handleDeleteChatSession(e, session.session_id)
+						}
+					>
+						Delete
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+		</div>
+	);
+
+	const groupedSessions = groupSessionsByDate(utilReducer?.sessionHistory || []);
+
 	useEffect(() => {
 		if (pathname === '/app/new-chat') {
 			setActiveTab('');
@@ -198,121 +285,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						<i className="bi-plus-lg"></i>
 						{isSideNavOpen ? <p>Ask IRA</p> : null}
 					</Link>
-					<div
-						className={`flex flex-col gap-4 cursor-pointer text-primary80 font-medium p-3 rounded-md`}
-					>
-						{isSideNavOpen ? (
-							<>
-								<p>Recent</p>
-								<div className=" max-h-[25rem] overflow-y-auto space-y-3.5 mt-2">
-									{isLoading ? (
-										<Spinner />
-									) : (
-										utilReducer?.sessionHistory &&
-										Array.isArray(utilReducer?.sessionHistory) &&
-										utilReducer?.sessionHistory.map(
-											(session, key) => (
-												<div
-													className={cn(
-														'flex items-center justify-between text-primary80 w-full rounded-lg py-2 text-sm font-medium  cursor-pointer hover:bg-purple-4',
-														chatStoreReducer
-															?.activeChatSession
-															?.id ===
-															session.session_id
-															? "bg-purple-10"
-															: '',
-													)}
-													key={session.session_id}
-													onClick={() => {
-														if (
-															isEditing ===
-															session.session_id
-														)
-															return;
-														getChatHistory(session);
-													}}
-												>
-													<div
-														className={cn(
-															'flex items-center max-w-[200px] truncate',
-															isEditing ===
-																session.session_id
-																? ''
-																: ' px-2 py-1',
-														)}
-													>
-														<i className="bi-chat-right-text-fill me-3"></i>
-														{isEditing ===
-														session.session_id ? (
-															<InputText
-																value={sessionTitle}
-																setValue={(
-																	value,
-																	e,
-																) => {
-																	e.stopPropagation();
-																	setSessionTitle(
-																		value,
-																	);
-																}}
-																className="flex bg-transparent border-none text-primary80 font-medium"
-															/>
-														) : (
-															<p className="flex  ">
-																{session.title}
-															</p>
-														)}
-													</div>
-
-													<DropdownMenu>
-														<DropdownMenuTrigger asChild>
-															<i
-																className="bi-three-dots-vertical ms-3 items-end hover:bg-purple-8"
-																onClick={(e) => {
-																	e.stopPropagation();
-																}}
-															></i>
-														</DropdownMenuTrigger>
-														<DropdownMenuContent
-															align="start"
-															className=""
-														>
-															{/* <DropdownMenuItem
-															className="text-primary80 font-medium hover:!bg-purple-4"
-															onClick={(e) => {
-																e.stopPropagation();
-																setIsEditing(
-																	session.session_id,
-																);
-															}}
-														>
-															Rename
-														</DropdownMenuItem> */}
-															<DropdownMenuItem
-																className="text-primary80 font-medium hover:!bg-purple-2"
-																onClick={(e) => {
-																	handleDeleteChatSession(
-																		e,
-																		session.session_id,
-																	);
-																}}
-															>
-																Delete
-															</DropdownMenuItem>
-														</DropdownMenuContent>
-													</DropdownMenu>
-												</div>
-											),
-										)
-									)}
-								</div>
-							</>
-						) : null}
-					</div>
-				</div>
-			</div>
-			<div>
-				<div style={{ overflow: 'visible' }}>
 					<div style={{ overflow: 'visible' }}>
 						{bottomMenuList?.map((menu, key) => (
 							<div key={key}>
@@ -342,6 +314,74 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 								})}
 							</div>
 						))}
+					</div>
+					<div
+						className={`flex flex-col gap-4 cursor-pointer text-primary80 font-medium py-3 rounded-md text-center`}
+					>
+						{isSideNavOpen ? (
+							<>
+								<div className=" max-h-[25rem] overflow-y-auto space-y-3.5 mt-2">
+									{isLoading ? (
+										<div className="w-full h-[20rem] flex items-center justify-center">
+											<Spinner />
+										</div>
+									) : (
+										<div className="space-y-4">
+											{groupedSessions.today.length > 0 && (
+												<div>
+													<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
+														Today
+													</h3>
+													<div className="space-y-1">
+														{groupedSessions.today.map(
+															(session) =>
+																renderSession(
+																	session,
+																),
+														)}
+													</div>
+												</div>
+											)}
+											{groupedSessions.yesterday.length >
+												0 && (
+												<div>
+													<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
+														Yesterday
+													</h3>
+													{groupedSessions.yesterday.map(
+														(session) =>
+															renderSession(session),
+													)}
+												</div>
+											)}
+											{groupedSessions.last7Days.length >
+												0 && (
+												<div>
+													<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
+														Last 7 Days
+													</h3>
+													{groupedSessions.last7Days.map(
+														(session) =>
+															renderSession(session),
+													)}
+												</div>
+											)}
+											{groupedSessions.earlier.length > 0 && (
+												<div>
+													<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
+														Earlier
+													</h3>
+													{groupedSessions.earlier.map(
+														(session) =>
+															renderSession(session),
+													)}
+												</div>
+											)}
+										</div>
+									)}
+								</div>
+							</>
+						) : null}
 					</div>
 				</div>
 			</div>

@@ -70,8 +70,7 @@ const NewChat = () => {
 	const [dashboardName, setDashboardName] = useState('');
 	const [isCreatingDashboard, setIsCreatingDashboard] = useState(false);
 	const [isTableLoading, setIsTableLoading] = useState(false);
-	const [activeQuery, setActiveQuery] = useState({id: query.queryId || null})
-	
+	const [activeQuery, setActiveQuery] = useState({ id: query.queryId || null });
 
 	const gradientText = {
 		backgroundImage:
@@ -153,7 +152,7 @@ const NewChat = () => {
 
 	const handleAppendQuery = () => {
 		setDoingScience(true);
-		setPromptQuery({data: prompt})
+		setPromptQuery({ data: prompt });
 		let parentQueryId = query?.queryId;
 		let lastQueryAnsObj = getCurrentQueryAns(parentQueryId);
 		createQuery(
@@ -166,28 +165,41 @@ const NewChat = () => {
 			},
 			getToken(),
 		).then((res) => {
-			setActiveQuery((prevState) => ({...prevState, id: res.query_id}));
+			setActiveQuery((prevState) => ({ ...prevState, id: res.query_id }));
 		});
 	};
 
 	const handleQueryAnswer = () => {
 		try {
-			if(!prompt || !prompt?.trim())return;
+			if (!prompt || !prompt?.trim()) return;
 			navigate(`/app/new-chat/session`);
 			dispatch(
 				updateChatStoreProp([
-					{ key: 'queries', value: [{id: '', question: prompt }] },
-					{ key: 'refreshChat', value: !chatStoreReducer?.refreshChat},
-
+					{ key: 'queries', value: [{ id: '', question: prompt }] },
+					{ key: 'refreshChat', value: !chatStoreReducer?.refreshChat },
 				]),
 			);
 			createQuerySession(query.dataSourceId, prompt, getToken()).then(
 				(res) => {
 					dispatch(
 						updateChatStoreProp([
-							{ key: 'queries', value: [{id: res?.query_id || '', question: res?.query || prompt }] },
-							{ key: 'activeChatSession', value: {id: res?.session_id, title: res?.query || ''} },
-							{ key: 'activeQueryId', value: res?.query_id }
+							{
+								key: 'queries',
+								value: [
+									{
+										id: res?.query_id || '',
+										question: res?.query || prompt,
+									},
+								],
+							},
+							{
+								key: 'activeChatSession',
+								value: {
+									id: res?.session_id,
+									title: res?.query || '',
+								},
+							},
+							{ key: 'activeQueryId', value: res?.query_id },
 						]),
 					);
 				},
@@ -270,7 +282,10 @@ const NewChat = () => {
 				if (pathname == '/app/dashboard') {
 					navigate(`/app/new-chat`);
 				} else if (pathname == '/app/new-chat/') {
-					queryClient.invalidateQueries('user-dashboard');
+					queryClient.invalidateQueries(['user-dashboard'], {
+						refetchActive: true,
+						refetchInactive: true,
+					});
 				}
 			}
 		} catch (error) {
@@ -312,7 +327,6 @@ const NewChat = () => {
 		// }
 	}, []);
 
-
 	useEffect(() => {
 		let intervalId;
 
@@ -341,12 +355,14 @@ const NewChat = () => {
 					getQueryAnswers(query.queryId, getToken())
 						.then((res) => {
 							setAnswersList((prevState) => {
-								console.log(res)
-								if(prevState.length <= 0)return [...prevState, res];
+								console.log(res);
+								if (prevState.length <= 0)
+									return [...prevState, res];
 								return prevState.map((item) => {
-									if(item?.query_id === res.query_id)return {...res}
-									return {...item}
-								})
+									if (item?.query_id === res.query_id)
+										return { ...res };
+									return { ...item };
+								});
 							});
 
 							// if (res?.answer) {
@@ -467,16 +483,24 @@ const NewChat = () => {
 		return answersList?.map((answerElem, key) => {
 			const hasIraGeneratedReply = answerElem?.answer; // complete initial reply object.
 			const hasIraGeneratedGraph = answerElem?.answer?.graph;
-			const isIraGeneratingGraph = hasIraGeneratedReply && !hasIraGeneratedGraph && answerElem?.status !== 'done'; 
-			const hasIraGeneratedMainReply =  answerElem?.answer?.answer // text reply of asked query
-			const isGraphProcessed = answerElem?.answer?.graph || (!answerElem?.answer?.graph && !isGraphLoading && answerElem?.status === 'done'); //either graph present or graph not availble for this query
-			const isGettingLateInReply = (!hasIraGeneratedGraph || !hasIraGeneratedMainReply || !answerElem?.answer?.response_dataframe)
+			const isIraGeneratingGraph =
+				hasIraGeneratedReply &&
+				!hasIraGeneratedGraph &&
+				answerElem?.status !== 'done';
+			const hasIraGeneratedMainReply = answerElem?.answer?.answer; // text reply of asked query
+			const isGraphProcessed =
+				answerElem?.answer?.graph ||
+				(!answerElem?.answer?.graph &&
+					!isGraphLoading &&
+					answerElem?.status === 'done'); //either graph present or graph not availble for this query
+			const isGettingLateInReply =
+				!hasIraGeneratedGraph ||
+				!hasIraGeneratedMainReply ||
+				!answerElem?.answer?.response_dataframe;
 			return (
-				<div
-					key={answerElem.query_id}
-				>
+				<div key={answerElem.query_id}>
 					{utilReducer?.selectedDataSource?.name && (
-						<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-10 float-right text-primary80 font-medium max-w-[220px] truncate">
+						<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-4 float-right text-primary80 font-medium max-w-[220px] truncate">
 							<i className="bi-database-check mr-2 text-primary80"></i>
 							{utilReducer?.selectedDataSource?.name}
 						</div>
@@ -490,7 +514,7 @@ const NewChat = () => {
 								</AvatarFallback>
 							</Avatar>
 							{answerElem?.query ? (
-								<p className="ms-1 bg-purple-10 text-primary80 font-medium px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
+								<p className="ms-1 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px]">
 									{answerElem.query}
 								</p>
 							) : (
@@ -514,7 +538,9 @@ const NewChat = () => {
 						</div>
 						<div className="mt-8 mb-20">
 							{/* Generating Graph Loader */}
-							{ answerElem.query_id === activeQuery.id && doingScience || isIraGeneratingGraph ? (
+							{(answerElem.query_id === activeQuery.id &&
+								doingScience) ||
+							isIraGeneratingGraph ? (
 								showFailedResponseBanner ? (
 									<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
 										<img
@@ -563,12 +589,12 @@ const NewChat = () => {
 									isTableLoading={isTableLoading}
 								/>
 							)}
-							
+
 							{/* Generating Observation Loader */}
 							{/* Only Rendered Ira doing science is false and Ira has not given main text reply yet */}
-							{( answerElem.query_id === activeQuery.id && !doingScience) &&
-								(!hasIraGeneratedMainReply && 
-									(
+							{answerElem.query_id === activeQuery.id &&
+								!doingScience &&
+								!hasIraGeneratedMainReply && (
 									<div className="flex flex-col space-y-3 my-8 ml-12">
 										<div className="space-y-3">
 											{showFailedResponseBanner ? (
@@ -583,8 +609,7 @@ const NewChat = () => {
 													please refresh the page to try
 													again.
 												</div>
-											) : 
-											// show creating observation
+											) : // show creating observation
 											isGraphProcessed ? (
 												<div className="darkSoul-glowing-button2">
 													<button
@@ -631,24 +656,21 @@ const NewChat = () => {
 											)}
 										</div>
 									</div>
-									)
-								)
-							}
+								)}
 						</div>
 					</div>
 					<div className="w-full flex flex-col justify-center mx-auto mt-5 pl-12">
-						{showResponseDelayBanner &&
-							isGettingLateInReply && (
-								<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-									<img
-										src={warningIcon}
-										width={40}
-										height={40}
-										className="mr-3"
-									/>
-									This is taking a bit longer than expected
-								</div>
-							)}
+						{showResponseDelayBanner && isGettingLateInReply && (
+							<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
+								<img
+									src={warningIcon}
+									width={40}
+									height={40}
+									className="mr-3"
+								/>
+								This is taking a bit longer than expected
+							</div>
+						)}
 					</div>
 				</div>
 			);
@@ -657,12 +679,12 @@ const NewChat = () => {
 
 	/**
 	 * Gives data of current queryId response from state
-	 * @param {*} queryId 
-	 * @returns 
+	 * @param {*} queryId
+	 * @returns
 	 */
 	const getCurrentQueryAns = (queryId) => {
 		return answersList.find((item) => item.query_id === queryId);
-	}
+	};
 
 	return (
 		<>
@@ -753,7 +775,7 @@ const NewChat = () => {
 					) : null}
 				</div>
 			) : (
-				<div className="flex justify-center pt-8">
+				<div className="flex justify-center mt-20">
 					<div className="flex flex-col items-center w-[51.875rem] relative">
 						<div className="align-left w-full">
 							<h1

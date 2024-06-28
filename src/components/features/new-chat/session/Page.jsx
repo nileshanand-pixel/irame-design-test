@@ -18,6 +18,7 @@ import Workspace from '../Workspace';
 import AddQueryToDashboard from '../AddQueryToDashboard';
 import CreateDashboardDialog from '../../dashboard/components/CreateDashboardDialog';
 import { createDashboard } from '../../dashboard/service/dashboard.service';
+import { queryClient } from '@/lib/react-query';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -270,10 +271,13 @@ const Workzone = () => {
 					showCreate: false,
 				}));
 				toast.success('Dashboard created successfully');
-				if (pathname == '/app/dashboard') {
+				if (pathname.includes('/app/dashboard')) {
 					navigate(`/app/new-chat/`);
-				} else if (pathname == '/app/new-chat/') {
-					queryClient.invalidateQueries('user-dashboard');
+				} else if (pathname.includes('/app/new-chat/')) {
+					queryClient.invalidateQueries(['user-dashboard'], {
+						refetchActive: true,
+						refetchInactive: true,
+					});
 				}
 			}
 		} catch (error) {
@@ -286,25 +290,25 @@ const Workzone = () => {
 	const renderConversation = () => {
 		if (queries.length <= 0) {
 			return (
-					<div className="mt-8 w-full">
-						<div className="flex items-center gap-2 flex-row-reverse">
-							<Avatar className="size-9">
-								<AvatarImage src={value?.avatar} />
-								<AvatarFallback>
-									{getInitials(value.userName)}
-								</AvatarFallback>
-							</Avatar>
-							{prompt ? (
-								<p className="ms-1 bg-purple-8 text-primary80 font-medium px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px] min-w-[90%] min-h-6">
-									{prompt}
-								</p>
-							) : (
-								<>
-									<Skeleton className="h-6 min-w-[90%] bg-purple-8 ms-1" />
-								</>
-							)}
-						</div>
+				<div className="mt-8 w-full">
+					<div className="flex items-center gap-2 flex-row-reverse">
+						<Avatar className="size-9">
+							<AvatarImage src={value?.avatar} />
+							<AvatarFallback>
+								{getInitials(value.userName)}
+							</AvatarFallback>
+						</Avatar>
+						{prompt ? (
+							<p className="max-w-[90%] ms-1 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px] min-w-[90%] min-h-6">
+								{prompt}
+							</p>
+						) : (
+							<>
+								<Skeleton className="h-6 min-w-[90%] bg-purple-8 ms-1" />
+							</>
+						)}
 					</div>
+				</div>
 			);
 		}
 		return queries?.map((query, key) => {
@@ -337,7 +341,7 @@ const Workzone = () => {
 								</AvatarFallback>
 							</Avatar>
 							{query?.question ? (
-								<p className="ms-1 bg-purple-10 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px]">
+								<p className="ms-1 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px]">
 									{query.question}
 								</p>
 							) : (

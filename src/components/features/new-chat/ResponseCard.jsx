@@ -61,7 +61,7 @@ const ResponseCard = ({
 			{(answerItem || (mainItems && mainItems.length > 0)) && (
 				<div className="mt-4 ml-12">
 					{answerItem && (
-						<div className="mb-8 bg-purple-8 p-4 rounded-tl-md rounded-e-xl rounded-bl-xl">
+						<div className="mb-8 bg-purple-4 p-4 rounded-tl-md rounded-e-xl rounded-bl-xl">
 							<p
 								className="text-primary80 font-medium"
 								style={{ whiteSpace: 'pre-wrap' }}

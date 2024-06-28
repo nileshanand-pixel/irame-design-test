@@ -61,7 +61,7 @@ const Dashboard = () => {
 
 	useEffect(() => {
 		if (userDashboardQuery.data) {
-			setDashboard(userDashboardQuery.data);
+			setDashboard(userDashboardQuery.data || []);
 		}
 	}, [refetch, userDashboardQuery.data]);
 
@@ -121,7 +121,7 @@ const Dashboard = () => {
 						No such dashboard found
 					</p>
 				</div>
-			) : (
+			) : userDashboardQuery.isLoading ? (
 				<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
 					<div className="flex items-center space-x-4">
 						<Skeleton className="h-12 w-16 rounded-xl bg-purple-4" />
@@ -130,6 +130,12 @@ const Dashboard = () => {
 							<Skeleton className="h-4 w-[200px] bg-purple-4" />
 						</div>
 					</div>
+				</div>
+			) : (
+				<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
+					<p className="text-sm text-primary60 font-medium">
+						No dashboards found
+					</p>
 				</div>
 			)}
 			{showCreateDashboard ? (
