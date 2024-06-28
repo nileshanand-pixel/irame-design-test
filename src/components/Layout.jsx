@@ -28,14 +28,14 @@ const Layout = ({ children }) => {
 				isSideNavOpen={utilReducer?.isSideNavOpen}
 			/>
 			<main
-				className={`grid w-full h-screen ${
+				className={`grid w-full ${
 					utilReducer?.isSideNavOpen ? 'pl-[250px]' : 'pl-[72px]'
 				} `}
 			>
 				<Header />
 				<div
 					className={cn(
-						'px-8 pt-0',
+						'px-8 pt-0 flex items-center justify-center h-full w-full',
 						pathname.includes('/dashboard')
 							? 'bg-gray-muted min-h-[92vh] overflow-y-auto'
 							: 'bg-white',
