@@ -316,11 +316,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						))}
 					</div>
 					<div
-						className={`flex flex-col gap-4 cursor-pointer text-primary80 font-medium py-3 rounded-md text-center`}
+						className={`flex flex-col gap-4 cursor-pointer text-primary80 font-medium py-3 rounded-md text-center h-full`}
 					>
 						{isSideNavOpen ? (
 							<>
-								<div className=" max-h-[25rem] overflow-y-auto space-y-3.5 mt-2">
+								<div className=" max-h-[32rem] overflow-y-auto space-y-3.5 mt-2">
 									{isLoading ? (
 										<div className="w-full h-[20rem] flex items-center justify-center">
 											<Spinner />
