@@ -7,7 +7,14 @@ import { DataTableColumnHeader } from './data-table/components/data-table-column
 import { useDispatch, useSelector } from 'react-redux';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 
-const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable, queryId, tab = "Tabular View" }) => {
+const GraphComponent = ({
+	data,
+	isGraphLoading,
+	setIsGraphLoading,
+	showTable,
+	queryId,
+	tab = 'Tabular View',
+}) => {
 	const [chartState, setChartState] = useState({
 		xAxis: '',
 		yAxis: '',
@@ -129,17 +136,22 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable, qu
 	}, [activeTab, loadedData, chartState]);
 
 	useEffect(() => {
-		if(chatStoreReducer?.activateGraphOnLast && chatStoreReducer?.activeQueryId === queryId){
-			setActiveTab("Graphical View");
-			dispatch(updateChatStoreProp([
-				{
-					key: 'activateGraphOnLast', value: false,
-				}
-			]))
+		if (
+			chatStoreReducer?.activateGraphOnLast &&
+			chatStoreReducer?.activeQueryId === queryId
+		) {
+			setActiveTab('Graphical View');
+			dispatch(
+				updateChatStoreProp([
+					{
+						key: 'activateGraphOnLast',
+						value: false,
+					},
+				]),
+			);
 		}
+	}, [chatStoreReducer?.activateGraphOnLast]);
 
-	}, [chatStoreReducer?.activateGraphOnLast])
-	
 	return (
 		<div className="mb-4">
 			{isGraphLoading ? (

@@ -50,7 +50,7 @@ const ResponseCard = ({
 	const showGraph = !!graphDataItem;
 	const showTableOnly = !showGraph && !!dataFrameItem;
 
-	// show follwup questions only for last query
+	// show followup questions only for last query
 	const showFollowup =
 		answerResp?.query_id ===
 			chatStoreReducer?.queries?.[chatStoreReducer?.queries?.length - 1]?.id &&

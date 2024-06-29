@@ -56,7 +56,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 		}
 	}, [workspace?.activeTab, answerResp?.answer]);
 	return (
-		<div className=" rounded-2xl my-6 w-[100%] h-full ">
+		<div className=" rounded-2xl my-6 w-[100%] h-full overflow-hidden ">
 			<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">
 				{answerResp?.answer
 					? Object.keys(answerResp?.answer)
@@ -93,7 +93,9 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 						))}
 			</ul>
 			{answerResp?.answer ? (
-				<div className="w-full h-[98%] overflow-y-auto">{renderedComponent}</div>
+				<div className="w-full h-[98%] overflow-y-auto">
+					{renderedComponent}
+				</div>
 			) : (
 				// <Skeleton className="h-96 w-full bg-purple-8 rounded-2xl" />
 				<div className="flex flex-col space-y-3">

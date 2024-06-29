@@ -45,7 +45,10 @@ const DashboardDetailsPage = () => {
 			setDashboard(dashboardDetailsQuery.data);
 		}
 		return () => {
-			queryClient.invalidateQueries('dashboard-details');
+			queryClient.invalidateQueries(['dashboard-details'], {
+				refetchActive: true,
+				refetchInactive: true,
+			});
 		};
 	}, [query, dashboardDetailsQuery.data]);
 	return (

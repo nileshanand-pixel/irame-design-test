@@ -10,11 +10,11 @@ import { createSlice } from '@reduxjs/toolkit';
  */
 const initialState = {
 	queries: [],
-    activeChatSession: {
-        id: '',
-        title: ''
-    },
-    initialQuery: {id: '', question: ''},
+	activeChatSession: {
+		id: '',
+		title: '',
+	},
+	initialQuery: { id: '', question: '' },
 	inputPrompt: '',
 	refreshChat: false,
 	activeQueryId: '',
@@ -45,5 +45,6 @@ const chatStoreSlice = createSlice({
 	},
 });
 
-export const { setChatStore, updateChatStoreProp, resetChatStore } = chatStoreSlice.actions;
+export const { setChatStore, updateChatStoreProp, resetChatStore } =
+	chatStoreSlice.actions;
 export default chatStoreSlice.reducer;

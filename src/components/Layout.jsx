@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Header from './Header';
 import SideNav from './SideNav';
 import PropTypes from 'prop-types';
@@ -6,6 +6,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useRouter } from '@/hooks/useRouter';
 import { cn } from '@/lib/utils';
+import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 
 const Layout = ({ children }) => {
 	// const [isSideNavOpen, setIsSideNavOpen] = useState(true);
@@ -21,6 +22,22 @@ const Layout = ({ children }) => {
 			]),
 		);
 	};
+
+	useMemo(() => {
+		if (!pathname.includes('/app/new-chat')) {
+			dispatch(
+				updateChatStoreProp([
+					{
+						key: 'activeChatSession',
+						value: {
+							id: '',
+							title: '',
+						},
+					},
+				]),
+			);
+		}
+	}, [pathname]);
 	return (
 		<div className={`flex items-start justify-between`}>
 			<SideNav

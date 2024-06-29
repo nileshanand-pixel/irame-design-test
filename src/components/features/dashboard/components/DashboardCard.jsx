@@ -24,7 +24,10 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 		mutationFn: (id) => deleteUserDashboard(userToken, id),
 		onSuccess: () => {
 			toast.success('Dashboard deleted successfully');
-			queryClient.invalidateQueries('user-dashboard');
+			queryClient.invalidateQueries(['user-dashboard'], {
+				refetchActive: true,
+				refetchInactive: true,
+			});
 		},
 	});
 	const editMutation = useMutation({
@@ -32,7 +35,10 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 		onSuccess: () => {
 			setIsEditing(false);
 			toast.success('Dashboard updated successfully');
-			queryClient.invalidateQueries('user-dashboard');
+			queryClient.invalidateQueries(['user-dashboard'], {
+				refetchActive: true,
+				refetchInactive: true,
+			});
 		},
 		onError: (err) => {
 			console.log('Error updating dashboard', err);
@@ -71,7 +77,7 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 					? null
 					: navigate(
 							`/app/dashboard/content?id=${data?.dasboard_id}&name=${data?.tittle}`,
-					  )
+						)
 			}
 		>
 			<div className="flex gap-6">

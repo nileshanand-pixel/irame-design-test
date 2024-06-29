@@ -171,6 +171,7 @@ const NewChat = () => {
 
 	const handleQueryAnswer = () => {
 		try {
+			if (!prompt || !prompt?.trim()) return;
 			navigate(`/app/new-chat/session`);
 			dispatch(
 				updateChatStoreProp([
@@ -281,7 +282,10 @@ const NewChat = () => {
 				if (pathname == '/app/dashboard') {
 					navigate(`/app/new-chat`);
 				} else if (pathname == '/app/new-chat/') {
-					queryClient.invalidateQueries('user-dashboard');
+					queryClient.invalidateQueries(['user-dashboard'], {
+						refetchActive: true,
+						refetchInactive: true,
+					});
 				}
 			}
 		} catch (error) {
@@ -488,7 +492,7 @@ const NewChat = () => {
 				answerElem?.answer?.graph ||
 				(!answerElem?.answer?.graph &&
 					!isGraphLoading &&
-					answerElem?.status === 'done'); //either graph present or graph not available for this query
+					answerElem?.status === 'done'); //either graph present or graph not availble for this query
 			const isGettingLateInReply =
 				!hasIraGeneratedGraph ||
 				!hasIraGeneratedMainReply ||
@@ -771,7 +775,7 @@ const NewChat = () => {
 					) : null}
 				</div>
 			) : (
-				<div className="flex justify-center mt-24">
+				<div className="flex justify-center mt-20">
 					<div className="flex flex-col items-center w-[51.875rem] relative">
 						<div className="align-left w-full">
 							<h1
