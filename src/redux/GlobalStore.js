@@ -1,12 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
-import utilReducer from './reducer/utilReducer';
-import chatStoreReducer from './reducer/chatReducer.js';
+import utilReducer, { resetUtil } from './reducer/utilReducer';
+import chatStoreReducer, { resetChatStore } from './reducer/chatReducer.js';
 
 const reduxStore = configureStore({
 	reducer: {
 		utilReducer: utilReducer,
-		chatStoreReducer: chatStoreReducer
+		chatStoreReducer: chatStoreReducer,
 	},
 });
+
+/ * whenever add new slice, add reset method here. */;
+export const resetAllStores = () => {
+	reduxStore.dispatch(resetChatStore());
+	reduxStore.dispatch(resetUtil());
+};
 
 export default reduxStore;

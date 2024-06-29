@@ -108,12 +108,12 @@ export const getQueriesOfSession = async (sessionId, token) => {
 			},
 			params: {
 				sort_param: 'created_at',
-				sort_order: 'asc'
-			}
+				sort_order: 'asc',
+			},
 		});
 		return response.data;
 	} catch (error) {
-		toast.error('Failed to delete session');
+		toast.error('Failed to get session');
 		throw error;
 	}
 };

@@ -18,6 +18,7 @@ import Workspace from '../Workspace';
 import AddQueryToDashboard from '../AddQueryToDashboard';
 import CreateDashboardDialog from '../../dashboard/components/CreateDashboardDialog';
 import { createDashboard } from '../../dashboard/service/dashboard.service';
+import { queryClient } from '@/lib/react-query';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -34,7 +35,7 @@ const Workzone = () => {
 		activeTab: 'planner',
 		visitedTabs: [],
 	});
-	const [prompt, setPrompt] = useState(chatStoreReducer.inputPrompt || ''); // input field controlled state
+	const [prompt, setPrompt] = useState(chatStoreReducer?.inputPrompt || ''); // input field controlled state
 	const [answers, setAnswers] = useState([]);
 	const [doingScience, setDoingScience] = useState([]);
 	const [dashboard, setDashboard] = useState({
@@ -52,16 +53,17 @@ const Workzone = () => {
 	const [isTableLoading, setIsTableLoading] = useState(false);
 	const [isGraphLoading, setIsGraphLoading] = useState(true);
 	const [responseTimeElapsed, setResponseTimeElapsed] = useState(0);
+	const [inputDisabled, setInputDisabled] = useState(false);
 	const queries = chatStoreReducer?.queries;
 
 	const scrollToBottom = () => {
 		if (scrollRef.current) {
 			scrollRef.current.scrollTo({
-			  top: scrollRef.current.scrollHeight,
-			  behavior: 'smooth'
+				top: scrollRef.current.scrollHeight,
+				behavior: 'smooth',
 			});
-		  }
-	}
+		}
+	};
 
 	const getInputWidth = () => {
 		if (utilReducer?.isSideNavOpen) {
@@ -83,7 +85,7 @@ const Workzone = () => {
 		if (newElapsedTime >= 30 && !banners?.showDelay) {
 			setBanners((prevState) => ({ ...prevState, showDelay: true }));
 		}
-		if (newElapsedTime >= 600 && !showFailedResponseBanner) {
+		if (newElapsedTime >= 600 && !banners?.showFailedResponse) {
 			setBanners((prevState) => ({
 				...prevState,
 				showFailedResponse: true,
@@ -123,7 +125,17 @@ const Workzone = () => {
 				);
 
 				// Update answers
-				setAnswers(res);
+				setAnswers((prevAnswers) => {
+					return res.map((newAnswer) => {
+						const existingAnswer = prevAnswers.find(
+							(answer) => answer.query_id === newAnswer.query_id,
+						);
+						if (existingAnswer && existingAnswer.status === 'done') {
+							return existingAnswer;
+						}
+						return newAnswer;
+					});
+				});
 
 				setDoingScience((prevState) => {
 					const tempDoingScience = prevState.filter((item) => item.id);
@@ -145,6 +157,7 @@ const Workzone = () => {
 							showDelay: false,
 							showFailedResponse: true,
 						}));
+						setInputDisabled(false);
 						resetDoingScience(false);
 						setIsGraphLoading(false);
 					}
@@ -154,6 +167,7 @@ const Workzone = () => {
 				console.error('Error fetching session queries:', error);
 				resetDoingScience(false);
 				setIsGraphLoading(false);
+				setInputDisabled(false);
 				setBanners((prevState) => ({
 					...prevState,
 					showDelay: false,
@@ -175,6 +189,8 @@ const Workzone = () => {
 
 	const handleAppendQuery = () => {
 		try {
+			if (inputDisabled) return;
+			if (!prompt || !prompt?.trim()) return;
 			const lastAns = answers[answers.length - 1];
 			const tempPrompt = prompt;
 			const tempCurrentQueries = [
@@ -232,7 +248,7 @@ const Workzone = () => {
 
 	const toggleIra = (targetQueryId) => {
 		if (!targetQueryId) return;
-		if(targetQueryId === chatStoreReducer?.activeQueryId){
+		if (targetQueryId === chatStoreReducer?.activeQueryId) {
 			setWorkspace((prevState) => ({ ...prevState, show: !prevState.show }));
 		}
 		dispatch(
@@ -255,10 +271,13 @@ const Workzone = () => {
 					showCreate: false,
 				}));
 				toast.success('Dashboard created successfully');
-				if (pathname == '/app/dashboard') {
+				if (pathname.includes('/app/dashboard')) {
 					navigate(`/app/new-chat/`);
-				} else if (pathname == '/app/new-chat/') {
-					queryClient.invalidateQueries('user-dashboard');
+				} else if (pathname.includes('/app/new-chat/')) {
+					queryClient.invalidateQueries(['user-dashboard'], {
+						refetchActive: true,
+						refetchInactive: true,
+					});
 				}
 			}
 		} catch (error) {
@@ -271,25 +290,23 @@ const Workzone = () => {
 	const renderConversation = () => {
 		if (queries.length <= 0) {
 			return (
-				<div>
-					<div className="mt-8 w-full">
-						<div className="flex items-center gap-2 flex-row-reverse">
-							<Avatar className="size-9">
-								<AvatarImage src={value?.avatar} />
-								<AvatarFallback>
-									{getInitials(value.userName)}
-								</AvatarFallback>
-							</Avatar>
-							{prompt ? (
-								<p className="ms-1 bg-purple-10 text-primary80 font-medium px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
-									{prompt}
-								</p>
-							) : (
-								<>
-									<Skeleton className="h-6 w-[90%] bg-purple-8 ms-1" />
-								</>
-							)}
-						</div>
+				<div className="mt-8 w-full">
+					<div className="flex items-center gap-2 flex-row-reverse">
+						<Avatar className="size-9">
+							<AvatarImage src={value?.avatar} />
+							<AvatarFallback>
+								{getInitials(value.userName)}
+							</AvatarFallback>
+						</Avatar>
+						{prompt ? (
+							<p className="max-w-[90%] ms-1 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px] min-w-[90%] min-h-6">
+								{prompt}
+							</p>
+						) : (
+							<>
+								<Skeleton className="h-6 min-w-[90%] bg-purple-8 ms-1" />
+							</>
+						)}
 					</div>
 				</div>
 			);
@@ -314,8 +331,8 @@ const Workzone = () => {
 				doingScience.find((loadingObj) => loadingObj.queryId === query?.id)
 					?.status || !!query?.parentQueryId;
 			return (
-				<div key={query.id}>
-					<div className="mt-2 w-full">
+				<>
+					<div key={query.id} className="my-2 w-full">
 						<div className="flex items-center gap-2 flex-row-reverse">
 							<Avatar className="size-9">
 								<AvatarImage src={value?.avatar} />
@@ -324,7 +341,7 @@ const Workzone = () => {
 								</AvatarFallback>
 							</Avatar>
 							{query?.question ? (
-								<p className="ms-1 bg-purple-10 text-primary80 font-medium px-4 py-2 rounded-tl-[6px] rounded-tr-[80px] rounded-br-[80px] rounded-bl-[80px]">
+								<p className="ms-1 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px]">
 									{query.question}
 								</p>
 							) : (
@@ -343,10 +360,19 @@ const Workzone = () => {
 								<span className="material-symbols-outlined me-1">
 									category
 								</span>
-								{workspace.show && chatStoreReducer?.activeQueryId === query?.id ? 'Hide' : 'Show'} Workspace
+								{workspace.show &&
+								chatStoreReducer?.activeQueryId === query?.id
+									? 'Hide'
+									: 'Show'}{' '}
+								Workspace
 							</Button>
 						</div>
-						<div className="mt-8 mb-16">
+						<div
+							className={cn(
+								'mt-8',
+								currentDoingScience ? 'mb-16' : '',
+							)}
+						>
 							{/* Generating Graph Loader */}
 							{currentDoingScience && isIraGeneratingGraph ? (
 								banners?.showFailedResponse ? (
@@ -461,7 +487,7 @@ const Workzone = () => {
 								</div>
 							)}
 					</div>
-				</div>
+				</>
 			);
 		});
 	};
@@ -471,13 +497,21 @@ const Workzone = () => {
 	};
 
 	useEffect(() => {
-		const allDone = doingScience.length && doingScience.every((item) => !item.status);
-		if(allDone){
+		const allDone =
+			doingScience.length && doingScience.every((item) => !item.status);
+		if (allDone) {
 			clearPolling();
 			scrollToBottom();
-			dispatch(updateChatStoreProp([
-				{ key: 'activeQueryId', value: answers?.[answers?.length - 1]?.query_id}
-			]))
+			dispatch(
+				updateChatStoreProp([
+					{
+						key: 'activeQueryId',
+						value: answers?.[answers?.length - 1]?.query_id,
+					},
+					{ key: 'activateGraphOnLast', value: true },
+				]),
+			);
+			setInputDisabled(false);
 			return;
 		}
 		intervalRef.current = setInterval(() => {
@@ -486,6 +520,7 @@ const Workzone = () => {
 				hasPendingQueries = false;
 			}
 			if (hasPendingQueries) {
+				setInputDisabled(true);
 				fetchQueries();
 			} else {
 				clearPolling();
@@ -494,13 +529,16 @@ const Workzone = () => {
 			}
 		}, 5000); // Polling interval of 5 seconds
 		return () => clearInterval(intervalRef.current);
-
 	}, [doingScience]);
 
 	useEffect(() => {
-		if(!query?.sessionId && chatStoreReducer?.activeChatSession?.id){
-			navigate(`/app/new-chat/session/?sessionId=${chatStoreReducer?.activeChatSession?.id}`, {replace: true});
+		if (!query?.sessionId && chatStoreReducer?.activeChatSession?.id) {
+			navigate(
+				`/app/new-chat/session/?sessionId=${chatStoreReducer?.activeChatSession?.id}`,
+				{ replace: true },
+			);
 		}
+		setInputDisabled(true);
 		fetchQueries();
 	}, [chatStoreReducer?.activeChatSession, chatStoreReducer?.refreshChat]);
 
@@ -509,20 +547,36 @@ const Workzone = () => {
 	}, [chatStoreReducer?.resetIra]);
 
 	useEffect(() => {
-		scrollToBottom();
-	}, [chatStoreReducer?.queries])
+		setInputDisabled(true);
+		dispatch(
+			updateChatStoreProp([
+				{
+					key: 'activateGraphOnLast',
+					value: false,
+				},
+			]),
+		);
+	}, [chatStoreReducer?.queries?.length]);
 
 	useEffect(() => {
 		// sessionId Present in Url params, absent in Redux
-		if(query?.sessionId && !chatStoreReducer?.activeChatSession?.id){
-			dispatch(updateChatStoreProp([
-				{key: 'activeChatSession', value: {...chatStoreReducer?.activeChatSession, id: query?.sessionId}}
-			]))
+		if (query?.sessionId && !chatStoreReducer?.activeChatSession?.id) {
+			dispatch(
+				updateChatStoreProp([
+					{
+						key: 'activeChatSession',
+						value: {
+							...chatStoreReducer?.activeChatSession,
+							id: query?.sessionId,
+						},
+					},
+				]),
+			);
 		}
-	}, [query])
+	}, [query]);
 
 	return (
-		<div className="grid grid-cols-12 border-cyan-400 gap-4 min-h-[90vh] max-h-[90vh]">
+		<div className="grid grid-cols-12 gap-4 min-h-[90vh] max-h-[90vh] w-full">
 			<div
 				className={cn(
 					'border rounded-2xl pt-4 px-4 shadow-1xl relative h-full flex-col',
@@ -535,13 +589,16 @@ const Workzone = () => {
 						{utilReducer?.selectedDataSource?.name}
 					</div>
 				)}
-				<div ref={scrollRef} className="h-[60vh] overflow-y-auto w-full">
+				<div
+					ref={scrollRef}
+					className="mb-[4vh] h-[60vh] h-sm:h-[64vh] h-md:h-[68vh] h-lg:h-[70vh] h-xl:h-[74vh] overflow-y-auto w-full"
+				>
 					{renderConversation()}
 				</div>
 
-				<div className="bg-white pt-2">
-					<div className="absolute bottom-4 flex flex-col items-center justify-center z-20 bg-white">
-						<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
+				<div className="bg-white flex justify-center mt-4 pt-2">
+					<div className="absolute bottom-4 w-[96%] flex flex-col items-center justify-center z-20 bg-white">
+						<div className="rounded-[100px] w-full flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 							<Input
 								placeholder="Ask IRA"
 								className={cn(
@@ -554,12 +611,18 @@ const Workzone = () => {
 									if (e.key === 'Enter') handleAppendQuery();
 								}}
 							/>
-							<div
-								className="flex gap-2 items-center pr-3 cursor-pointer"
-								onClick={handleAppendQuery}
-							>
-								<i className="bi-send text-primary100 text-lg rotate-45"></i>
-							</div>
+							{!inputDisabled ? (
+								<div
+									className="flex gap-2 items-center pr-3 cursor-pointer"
+									onClick={handleAppendQuery}
+								>
+									<i className="bi-send text-primary100 text-lg rotate-45"></i>
+								</div>
+							) : (
+								<div className="flex gap-2 items-center pr-3 cursor-not-allowed">
+									<i className="bi bi-arrow-repeat animate-spin text-purple-40 text-xl"></i>
+								</div>
+							)}
 						</div>
 						<p className="text-xs text-primary40 font-normal">
 							Irame.ai may display inaccurate info, including about
@@ -570,7 +633,7 @@ const Workzone = () => {
 			</div>
 
 			{workspace.show ? (
-				<div className="border rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-[90vh]">
+				<div className="border sticky rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-[90vh]">
 					<div className="flex justify-between">
 						<div className="flex items-center gap-1">
 							<span className="material-symbols-outlined me-1">

@@ -1,5 +1,5 @@
 import GraphComponent from '@/components/elements/GraphComponent';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import CoderComponent from './CoderComponent';
 import { WorkspaceEnum } from './types/new-chat.enum';
 import { Button } from '@/components/ui/button';
@@ -50,15 +50,18 @@ const ResponseCard = ({
 	const showGraph = !!graphDataItem;
 	const showTableOnly = !showGraph && !!dataFrameItem;
 
-	// show follwup questions only for last query
-	const showFollowup = answerResp?.query_id === chatStoreReducer?.queries?.[chatStoreReducer?.queries?.length - 1]?.id
+	// show followup questions only for last query
+	const showFollowup =
+		answerResp?.query_id ===
+			chatStoreReducer?.queries?.[chatStoreReducer?.queries?.length - 1]?.id &&
+		answerResp?.status === 'done';
 
 	return (
 		<>
 			{(answerItem || (mainItems && mainItems.length > 0)) && (
 				<div className="mt-4 ml-12">
 					{answerItem && (
-						<div className="mb-8 bg-purple-8 p-4 rounded-tl-md rounded-e-xl rounded-bl-xl">
+						<div className="mb-8 bg-purple-4 p-4 rounded-tl-md rounded-e-xl rounded-bl-xl">
 							<p
 								className="text-primary80 font-medium"
 								style={{ whiteSpace: 'pre-wrap' }}
@@ -74,6 +77,11 @@ const ResponseCard = ({
 								setIsGraphLoading={setIsGraphLoading}
 								showTable={showTable}
 								queryId={answerResp?.query_id}
+								tab={
+									answerResp?.status === 'done'
+										? 'Graphical View'
+										: 'Tabular View'
+								}
 							/>
 							<div className="mt-6 mb-14 flex justify-between">
 								<Button
@@ -135,49 +143,43 @@ const ResponseCard = ({
 									<i className="bi-download mr-2"></i>
 									Download CSV
 								</Button>
-								<Button
-									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
-									onClick={() => {
-										setDashboard((prevState) => ({
-											...prevState,
-											showAdd: true,
-										}));
-									}}
-								>
-									+ Add to Dashboard
-								</Button>
 							</div>
 						</div>
 					)}
 				</div>
 			)}
-			{answerResp?.answer?.follow_up && !doingScience && !isGraphLoading && (
-				<>
-					<div className="mt-2 ml-12 border-t border-purple-10"></div>
-					<div className="!mt-8 ml-12 flex gap-4 overflow-x-auto">
-						{answerResp?.answer?.follow_up?.tool_data?.questions &&
-							Array.isArray(
-								answerResp?.answer?.follow_up?.tool_data?.questions,
-							) && showFollowup && 
-							answerResp?.answer?.follow_up?.tool_data?.questions?.map(
-								(question, index) => (
-									<FollowUpQuestions
-										key={index}
-										question={question}
-										index={index}
-										setAnswerResp={setAnswerResp}
-										setDoingScience={setDoingScience}
-										setResponseTimeElapsed={
-											setResponseTimeElapsed
-										}
-										setBanners={setBanners}
-										answerResp={answerResp}
-									/>
-								),
-							)}
-					</div>
-				</>
-			)}
+			{answerResp?.answer?.follow_up &&
+				showFollowup &&
+				!doingScience &&
+				!isGraphLoading && (
+					<>
+						<div className="mt-2 ml-12 border-t border-purple-10"></div>
+						<div className="!mt-8 ml-12 flex gap-4 overflow-x-auto">
+							{answerResp?.answer?.follow_up?.tool_data?.questions &&
+								Array.isArray(
+									answerResp?.answer?.follow_up?.tool_data
+										?.questions,
+								) &&
+								showFollowup &&
+								answerResp?.answer?.follow_up?.tool_data?.questions?.map(
+									(question, index) => (
+										<FollowUpQuestions
+											key={index}
+											question={question}
+											index={index}
+											setAnswerResp={setAnswerResp}
+											setDoingScience={setDoingScience}
+											setResponseTimeElapsed={
+												setResponseTimeElapsed
+											}
+											setBanners={setBanners}
+											answerResp={answerResp}
+										/>
+									),
+								)}
+						</div>
+					</>
+				)}
 		</>
 	);
 };

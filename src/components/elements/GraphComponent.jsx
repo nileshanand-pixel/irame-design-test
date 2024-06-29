@@ -4,8 +4,17 @@ import Chart from 'chart.js/auto';
 import * as d3 from 'd3';
 import TableComponent from './TableComponent';
 import { DataTableColumnHeader } from './data-table/components/data-table-column-header';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 
-const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable, queryId }) => {
+const GraphComponent = ({
+	data,
+	isGraphLoading,
+	setIsGraphLoading,
+	showTable,
+	queryId,
+	tab = 'Tabular View',
+}) => {
 	const [chartState, setChartState] = useState({
 		xAxis: '',
 		yAxis: '',
@@ -16,8 +25,10 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable, qu
 	});
 	const [loadedData, setLoadedData] = useState([]);
 	const [columns, setColumns] = useState([]);
-	const [activeTab, setActiveTab] = useState('Graphical View');
+	const [activeTab, setActiveTab] = useState(tab);
 	const chartRef = useRef(null);
+	const dispatch = useDispatch();
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
 	const memoizedChartState = useMemo(() => {
 		if (data && data.response_csv_curl) {
@@ -124,6 +135,23 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable, qu
 		};
 	}, [activeTab, loadedData, chartState]);
 
+	useEffect(() => {
+		if (
+			chatStoreReducer?.activateGraphOnLast &&
+			chatStoreReducer?.activeQueryId === queryId
+		) {
+			setActiveTab('Graphical View');
+			dispatch(
+				updateChatStoreProp([
+					{
+						key: 'activateGraphOnLast',
+						value: false,
+					},
+				]),
+			);
+		}
+	}, [chatStoreReducer?.activateGraphOnLast]);
+
 	return (
 		<div className="mb-4">
 			{isGraphLoading ? (
@@ -137,7 +165,7 @@ const GraphComponent = ({ data, isGraphLoading, setIsGraphLoading, showTable, qu
 				<>
 					<>
 						<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
-							{['Graphical View', 'Tabular View'].map((item, indx) => (
+							{['Tabular View', 'Graphical View'].map((item, indx) => (
 								<li
 									key={`${queryId}_${indx}`}
 									className={`!pb-0 ${

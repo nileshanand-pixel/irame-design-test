@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Header from './Header';
 import SideNav from './SideNav';
 import PropTypes from 'prop-types';
@@ -6,6 +6,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useRouter } from '@/hooks/useRouter';
 import { cn } from '@/lib/utils';
+import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 
 const Layout = ({ children }) => {
 	// const [isSideNavOpen, setIsSideNavOpen] = useState(true);
@@ -21,6 +22,22 @@ const Layout = ({ children }) => {
 			]),
 		);
 	};
+
+	useMemo(() => {
+		if (!pathname.includes('/app/new-chat')) {
+			dispatch(
+				updateChatStoreProp([
+					{
+						key: 'activeChatSession',
+						value: {
+							id: '',
+							title: '',
+						},
+					},
+				]),
+			);
+		}
+	}, [pathname]);
 	return (
 		<div className={`flex items-start justify-between`}>
 			<SideNav
@@ -28,14 +45,14 @@ const Layout = ({ children }) => {
 				isSideNavOpen={utilReducer?.isSideNavOpen}
 			/>
 			<main
-				className={`grid w-full h-full ${
+				className={`grid w-full ${
 					utilReducer?.isSideNavOpen ? 'pl-[250px]' : 'pl-[72px]'
 				} `}
 			>
 				<Header />
 				<div
 					className={cn(
-						'px-8 pt-0',
+						'px-8 pt-0 flex items-center justify-center h-full w-full',
 						pathname.includes('/dashboard')
 							? 'bg-gray-muted min-h-[92vh] overflow-y-auto'
 							: 'bg-white',

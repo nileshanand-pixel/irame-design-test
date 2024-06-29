@@ -104,6 +104,12 @@ module.exports = {
 			boxShadow: {
 				'1xl': '0px 12px 24px -4px rgba(145, 158, 171, 0.12)',
 			},
+			screens: {
+				'h-sm': { 'raw': '(min-height: 750px)' },
+				'h-md': { 'raw': '(min-height: 950px)' },
+				'h-lg': { 'raw': '(min-height: 1000px)' },
+				'h-xl': { 'raw': '(min-height: 1250px)' },
+			  },
 		},
 	},
 	plugins: [require('tailwindcss-animate')],
