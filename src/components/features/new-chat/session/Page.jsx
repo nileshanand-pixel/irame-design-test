@@ -576,7 +576,7 @@ const Workzone = () => {
 	}, [query]);
 
 	return (
-		<div className="grid grid-cols-12 border-cyan-400 gap-4 min-h-[90vh] max-h-[90vh]">
+		<div className="grid grid-cols-12 gap-4 min-h-[90vh] max-h-[90vh] w-full">
 			<div
 				className={cn(
 					'border rounded-2xl pt-4 px-4 shadow-1xl relative h-full flex-col',
