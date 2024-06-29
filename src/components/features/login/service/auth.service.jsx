@@ -1,23 +1,11 @@
 import { API_URL } from '@/config';
-import axios from 'axios';
+import axiosClient from '@/lib/axios';
 
 export const loginWithGoogle = async (data) => {
-	const response = await axios.post('auth/google/callback', data);
+	const response = await axiosClient.post('auth/google/callback', data);
 	return response.data;
 };
-export const logout = async (token) => {
-	// const response = await axios.get(`${API_URL}/oauth/google/logout`, {
-	// 	headers: {
-	// 		Authorization: `Bearer ${token}`,
-	// 	},
-	// });
-	// document.cookie.split(';').forEach((c) => {
-	// 	document.cookie = c
-	// 		.replace(/^ +/, '')
-	// 		.replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
-	// });
+export const logout = async (token = '') => {
 	window.location.href = `${API_URL}/oauth/google/logout`;
 	localStorage.clear();
-
-	// return response.data;
 };

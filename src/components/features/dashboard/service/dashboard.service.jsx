@@ -1,9 +1,8 @@
-import axios from 'axios';
-import { API_URL } from '@/config';
+import axiosClient from '@/lib/axios';
 import { toast } from 'sonner';
 
 export const getUserDashboard = async (token) => {
-	const response = await axios.get(`${API_URL}/dashboard`, {
+	const response = await axiosClient.get(`/dashboard`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -13,7 +12,7 @@ export const getUserDashboard = async (token) => {
 
 export const deleteUserDashboard = async (token, id) => {
 	try {
-		const response = await axios.delete(`${API_URL}/dashboard/${id}`, {
+		const response = await axiosClient.delete(`/dashboard/${id}`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -28,7 +27,7 @@ export const deleteUserDashboard = async (token, id) => {
 
 export const getDashboardContent = async (token, id) => {
 	try {
-		const response = await axios.get(`${API_URL}/dashboard/${id}/content`, {
+		const response = await axiosClient.get(`/dashboard/${id}/content`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -42,8 +41,8 @@ export const getDashboardContent = async (token, id) => {
 };
 
 export const createDashboard = async (token, name) => {
-	const response = await axios.post(
-		`${API_URL}/dashboard`,
+	const response = await axiosClient.post(
+		`/dashboard`,
 		{ tittle: name },
 		{
 			headers: {
@@ -55,8 +54,8 @@ export const createDashboard = async (token, name) => {
 };
 
 export const createDashboardContent = async (token, id, content) => {
-	const response = await axios.post(
-		`${API_URL}/dashboard/${id}/content`,
+	const response = await axiosClient.post(
+		`/dashboard/${id}/content`,
 		content,
 		{
 			headers: {
@@ -68,8 +67,8 @@ export const createDashboardContent = async (token, id, content) => {
 };
 
 export const updateDashboardName = async (token, id, name) => {
-	const response = await axios.put(
-		`${API_URL}/dashboard/${id}/?title=${name}`,
+	const response = await axiosClient.put(
+		`/dashboard/${id}/?title=${name}`,
 		{},
 		{
 			headers: {
