@@ -148,11 +148,11 @@ const Configuration = () => {
 			});
 			toast.success('Data source created successfully');
 			navigate(`/app/new-chat/?step=3&dataSourceId=${response.datasource_id}`);
+			setProgress({});
+			setIsLoading(false);
 		} catch (error) {
 			toast.error('Error creating data source');
-		} finally {
 			setIsLoading(false);
-			setProgress({});
 		}
 	};
 	const handleDeleteDataSource = async (e, dataSourceId) => {
