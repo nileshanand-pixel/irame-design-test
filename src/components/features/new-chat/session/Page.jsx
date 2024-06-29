@@ -360,8 +360,8 @@ const Workzone = () => {
 								<span className="material-symbols-outlined me-1">
 									category
 								</span>
-								{workspace.show &&
-								chatStoreReducer?.activeQueryId === query?.id
+								{(workspace.show &&
+								chatStoreReducer?.activeQueryId === query?.id) || !chatStoreReducer?.activeQueryId
 									? 'Hide'
 									: 'Show'}{' '}
 								Workspace
