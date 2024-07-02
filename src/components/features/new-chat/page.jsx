@@ -775,7 +775,7 @@ const NewChat = () => {
 					) : null}
 				</div>
 			) : (
-				<div className="flex justify-center mt-20">
+				<div className="flex justify-center h-md:mt-20">
 					<div className="flex flex-col items-center w-[51.875rem] relative">
 						<div className="align-left w-full">
 							<h1
@@ -805,7 +805,7 @@ const NewChat = () => {
 								})}
 							</ul>
 						</div>
-						<div className="mt-[2.5rem] overflow-scroll w-full">
+						<div className="h-sm:mt-[2.5rem] overflow-scroll w-full">
 							{renderComponent()}
 						</div>
 						{completedSteps.includes(2) || completedSteps.includes(3) ? (
