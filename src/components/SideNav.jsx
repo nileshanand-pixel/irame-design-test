@@ -200,7 +200,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		>
 			<div
 				className={cn(
-					'flex items-center max-w-[200px] truncate ml-1',
+					'flex items-center max-w-[200px] truncate',
 					isEditing === session.session_id ? '' : ' px-2 py-1',
 				)}
 			>
@@ -267,18 +267,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			} border-r h-screen p-4 bg-purple-8`}
 		>
 			<div className="grow">
-				{/* <Button
-					variant="icon"
-					onClick={toggleSideNav}
-					className="hover:bg-purple-4 size-6"
-				> */}
 				<img
 					src="https://d2vkmtgu2mxkyq.cloudfront.net/hamburger_menu.svg"
-					alt="ham-menu"
+					alt="ask-ira"
+					className="size-10 cursor-pointer hover:bg-purple-4 rounded-full p-2"
 					onClick={toggleSideNav}
-					className="hover:bg-purple-4 size-6 p-3 cursor-pointer"
 				/>
-				{/* </Button> */}
 				<div>
 					<Link
 						to={'/app/new-chat'}
@@ -299,7 +293,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					</Link>
 					<div style={{ overflow: 'visible' }}>
 						{bottomMenuList?.map((menu, key) => (
-							<div key={key}>
+							<div key={key} className="space-y-2">
 								{menu?.items?.map((option, optionKey) => {
 									const isActive = activeTab === option.link;
 									return (
@@ -307,15 +301,15 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 											to={option.link}
 											key={optionKey}
 											onClick={() => setActiveTab(option.link)}
-											className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-3 rounded-md hover:bg-purple-4 border-l-4 ${
+											className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-2 rounded-md hover:bg-purple-4 border-l-4 ${
 												isActive
-													? `${isSideNavOpen ? 'border-purple-100 bg-purple-4 font-semibold text-purple-100' : ''}`
-													: `${isSideNavOpen ? 'border-transparent' : ''}`
-											}`}
+													? ' border-purple-100 bg-purple-4 font-semibold text-purple-100 '
+													: ' border-transparent'
+											} `}
 										>
 											<img
 												src={option.icon}
-												className={`${isActive ? 'text-purple-100 ' : ''} `}
+												className={`${isActive ? 'text-purple-100 ' : ''} size-[22px] `}
 												style={{ strokeWidth: '2' }}
 											></img>
 											{isSideNavOpen ? (
