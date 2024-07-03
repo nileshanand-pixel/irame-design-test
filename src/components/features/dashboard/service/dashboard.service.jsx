@@ -8,7 +8,7 @@ export const getUserDashboard = async (token) => {
 			Authorization: `Bearer ${token}`,
 		},
 	});
-	return response.data;
+	return response.data?.dashboard_list;
 };
 
 export const deleteUserDashboard = async (token, id) => {
@@ -34,7 +34,7 @@ export const getDashboardContent = async (token, id) => {
 			},
 		});
 
-		return response.data;
+		return response.data?.dashboard_content_list;
 	} catch (error) {
 		console.error('Error fetching dashboard content', error);
 		throw error;

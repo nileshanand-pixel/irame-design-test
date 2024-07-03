@@ -530,9 +530,10 @@ const NewChat = () => {
 								className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
 								onClick={() => setShowWorkspace(!showWorkspace)}
 							>
-								<span className="material-symbols-outlined me-1">
-									category
-								</span>
+								<img
+									src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
+									className="me-1 size-4"
+								/>
 								{showWorkspace ? 'Hide' : 'Show'} Workspace
 							</Button>
 						</div>
@@ -732,9 +733,7 @@ const NewChat = () => {
 						<div className="border rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-[90%]">
 							<div className="flex justify-between">
 								<div className="flex items-center gap-1">
-									<span className="material-symbols-outlined me-1">
-										category
-									</span>
+									<img src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg" />
 									<h3 className="text-primary80 font-semibold text-xl">
 										Ira's Workspace
 									</h3>

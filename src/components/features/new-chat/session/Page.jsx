@@ -357,11 +357,13 @@ const Workzone = () => {
 								className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
 								onClick={() => toggleIra(query?.id)}
 							>
-								<span className="material-symbols-outlined me-1">
-									category
-								</span>
+								<img
+									src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
+									className="me-1"
+								/>
 								{(workspace.show &&
-								chatStoreReducer?.activeQueryId === query?.id) || !chatStoreReducer?.activeQueryId
+									chatStoreReducer?.activeQueryId === query?.id) ||
+								!chatStoreReducer?.activeQueryId
 									? 'Hide'
 									: 'Show'}{' '}
 								Workspace
@@ -636,9 +638,10 @@ const Workzone = () => {
 				<div className="border sticky rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-[90vh]">
 					<div className="flex justify-between">
 						<div className="flex items-center gap-1">
-							<span className="material-symbols-outlined me-1">
-								category
-							</span>
+							<img
+								src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
+								className="me-1 size-6"
+							/>
 							<h3 className="text-primary80 font-semibold text-xl">
 								Ira's Workspace
 							</h3>

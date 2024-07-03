@@ -63,7 +63,7 @@ export const getUserSession = async (token) => {
 			Authorization: `Bearer ${token}`,
 		},
 	});
-	return response.data;
+	return response.data?.session_list;
 };
 
 export const getQuerySession = async (sessionId, token) => {
@@ -111,7 +111,7 @@ export const getQueriesOfSession = async (sessionId, token) => {
 				sort_order: 'asc',
 			},
 		});
-		return response.data;
+		return response.data?.query_list;
 	} catch (error) {
 		toast.error('Failed to get session');
 		throw error;

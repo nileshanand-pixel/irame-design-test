@@ -42,7 +42,7 @@ export const uploadFile = async (file, setProgress, authToken) => {
 					}
 
 					// Return the previous state if the file name is not present
-					return {...prevProgress};
+					return { ...prevProgress };
 				});
 			},
 		});
@@ -61,7 +61,7 @@ export const getDataSources = async (authToken) => {
 		},
 	});
 
-	return response.data;
+	return response.data?.datasource_list;
 };
 
 export const createNewDtaSource = async (data, authToken) => {
