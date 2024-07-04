@@ -1,10 +1,9 @@
 import { Button } from '@/components/ui/button';
-import { API_URL } from '@/config';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { useRouter } from '@/hooks/useRouter';
+import axiosClient from '@/lib/axios';
 
 const SignInSignUp = () => {
 	const navigate = useNavigate();
@@ -13,11 +12,10 @@ const SignInSignUp = () => {
 
 	const handleLogin = async () => {
 		setIsLoading(true);
-		const resp = await axios.get(`${API_URL}/oauth/google/login`);
+		const resp = await axiosClient.get(`/oauth/google/login`);
 		if (resp) {
 			window.location.href = resp.data;
 		}
-		// window.location.href = `${API_URL}/oauth/google/login`;
 	};
 
 	const bgStyles = {

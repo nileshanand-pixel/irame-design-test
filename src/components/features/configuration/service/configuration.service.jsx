@@ -1,11 +1,11 @@
-import axios from 'axios';
-import { AI_API_URL, API_URL } from '@/config';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
+import axiosClient from '@/lib/axios';
+
 
 export const getPresignedUrl = async (fileName, authToken) => {
-	const response = await axios.get(
-		`${API_URL}/config/datasource/presigned-url?file_name=${fileName}&datasource_id=${uuidv4()}`,
+	const response = await axiosClient.get(
+		`/config/datasource/presigned-url?file_name=${fileName}&datasource_id=${uuidv4()}`,
 		{
 			headers: {
 				Authorization: `Bearer ${authToken}`,
@@ -23,7 +23,7 @@ export const uploadFile = async (file, setProgress, authToken) => {
 			authToken,
 		);
 
-		await axios.put(presigned_url, file, {
+		await axiosClient.put(presigned_url, file, {
 			headers: {
 				'Content-Type': file.type,
 			},
@@ -55,7 +55,7 @@ export const uploadFile = async (file, setProgress, authToken) => {
 };
 
 export const getDataSources = async (authToken) => {
-	const response = await axios.get(`${API_URL}/config/datasource`, {
+	const response = await axiosClient.get(`/config/datasource`, {
 		headers: {
 			Authorization: `Bearer ${authToken}`,
 		},
@@ -65,7 +65,7 @@ export const getDataSources = async (authToken) => {
 };
 
 export const createNewDtaSource = async (data, authToken) => {
-	const response = await axios.post(`${API_URL}/config/datasource`, data, {
+	const response = await axiosClient.post(`/config/datasource`, data, {
 		headers: {
 			Authorization: `Bearer ${authToken}`,
 		},
@@ -76,8 +76,8 @@ export const createNewDtaSource = async (data, authToken) => {
 
 export const deleteDataSource = async (dataSourceId, authToken) => {
 	try {
-		const response = await axios.delete(
-			`${API_URL}/config/datasource/${dataSourceId}`,
+		const response = await axiosClient.delete(
+			`/config/datasource/${dataSourceId}`,
 			{
 				headers: {
 					Authorization: `Bearer ${authToken}`,
