@@ -205,11 +205,16 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				)}
 			>
 				{/* <i className="bi-chat-right-text-fill me-3"></i> */}
-				<img
-					src="https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg"
-					alt="ask-ira"
-					className="size-5 me-3"
-				/>
+				{session.status === 'in_queue' ||
+				session.status === 'in_progress' ? (
+					<Spinner className="me-7" />
+				) : (
+					<img
+						src="https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg"
+						alt="ask-ira"
+						className="size-5 me-3"
+					/>
+				)}
 
 				{isEditing === session.session_id ? (
 					<InputText

@@ -1,46 +1,38 @@
 export const intent = [
 	{
-		label: 'Adhoc analysis',
-		value: 'adhoc_analysis',
+		label: 'Risk Analysis',
+		value: 'risk_analysis',
 	},
 	{
-		label: 'Claim validation',
-		value: 'claim_validation',
+		label: 'Descriptive Analysis',
+		value: 'descriptive_analysis',
 	},
 	{
-		label: 'Reconciliation',
-		value: 'reconciliation',
+		label: 'Trend Analysis',
+		value: 'trend_analysis',
 	},
 	{
-		label: 'Contract validation',
-		value: 'contract_validation',
+		label: 'Correlation Analysis',
+		value: 'correlation_analysis',
 	},
 	{
-		label: 'KPI Monitoring',
-		value: 'kpi_monitoring',
+		label: 'Comparative Analysis',
+		value: 'comparative_analysis',
 	},
 	{
-		label: 'Process compliance',
-		value: 'process_compliance',
+		label: 'Time-series Analysis',
+		value: 'timeseries_analysis',
 	},
 	{
-		label: 'RFP management',
-		value: 'rfp_management',
+		label: 'Variance Analysis',
+		value: 'variance_analysis',
 	},
 	{
-		label: 'Expense validation',
-		value: 'expense_validation',
+		label: 'Fraud Detection',
+		value: 'fraud_detection',
 	},
 	{
-		label: 'Invoice validation',
-		value: 'invoice_validation',
-	},
-	{
-		label: 'Fraud monitoring',
-		value: 'fraud_monitoring',
-	},
-	{
-		label: 'Other',
-		value: 'other',
+		label: 'Sensitivity Analysis',
+		value: 'sensitivity_analysis',
 	},
 ];
