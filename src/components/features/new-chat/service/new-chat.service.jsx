@@ -1,10 +1,9 @@
-import { API_URL } from '@/config';
-import axios from 'axios';
+import axiosClient from '@/lib/axios';
 import { toast } from 'sonner';
 
 export const fetchSuggestions = async (dataSourceId, token) => {
-	const response = await axios.get(
-		`${API_URL}/config/datasource/${dataSourceId}/suggestion`,
+	const response = await axiosClient.get(
+		`/config/datasource/${dataSourceId}/suggestion`,
 		{
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -15,8 +14,8 @@ export const fetchSuggestions = async (dataSourceId, token) => {
 };
 
 export const createQuerySession = async (dataSourceId, prompt, token) => {
-	const response = await axios.post(
-		`${API_URL}/query/session`,
+	const response = await axiosClient.post(
+		`/query/session`,
 		{
 			datasource_id: dataSourceId,
 			query: prompt,
@@ -31,7 +30,7 @@ export const createQuerySession = async (dataSourceId, prompt, token) => {
 };
 
 export const getAnswerConfig = async (token) => {
-	const response = await axios.get(`${API_URL}/config/answer`, {
+	const response = await axiosClient.get(`/config/answer`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -40,7 +39,7 @@ export const getAnswerConfig = async (token) => {
 };
 
 export const getQueryAnswers = async (queryId, token) => {
-	const response = await axios.get(`${API_URL}/query/${queryId}`, {
+	const response = await axiosClient.get(`/query/${queryId}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -49,7 +48,7 @@ export const getQueryAnswers = async (queryId, token) => {
 };
 
 export const getUserDetails = async (token) => {
-	const response = await axios.get(`${API_URL}/oauth/google/user`, {
+	const response = await axiosClient.get(`/oauth/google/user`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -58,7 +57,7 @@ export const getUserDetails = async (token) => {
 };
 
 export const getUserSession = async (token) => {
-	const response = await axios.get(`${API_URL}/session`, {
+	const response = await axiosClient.get(`/session`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -67,7 +66,7 @@ export const getUserSession = async (token) => {
 };
 
 export const getQuerySession = async (sessionId, token) => {
-	const response = await axios.get(`${API_URL}/query/session/${sessionId}`, {
+	const response = await axiosClient.get(`/query/session/${sessionId}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -76,7 +75,7 @@ export const getQuerySession = async (sessionId, token) => {
 };
 
 export const createQuery = async (data, token) => {
-	const response = await axios.post(`${API_URL}/query`, data, {
+	const response = await axiosClient.post(`/query`, data, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -86,7 +85,7 @@ export const createQuery = async (data, token) => {
 
 export const deleteSession = async (sessionId, token) => {
 	try {
-		const response = await axios.delete(`${API_URL}/session/${sessionId}`, {
+		const response = await axiosClient.delete(`/session/${sessionId}`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -102,7 +101,7 @@ export const deleteSession = async (sessionId, token) => {
 
 export const getQueriesOfSession = async (sessionId, token) => {
 	try {
-		const response = await axios.get(`${API_URL}/query/session/${sessionId}`, {
+		const response = await axiosClient.get(`/query/session/${sessionId}`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
