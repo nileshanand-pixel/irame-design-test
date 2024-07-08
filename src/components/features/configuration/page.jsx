@@ -224,7 +224,6 @@ const Configuration = () => {
 	return (
 		<div className="grid grid-cols-12 gap-4 pt-6">
 			{/* Upload Section */}
-			<QueueStatus text="Ram chahe leela chahe" />
 			<div className="border rounded-3xl py-4 px-6 col-span-9 shadow-1xl h-fit">
 				<div className="flex justify-between items-center">
 					<h3 className="text-primary80 font-semibold text-xl">
