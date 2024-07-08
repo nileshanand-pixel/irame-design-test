@@ -161,6 +161,17 @@ const Workzone = () => {
 					(item) => item?.query_id === chatStoreReducer?.activeQueryId,
 				);
 				if (!!activeQueryResp) {
+					dispatch(
+						updateChatStoreProp([
+							{
+								key: 'activeChatSession',
+								value: {
+									...chatStoreReducer?.activeChatSession,
+									status: activeQueryResp?.status,
+								},
+							},
+						]),
+					);
 					let failed = checkGraphOrObservationAbsent(activeQueryResp);
 					if (failed) {
 						setBanners((prevState) => ({
@@ -387,7 +398,7 @@ const Workzone = () => {
 								currentDoingScience ? 'mb-16' : '',
 							)}
 						>
-							<div className="ml-12">
+							<div className="ml-12 my-10">
 								{currentDoingScience && (
 									<QueueStatus
 										text={
@@ -470,7 +481,7 @@ const Workzone = () => {
 		}
 		setInputDisabled(true);
 		fetchQueries();
-	}, [chatStoreReducer?.activeChatSession, chatStoreReducer?.refreshChat]);
+	}, [chatStoreReducer?.activeChatSession?.id, chatStoreReducer?.refreshChat]);
 
 	useEffect(() => {
 		setAnswers([]);

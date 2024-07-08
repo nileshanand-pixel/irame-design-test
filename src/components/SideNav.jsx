@@ -24,6 +24,7 @@ import Spinner from './elements/loading/Spinner';
 import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
+import GradientSpinner from './elements/loading/GradientSpinner';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -168,7 +169,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		const earlier = [];
 
 		sessions.forEach((session) => {
-			const sessionDate = dayjs(session.created_at);
+			const sessionDate = dayjs(session.updated_at);
 
 			if (sessionDate.isToday()) {
 				today.push(session);
@@ -204,15 +205,25 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					isEditing === session.session_id ? '' : ' px-2 py-1',
 				)}
 			>
-				{/* <i className="bi-chat-right-text-fill me-3"></i> */}
-				{session.status === 'in_queue' ||
-				session.status === 'in_progress' ? (
-					<Spinner className="me-7" />
+				{chatStoreReducer?.activeChatSession?.id === session.session_id ? (
+					chatStoreReducer?.activeChatSession?.status === 'in_queue' ||
+					chatStoreReducer?.activeChatSession?.status === 'in_progress' ? (
+						<GradientSpinner tailwindBg = "bg-[#E6D7F7]" width="15"/>
+					) : (
+						<img
+							src="https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg"
+							alt="ask-ira"
+							className="size-5"
+						/>
+					)
+				) : session.status === 'in_queue' ||
+				  session.status === 'in_progress' ? (
+					<GradientSpinner tailwindBg = "bg-[#E6D7F7]" width="15" />
 				) : (
 					<img
 						src="https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg"
 						alt="ask-ira"
-						className="size-5 me-3"
+						className="size-5"
 					/>
 				)}
 
@@ -226,7 +237,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						className="flex bg-transparent border-none text-primary80 font-medium"
 					/>
 				) : (
-					<p className="flex">{session.title}</p>
+					<p className="flex ml-3">{session.title}</p>
 				)}
 			</div>
 			<DropdownMenu>
