@@ -209,14 +209,6 @@ const NewChat = () => {
 		}
 	};
 
-	const getInputWidth = () => {
-		if (utilReducer?.isSideNavOpen) {
-			return showWorkspace ? 'w-[44.2rem]' : 'w-[53rem]';
-		} else {
-			return showWorkspace ? 'w-[51.5rem]' : 'w-[64.5rem]';
-		}
-	};
-
 	const fetchUserSession = () => {
 		try {
 			// if (utilReducer?.sessionHistory?.length > 0) return;
@@ -703,10 +695,7 @@ const NewChat = () => {
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 									<Input
 										placeholder="Ask IRA"
-										className={cn(
-											'border-0 outline-none rounded-none bg-transparent ',
-											getInputWidth(),
-										)}
+										className="border-0 outline-none rounded-none bg-transparent w-full"
 										value={prompt}
 										onChange={(e) => handlePromptChange(e)}
 										onKeyDown={(e) => {
@@ -812,7 +801,7 @@ const NewChat = () => {
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 w-full">
 									<Input
 										placeholder="Ask IRA"
-										className="border-0 outline-none rounded-none bg-transparent !w-[46rem] !h-auto"
+										className="border-0 outline-none rounded-none bg-transparent w-full mr-2 !h-auto"
 										value={prompt}
 										onChange={(e) => {
 											handlePromptChange(e);

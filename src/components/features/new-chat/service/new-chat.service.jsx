@@ -110,7 +110,7 @@ export const getQueriesOfSession = async (sessionId, token) => {
 				sort_order: 'asc',
 			},
 		});
-		return response.data?.query_list;
+		return response.data;
 	} catch (error) {
 		toast.error('Failed to get session');
 		throw error;

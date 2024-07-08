@@ -8,6 +8,7 @@ import Configuration from '@/components/features/configuration/page';
 import useAuth from '@/hooks/useAuth';
 import DashboardDetailsPage from '@/components/features/dashboard/components/DashboardDetailsPage';
 import Workzone from '@/components/features/new-chat/session/Page';
+import TestRoute from '@/components/features/testingUI/Page';
 
 const ProtectedRoute = ({ element, ...rest }) => {
 	const { isAuthenticated } = useAuth();
@@ -45,6 +46,7 @@ const AppRoutes = () => {
 								element={<Configuration />}
 							/>
 							<Route path="help" element={<Help />} />
+							<Route path="test" element={<TestRoute />} />
 						</Routes>
 					</Layout>
 				}
