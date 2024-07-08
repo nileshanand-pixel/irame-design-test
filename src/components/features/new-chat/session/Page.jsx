@@ -158,7 +158,7 @@ const Workzone = () => {
 
 				// active query has no graph or observation case check
 				const activeQueryResp = res?.find(
-					(item) => item?.query_id === chatStoreReducer?.activeQueryId,
+					(item) => item?.query_id === chatStoreReducer?.activeQueryId
 				);
 				if (!!activeQueryResp) {
 					dispatch(
@@ -253,6 +253,11 @@ const Workzone = () => {
 						{ key: 'activeQueryId', value: res?.query_id },
 					]),
 				);
+
+				queryClient.invalidateQueries(['chat-history'], {
+					refetchActive: true,
+					refetchInactive: true,
+				});
 			});
 
 			setResponseTimeElapsed(0);
@@ -444,16 +449,27 @@ const Workzone = () => {
 			scrollToBottom();
 			dispatch(
 				updateChatStoreProp([
+					{ key: 'activateGraphOnLast', value: true },
 					{
 						key: 'activeQueryId',
 						value: answers?.[answers?.length - 1]?.query_id,
-					},
-					{ key: 'activateGraphOnLast', value: true },
+					}
 				]),
 			);
 			setInputDisabled(false);
 			return;
 		}
+		if(!chatStoreReducer?.activeQueryId && answers && answers?.length){
+			dispatch(
+				updateChatStoreProp([
+					{
+						key: 'activeQueryId',
+						value: answers?.[answers?.length - 1]?.query_id,
+					},
+				]),
+			);
+		}
+
 		intervalRef.current = setInterval(() => {
 			let hasPendingQueries = true;
 			if (doingScience.length && doingScience.every((item) => !item.status)) {

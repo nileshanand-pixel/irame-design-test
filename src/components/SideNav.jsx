@@ -118,6 +118,10 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					key: 'activeChatSession',
 					value: { id: session.session_id, title: session.title },
 				},
+				{
+					key: 'activeQueryId',
+					value: ''
+				},
 				{ key: 'refreshChat', value: true },
 				{ key: 'resetIra', value: !chatStoreReducer?.resetIra },
 			]),
@@ -185,8 +189,16 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		return { today, yesterday, last7Days, earlier };
 	};
 
-	const renderSession = (session) => (
-		<div
+	const renderSession = (session) => {
+		const isActiveSession = chatStoreReducer?.activeChatSession?.id === session.session_id;
+		let showSpinner = false;
+		if(isActiveSession){
+			showSpinner = chatStoreReducer?.activeChatSession?.status && chatStoreReducer?.activeChatSession?.status !== 'done' || session?.status !== 'done';
+		}else{
+			showSpinner = session?.status !== 'done';
+		}
+
+		return (<div
 			className={cn(
 				'flex items-center justify-between text-primary80 w-full rounded-lg py-2 pl-1 text-sm font-medium cursor-pointer hover:bg-purple-4',
 				chatStoreReducer?.activeChatSession?.id === session.session_id
@@ -205,9 +217,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					isEditing === session.session_id ? '' : ' px-2 py-1',
 				)}
 			>
-				{chatStoreReducer?.activeChatSession?.id === session.session_id ? (
-					chatStoreReducer?.activeChatSession?.status === 'in_queue' ||
-					chatStoreReducer?.activeChatSession?.status === 'in_progress' ? (
+				{
+					showSpinner ? (
 						<GradientSpinner tailwindBg = "bg-[#E6D7F7]" width="15"/>
 					) : (
 						<img
@@ -216,17 +227,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							className="size-5"
 						/>
 					)
-				) : session.status === 'in_queue' ||
-				  session.status === 'in_progress' ? (
-					<GradientSpinner tailwindBg = "bg-[#E6D7F7]" width="15" />
-				) : (
-					<img
-						src="https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg"
-						alt="ask-ira"
-						className="size-5"
-					/>
-				)}
-
+				}
 				{isEditing === session.session_id ? (
 					<InputText
 						value={sessionTitle}
@@ -259,8 +260,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
-		</div>
-	);
+		</div>)
+	};
 
 	const groupedSessions = groupSessionsByDate(utilReducer?.sessionHistory || []);
 
