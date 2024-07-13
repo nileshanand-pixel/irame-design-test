@@ -5,10 +5,11 @@ const Typewriter = ({ text }) => {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    if(displayText && text && displayText.charAt(0) !== text.charAt(0)){
-      setDisplayText('');
-      setIndex(0);
-    }
+    setDisplayText('');
+    setIndex(0);
+  }, [text]);
+
+  useEffect(() => {
     if (index < text.length) {
       const timeout = setTimeout(() => {
         setDisplayText((prev) => prev + text[index]);
