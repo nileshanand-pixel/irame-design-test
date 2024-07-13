@@ -441,6 +441,23 @@ const Workzone = () => {
 		clearInterval(intervalRef.current);
 	};
 
+	const markSessionStatusInReducer = (sessionId, status) => {
+		let tempSessionHistory = utilReducer?.sessionHistory;
+		tempSessionHistory = tempSessionHistory?.map((session) => {
+			if(session.session_id === sessionId){
+				return {
+					...session,
+					status
+				}
+			}else return session;
+		});
+		dispatch(updateUtilProp(
+			[
+				{key: "sessionHistory", value: tempSessionHistory}
+			]
+		))
+	}
+
 	useEffect(() => {
 		const allDone =
 			doingScience.length && doingScience.every((item) => !item.status);
@@ -456,6 +473,7 @@ const Workzone = () => {
 					}
 				]),
 			);
+			markSessionStatusInReducer(answers?.[answers?.length - 1]?.session_id, "done");
 			setInputDisabled(false);
 			return;
 		}

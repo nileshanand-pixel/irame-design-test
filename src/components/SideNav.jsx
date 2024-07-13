@@ -193,7 +193,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		const isActiveSession = chatStoreReducer?.activeChatSession?.id === session.session_id;
 		let showSpinner = false;
 		if(isActiveSession){
-			showSpinner = chatStoreReducer?.activeChatSession?.status && chatStoreReducer?.activeChatSession?.status !== 'done' || session?.status !== 'done';
+			showSpinner = chatStoreReducer?.activeChatSession?.status && chatStoreReducer?.activeChatSession?.status !== 'done'
 		}else{
 			showSpinner = session?.status !== 'done';
 		}
