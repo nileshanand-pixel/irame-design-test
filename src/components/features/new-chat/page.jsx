@@ -209,14 +209,6 @@ const NewChat = () => {
 		}
 	};
 
-	const getInputWidth = () => {
-		if (utilReducer?.isSideNavOpen) {
-			return showWorkspace ? 'w-[44.2rem]' : 'w-[53rem]';
-		} else {
-			return showWorkspace ? 'w-[51.5rem]' : 'w-[64.5rem]';
-		}
-	};
-
 	const fetchUserSession = () => {
 		try {
 			// if (utilReducer?.sessionHistory?.length > 0) return;
@@ -530,9 +522,10 @@ const NewChat = () => {
 								className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
 								onClick={() => setShowWorkspace(!showWorkspace)}
 							>
-								<span className="material-symbols-outlined me-1">
-									category
-								</span>
+								<img
+									src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
+									className="me-1 size-4"
+								/>
 								{showWorkspace ? 'Hide' : 'Show'} Workspace
 							</Button>
 						</div>
@@ -702,10 +695,7 @@ const NewChat = () => {
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 									<Input
 										placeholder="Ask IRA"
-										className={cn(
-											'border-0 outline-none rounded-none bg-transparent ',
-											getInputWidth(),
-										)}
+										className="border-0 outline-none rounded-none bg-transparent w-full"
 										value={prompt}
 										onChange={(e) => handlePromptChange(e)}
 										onKeyDown={(e) => {
@@ -732,9 +722,7 @@ const NewChat = () => {
 						<div className="border rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-[90%]">
 							<div className="flex justify-between">
 								<div className="flex items-center gap-1">
-									<span className="material-symbols-outlined me-1">
-										category
-									</span>
+									<img src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg" />
 									<h3 className="text-primary80 font-semibold text-xl">
 										Ira's Workspace
 									</h3>
@@ -813,7 +801,7 @@ const NewChat = () => {
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 w-full">
 									<Input
 										placeholder="Ask IRA"
-										className="border-0 outline-none rounded-none bg-transparent !w-[46rem] !h-auto"
+										className="border-0 outline-none rounded-none bg-transparent w-full mr-2 !h-auto"
 										value={prompt}
 										onChange={(e) => {
 											handlePromptChange(e);

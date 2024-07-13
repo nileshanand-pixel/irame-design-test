@@ -109,8 +109,11 @@ const UploadInput = ({ onFileUpload, files, setFiles, progress, setOpen }) => {
 									showSupportedFormats(e);
 								}}
 							>
-								<p className="text-sm font-medium leading-4 text-primary100">
-									<i className="bi-folder me-2"></i>
+								<p className="text-sm font-medium leading-4 text-primary100 flex items-center">
+									<img
+										src="https://d2vkmtgu2mxkyq.cloudfront.net/folder.svg"
+										className="me-1 size-6"
+									/>
 									{welcomeTypography?.fileStructure}
 									{showFormats ? (
 										<i className="bi-chevron-up ms-2"></i>

@@ -5,7 +5,7 @@ const initialState = {
 	suggestionData: {},
 	dataSources: [],
 	sessionHistory: [],
-	selectedDataSource: '',
+	selectedDataSource: {id: "", name: ""},
 	resetChat: false,
 	answerFromHistory: {},
 };
