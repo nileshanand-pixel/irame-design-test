@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import ResponseCard from '../ResponseCard';
 import ira from '@/assets/icons/ira_icon.svg';
-import failedIcon from '@/assets/icons/failed_icon.svg';
 import warningIcon from '@/assets/icons/warning_icon.svg';
 import { toast } from 'sonner';
 import Workspace from '../Workspace';
@@ -19,6 +18,8 @@ import AddQueryToDashboard from '../AddQueryToDashboard';
 import CreateDashboardDialog from '../../dashboard/components/CreateDashboardDialog';
 import { createDashboard } from '../../dashboard/service/dashboard.service';
 import { queryClient } from '@/lib/react-query';
+import QueueStatus from '../QueueStatus';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -65,14 +66,6 @@ const Workzone = () => {
 		}
 	};
 
-	const getInputWidth = () => {
-		if (utilReducer?.isSideNavOpen) {
-			return workspace.show ? 'w-[40.8rem]' : 'w-[53rem]';
-		} else {
-			return workspace.show ? 'w-[51.5rem]' : 'w-[64.5rem]';
-		}
-	};
-
 	const handleTabClick = (tab) => {
 		setWorkspace((prevState) => ({
 			...prevState,
@@ -110,9 +103,11 @@ const Workzone = () => {
 		};
 
 		getQueriesOfSession(chatStoreReducer?.activeChatSession?.id, getToken())
-			.then((res) => {
+			.then((resp) => {
+				const res = resp?.query_list;
 				if (res.length <= 0) return;
-
+				const dataSourceName = resp?.datasource_name;
+				const dataSourceId = res[0].datasource_id;
 				// Update queries
 				const tempQueries = res?.map((item) => ({
 					id: item?.query_id,
@@ -123,6 +118,22 @@ const Workzone = () => {
 						{ key: 'queries', value: [...tempQueries] },
 					]),
 				);
+
+				//update datasource name in util reducer if not present
+				if (!utilReducer?.selectedDataSource?.name) {
+					dispatch(
+						updateUtilProp([
+							{
+								key: 'selectedDataSource',
+								value: {
+									...utilReducer?.selectedDataSource,
+									name: dataSourceName,
+									id: dataSourceId,
+								},
+							},
+						]),
+					);
+				}
 
 				// Update answers
 				setAnswers((prevAnswers) => {
@@ -147,9 +158,20 @@ const Workzone = () => {
 
 				// active query has no graph or observation case check
 				const activeQueryResp = res?.find(
-					(item) => item?.query_id === chatStoreReducer?.activeQueryId,
+					(item) => item?.query_id === chatStoreReducer?.activeQueryId
 				);
 				if (!!activeQueryResp) {
+					dispatch(
+						updateChatStoreProp([
+							{
+								key: 'activeChatSession',
+								value: {
+									...chatStoreReducer?.activeChatSession,
+									status: activeQueryResp?.status,
+								},
+							},
+						]),
+					);
 					let failed = checkGraphOrObservationAbsent(activeQueryResp);
 					if (failed) {
 						setBanners((prevState) => ({
@@ -231,6 +253,11 @@ const Workzone = () => {
 						{ key: 'activeQueryId', value: res?.query_id },
 					]),
 				);
+
+				queryClient.invalidateQueries(['chat-history'], {
+					refetchActive: true,
+					refetchInactive: true,
+				});
 			});
 
 			setResponseTimeElapsed(0);
@@ -291,7 +318,7 @@ const Workzone = () => {
 		if (queries.length <= 0) {
 			return (
 				<div className="mt-8 w-full">
-					<div className="flex items-center gap-2 flex-row-reverse">
+					<div className="mr-1 ml-10 flex items-center gap-2.5 flex-row-reverse">
 						<Avatar className="size-9">
 							<AvatarImage src={value?.avatar} />
 							<AvatarFallback>
@@ -299,12 +326,12 @@ const Workzone = () => {
 							</AvatarFallback>
 						</Avatar>
 						{prompt ? (
-							<p className="max-w-[90%] ms-1 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px] min-w-[90%] min-h-6">
+							<p className="max-w-[90%] ms-2 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px] min-w-[90%] min-h-6">
 								{prompt}
 							</p>
 						) : (
 							<>
-								<Skeleton className="h-6 min-w-[90%] bg-purple-8 ms-1" />
+								<Skeleton className="h-6 w-full bg-purple-8 ms-1" />
 							</>
 						)}
 					</div>
@@ -313,6 +340,7 @@ const Workzone = () => {
 		}
 		return queries?.map((query, key) => {
 			const answerElem = answers.find((item) => item.query_id === query.id);
+			// console.log(answerElem?.status_text, answerElem)
 			const hasIraGeneratedReply = !!answerElem?.answer; // complete initial reply object.
 			const hasIraGeneratedGraph = !!answerElem?.answer?.graph;
 			const isIraGeneratingGraph =
@@ -333,7 +361,7 @@ const Workzone = () => {
 			return (
 				<>
 					<div key={query.id} className="my-2 w-full">
-						<div className="flex items-center gap-2 flex-row-reverse">
+						<div className="ml-10 flex items-center gap-2.5 flex-row-reverse">
 							<Avatar className="size-9">
 								<AvatarImage src={value?.avatar} />
 								<AvatarFallback>
@@ -341,7 +369,7 @@ const Workzone = () => {
 								</AvatarFallback>
 							</Avatar>
 							{query?.question ? (
-								<p className="ms-1 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px]">
+								<p className="ms-2 mr-1 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px]">
 									{query.question}
 								</p>
 							) : (
@@ -357,11 +385,13 @@ const Workzone = () => {
 								className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
 								onClick={() => toggleIra(query?.id)}
 							>
-								<span className="material-symbols-outlined me-1">
-									category
-								</span>
+								<img
+									src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
+									className="me-1"
+								/>
 								{(workspace.show &&
-								chatStoreReducer?.activeQueryId === query?.id) || !chatStoreReducer?.activeQueryId
+									chatStoreReducer?.activeQueryId === query?.id) ||
+								!chatStoreReducer?.activeQueryId
 									? 'Hide'
 									: 'Show'}{' '}
 								Workspace
@@ -373,119 +403,34 @@ const Workzone = () => {
 								currentDoingScience ? 'mb-16' : '',
 							)}
 						>
-							{/* Generating Graph Loader */}
-							{currentDoingScience && isIraGeneratingGraph ? (
-								banners?.showFailedResponse ? (
-									<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-										<img
-											src={failedIcon}
-											width={40}
-											height={40}
-											className="mr-3"
-										/>
-										Failed to generate a response, please refresh
-										the page to try again.
-									</div>
-								) : (
-									<div className="darkSoul-glowing-button2 ml-12">
-										<button
-											className="darkSoul-button2"
-											type="button"
-										>
-											<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-											Generating Graph...
-										</button>
-									</div>
-								)
-							) : (
-								<ResponseCard
-									answerResp={answerElem}
-									isGraphLoading={isGraphLoading}
-									setIsGraphLoading={setIsGraphLoading}
-									setAnswerResp={setAnswers}
-									setDoingScience={setDoingScience}
-									setResponseTimeElapsed={setResponseTimeElapsed}
-									setBanners={setBanners}
-									doingScience={currentDoingScience}
-									setDashboard={setDashboard}
-									showTable={
-										!answerElem?.answer?.response_dataframe &&
-										answerElem?.answer?.graph
-									}
-									setIsTableLoading={setIsTableLoading}
-									isTableLoading={isTableLoading}
-								/>
-							)}
-
-							{/* Generating Observation Loader */}
-							{/* Only Rendered Ira doing science is false and Ira has not given main text reply yet */}
-							{currentDoingScience && !hasIraGeneratedObservation && (
-								<div className="flex flex-col space-y-3 my-8 ml-12">
-									<div className="space-y-3">
-										{banners?.showFailedResponse ? (
-											<div className="flex items-center justify-center p-3 mt-3 ml-12 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-												<img
-													src={failedIcon}
-													width={40}
-													height={40}
-													className="mr-3"
-												/>
-												Failed to generate a response, please
-												refresh the page to try again.
-											</div>
-										) : // show creating observation
-										isGraphProcessed ? (
-											<div className="darkSoul-glowing-button2">
-												<button
-													className="darkSoul-button2"
-													type="button"
-												>
-													<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-													Creating Observation...
-												</button>
-											</div>
-										) : (
-											<ResponseCard
-												answerResp={answerElem}
-												isGraphLoading={isGraphLoading}
-												setIsGraphLoading={setIsGraphLoading}
-												setAnswerResp={setAnswers}
-												setDoingScience={setDoingScience}
-												setResponseTimeElapsed={
-													setResponseTimeElapsed
-												}
-												setBanners={setBanners}
-												setDashboard={setDashboard}
-												showTable={
-													!answerElem?.answer
-														?.response_dataframe &&
-													answerElem?.answer?.graph
-												}
-												setIsTableLoading={setIsTableLoading}
-												isTableLoading={isTableLoading}
-											/>
-										)}
-									</div>
-								</div>
-							)}
-						</div>
-					</div>
-					<div className="w-full flex flex-col justify-center mx-auto mt-5 pl-12">
-						{currentDoingScience &&
-							chatStoreReducer?.activeQueryId ===
-								answerElem?.query_id &&
-							isGettingLateInReply &&
-							banners?.showDelay && (
-								<div className="flex items-center justify-center p-3 mt-3 border border-black/5 shadow-sm w-fit rounded-lg text-sm font-semibold text-primary80">
-									<img
-										src={warningIcon}
-										width={40}
-										height={40}
-										className="mr-3"
+							<div className="ml-12 my-10">
+								{currentDoingScience && (
+									<QueueStatus
+										text={
+											answerElem?.status_text ||
+											'Doing Science'
+										}
 									/>
-									This is taking a bit longer than expected
-								</div>
-							)}
+								)}
+							</div>
+							<ResponseCard
+								answerResp={answerElem}
+								isGraphLoading={isGraphLoading}
+								setIsGraphLoading={setIsGraphLoading}
+								setAnswerResp={setAnswers}
+								setDoingScience={setDoingScience}
+								setResponseTimeElapsed={setResponseTimeElapsed}
+								setBanners={setBanners}
+								doingScience={currentDoingScience}
+								setDashboard={setDashboard}
+								showTable={
+									!answerElem?.answer?.response_dataframe &&
+									answerElem?.answer?.graph
+								}
+								setIsTableLoading={setIsTableLoading}
+								isTableLoading={isTableLoading}
+							/>
+						</div>
 					</div>
 				</>
 			);
@@ -504,16 +449,27 @@ const Workzone = () => {
 			scrollToBottom();
 			dispatch(
 				updateChatStoreProp([
+					{ key: 'activateGraphOnLast', value: true },
 					{
 						key: 'activeQueryId',
 						value: answers?.[answers?.length - 1]?.query_id,
-					},
-					{ key: 'activateGraphOnLast', value: true },
+					}
 				]),
 			);
 			setInputDisabled(false);
 			return;
 		}
+		if(!chatStoreReducer?.activeQueryId && answers && answers?.length){
+			dispatch(
+				updateChatStoreProp([
+					{
+						key: 'activeQueryId',
+						value: answers?.[answers?.length - 1]?.query_id,
+					},
+				]),
+			);
+		}
+
 		intervalRef.current = setInterval(() => {
 			let hasPendingQueries = true;
 			if (doingScience.length && doingScience.every((item) => !item.status)) {
@@ -537,10 +493,11 @@ const Workzone = () => {
 				`/app/new-chat/session/?sessionId=${chatStoreReducer?.activeChatSession?.id}`,
 				{ replace: true },
 			);
+			setPrompt('');
 		}
 		setInputDisabled(true);
 		fetchQueries();
-	}, [chatStoreReducer?.activeChatSession, chatStoreReducer?.refreshChat]);
+	}, [chatStoreReducer?.activeChatSession?.id, chatStoreReducer?.refreshChat]);
 
 	useEffect(() => {
 		setAnswers([]);
@@ -601,10 +558,7 @@ const Workzone = () => {
 						<div className="rounded-[100px] w-full flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 							<Input
 								placeholder="Ask IRA"
-								className={cn(
-									'border-0 outline-none rounded-none bg-transparent ',
-									getInputWidth(),
-								)}
+								className="border-0 outline-none rounded-none bg-transparent w-full mr-2"
 								value={prompt}
 								onChange={(e) => handlePromptChange(e)}
 								onKeyDown={(e) => {
@@ -636,9 +590,10 @@ const Workzone = () => {
 				<div className="border sticky rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-[90vh]">
 					<div className="flex justify-between">
 						<div className="flex items-center gap-1">
-							<span className="material-symbols-outlined me-1">
-								category
-							</span>
+							<img
+								src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
+								className="me-1 size-6"
+							/>
 							<h3 className="text-primary80 font-semibold text-xl">
 								Ira's Workspace
 							</h3>

@@ -17,6 +17,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { queryClient } from '@/lib/react-query';
 import { useQuery } from '@tanstack/react-query';
+import QueueStatus from '../new-chat/QueueStatus';
+import { intent } from './configuration.content';
 
 const Configuration = () => {
 	const [files, setFiles] = useState([]);
@@ -27,6 +29,8 @@ const Configuration = () => {
 	const [hideUpload, setHideUpload] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [existingDatasourceId, setExistingDataSourceId] = useState(null);
+	const [dataSourceIntent, setDataSourceIntent] = useState([]);
+
 	const dispatch = useDispatch();
 	const utilReducer = useSelector((state) => state.utilReducer);
 
@@ -74,7 +78,7 @@ const Configuration = () => {
 				selectedFiles.forEach((file) => {
 					progessState[file.name] = 0;
 				});
-				return {...prevProgress, ...progessState};
+				return { ...prevProgress, ...progessState };
 			});
 		} catch (error) {
 			console.log(error);
@@ -96,7 +100,7 @@ const Configuration = () => {
 
 			const uploadedData = await Promise.all(uploadPromises);
 
-			console.log('uploadedData===', uploadedData);
+			// console.log('uploadedData===', uploadedData);
 
 			const newFiles = files.map((file) => {
 				const uploadedFile = uploadedData.find(
@@ -134,6 +138,7 @@ const Configuration = () => {
 					file_id: uuid(),
 					file_url: file.url || file.file_url,
 				})),
+			intent: [...dataSourceIntent],
 		};
 
 		try {
@@ -144,11 +149,11 @@ const Configuration = () => {
 			});
 			toast.success('Data source created successfully');
 			navigate(`/app/new-chat/?step=3&dataSourceId=${response.datasource_id}`);
+			setProgress({});
+			setIsLoading(false);
 		} catch (error) {
 			toast.error('Error creating data source');
-		} finally {
 			setIsLoading(false);
-			setProgress({});
 		}
 	};
 	const handleDeleteDataSource = async (e, dataSourceId) => {
@@ -187,6 +192,14 @@ const Configuration = () => {
 		queryKey: ['data-sources'],
 		queryFn: fetchDataSources,
 	});
+
+	const handleSelectUseCase = (value) => {
+		if (dataSourceIntent.includes(value)) {
+			setDataSourceIntent((prev) => prev.filter((item) => item !== value));
+		} else {
+			setDataSourceIntent((prev) => [...prev, value]);
+		}
+	};
 
 	useEffect(() => {
 		if (data?.length > 0) {
@@ -233,7 +246,7 @@ const Configuration = () => {
 					Securely connect to a data source
 				</p>
 				{!hideUpload && (
-					<div className="mt-4 space-y-2 mb-10">
+					<div className="mt-4 space-y-6 mb-10">
 						<InputText
 							placeholder="Name your data source"
 							value={datasourceName}
@@ -241,6 +254,31 @@ const Configuration = () => {
 							error={formErrors.datasourceName}
 							errorText={formErrors.datasourceName}
 						/>
+						<div>
+							<p className="text-sm font-medium text-primary40 mb-3">
+								Choose Analysis Type
+							</p>
+							<div className="flex flex-wrap gap-2">
+								{Array.isArray(intent) &&
+									intent.map((useCase, index) => (
+										<span
+											key={useCase.value}
+											onClick={() =>
+												handleSelectUseCase(useCase.value)
+											}
+											className={`text-sm font-normal text-black/60 px-3 py-1.5 border border-black/10 rounded-[30px] cursor-pointer hover:bg-purple-8 hover:text-purple-100 ${
+												dataSourceIntent.includes(
+													useCase.value,
+												)
+													? 'bg-purple-8 text-purple-100 border-[1.2px] border-primary'
+													: ''
+											}`}
+										>
+											{useCase?.label}
+										</span>
+									))}
+							</div>
+						</div>
 						<div
 							className={` w-full bg-purple-4 hover:bg-purple-8 text-purple-100 text-sm font-medium hover:text-purple-100 rounded-lg ${
 								!isAllFilesUploaded() || isLoading
@@ -257,7 +295,7 @@ const Configuration = () => {
 								htmlFor="file-upload"
 								className=" block text-center cursor-pointer py-2 px-4"
 							>
-								Upload your files
+								Upload your Data Source
 							</label>
 						</div>
 						<Input

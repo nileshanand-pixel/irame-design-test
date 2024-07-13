@@ -62,7 +62,7 @@ export const getUserSession = async (token) => {
 			Authorization: `Bearer ${token}`,
 		},
 	});
-	return response.data;
+	return response.data?.session_list;
 };
 
 export const getQuerySession = async (sessionId, token) => {

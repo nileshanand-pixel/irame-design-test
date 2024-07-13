@@ -24,6 +24,7 @@ import Spinner from './elements/loading/Spinner';
 import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
+import GradientSpinner from './elements/loading/GradientSpinner';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -60,17 +61,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				{
 					link: '/app/dashboard',
 					text: 'Dashboard',
-					icon: 'columns-gap',
+					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/dashboard_columns.svg',
 				},
 				{
 					link: '/app/configuration',
 					text: 'Configuration',
-					icon: 'gear',
-				},
-				{
-					link: '/app/help',
-					text: 'Help',
-					icon: 'question-circle',
+					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/gear.svg',
 				},
 			],
 		},
@@ -121,6 +117,10 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				{
 					key: 'activeChatSession',
 					value: { id: session.session_id, title: session.title },
+				},
+				{
+					key: 'activeQueryId',
+					value: ''
 				},
 				{ key: 'refreshChat', value: true },
 				{ key: 'resetIra', value: !chatStoreReducer?.resetIra },
@@ -173,7 +173,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		const earlier = [];
 
 		sessions.forEach((session) => {
-			const sessionDate = dayjs(session.created_at);
+			const sessionDate = dayjs(session.updated_at);
 
 			if (sessionDate.isToday()) {
 				today.push(session);
@@ -189,8 +189,16 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		return { today, yesterday, last7Days, earlier };
 	};
 
-	const renderSession = (session) => (
-		<div
+	const renderSession = (session) => {
+		const isActiveSession = chatStoreReducer?.activeChatSession?.id === session.session_id;
+		let showSpinner = false;
+		if(isActiveSession){
+			showSpinner = chatStoreReducer?.activeChatSession?.status && chatStoreReducer?.activeChatSession?.status !== 'done' || session?.status !== 'done';
+		}else{
+			showSpinner = session?.status !== 'done';
+		}
+
+		return (<div
 			className={cn(
 				'flex items-center justify-between text-primary80 w-full rounded-lg py-2 pl-1 text-sm font-medium cursor-pointer hover:bg-purple-4',
 				chatStoreReducer?.activeChatSession?.id === session.session_id
@@ -209,7 +217,17 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					isEditing === session.session_id ? '' : ' px-2 py-1',
 				)}
 			>
-				<i className="bi-chat-right-text-fill me-3"></i>
+				{
+					showSpinner ? (
+						<GradientSpinner tailwindBg = "bg-[#E6D7F7]" width="15"/>
+					) : (
+						<img
+							src="https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg"
+							alt="ask-ira"
+							className="size-5"
+						/>
+					)
+				}
 				{isEditing === session.session_id ? (
 					<InputText
 						value={sessionTitle}
@@ -220,7 +238,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						className="flex bg-transparent border-none text-primary80 font-medium"
 					/>
 				) : (
-					<p className="flex">{session.title}</p>
+					<p className="flex ml-3">{session.title}</p>
 				)}
 			</div>
 			<DropdownMenu>
@@ -237,12 +255,13 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							handleDeleteChatSession(e, session.session_id)
 						}
 					>
+						<i className="bi-trash me-2 text-primary80 font-medium"></i>
 						Delete
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
-		</div>
-	);
+		</div>)
+	};
 
 	const groupedSessions = groupSessionsByDate(utilReducer?.sessionHistory || []);
 
@@ -265,13 +284,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			} border-r h-screen p-4 bg-purple-8`}
 		>
 			<div className="grow">
-				<Button
-					variant="ghost"
+				<img
+					src="https://d2vkmtgu2mxkyq.cloudfront.net/hamburger_menu.svg"
+					alt="ask-ira"
+					className="size-10 cursor-pointer hover:bg-purple-4 rounded-full p-2"
 					onClick={toggleSideNav}
-					className="hover:bg-purple-4"
-				>
-					<i className="bi-list"></i>
-				</Button>
+				/>
 				<div>
 					<Link
 						to={'/app/new-chat'}
@@ -279,15 +297,20 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
 							isSideNavOpen
 								? 'rounded-[200px] px-5 py-3'
-								: 'rounded-full pl-3 pr-3 mx-auto py-2'
+								: 'rounded-full px-2 mx-auto py-2'
 						} mt-10 mb-8 bg-purple-4`}
 					>
-						<i className="bi-plus-lg"></i>
+						{/* <i className="bi-plus-lg"></i> */}
+						<img
+							src="https://d2vkmtgu2mxkyq.cloudfront.net/plus.svg"
+							alt="ask-ira"
+							className="size-6"
+						/>
 						{isSideNavOpen ? <p>Ask IRA</p> : null}
 					</Link>
 					<div style={{ overflow: 'visible' }}>
 						{bottomMenuList?.map((menu, key) => (
-							<div key={key}>
+							<div key={key} className="space-y-2">
 								{menu?.items?.map((option, optionKey) => {
 									const isActive = activeTab === option.link;
 									return (
@@ -295,17 +318,17 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 											to={option.link}
 											key={optionKey}
 											onClick={() => setActiveTab(option.link)}
-											className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-3 rounded-md hover:bg-purple-4 ${
+											className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-2 rounded-md hover:bg-purple-4 border-l-4 ${
 												isActive
-													? 'border-l-4  border-purple-100 bg-purple-4 font-semibold text-purple-100 '
-													: ' border-l-4 border-transparent'
+													? ' border-purple-100 bg-purple-4 font-semibold text-purple-100 '
+													: ' border-transparent'
 											} `}
 										>
-											<i
-												className={`bi-${option.icon}
-												${isActive ? 'text-purple-100 ' : ''} `}
+											<img
+												src={option.icon}
+												className={`${isActive ? 'text-purple-100 ' : ''} size-[22px] `}
 												style={{ strokeWidth: '2' }}
-											></i>
+											></img>
 											{isSideNavOpen ? (
 												<p>{option.text}</p>
 											) : null}

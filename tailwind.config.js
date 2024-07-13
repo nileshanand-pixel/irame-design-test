@@ -93,10 +93,35 @@ module.exports = {
 					from: { height: 'var(--radix-accordion-content-height)' },
 					to: { height: '0' },
 				},
+				typewriter: {
+					to: {
+						left: '100%',
+					},
+				},
+				blink: {
+					'0%': {
+						opacity: '0',
+					},
+					'0.1%': {
+						opacity: '1',
+					},
+					'50%': {
+						opacity: '1',
+					},
+					'50.1%': {
+						opacity: '0',
+					},
+					'100%': {
+						opacity: '0',
+					},
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
+				'spin-slow': 'spin 2s ease-in-out infinite',
+				'typewriter': 'typewriter 2s steps(11) forwards',
+				'caret': 'typewriter 2s steps(11) forwards, blink 1s steps(11) infinite 2s',
 			},
 			dropShadow: {
 				'1xl': '0px 12px 24px -4px rgba(145, 158, 171, 0.12)',
@@ -105,11 +130,11 @@ module.exports = {
 				'1xl': '0px 12px 24px -4px rgba(145, 158, 171, 0.12)',
 			},
 			screens: {
-				'h-sm': { 'raw': '(min-height: 750px)' },
-				'h-md': { 'raw': '(min-height: 950px)' },
-				'h-lg': { 'raw': '(min-height: 1000px)' },
-				'h-xl': { 'raw': '(min-height: 1250px)' },
-			  },
+				'h-sm': { raw: '(min-height: 750px)' },
+				'h-md': { raw: '(min-height: 950px)' },
+				'h-lg': { raw: '(min-height: 1000px)' },
+				'h-xl': { raw: '(min-height: 1250px)' },
+			},
 		},
 	},
 	plugins: [require('tailwindcss-animate')],

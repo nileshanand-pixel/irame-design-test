@@ -13,6 +13,7 @@ const initialState = {
 	activeChatSession: {
 		id: '',
 		title: '',
+		status: '',
 	},
 	initialQuery: { id: '', question: '' },
 	inputPrompt: '',

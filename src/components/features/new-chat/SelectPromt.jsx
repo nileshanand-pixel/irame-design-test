@@ -34,29 +34,47 @@ const SelectPrompt = ({
 	const handleActiveTab = (selectedTab) => {
 		setActiveTab(selectedTab);
 	};
-	
+
 	const handlePrompt = (question) => {
 		try {
 			navigate(`/app/new-chat/session`);
 			dispatch(
 				updateChatStoreProp([
-					{ key: 'queries', value: [{id: '', query: question }] },
-					{ key: 'refreshChat', value: !chatStoreReducer?.refreshChat},
+					{ key: 'queries', value: [{ id: '', query: question }] },
+					{ key: 'refreshChat', value: !chatStoreReducer?.refreshChat },
 				]),
 			);
 			createQuerySession(query.dataSourceId, question, getToken()).then(
 				(res) => {
 					dispatch(
 						updateChatStoreProp([
-							{ key: 'initialQuery', value: {id: res?.query_id || '', question} },
-							{ key: 'queries', value: [{id: res?.query_id || '', question: res?.query || question }] },
-							{ key: 'activeChatSession', value: {id: res?.session_id, title: res?.query || ''} },
-							{ key: 'activeQueryId', value: res?.query_id }
-						])),
-					queryClient.invalidateQueries(['chat-history'], {
-						refetchActive: true,
-						refetchInactive: true,
-					});
+							{
+								key: 'initialQuery',
+								value: { id: res?.query_id || '', question },
+							},
+							{
+								key: 'queries',
+								value: [
+									{
+										id: res?.query_id || '',
+										question: res?.query || question,
+									},
+								],
+							},
+							{
+								key: 'activeChatSession',
+								value: {
+									id: res?.session_id,
+									title: res?.query || '',
+								},
+							},
+							{ key: 'activeQueryId', value: res?.query_id },
+						]),
+					),
+						queryClient.invalidateQueries(['chat-history'], {
+							refetchActive: true,
+							refetchInactive: true,
+						});
 				},
 			);
 		} catch (error) {
@@ -171,11 +189,15 @@ const SelectPrompt = ({
 												onClick={() => {
 													dispatch(
 														updateChatStoreProp([
-															{ key: 'inputPrompt', value: question },
+															{
+																key: 'inputPrompt',
+																value: question,
+															},
 														]),
 													);
 												}}
 											>
+												{/* <img src='https://d2vkmtgu2mxkyq.cloudfront.net/hamburger_menu.svg'  /> */}
 												<i className="bi-pencil-square text-primary100 bg-white py-1.5 px-2 rounded-full "></i>
 											</div>
 										</div>
