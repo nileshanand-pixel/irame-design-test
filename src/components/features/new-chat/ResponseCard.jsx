@@ -158,8 +158,7 @@ const ResponseCard = ({
 									className="text-muted-foreground cursor-pointer"
 									onClick={() =>
 										window.open(
-											graphDataItem[1]?.tool_data
-												?.response_csv_curl,
+											dataFrameItem[1]?.tool_data?.csv_url,
 											'_blank',
 										)
 									}
