@@ -416,11 +416,11 @@ const Configuration = () => {
 									setFiles(source.filepath);
 								}}
 							>
-								<p className="text-primary80 font-medium max-w-[180px] truncate flex">
+								<p className="text-primary80 font-medium max-w-[180px] truncate flex items-center">
 									<img
 										src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
 										alt="database"
-										className="mr-2 size-6"
+										className="mr-2 size-5"
 									/>
 									{source.name}
 								</p>

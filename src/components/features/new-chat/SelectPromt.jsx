@@ -187,14 +187,7 @@ const SelectPrompt = ({
 											<div
 												className="absolute bottom-4 right-4 text-right mt-6 cursor-pointer"
 												onClick={() => {
-													dispatch(
-														updateChatStoreProp([
-															{
-																key: 'inputPrompt',
-																value: question,
-															},
-														]),
-													);
+													setPrompt(question);
 												}}
 											>
 												<img

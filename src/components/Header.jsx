@@ -20,7 +20,9 @@ const Header = () => {
 	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const showDataSourceName =
-		utilReducer?.selectedDataSource?.name && !pathname.includes('/dashboard');
+		utilReducer?.selectedDataSource?.name &&
+		!pathname.includes('/dashboard') &&
+		!pathname.includes('/configuration');
 	return (
 		<header
 			className={cn(
