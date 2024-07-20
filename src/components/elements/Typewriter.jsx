@@ -20,7 +20,7 @@ const Typewriter = ({ text }) => {
 	}, [index, text]);
 
 	return (
-		<div className="w-full h-full flex justify-center items-center text-sm font-medium">
+		<div className="w-full h-full flex justify-center items-center">
 			<span>{displayText}</span>
 		</div>
 	);

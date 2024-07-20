@@ -20,6 +20,7 @@ import { createDashboard } from '../../dashboard/service/dashboard.service';
 import { queryClient } from '@/lib/react-query';
 import QueueStatus from '../QueueStatus';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import isEqual from 'lodash.isequal';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -141,10 +142,30 @@ const Workzone = () => {
 						const existingAnswer = prevAnswers.find(
 							(answer) => answer.query_id === newAnswer.query_id,
 						);
-						if (existingAnswer && existingAnswer.status === 'done') {
-							return existingAnswer;
+
+						if (existingAnswer) {
+							if (existingAnswer.status === 'done') {
+								return existingAnswer;
+							}
+
+							const existingGraph = existingAnswer?.answer?.graph;
+							const newGraph = newAnswer?.answer?.graph;
+
+							// Determine if we need to update the graph key -> helps in graph stopping graph reload
+							const shouldUpdateGraph = !existingGraph && newGraph;
+
+							return {
+								...newAnswer,
+								answer: {
+									...newAnswer.answer,
+									graph: shouldUpdateGraph
+										? newGraph
+										: existingGraph,
+								},
+							};
 						}
-						return newAnswer;
+
+						return newAnswer; 
 					});
 				});
 
@@ -340,21 +361,8 @@ const Workzone = () => {
 		}
 		return queries?.map((query, key) => {
 			const answerElem = answers.find((item) => item.query_id === query.id);
-			// console.log(answerElem?.status_text, answerElem)
-			const hasIraGeneratedReply = !!answerElem?.answer; // complete initial reply object.
 			const hasIraGeneratedGraph = !!answerElem?.answer?.graph;
-			const isIraGeneratingGraph =
-				!hasIraGeneratedGraph && answerElem?.status !== 'done';
-			const hasIraGeneratedObservation = !!answerElem?.answer?.answer; // text reply of asked query
-			const isGraphProcessed =
-				!!answerElem?.answer?.graph ||
-				(!answerElem?.answer?.graph &&
-					!isGraphLoading &&
-					answerElem?.status === 'done'); //either graph present or graph not availble for this query
-			const isGettingLateInReply =
-				!hasIraGeneratedGraph ||
-				!hasIraGeneratedObservation ||
-				!answerElem?.answer?.response_dataframe;
+			!hasIraGeneratedGraph && answerElem?.status !== 'done';
 			const currentDoingScience =
 				doingScience.find((loadingObj) => loadingObj.queryId === query?.id)
 					?.status || !!query?.parentQueryId;
@@ -555,7 +563,7 @@ const Workzone = () => {
 		<div className="grid grid-cols-12 gap-4 min-h-[90vh] max-h-[90vh] w-full">
 			<div
 				className={cn(
-					'border rounded-2xl pt-4 px-4 shadow-1xl relative h-full flex-col',
+					'border rounded-2xl pt-8 px-4 shadow-1xl relative h-full flex-col',
 					workspace.show ? 'col-span-8' : 'col-span-12 mx-[8rem]',
 				)}
 			>
@@ -567,7 +575,7 @@ const Workzone = () => {
 				)} */}
 				<div
 					ref={scrollRef}
-					className="mb-[4vh] h-[60vh] h-sm:h-[64vh] h-md:h-[68vh] h-lg:h-[70vh] h-xl:h-[74vh] overflow-y-auto w-full"
+					className="mb-[4vh] h-[68vh] h-sm:h-[72vh] h-md:h-[76vh] h-lg:h-[76vh] h-xl:h-[78vh] overflow-y-auto w-full"
 				>
 					{renderConversation()}
 				</div>

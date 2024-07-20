@@ -47,6 +47,73 @@ const ResponseCard = ({
 		([key, value]) => value.tool_type === WorkspaceEnum.DataFrame,
 	);
 
+	const mockGraphData = {
+		tool_type: 'graph',
+		tool_space: 'main',
+		tool_data: [
+			{
+				id: 'graph_0',
+				csv_url:
+					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_0.csv',
+				title: 'Average Login Hours per Store in Each City',
+				type: 'bar',
+				x_axis: 'blinkit_store_id',
+				y_axis: ['avg_login_hours'],
+				category_filter: 'city',
+			},
+			{
+				id: 'graph_1',
+				csv_url:
+					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_1.csv',
+				title: 'Total Earnings per Store in Each City',
+				type: 'bar',
+				x_axis: 'blinkit_store_id',
+				y_axis: ['total_earnings'],
+				category_filter: 'city',
+			},
+			{
+				id: 'graph_2',
+				csv_url:
+					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_2.csv',
+				title: 'Delivered Orders per Store in Each City',
+				type: 'bar',
+				x_axis: 'blinkit_store_id',
+				y_axis: ['delivered_orders'],
+				category_filter: 'city',
+			},
+			{
+				id: 'graph_3',
+				csv_url:
+					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_3.csv',
+				title: 'Comparison of Average Login Hours, Total Earnings, and Delivered Orders per Store in Each City',
+				type: 'line',
+				x_axis: 'blinkit_store_id',
+				y_axis: ['avg_login_hours', 'total_earnings', 'delivered_orders'],
+				category_filter: 'city',
+			},
+			{
+				id: 'graph_5',
+				csv_url:
+					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_3.csv',
+				title: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Optio',
+				type: 'line',
+				x_axis: 'blinkit_store_id',
+				y_axis: ['avg_login_hours', 'total_earnings', 'delivered_orders'],
+				category_filter: 'city',
+			},
+			{
+				id: 'graph_4',
+				csv_url:
+					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_3.csv',
+				title: 'Kuch to hai ki neend aaye kam',
+				type: 'line',
+				x_axis: 'blinkit_store_id',
+				y_axis: ['avg_login_hours', 'total_earnings', 'delivered_orders'],
+				category_filter: 'city',
+			},
+		],
+	};
+
 	const showGraph = !!graphDataItem;
 	const showTableOnly = !showGraph && !!dataFrameItem;
 
@@ -71,18 +138,20 @@ const ResponseCard = ({
 					)}
 					{showGraph && (
 						<div className="mb-4">
-							<GraphComponent
-								data={graphDataItem[1].tool_data}
-								isGraphLoading={isGraphLoading}
-								setIsGraphLoading={setIsGraphLoading}
-								showTable={showTable}
-								queryId={answerResp?.query_id}
-								tab={
-									answerResp?.status === 'done'
-										? 'Graphical View'
-										: 'Tabular View'
-								}
-							/>
+							<div className="mb-4">
+								<GraphComponent
+									data={{graph: graphDataItem[1], table: dataFrameItem[1]}}
+									isGraphLoading={isGraphLoading}
+									setIsGraphLoading={setIsGraphLoading}
+									showTable={showTable}
+									queryId={answerResp?.query_id}
+									tab={
+										answerResp?.status === 'done'
+											? 'Graphical View'
+											: 'Tabular View'
+									}
+								/>
+							</div>
 							<div className="mt-6 mb-14 flex justify-between">
 								<Button
 									variant="outline"
@@ -152,7 +221,7 @@ const ResponseCard = ({
 				showFollowup &&
 				!doingScience &&
 				!isGraphLoading && (
-					<div className='mx-12'>
+					<div className="mx-12">
 						<div className="mt-2 border-t border-purple-10"></div>
 						<div className="!mt-8 flex gap-4 overflow-x-auto">
 							{answerResp?.answer?.follow_up?.tool_data?.questions &&
