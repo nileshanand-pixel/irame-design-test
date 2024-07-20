@@ -197,8 +197,11 @@ const SelectPrompt = ({
 													);
 												}}
 											>
-												{/* <img src='https://d2vkmtgu2mxkyq.cloudfront.net/hamburger_menu.svg'  /> */}
-												<i className="bi-pencil-square text-primary100 bg-white py-1.5 px-2 rounded-full "></i>
+												<img
+													src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
+													alt="edit-prompt"
+													className="bg-white py-1 px-1 rounded-full"
+												/>
 											</div>
 										</div>
 									))

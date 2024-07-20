@@ -48,7 +48,7 @@ const ChooseDataSourceDialog = ({
 			updateUtilProp([
 				{
 					key: 'selectedDataSource',
-					value: {id: dataSourceId, name: dataSourceName},
+					value: { id: dataSourceId, name: dataSourceName },
 				},
 			]),
 		);
@@ -111,9 +111,13 @@ const ChooseDataSourceDialog = ({
 										<div className="flex items-center justify-between space-x-2">
 											<Label
 												htmlFor={source.datasource_id}
-												className="w-full text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-7 cursor-pointer"
+												className="w-full flex items-center text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-7 cursor-pointer"
 											>
-												<i className="bi-database text-purple-100 me-2 text-base"></i>
+												<img
+													src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
+													alt="database"
+													className="mr-2 size-6"
+												/>
 												{source.name}
 											</Label>
 											<RadioGroupItem

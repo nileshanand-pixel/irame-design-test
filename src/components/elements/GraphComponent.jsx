@@ -51,7 +51,11 @@ const GraphComponent = ({
 			return {
 				accessorKey: key,
 				header: ({ column }) => (
-					<DataTableColumnHeader column={column} title={headerTitle} />
+					<DataTableColumnHeader
+						column={column}
+						title={headerTitle}
+						className="!sticky"
+					/>
 				),
 				cell: ({ row }) => <div className="p-1">{row?.original?.[key]}</div>,
 				enableSorting: true,
@@ -190,7 +194,7 @@ const GraphComponent = ({
 								</div>
 							)}
 							{activeTab === 'Tabular View' && (
-								<div className="bg-white rounded-3xl py-2">
+								<div className="bg-white rounded-3xl py-2 relative">
 									{/* {showTable ? (
 										<TableComponent
 											data={loadedData}

@@ -158,7 +158,7 @@ const Workzone = () => {
 
 				// active query has no graph or observation case check
 				const activeQueryResp = res?.find(
-					(item) => item?.query_id === chatStoreReducer?.activeQueryId
+					(item) => item?.query_id === chatStoreReducer?.activeQueryId,
 				);
 				if (!!activeQueryResp) {
 					dispatch(
@@ -444,19 +444,17 @@ const Workzone = () => {
 	const markSessionStatusInReducer = (sessionId, status) => {
 		let tempSessionHistory = utilReducer?.sessionHistory;
 		tempSessionHistory = tempSessionHistory?.map((session) => {
-			if(session.session_id === sessionId){
+			if (session.session_id === sessionId) {
 				return {
 					...session,
-					status
-				}
-			}else return session;
+					status,
+				};
+			} else return session;
 		});
-		dispatch(updateUtilProp(
-			[
-				{key: "sessionHistory", value: tempSessionHistory}
-			]
-		))
-	}
+		dispatch(
+			updateUtilProp([{ key: 'sessionHistory', value: tempSessionHistory }]),
+		);
+	};
 
 	useEffect(() => {
 		const allDone =
@@ -470,14 +468,17 @@ const Workzone = () => {
 					{
 						key: 'activeQueryId',
 						value: answers?.[answers?.length - 1]?.query_id,
-					}
+					},
 				]),
 			);
-			markSessionStatusInReducer(answers?.[answers?.length - 1]?.session_id, "done");
+			markSessionStatusInReducer(
+				answers?.[answers?.length - 1]?.session_id,
+				'done',
+			);
 			setInputDisabled(false);
 			return;
 		}
-		if(!chatStoreReducer?.activeQueryId && answers && answers?.length){
+		if (!chatStoreReducer?.activeQueryId && answers && answers?.length) {
 			dispatch(
 				updateChatStoreProp([
 					{
@@ -558,12 +559,12 @@ const Workzone = () => {
 					workspace.show ? 'col-span-8' : 'col-span-12 mx-[8rem]',
 				)}
 			>
-				{utilReducer?.selectedDataSource?.name && (
+				{/* {utilReducer?.selectedDataSource?.name && (
 					<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-10 float-right text-primary80 font-medium max-w-[220px] truncate">
 						<i className="bi-database-check mr-2 text-primary80"></i>
 						{utilReducer?.selectedDataSource?.name}
 					</div>
-				)}
+				)} */}
 				<div
 					ref={scrollRef}
 					className="mb-[4vh] h-[60vh] h-sm:h-[64vh] h-md:h-[68vh] h-lg:h-[70vh] h-xl:h-[74vh] overflow-y-auto w-full"
@@ -588,7 +589,10 @@ const Workzone = () => {
 									className="flex gap-2 items-center pr-3 cursor-pointer"
 									onClick={handleAppendQuery}
 								>
-									<i className="bi-send text-primary100 text-lg rotate-45"></i>
+									<img
+										src={`https://d2vkmtgu2mxkyq.cloudfront.net/send.svg`}
+										className="size-6"
+									/>
 								</div>
 							) : (
 								<div className="flex gap-2 items-center pr-3 cursor-not-allowed">
@@ -609,7 +613,7 @@ const Workzone = () => {
 					<div className="flex justify-between">
 						<div className="flex items-center gap-1">
 							<img
-								src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
+								src={`https://d2vkmtgu2mxkyq.cloudfront.net/category.svg`}
 								className="me-1 size-6"
 							/>
 							<h3 className="text-primary80 font-semibold text-xl">

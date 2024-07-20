@@ -74,20 +74,23 @@ export function DataTable({
 		defaultSort,
 	});
 	return (
-		<div className="w-full space-y-2.5 overflow-auto">
-			<div className="text-primary100">
+		<div className="w-full space-y-2.5">
+			<div className="text-primary100 relative overflow-auto max-h-[45rem]">
 				<Table>
-					<TableHeader>
+					<TableHeader className="sticky top-0 bg-white hover:bg-white ">
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id}>
+									<TableHead
+										key={header.id}
+										className="hover:bg-white bg-white"
+									>
 										{header.isPlaceholder
 											? null
 											: flexRender(
 													header.column.columnDef.header,
 													header.getContext(),
-											  )}
+												)}
 									</TableHead>
 								))}
 							</TableRow>
