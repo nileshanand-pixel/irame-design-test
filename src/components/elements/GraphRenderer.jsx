@@ -30,37 +30,97 @@ const GraphRenderer = ({ graph, queryId }) => {
 	const colors = [
 		'#6A12CD',
 		'#F88907',
+		'#BBA446',
+		'#7DBE86',
 		'#40D9C5',
+		'#56B4D6',
+		'#6C8FE8',
 		'#826AF9',
+		'#AA94A6',
+		'#D3BD53',
 		'#FBE700',
+		'#BACD55',
+		'#7AB3AA',
 		'#3999FF',
 	];
+	  
 
-	const getOpacity = (chartType) => (chartType === 'line' ? 0.1 : 0.5);
+	const getOpacity = (chartType) => {
+		switch(chartType){
+			case 'line': 
+				return 0.1;
+			case 'pie': 
+				return 0.8;
+			default:
+				return 0.5;
+		}
+	}
+
+	// for pie and doughnuts
+	const getCircularChartDatasets = (data) => {
+		const labels = data.map((item) => `${graph.x_axis}(${item[graph.x_axis]})`);
+		const dataList =  [
+			{
+				label: graph.y_axis[0],
+				data: data.map((item) => Number(item[graph.y_axis[0]])),
+				// borderColor: data.map((_, index) => colors[index % colors.length]),
+				backgroundColor: data.map(
+					(_, index) =>
+						`${colors[index % colors.length]}${Math.floor(
+							getOpacity(graph.type) * 255,
+						)
+							.toString(16)
+							.padStart(2, '0')}`,
+				),
+				fill: true,
+			},
+		];
+
+		return {data: dataList, labels, scales: null}
+	}
+
+	// 2d axis charts (Line, Bar, Scatter)
+	const getAxialChartDatasets = (data, yAxisArray) => {
+		const labels = data.map((item) => item[graph.x_axis]);
+		const dataObj =  yAxisArray.map((yAxis, index) => ({
+			label: yAxis,
+			data: data.map((item) => Number(item[yAxis])),
+			borderColor: colors[index % colors.length],
+			backgroundColor: `${colors[index % colors.length]}${Math.floor(
+				getOpacity(graph.type) * 255,
+			)
+				.toString(16)
+				.padStart(2, '0')}`,
+			fill: true,
+		}));
+		const scales = {
+			x: {
+				title: {
+					display: true,
+					text: graph.x_axis || 'X Axis',
+				},
+			},
+		};
+		return { data: dataObj, scales, labels };
+	}
 
 	
 	useEffect(() => {
 		if (loadedData.length > 0) {
 			if (chartRef.current) chartRef.current.destroy();
 			const ctx = document.getElementById(`canvas_${queryId}_${graph.id}`);
+			const isPieChart = graph.type.toLowerCase() === 'pie';
 			const tempLoadedData = handle.active
 				? loadedData
 				: loadedData.slice(0, Math.min(21, loadedData.length + 1));
+			const finalDataObj = isPieChart
+			? getCircularChartDatasets(tempLoadedData)
+			: getAxialChartDatasets(tempLoadedData, graph.y_axis)
 			chartRef.current = new Chart(ctx, {
 				type: graph.type.toLowerCase(),
 				data: {
-					labels: tempLoadedData.map((item) => item[graph.x_axis]),
-					datasets: graph.y_axis.map((yAxis, index) => ({
-						label: yAxis,
-						data: tempLoadedData?.map((item) => Number(item[yAxis])),
-						borderColor: colors[index % colors.length],
-						backgroundColor: `${colors[index % colors.length]}${Math.floor(
-							getOpacity(graph.type) * 255,
-						)
-							.toString(16)
-							.padStart(2, '0')}`,
-						fill: true,
-					})),
+					labels: finalDataObj.labels,
+					datasets: finalDataObj.data
 				},
 				options: {
 					plugins: {
@@ -72,21 +132,16 @@ const GraphRenderer = ({ graph, queryId }) => {
 							position: 'top',
 						},
 						legend: {
-							align: handle.active ? 'end' : 'center',
+							align: handle.active || isPieChart ? 'end' : 'center',
 							position: 'top',
 						},
 					},
-					scales: {
-						x: {
-							title: {
-								display: true,
-								text: graph.x_axis || 'X Axis'
-							},
-						},
-					},
+					animations: false,
+					scales: finalDataObj.scales,
 					maintainAspectRatio: handle.active ? false : true,
 				},
 			});
+			if(graph.type.toLowerCase() === 'pie')console.log("CHART", chartRef.current)
 		}
 		return () => {
 			if (chartRef.current) chartRef.current.destroy();

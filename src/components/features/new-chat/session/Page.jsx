@@ -152,7 +152,6 @@ const Workzone = () => {
 
 							// Determine if we need to update the graph key -> helps in graph stopping graph reload
 							const shouldUpdateGraph = !graphKeyExists && newGraph;
-
 							return {
 								...newAnswer,
 								answer: {
