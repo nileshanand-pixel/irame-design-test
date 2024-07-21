@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import ResponseCard from '../ResponseCard';
 import ira from '@/assets/icons/ira_icon.svg';
-import warningIcon from '@/assets/icons/warning_icon.svg';
 import { toast } from 'sonner';
 import Workspace from '../Workspace';
 import AddQueryToDashboard from '../AddQueryToDashboard';
@@ -148,19 +147,17 @@ const Workzone = () => {
 								return existingAnswer;
 							}
 
-							const existingGraph = existingAnswer?.answer?.graph;
+							const graphKeyExists = existingAnswer?.answer && Object.keys(existingAnswer?.answer).includes("graph")
 							const newGraph = newAnswer?.answer?.graph;
 
 							// Determine if we need to update the graph key -> helps in graph stopping graph reload
-							const shouldUpdateGraph = !existingGraph && newGraph;
+							const shouldUpdateGraph = !graphKeyExists && newGraph;
 
 							return {
 								...newAnswer,
 								answer: {
 									...newAnswer.answer,
-									graph: shouldUpdateGraph
-										? newGraph
-										: existingGraph,
+									...(shouldUpdateGraph && { graph: newGraph }), // Conditionally add the graph key
 								},
 							};
 						}

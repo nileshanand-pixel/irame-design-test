@@ -27,12 +27,12 @@ const ResponseCard = ({
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
-			value.tool_space === 'main' && value.tool_type !== WorkspaceEnum.Answer,
+			value?.tool_space === 'main' && value?.tool_type !== WorkspaceEnum.Answer,
 	);
 
 	const answerItem = Object.entries(answerResp?.answer || {}).find(
 		([key, value]) =>
-			value.tool_space === 'main' && value.tool_type === WorkspaceEnum.Answer,
+			value?.tool_space === 'main' && value?.tool_type === WorkspaceEnum.Answer,
 	);
 
 	let safeHTML = '';
@@ -41,78 +41,11 @@ const ResponseCard = ({
 	}
 
 	const graphDataItem = mainItems.find(
-		([key, value]) => value.tool_type === WorkspaceEnum.Graph,
+		([key, value]) => value?.tool_type === WorkspaceEnum.Graph,
 	);
 	const dataFrameItem = mainItems.find(
-		([key, value]) => value.tool_type === WorkspaceEnum.DataFrame,
+		([key, value]) => value?.tool_type === WorkspaceEnum.DataFrame,
 	);
-
-	const mockGraphData = {
-		tool_type: 'graph',
-		tool_space: 'main',
-		tool_data: [
-			{
-				id: 'graph_0',
-				csv_url:
-					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_0.csv',
-				title: 'Average Login Hours per Store in Each City',
-				type: 'bar',
-				x_axis: 'blinkit_store_id',
-				y_axis: ['avg_login_hours'],
-				category_filter: 'city',
-			},
-			{
-				id: 'graph_1',
-				csv_url:
-					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_1.csv',
-				title: 'Total Earnings per Store in Each City',
-				type: 'bar',
-				x_axis: 'blinkit_store_id',
-				y_axis: ['total_earnings'],
-				category_filter: 'city',
-			},
-			{
-				id: 'graph_2',
-				csv_url:
-					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_2.csv',
-				title: 'Delivered Orders per Store in Each City',
-				type: 'bar',
-				x_axis: 'blinkit_store_id',
-				y_axis: ['delivered_orders'],
-				category_filter: 'city',
-			},
-			{
-				id: 'graph_3',
-				csv_url:
-					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_3.csv',
-				title: 'Comparison of Average Login Hours, Total Earnings, and Delivered Orders per Store in Each City',
-				type: 'line',
-				x_axis: 'blinkit_store_id',
-				y_axis: ['avg_login_hours', 'total_earnings', 'delivered_orders'],
-				category_filter: 'city',
-			},
-			{
-				id: 'graph_5',
-				csv_url:
-					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_3.csv',
-				title: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Optio',
-				type: 'line',
-				x_axis: 'blinkit_store_id',
-				y_axis: ['avg_login_hours', 'total_earnings', 'delivered_orders'],
-				category_filter: 'city',
-			},
-			{
-				id: 'graph_4',
-				csv_url:
-					'https://irame-sna.s3.ap-south-1.amazonaws.com/files/667b45fb3fa79316b920261c_graph_3.csv',
-				title: 'Kuch to hai ki neend aaye kam',
-				type: 'line',
-				x_axis: 'blinkit_store_id',
-				y_axis: ['avg_login_hours', 'total_earnings', 'delivered_orders'],
-				category_filter: 'city',
-			},
-		],
-	};
 
 	const showGraph = !!graphDataItem;
 	const showTableOnly = !showGraph && !!dataFrameItem;

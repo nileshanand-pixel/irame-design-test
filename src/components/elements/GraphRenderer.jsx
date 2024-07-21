@@ -76,6 +76,14 @@ const GraphRenderer = ({ graph, queryId }) => {
 							position: 'top',
 						},
 					},
+					scales: {
+						x: {
+							title: {
+								display: true,
+								text: graph.x_axis || 'X Axis'
+							},
+						},
+					},
 					maintainAspectRatio: handle.active ? false : true,
 				},
 			});
@@ -83,7 +91,7 @@ const GraphRenderer = ({ graph, queryId }) => {
 		return () => {
 			if (chartRef.current) chartRef.current.destroy();
 		};
-	}, [loadedData, graph, queryId, handle.active]);
+	}, [loadedData, graph, queryId, handle.active]);	
 
 	return (
 		<div className="bg-white rounded-3xl p-2 overflow-x-auto">
