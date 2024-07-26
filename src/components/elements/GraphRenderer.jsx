@@ -136,12 +136,11 @@ const GraphRenderer = ({ graph, queryId }) => {
 							position: 'top',
 						},
 					},
-					animations: false,
+					animation: handle.active ? true: false,
 					scales: finalDataObj.scales,
 					maintainAspectRatio: handle.active ? false : true,
 				},
 			});
-			if(graph.type.toLowerCase() === 'pie')console.log("CHART", chartRef.current)
 		}
 		return () => {
 			if (chartRef.current) chartRef.current.destroy();
@@ -174,10 +173,10 @@ const GraphRenderer = ({ graph, queryId }) => {
 					<Button
 						size="icon"
 						variant="ghost"
-						className="absolute top-[1px] right-0 text-gray-600"
+						className="absolute top-[1px] font-extrabold right-0 text-primary animate-pulse hover:animate-none duration-1000"
 						onClick={handle.enter}
 					>
-						<i className="bi bi-fullscreen"></i>
+						<i className="bi bi-fullscreen font-extrabold"></i>
 					</Button>
 				</div>
 			)}

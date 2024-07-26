@@ -3,15 +3,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { getDashboardContent } from '../service/dashboard.service';
 import { cn, getToken } from '@/lib/utils';
 import DOMPurify from 'dompurify';
-import GraphCard from './GraphCard';
 import { Button } from '@/components/ui/button';
 import TooltipWrapper from '@/components/elements/TooltipWrapper';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/react-query';
+import MultiGraphCard from './MultiGraphCard';
 
 const DashboardDetailsPage = () => {
 	const [dashboard, setDashboard] = useState([]);
-	const [isLoading, setIsLoading] = useState(true);
 	const [selectedItem, setSelectedItem] = useState(null);
 	const { query, navigate } = useRouter();
 
@@ -39,6 +38,57 @@ const DashboardDetailsPage = () => {
 			});
 		}
 	};
+
+	const renderGraphs = () => {
+		return dashboard?.length > 0 ? (
+			Array.isArray(dashboard) &&
+			dashboard.map((item) => {
+				return (
+					<div
+						key={item.dashboard_content_id}
+						className="w-full h-full"
+					>
+						<div
+							className={`bg-white rounded-3xl p-2 cursor-pointer w-full h-full ${selectedItem === item ? 'border-2 border-purple-500': ''}`}
+							onClick={() => handleItemClick(item)}
+						>
+							<div className="flex flex-col py-2 px-4 items-center justify-center w-full h-full">
+								<MultiGraphCard
+									data={item}
+									isGraphLoading={
+										dashboardDetailsQuery.isLoading
+									}
+									selectedItem={selectedItem}
+								/>
+								{false ? (
+									<p
+										className="text-primary80 font-medium mb-2 px-4 line-clamp-2"
+										style={{
+											whiteSpace: 'pre-wrap',
+										}}
+									>
+										{item?.content?.query}
+									</p>
+								) : null}
+							</div>
+						</div>
+					</div>
+				);
+			})
+		) : dashboardDetailsQuery?.isLoading ? (
+			<div className="darkSoul-glowing-button2 mb-10 mt-5 ml-4">
+				<button className="darkSoul-button2" type="button">
+					<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+					Generating Graph...
+				</button>
+			</div>
+		) : (
+			<div className="text-primary60 font-normal mt-2">
+				No dashboard content. Please add a query to this
+				dashboard.
+			</div>
+		)
+	}
 
 	useEffect(() => {
 		if (query.id) {
@@ -70,67 +120,22 @@ const DashboardDetailsPage = () => {
 				<div className="flex gap-4">
 					<div
 						className={cn(
-							'grid gap-4 my-6 w-full h-full',
+							'grid gap-4 my-6 w-full h-[78vh] h-sm:h-[80vh] h-lg:h-[85vh] h-xl:h-[90vh] overflow-y-auto',
 							selectedItem ? 'grid-cols-1' : 'grid-cols-2',
+
 							// '2xl:grid-cols-2', // Two columns on double extra-large screens (1281px and up)
 						)}
 					>
-						{dashboard?.length > 0 ? (
-							Array.isArray(dashboard) &&
-							dashboard.map((item) => {
-								return (
-									<div
-										key={item.dashboard_content_id}
-										className="w-full h-full"
-									>
-										<div
-											className="bg-white rounded-3xl p-2 cursor-pointer w-full h-full"
-											onClick={() => handleItemClick(item)}
-										>
-											<div className="flex flex-col items-center justify-center w-full h-full">
-												<GraphCard
-													data={item?.content?.graph}
-													isGraphLoading={isLoading}
-													setIsGraphLoading={setIsLoading}
-													selectedItem={!!selectedItem}
-												/>
-												{false ? (
-													<p
-														className="text-primary80 font-medium mb-2 px-4 line-clamp-2"
-														style={{
-															whiteSpace: 'pre-wrap',
-														}}
-													>
-														{item?.content?.query}
-													</p>
-												) : null}
-											</div>
-										</div>
-									</div>
-								);
-							})
-						) : dashboardDetailsQuery?.isLoading ? (
-							<div className="darkSoul-glowing-button2 mb-10 mt-5 ml-4">
-								<button className="darkSoul-button2" type="button">
-									<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-									Generating Graph...
-								</button>
-							</div>
-						) : (
-							<div className="text-primary60 font-normal mt-2">
-								No dashboard content. Please add a query to this
-								dashboard.
-							</div>
-						)}
+						{renderGraphs()}
 					</div>
 					{selectedItem && (
 						<div
-							className={`min-w-[400px] max-w-[400px] mt-6 min-h-fit max-h-[720px] p-4 bg-white border-l border-primary8 rounded-3xl transition-transform transform ${
+							className={`min-w-[400px] max-w-[400px] mt-6 h-[78vh] h-sm:h-[80vh] h-lg:h-[85vh] h-xl:h-[90vh] p-4 bg-white border-l border-primary8 rounded-3xl transition-transform transform ${
 								selectedItem ? 'translate-x-0' : 'translate-x-full'
 							}`}
 							style={{ transition: 'transform 0.3s ease-in-out' }}
 						>
-							<div className="flex justify-between items-center">
+							<div className="flex justify-between h-[5%] items-center">
 								<h2 className="text-xl font-semibold text-primary80 flex items-center">
 									<span className="material-symbols-outlined me-2">
 										query_stats
@@ -146,7 +151,7 @@ const DashboardDetailsPage = () => {
 									</span>
 								</button>
 							</div>
-							<div className="mt-8">
+							<div className="mt-8 pb-8 h-[90%] overflow-y-auto">
 								<div className="flex items-center justify-between">
 									<TooltipWrapper
 										tooltip={selectedItem?.content?.graph?.title}
@@ -174,20 +179,24 @@ const DashboardDetailsPage = () => {
 										{selectedItem?.content?.query}
 									</p>
 								</div>
-								<div className="max-h-[400px] overflow-y-auto">
-									{selectedItem?.content?.summary ? (
-										<p
-											className="text-primary80 font-normal mt-2"
-											style={{ whiteSpace: 'pre-wrap' }}
-											dangerouslySetInnerHTML={{
-												__html: safeHTML,
-											}}
-										></p>
-									) : (
-										<p className="text-primary60 font-normal mt-2">
-											No summary available
-										</p>
-									)}
+								<div className="max-h-[60%]">
+									<div className="h-[100%] mb-2">
+										{selectedItem?.content?.summary ? (
+											<p
+												className="text-primary80 font-normal h-[50%] overflow-y-clip mt-2"
+												style={{
+													whiteSpace: 'break-spaces',
+												}}
+												dangerouslySetInnerHTML={{
+													__html: safeHTML,
+												}}
+											></p>
+										) : (
+											<p className="text-primary60 font-normal mt-2">
+												No summary available
+											</p>
+										)}
+									</div>
 								</div>
 							</div>
 						</div>
