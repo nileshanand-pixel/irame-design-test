@@ -1,28 +1,28 @@
 /* eslint-disable react/prop-types */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import GraphRenderer from '@/components/elements/GraphRenderer';
+import ScrollList from '@/components/elements/ScrollList';
 
-const MultiGraphCard = ({
-	data,
-	isGraphLoading,
-}) => {
-	const graphList = data?.content?.graph?.graphs || []
-	const [activeGraphTab, setActiveGraphTab] = useState(
-		graphList[0]?.id || null,
-	);
+const MultiGraphCard = ({ data, isGraphLoading }) => {
+	const graphList = data?.content?.graph?.graphs || [];
+	const [activeGraphTab, setActiveGraphTab] = useState(graphList[0]?.id || null);
 
 	const supportedChartTypes = [
-		"bar",
-		"line",
-		"scatter",
-		"bubble",
-		"pie",
-		"doughnut",
-		"polarArea",
-		"radar"
+		'bar',
+		'line',
+		'scatter',
+		'bubble',
+		'pie',
+		'doughnut',
+		'polarArea',
+		'radar',
 	];
 
-	const supportedGraphsData = graphList.filter((item) => supportedChartTypes.includes(item.type.toLowerCase()))
+	const supportedGraphsData = graphList.filter((item) =>
+		supportedChartTypes.includes(item.type.toLowerCase()),
+	);
+
+
 
 	return (
 		<div className="mb-4 w-full h-full">
@@ -34,38 +34,36 @@ const MultiGraphCard = ({
 					</button>
 				</div>
 			) : (
-						<>
-							<ul className="flex overflow-x-auto gap-2 items-center ">
-								{supportedGraphsData?.map((graph) => (
-									<li
+				<>
+					<ScrollList>
+						{supportedGraphsData?.map((graph) => (
+							<li
+								key={graph.id}
+								className={`${
+									activeGraphTab === graph.id
+										? 'text-purple-100 border-purple-40 tabActiveBg'
+										: 'text-black/60 border-black/10'
+								} text-sm font-medium border rounded-3xl px-3 h-full py-2 my-3 cursor-pointer min-w-fit whitespace-nowrap`}
+								onClick={() => setActiveGraphTab(graph.id)}
+							>
+								{graph.title}
+							</li>
+						))}
+					</ScrollList>
+
+					<div className="rounded-3xl border w-full overflow-x-auto border-primary4 bg-purple-4 p-4 mt-2">
+						{supportedGraphsData?.map(
+							(graph) =>
+								activeGraphTab === graph.id && (
+									<GraphRenderer
 										key={graph.id}
-										className={`${
-											activeGraphTab === graph.id
-												? 'text-purple-100 border-purple-40 tabActiveBg'
-												: 'text-black/60 border-black/10'
-										} text-sm font-medium border rounded-3xl px-3 h-full py-2 my-3 cursor-pointer min-w-fit whitespace-nowrap`}
-										onClick={() => setActiveGraphTab(graph.id)}
-									>
-										{graph.title}
-									</li>
-								))}
-							</ul>
-
-							<div className="rounded-3xl border w-full overflow-x-auto border-primary4 bg-purple-4 p-4 mt-2">
-								{supportedGraphsData?.map(
-									(graph) =>
-										activeGraphTab === graph.id && (
-											<GraphRenderer
-
-												key={graph.id}
-												graph={graph}
-												queryId={data.queryId}
-											/>
-										),
-								)}
-							</div>
-						</>
-					
+										graph={graph}
+										queryId={data.queryId}
+									/>
+								),
+						)}
+					</div>
+				</>
 			)}
 		</div>
 	);

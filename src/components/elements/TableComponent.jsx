@@ -7,7 +7,7 @@ const TableComponent = ({ data, columns }) => {
 	}
 
 	return (
-		<div className="min-h-fit max-h-[45rem] overflow-auto">
+		<div className="flex flex-col h-[45rem] overflow-auto">
 			<DataTable columns={columns} data={data} />
 		</div>
 	);

@@ -6,6 +6,7 @@ import { DataTableColumnHeader } from './data-table/components/data-table-column
 import { useDispatch, useSelector } from 'react-redux';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import GraphRenderer from './GraphRenderer';
+import ScrollList from './ScrollList';
 
 const GraphComponent = ({
 	data,
@@ -18,23 +19,23 @@ const GraphComponent = ({
 	const [loadedData, setLoadedData] = useState([]);
 	const [columns, setColumns] = useState([]);
 	const [activeTab, setActiveTab] = useState(tab);
-	const graphList = data?.graph?.tool_data?.graphs || []
+	const graphList = data?.graph?.tool_data?.graphs || [];
 	const tableData = data?.table?.tool_data;
-	const [activeGraphTab, setActiveGraphTab] = useState(
-		graphList[0]?.id || null,
-	);
+	const [activeGraphTab, setActiveGraphTab] = useState(graphList[0]?.id || null);
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+	const containerRef = useRef(null);
+	const [isOverflowing, setIsOverflowing] = useState(false);
 
 	const supportedChartTypes = [
-		"bar",
-		"line",
-		"scatter",
-		"bubble",
-		"pie",
-		"doughnut",
-		"polarArea",
-		"radar"
+		'bar',
+		'line',
+		'scatter',
+		'bubble',
+		'pie',
+		'doughnut',
+		'polarArea',
+		'radar',
 	];
 
 	function generateColumns(keys) {
@@ -44,11 +45,7 @@ const GraphComponent = ({
 			return {
 				accessorKey: key,
 				header: ({ column }) => (
-					<DataTableColumnHeader
-						column={column}
-						title={headerTitle}
-						className="!sticky"
-					/>
+					<DataTableColumnHeader column={column} title={headerTitle} />
 				),
 				cell: ({ row }) => <div className="p-1">{row?.original?.[key]}</div>,
 				enableSorting: true,
@@ -58,9 +55,7 @@ const GraphComponent = ({
 	}
 
 	useEffect(() => {
-		if (
-			tableData && tableData.csv_url
-		) {
+		if (tableData && tableData.csv_url) {
 			const fetchData = async () => {
 				try {
 					const csvData = await d3.csv(tableData.csv_url);
@@ -96,7 +91,11 @@ const GraphComponent = ({
 		}
 	}, [chatStoreReducer?.activateGraphOnLast]);
 
-	const supportedGraphsData = graphList.filter((item) => supportedChartTypes.includes(item.type.toLowerCase()))
+	const supportedGraphsData = graphList.filter((item) =>
+		supportedChartTypes.includes(item.type.toLowerCase()),
+	);
+
+
 
 	return (
 		<div className="mb-4">
@@ -124,7 +123,7 @@ const GraphComponent = ({
 					</ul>
 					{activeTab === 'Graphical View' && (
 						<>
-							<ul className="flex overflow-x-auto gap-2 items-center ">
+							<ScrollList>
 								{supportedGraphsData?.map((graph) => (
 									<li
 										key={graph.id}
@@ -138,7 +137,7 @@ const GraphComponent = ({
 										{graph.title}
 									</li>
 								))}
-							</ul>
+							</ScrollList>
 
 							<div className="rounded-3xl border w-full overflow-x-auto border-primary4 bg-purple-4 p-4 mt-2">
 								{supportedGraphsData?.map(

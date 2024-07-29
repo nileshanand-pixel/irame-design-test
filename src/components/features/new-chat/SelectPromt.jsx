@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { queryClient } from '@/lib/react-query';
+import ScrollList from '@/components/elements/ScrollList';
 
 const SelectPrompt = ({
 	handleNextStep,
@@ -130,9 +131,9 @@ const SelectPrompt = ({
 		<div className="">
 			<div className="mt-8">
 				<div className="w-full overflow-x-auto flex gap-4">
-					<ul className="flex gap-2 items-center w-full">
 						{data?.suggestion?.length > 0 ? (
-							data?.suggestion?.map((suggestion, index) => (
+							<ScrollList>
+								{data?.suggestion?.map((suggestion, index) => (
 								<li
 									key={suggestion?.suggestion_id}
 									className={`${
@@ -146,7 +147,8 @@ const SelectPrompt = ({
 										{suggestion?.type}
 									</div>
 								</li>
-							))
+							))}
+							</ScrollList>
 						) : (
 							<div className="flex space-x-2">
 								{[...Array(4)].map((_, index) => (
@@ -157,7 +159,6 @@ const SelectPrompt = ({
 								))}
 							</div>
 						)}
-					</ul>
 				</div>
 				{activeTab ? (
 					<div className="w-full overflow-x-auto flex gap-4 mt-8">
