@@ -17,7 +17,7 @@ export const formatFileSize = (size) => {
 	}
 };
 
-export const tokenCookie = import.meta.env.VITE_COOKIE_TOKEN;
+export const tokenCookie = '';
 
 export const getToken = () => {
 	const cookieString = document.cookie;
