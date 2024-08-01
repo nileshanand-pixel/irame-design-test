@@ -138,6 +138,9 @@ const GraphRenderer = ({ graph, queryId }) => {
 	useEffect(() => {
 		setLoadedData(baseData);
 		if (graph.category_filter) {
+			const isCategoryFilterString =  typeof graph.category_filter === 'string' || graph.category_filter instanceof String;
+			if(!isCategoryFilterString)return;
+			
 			const categoryFilter = graph.category_filter.toLowerCase();
 			const headers = Object.keys(baseData[0] || {});
 			const matchingHeader = headers.find(
