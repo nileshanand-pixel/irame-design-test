@@ -119,7 +119,15 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 						setIsEditing(isEditing ? false : true);
 					}}
 				>
-					{isEditing ? 'check_circle' : 'edit'}
+					{isEditing ? (
+						'check_circle'
+					) : (
+						<img
+							src={`https://d2vkmtgu2mxkyq.cloudfront.net/pencil.svg`}
+							className="me-1 size-6"
+							alt="edit-pencil"
+						/>
+					)}
 				</span>
 				<DotsDropdown options={dashboardMutations} />
 			</div>

@@ -27,12 +27,12 @@ const ResponseCard = ({
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
-			value.tool_space === 'main' && value.tool_type !== WorkspaceEnum.Answer,
+			value?.tool_space === 'main' && value?.tool_type !== WorkspaceEnum.Answer,
 	);
 
 	const answerItem = Object.entries(answerResp?.answer || {}).find(
 		([key, value]) =>
-			value.tool_space === 'main' && value.tool_type === WorkspaceEnum.Answer,
+			value?.tool_space === 'main' && value?.tool_type === WorkspaceEnum.Answer,
 	);
 
 	let safeHTML = '';
@@ -41,10 +41,10 @@ const ResponseCard = ({
 	}
 
 	const graphDataItem = mainItems.find(
-		([key, value]) => value.tool_type === WorkspaceEnum.Graph,
+		([key, value]) => value?.tool_type === WorkspaceEnum.Graph,
 	);
 	const dataFrameItem = mainItems.find(
-		([key, value]) => value.tool_type === WorkspaceEnum.DataFrame,
+		([key, value]) => value?.tool_type === WorkspaceEnum.DataFrame,
 	);
 
 	const showGraph = !!graphDataItem;
@@ -71,26 +71,27 @@ const ResponseCard = ({
 					)}
 					{showGraph && (
 						<div className="mb-4">
-							<GraphComponent
-								data={graphDataItem[1].tool_data}
-								isGraphLoading={isGraphLoading}
-								setIsGraphLoading={setIsGraphLoading}
-								showTable={showTable}
-								queryId={answerResp?.query_id}
-								tab={
-									answerResp?.status === 'done'
-										? 'Graphical View'
-										: 'Tabular View'
-								}
-							/>
+							<div className="mb-4">
+								<GraphComponent
+									data={{graph: graphDataItem[1], table: dataFrameItem[1]}}
+									isGraphLoading={isGraphLoading}
+									setIsGraphLoading={setIsGraphLoading}
+									showTable={showTable}
+									queryId={answerResp?.query_id}
+									tab={
+										answerResp?.status === 'done'
+											? 'Graphical View'
+											: 'Tabular View'
+									}
+								/>
+							</div>
 							<div className="mt-6 mb-14 flex justify-between">
 								<Button
 									variant="outline"
 									className="text-muted-foreground cursor-pointer"
 									onClick={() =>
 										window.open(
-											graphDataItem[1]?.tool_data
-												?.response_csv_curl,
+											dataFrameItem[1]?.tool_data?.csv_url,
 											'_blank',
 										)
 									}
@@ -152,7 +153,7 @@ const ResponseCard = ({
 				showFollowup &&
 				!doingScience &&
 				!isGraphLoading && (
-					<div className='mx-12'>
+					<div className="mx-12">
 						<div className="mt-2 border-t border-purple-10"></div>
 						<div className="!mt-8 flex gap-4 overflow-x-auto">
 							{answerResp?.answer?.follow_up?.tool_data?.questions &&

@@ -1,11 +1,12 @@
 /* eslint-disable react/prop-types */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Chart from 'chart.js/auto';
-import * as d3 from 'd3';
 import TableComponent from './TableComponent';
+import * as d3 from 'd3';
 import { DataTableColumnHeader } from './data-table/components/data-table-column-header';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
+import GraphRenderer from './GraphRenderer';
+import ScrollList from './ScrollList';
 
 const GraphComponent = ({
 	data,
@@ -15,34 +16,27 @@ const GraphComponent = ({
 	queryId,
 	tab = 'Tabular View',
 }) => {
-	const [chartState, setChartState] = useState({
-		xAxis: '',
-		yAxis: '',
-		type: '',
-		borderColor: '',
-		backgroundColor: '',
-		title: '',
-	});
 	const [loadedData, setLoadedData] = useState([]);
 	const [columns, setColumns] = useState([]);
 	const [activeTab, setActiveTab] = useState(tab);
-	const chartRef = useRef(null);
+	const graphList = data?.graph?.tool_data?.graphs || [];
+	const tableData = data?.table?.tool_data;
+	const [activeGraphTab, setActiveGraphTab] = useState(graphList[0]?.id || null);
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+	const containerRef = useRef(null);
+	const [isOverflowing, setIsOverflowing] = useState(false);
 
-	const memoizedChartState = useMemo(() => {
-		if (data && data.response_csv_curl) {
-			return {
-				xAxis: data['x-axis'],
-				yAxis: data['y-axis'],
-				type: data['graph_type'],
-				borderColor: data['border_color'] || data['borderColor'],
-				backgroundColor: data['background_color'] || data['backgroundColor'],
-				title: data['chart_title'] || data['chartTitle'] || data['title'],
-			};
-		}
-		return chartState;
-	}, [data]);
+	const supportedChartTypes = [
+		'bar',
+		'line',
+		'scatter',
+		'bubble',
+		'pie',
+		'doughnut',
+		'polarArea',
+		'radar',
+	];
 
 	function generateColumns(keys) {
 		return keys.map((key) => {
@@ -61,79 +55,24 @@ const GraphComponent = ({
 	}
 
 	useEffect(() => {
-		setChartState(memoizedChartState);
-	}, [memoizedChartState]);
-
-	useEffect(() => {
-		const fetchData = async () => {
-			if (
-				chartState.type &&
-				chartState.xAxis &&
-				chartState.yAxis &&
-				data?.response_csv_curl
-			) {
+		if (tableData && tableData.csv_url) {
+			const fetchData = async () => {
 				try {
-					const csvData = await d3.csv(data.response_csv_curl);
+					const csvData = await d3.csv(tableData.csv_url);
 					setLoadedData(csvData);
-
 					setColumns(generateColumns(Object.keys(csvData[0])));
 				} catch (error) {
 					console.error('Error loading CSV data:', error);
 				} finally {
 					setIsGraphLoading(false);
 				}
-			}
-		};
+			};
 
-		if (loadedData.length === 0) {
-			fetchData();
-		}
-	}, [chartState, data, loadedData.length, setIsGraphLoading]);
-
-	useEffect(() => {
-		if (activeTab === 'Graphical View' && loadedData.length > 0) {
-			if (chartRef.current) {
-				chartRef.current.destroy();
+			if (loadedData.length === 0) {
+				fetchData();
 			}
-			const ctx = document.getElementById(`canvas_${queryId}`);
-			chartRef.current = new Chart(ctx, {
-				type: chartState.type,
-				data: {
-					labels: loadedData.map((item) => item[chartState.xAxis]),
-					datasets: [
-						{
-							label: chartState.yAxis,
-							data: loadedData.map((item) =>
-								Number(item[chartState.yAxis]),
-							),
-							fill: false,
-							borderColor:
-								chartState.borderColor || 'rgba(38, 6, 74, 0.8)',
-							backgroundColor:
-								chartState.backgroundColor ||
-								'rgba(106, 18, 205, 1)',
-						},
-					],
-				},
-				options: {
-					plugins: {
-						title: {
-							display: true,
-							text: chartState.title || 'Data plot',
-							font: {
-								size: 18,
-							},
-						},
-					},
-				},
-			});
 		}
-		return () => {
-			if (chartRef.current) {
-				chartRef.current.destroy();
-			}
-		};
-	}, [activeTab, loadedData, chartState]);
+	}, [data, loadedData.length, setIsGraphLoading]);
 
 	useEffect(() => {
 		if (
@@ -152,6 +91,12 @@ const GraphComponent = ({
 		}
 	}, [chatStoreReducer?.activateGraphOnLast]);
 
+	const supportedGraphsData = graphList.filter((item) =>
+		supportedChartTypes.includes(item.type.toLowerCase()),
+	);
+
+
+
 	return (
 		<div className="mb-4">
 			{isGraphLoading ? (
@@ -163,55 +108,61 @@ const GraphComponent = ({
 				</div>
 			) : (
 				<>
-					<>
-						<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
-							{['Tabular View', 'Graphical View'].map((item, indx) => (
-								<li
-									key={`${queryId}_${indx}`}
-									className={`!pb-0 ${
-										activeTab === item
-											? 'active-tab'
-											: 'default-tab'
-									}`}
-									onClick={() => setActiveTab(item)}
-								>
-									{item}
-								</li>
-							))}
-						</ul>
-						<div className="rounded-3xl border border-primary4 bg-purple-4 p-4 mt-2">
-							{activeTab === 'Graphical View' && (
-								<div className="bg-white rounded-3xl p-2">
-									<canvas
-										id={`canvas_${queryId}`}
-										width="380"
-										height="250"
-									></canvas>
-								</div>
-							)}
-							{activeTab === 'Tabular View' && (
-								<div className="bg-white rounded-3xl py-2">
-									{/* {showTable ? (
-										<TableComponent
-											data={loadedData}
-											columns={columns}
-										/>
-									) : (
-										<TableResponse
-											data={data}
-											isGraphLoading={false}
-											// setIsGraphLoading={setIsGraphLoading}
-											noStyles
-										/>
-									)} */}
-									<TableComponent
-										data={loadedData}
-										columns={columns}
-									/>
-								</div>
-							)}
+					<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
+						{['Tabular View', 'Graphical View'].map((item, indx) => (
+							<li
+								key={`${queryId}_${indx}`}
+								className={`!pb-0 ${
+									activeTab === item ? 'active-tab' : 'default-tab'
+								}`}
+								onClick={() => setActiveTab(item)}
+							>
+								{item}
+							</li>
+						))}
+					</ul>
+					{activeTab === 'Graphical View' && (
+						<>
+							<ScrollList>
+								{supportedGraphsData?.map((graph) => (
+									<li
+										key={graph.id}
+										className={`${
+											activeGraphTab === graph.id
+												? 'text-purple-100 border-purple-40 tabActiveBg'
+												: 'text-black/60 border-black/10'
+										} text-sm font-medium border rounded-3xl px-3 h-full py-2 my-3 cursor-pointer min-w-fit whitespace-nowrap`}
+										onClick={() => setActiveGraphTab(graph.id)}
+									>
+										{graph.title}
+									</li>
+								))}
+							</ScrollList>
+
+							<div className="rounded-3xl border w-full overflow-x-auto border-primary4 bg-purple-4 p-4 mt-2">
+								{supportedGraphsData?.map(
+									(graph) =>
+										activeGraphTab === graph.id && (
+											<GraphRenderer
+												key={`${queryId}_${graph.id}`}
+												graph={graph}
+												queryId={queryId}
+											/>
+										),
+								)}
+							</div>
+						</>
+					)}
+					{activeTab === 'Tabular View' && (
+						<div className="rounded-3xl border w-full overflow-x-auto border-primary4 bg-purple-4 p-4 mt-2">
+							<div className="bg-white rounded-3xl py-2">
+								<TableComponent
+									data={loadedData}
+									columns={columns}
+								/>
+							</div>
 						</div>
-					</>
+					)}
 				</>
 			)}
 		</div>

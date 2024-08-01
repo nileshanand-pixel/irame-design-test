@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import ResponseCard from '../ResponseCard';
 import ira from '@/assets/icons/ira_icon.svg';
-import warningIcon from '@/assets/icons/warning_icon.svg';
 import { toast } from 'sonner';
 import Workspace from '../Workspace';
 import AddQueryToDashboard from '../AddQueryToDashboard';
@@ -20,6 +19,7 @@ import { createDashboard } from '../../dashboard/service/dashboard.service';
 import { queryClient } from '@/lib/react-query';
 import QueueStatus from '../QueueStatus';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import isEqual from 'lodash.isequal';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -141,10 +141,27 @@ const Workzone = () => {
 						const existingAnswer = prevAnswers.find(
 							(answer) => answer.query_id === newAnswer.query_id,
 						);
-						if (existingAnswer && existingAnswer.status === 'done') {
-							return existingAnswer;
+
+						if (existingAnswer) {
+							if (existingAnswer.status === 'done') {
+								return existingAnswer;
+							}
+
+							const graphKeyExists = existingAnswer?.answer && Object.keys(existingAnswer?.answer).includes("graph")
+							const newGraph = newAnswer?.answer?.graph;
+
+							// Determine if we need to update the graph key -> helps in graph stopping graph reload
+							const shouldUpdateGraph = !graphKeyExists && newGraph;
+							return {
+								...newAnswer,
+								answer: {
+									...newAnswer.answer,
+									...(shouldUpdateGraph && { graph: newGraph }), // Conditionally add the graph key
+								},
+							};
 						}
-						return newAnswer;
+
+						return newAnswer; 
 					});
 				});
 
@@ -158,7 +175,7 @@ const Workzone = () => {
 
 				// active query has no graph or observation case check
 				const activeQueryResp = res?.find(
-					(item) => item?.query_id === chatStoreReducer?.activeQueryId
+					(item) => item?.query_id === chatStoreReducer?.activeQueryId,
 				);
 				if (!!activeQueryResp) {
 					dispatch(
@@ -340,21 +357,8 @@ const Workzone = () => {
 		}
 		return queries?.map((query, key) => {
 			const answerElem = answers.find((item) => item.query_id === query.id);
-			// console.log(answerElem?.status_text, answerElem)
-			const hasIraGeneratedReply = !!answerElem?.answer; // complete initial reply object.
 			const hasIraGeneratedGraph = !!answerElem?.answer?.graph;
-			const isIraGeneratingGraph =
-				!hasIraGeneratedGraph && answerElem?.status !== 'done';
-			const hasIraGeneratedObservation = !!answerElem?.answer?.answer; // text reply of asked query
-			const isGraphProcessed =
-				!!answerElem?.answer?.graph ||
-				(!answerElem?.answer?.graph &&
-					!isGraphLoading &&
-					answerElem?.status === 'done'); //either graph present or graph not availble for this query
-			const isGettingLateInReply =
-				!hasIraGeneratedGraph ||
-				!hasIraGeneratedObservation ||
-				!answerElem?.answer?.response_dataframe;
+			!hasIraGeneratedGraph && answerElem?.status !== 'done';
 			const currentDoingScience =
 				doingScience.find((loadingObj) => loadingObj.queryId === query?.id)
 					?.status || !!query?.parentQueryId;
@@ -444,19 +448,17 @@ const Workzone = () => {
 	const markSessionStatusInReducer = (sessionId, status) => {
 		let tempSessionHistory = utilReducer?.sessionHistory;
 		tempSessionHistory = tempSessionHistory?.map((session) => {
-			if(session.session_id === sessionId){
+			if (session.session_id === sessionId) {
 				return {
 					...session,
-					status
-				}
-			}else return session;
+					status,
+				};
+			} else return session;
 		});
-		dispatch(updateUtilProp(
-			[
-				{key: "sessionHistory", value: tempSessionHistory}
-			]
-		))
-	}
+		dispatch(
+			updateUtilProp([{ key: 'sessionHistory', value: tempSessionHistory }]),
+		);
+	};
 
 	useEffect(() => {
 		const allDone =
@@ -470,14 +472,17 @@ const Workzone = () => {
 					{
 						key: 'activeQueryId',
 						value: answers?.[answers?.length - 1]?.query_id,
-					}
+					},
 				]),
 			);
-			markSessionStatusInReducer(answers?.[answers?.length - 1]?.session_id, "done");
+			markSessionStatusInReducer(
+				answers?.[answers?.length - 1]?.session_id,
+				'done',
+			);
 			setInputDisabled(false);
 			return;
 		}
-		if(!chatStoreReducer?.activeQueryId && answers && answers?.length){
+		if (!chatStoreReducer?.activeQueryId && answers && answers?.length) {
 			dispatch(
 				updateChatStoreProp([
 					{
@@ -554,19 +559,19 @@ const Workzone = () => {
 		<div className="grid grid-cols-12 gap-4 min-h-[90vh] max-h-[90vh] w-full">
 			<div
 				className={cn(
-					'border rounded-2xl pt-4 px-4 shadow-1xl relative h-full flex-col',
+					'border rounded-2xl pt-8 px-4 shadow-1xl relative h-full flex-col',
 					workspace.show ? 'col-span-8' : 'col-span-12 mx-[8rem]',
 				)}
 			>
-				{utilReducer?.selectedDataSource?.name && (
+				{/* {utilReducer?.selectedDataSource?.name && (
 					<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-10 float-right text-primary80 font-medium max-w-[220px] truncate">
 						<i className="bi-database-check mr-2 text-primary80"></i>
 						{utilReducer?.selectedDataSource?.name}
 					</div>
-				)}
+				)} */}
 				<div
 					ref={scrollRef}
-					className="mb-[4vh] h-[60vh] h-sm:h-[64vh] h-md:h-[68vh] h-lg:h-[70vh] h-xl:h-[74vh] overflow-y-auto w-full"
+					className="mb-[4vh] h-[68vh] h-sm:h-[72vh] h-md:h-[76vh] h-lg:h-[76vh] h-xl:h-[78vh] overflow-y-auto w-full"
 				>
 					{renderConversation()}
 				</div>
@@ -588,7 +593,10 @@ const Workzone = () => {
 									className="flex gap-2 items-center pr-3 cursor-pointer"
 									onClick={handleAppendQuery}
 								>
-									<i className="bi-send text-primary100 text-lg rotate-45"></i>
+									<img
+										src={`https://d2vkmtgu2mxkyq.cloudfront.net/send.svg`}
+										className="size-6"
+									/>
 								</div>
 							) : (
 								<div className="flex gap-2 items-center pr-3 cursor-not-allowed">
@@ -609,7 +617,7 @@ const Workzone = () => {
 					<div className="flex justify-between">
 						<div className="flex items-center gap-1">
 							<img
-								src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
+								src={`https://d2vkmtgu2mxkyq.cloudfront.net/category.svg`}
 								className="me-1 size-6"
 							/>
 							<h3 className="text-primary80 font-semibold text-xl">

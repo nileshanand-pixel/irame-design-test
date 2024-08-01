@@ -707,7 +707,10 @@ const NewChat = () => {
 										className="flex gap-2 items-center pr-3 cursor-pointer"
 										onClick={handleAppendQuery}
 									>
-										<i className="bi-send text-primary100 text-lg rotate-45"></i>
+										<img
+											src={`https://d2vkmtgu2mxkyq.cloudfront.net/send.svg`}
+											className="size-6"
+										/>
 									</div>
 								</div>
 								<p className="text-xs text-primary40 font-normal">
@@ -815,7 +818,10 @@ const NewChat = () => {
 										className="flex gap-2 items-center pr-3 cursor-pointer"
 										onClick={handleQueryAnswer}
 									>
-										<i className="bi-send text-primary100 text-lg rotate-45"></i>
+										<img
+											src={`https://d2vkmtgu2mxkyq.cloudfront.net/send.svg`}
+											className=" size-6"
+										/>{' '}
 									</div>
 								</div>
 								<p className="text-xs text-primary40 font-normal">

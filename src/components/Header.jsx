@@ -11,10 +11,18 @@ import {
 } from './ui/dropdown-menu';
 import { tokenCookie, getToken, getInitials, cn } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
+import { useSelector } from 'react-redux';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
-	const { pathname } = useRouter();
+	const { pathname, query } = useRouter();
+
+	const utilReducer = useSelector((state) => state.utilReducer);
+
+	const showDataSourceName =
+		utilReducer?.selectedDataSource?.name &&
+		!pathname.includes('/dashboard') &&
+		!pathname.includes('/configuration');
 	return (
 		<header
 			className={cn(
@@ -22,7 +30,23 @@ const Header = () => {
 				pathname.includes('/dashboard') ? 'bg-gray-muted' : 'bg-white',
 			)}
 		>
-			<span>{'Irame.ai'}</span>
+			{showDataSourceName ? (
+				<div className="mb-4 flex gap-2 items-center rounded-lg px-3 py-2 bg-purple-10 text-primary80 text-sm font-medium w-fit truncate">
+					<img
+						src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
+						alt="edit-prompt"
+					/>
+					{utilReducer?.selectedDataSource?.name}
+					<span className="relative flex size-3 ">
+						<span className="absolute inline-flex h-full w-full rounded-full bg-green-500"></span>
+						<span className="animate-ping relative inline-flex rounded-full size-3 bg-green-500"></span>
+					</span>
+				</div>
+			) : (
+				<span className="font-medium text-lg leading-[21.78px]">
+					{'Irame.ai'}
+				</span>
+			)}
 			<div className="flex gap-6">
 				{/* <ThemeToggle /> */}
 

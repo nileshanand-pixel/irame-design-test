@@ -131,6 +131,7 @@ module.exports = {
 			},
 			screens: {
 				'h-sm': { raw: '(min-height: 750px)' },
+				'h-cr': { raw: '(min-height: 850px)' },
 				'h-md': { raw: '(min-height: 950px)' },
 				'h-lg': { raw: '(min-height: 1000px)' },
 				'h-xl': { raw: '(min-height: 1250px)' },

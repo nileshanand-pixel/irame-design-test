@@ -120,7 +120,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				},
 				{
 					key: 'activeQueryId',
-					value: ''
+					value: '',
 				},
 				{ key: 'refreshChat', value: true },
 				{ key: 'resetIra', value: !chatStoreReducer?.resetIra },
@@ -173,7 +173,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		const earlier = [];
 
 		sessions.forEach((session) => {
-			const sessionDate = dayjs(session.updated_at);
+			const sessionDate = dayjs(session.updated_at.toLocaleString());
 
 			if (sessionDate.isToday()) {
 				today.push(session);
@@ -190,77 +190,80 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	};
 
 	const renderSession = (session) => {
-		const isActiveSession = chatStoreReducer?.activeChatSession?.id === session.session_id;
+		const isActiveSession =
+			chatStoreReducer?.activeChatSession?.id === session.session_id;
 		let showSpinner = false;
-		if(isActiveSession){
-			showSpinner = chatStoreReducer?.activeChatSession?.status && chatStoreReducer?.activeChatSession?.status !== 'done'
-		}else{
+		if (isActiveSession) {
+			showSpinner =
+				chatStoreReducer?.activeChatSession?.status &&
+				chatStoreReducer?.activeChatSession?.status !== 'done';
+		} else {
 			showSpinner = session?.status !== 'done';
 		}
 
-		return (<div
-			className={cn(
-				'flex items-center justify-between text-primary80 w-full rounded-lg py-2 pl-1 text-sm font-medium cursor-pointer hover:bg-purple-4',
-				chatStoreReducer?.activeChatSession?.id === session.session_id
-					? 'bg-purple-10'
-					: '',
-			)}
-			key={session.session_id}
-			onClick={() => {
-				if (isEditing === session.session_id) return;
-				getChatHistory(session);
-			}}
-		>
+		return (
 			<div
 				className={cn(
-					'flex items-center max-w-[200px] truncate',
-					isEditing === session.session_id ? '' : ' px-2 py-1',
+					'flex items-center justify-between text-primary80 w-full rounded-lg py-2 pl-1 text-sm font-medium cursor-pointer hover:bg-purple-4',
+					chatStoreReducer?.activeChatSession?.id === session.session_id
+						? 'bg-purple-10'
+						: '',
 				)}
+				key={session.session_id}
+				onClick={() => {
+					if (isEditing === session.session_id) return;
+					getChatHistory(session);
+				}}
 			>
-				{
-					showSpinner ? (
-						<GradientSpinner tailwindBg = "bg-[#E6D7F7]" width="15"/>
+				<div
+					className={cn(
+						'flex items-center max-w-[200px] truncate',
+						isEditing === session.session_id ? '' : ' px-2 py-1',
+					)}
+				>
+					{showSpinner ? (
+						<GradientSpinner tailwindBg="bg-[#E6D7F7]" width="15" />
 					) : (
 						<img
 							src="https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg"
 							alt="ask-ira"
 							className="size-5"
 						/>
-					)
-				}
-				{isEditing === session.session_id ? (
-					<InputText
-						value={sessionTitle}
-						setValue={(value, e) => {
-							e.stopPropagation();
-							setSessionTitle(value);
-						}}
-						className="flex bg-transparent border-none text-primary80 font-medium"
-					/>
-				) : (
-					<p className="flex ml-3">{session.title}</p>
-				)}
+					)}
+					{isEditing === session.session_id ? (
+						<InputText
+							value={sessionTitle}
+							setValue={(value, e) => {
+								e.stopPropagation();
+								setSessionTitle(value);
+							}}
+							className="flex bg-transparent border-none text-primary80 font-medium"
+						/>
+					) : (
+						<p className="flex ml-3">{session.title}</p>
+					)}
+				</div>
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<i
+							className="bi-three-dots-vertical ms-3 me-3 items-end hover:bg-purple-4 rounded-[4px] py-1"
+							onClick={(e) => e.stopPropagation()}
+						></i>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="start">
+						<DropdownMenuItem
+							className="text-primary80 font-medium hover:!bg-purple-2"
+							onClick={(e) =>
+								handleDeleteChatSession(e, session.session_id)
+							}
+						>
+							<i className="bi-trash me-2 text-primary80 font-medium"></i>
+							Delete
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</div>
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<i
-						className="bi-three-dots-vertical ms-3 me-3 items-end hover:bg-purple-4 rounded-[4px] py-1"
-						onClick={(e) => e.stopPropagation()}
-					></i>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="start">
-					<DropdownMenuItem
-						className="text-primary80 font-medium hover:!bg-purple-2"
-						onClick={(e) =>
-							handleDeleteChatSession(e, session.session_id)
-						}
-					>
-						<i className="bi-trash me-2 text-primary80 font-medium"></i>
-						Delete
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
-		</div>)
+		);
 	};
 
 	const groupedSessions = groupSessionsByDate(utilReducer?.sessionHistory || []);

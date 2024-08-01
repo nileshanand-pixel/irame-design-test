@@ -221,6 +221,11 @@ const Configuration = () => {
 		}));
 	}, [datasourceName]);
 
+	useEffect(() => {
+		const initialIntents = intent.slice(0, 5).map((item) => item.value);
+		setDataSourceIntent(initialIntents);
+	}, []);
+
 	return (
 		<div className="grid grid-cols-12 gap-4 pt-6">
 			{/* Upload Section */}
@@ -248,11 +253,13 @@ const Configuration = () => {
 				{!hideUpload && (
 					<div className="mt-4 space-y-6 mb-10">
 						<InputText
+							label="Data Source Name"
 							placeholder="Name your data source"
 							value={datasourceName}
 							setValue={(e) => setDatasourceName(e)}
 							error={formErrors.datasourceName}
 							errorText={formErrors.datasourceName}
+							labelClassName="text-sm font-medium text-primary40"
 						/>
 						<div>
 							<p className="text-sm font-medium text-primary40 mb-3">
@@ -409,8 +416,12 @@ const Configuration = () => {
 									setFiles(source.filepath);
 								}}
 							>
-								<p className="text-primary80 font-medium max-w-[180px] truncate">
-									<i className="bi-database mr-2 text-primary80 text-md "></i>
+								<p className="text-primary80 font-medium max-w-[180px] truncate flex items-center">
+									<img
+										src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
+										alt="database"
+										className="mr-2 size-5"
+									/>
 									{source.name}
 								</p>
 								<i
