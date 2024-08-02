@@ -74,32 +74,25 @@ export function DataTable({
 		defaultSort,
 	});
 	return (
-		<div className="flex flex-col h-full">
-			<div className="flex-none">
+		<div className="w-full space-y-2.5 overflow-auto">
+			<div className="text-primary100">
 				<Table>
-					<TableHeader className="sticky top-0 bg-transparent z-10 rounded-lg">
+					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => (
-									<TableHead
-										key={header.id}
-										className=" bg-transparent"
-									>
+									<TableHead key={header.id}>
 										{header.isPlaceholder
 											? null
 											: flexRender(
 													header.column.columnDef.header,
 													header.getContext(),
-												)}
+											  )}
 									</TableHead>
 								))}
 							</TableRow>
 						))}
 					</TableHeader>
-				</Table>
-			</div>
-			<div className="flex-grow overflow-auto">
-				<Table>
 					{isLoading ? (
 						<>
 							{Array(pagination?.pageSize ?? 10)
@@ -160,7 +153,7 @@ export function DataTable({
 				</Table>
 			</div>
 			{!hidePagination && (
-				<div className="flex-none bg-transparent">
+				<div className="space-y-2.5">
 					<DataTablePagination table={table} />
 				</div>
 			)}
