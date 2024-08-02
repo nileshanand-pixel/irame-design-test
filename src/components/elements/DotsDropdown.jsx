@@ -25,7 +25,7 @@ const DotsDropdown = ({ options }) => {
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-[160px]">
-				{options.map((i) => (
+				{options?.map((i) => (
 					<>
 						{i.type === 'item' && (
 							<DropdownMenuItem onClick={i.onClick}>

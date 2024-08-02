@@ -5,7 +5,7 @@ import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import { Button } from '../ui/button';
 import { GraphCategoryFilter } from './GraphCategoryFilter';
 
-const GraphRenderer = ({ graph, queryId }) => {
+const GraphRenderer = ({ graph, identifierKey }) => {
 	const chartRef = useRef(null);
 	const [baseData, setBaseData] = useState([]);
 	const [loadedData, setLoadedData] = useState([]);
@@ -51,15 +51,15 @@ const GraphRenderer = ({ graph, queryId }) => {
 	};
 
 	const getCircularChartDatasets = (data) => {
-		const fullLabels = data.map(
+		const fullLabels = data?.map(
 			(item) => `${graph.x_axis}(${item[graph.x_axis]})`,
 		);
-		const truncatedLabels = fullLabels.map((label) => truncateLabel(label));
+		const truncatedLabels = fullLabels?.map((label) => truncateLabel(label));
 		const dataList = [
 			{
 				label: graph.y_axis[0],
-				data: data.map((item) => Number(item[graph.y_axis[0]])),
-				backgroundColor: data.map(
+				data: data?.map((item) => Number(item[graph.y_axis[0]])),
+				backgroundColor: data?.map(
 					(_, index) =>
 						`${colors[index % colors.length]}${Math.floor(
 							getOpacity(graph.type) * 255,
@@ -75,11 +75,11 @@ const GraphRenderer = ({ graph, queryId }) => {
 	};
 
 	const getAxialChartDatasets = (data, yAxisArray) => {
-		const fullLabels = data.map((item) => item[graph.x_axis]);
-		const truncatedLabels = fullLabels.map((label) => truncateLabel(label));
-		const dataObj = yAxisArray.map((yAxis, index) => ({
+		const fullLabels = data?.map((item) => item[graph.x_axis]);
+		const truncatedLabels = fullLabels?.map((label) => truncateLabel(label));
+		const dataObj = yAxisArray?.map((yAxis, index) => ({
 			label: yAxis,
-			data: data.map((item) => Number(item[yAxis])),
+			data: data?.map((item) => Number(item[yAxis])),
 			borderColor: colors[index % colors.length],
 			backgroundColor: `${colors[index % colors.length]}${Math.floor(
 				getOpacity(graph.type) * 255,
@@ -104,7 +104,7 @@ const GraphRenderer = ({ graph, queryId }) => {
 	};
 
 	const handleCategoryChange = (selectedValue) => {
-		if (graph.category_filter && selectedValue) {
+		if (graph?.category_filter && selectedValue) {
 			if (selectedValue === 'none') {
 				setLoadedData(baseData);
 			} else {
@@ -141,17 +141,17 @@ const GraphRenderer = ({ graph, queryId }) => {
 			const isCategoryFilterString =  typeof graph.category_filter === 'string' || graph.category_filter instanceof String;
 			if(!isCategoryFilterString)return;
 			
-			const categoryFilter = graph.category_filter.toLowerCase();
+			const categoryFilter = graph?.category_filter?.toLowerCase();
 			const headers = Object.keys(baseData[0] || {});
 			const matchingHeader = headers.find(
-				(header) => header.toLowerCase() === categoryFilter,
+				(header) => header?.toLowerCase() === categoryFilter,
 			);
 
 			if (matchingHeader) {
 				const uniqueValues = Array.from(
-					new Set(baseData.map((item) => item[matchingHeader])),
+					new Set(baseData?.map((item) => item[matchingHeader])),
 				);
-				const options = uniqueValues.map((value) => ({
+				const options = uniqueValues?.map((value) => ({
 					value,
 					label: value.charAt(0).toUpperCase() + value.slice(1),
 				}));
@@ -159,13 +159,13 @@ const GraphRenderer = ({ graph, queryId }) => {
 				if (options.length > 0) {
 					setCategoryData({
 						label:
-							matchingHeader.charAt(0).toUpperCase() +
-							matchingHeader.slice(1).toLowerCase(),
-						placeholder: `Select ${matchingHeader.toLowerCase()}`,
+							matchingHeader?.charAt(0)?.toUpperCase() +
+							matchingHeader?.slice(1)?.toLowerCase(),
+						placeholder: `Select ${matchingHeader?.toLowerCase()}`,
 						options,
 					});
 
-					const defaultCategoryValue = options[0].value;
+					const defaultCategoryValue = options[0]?.value;
 					handleCategoryChange(defaultCategoryValue);
 				}
 			}
@@ -175,7 +175,7 @@ const GraphRenderer = ({ graph, queryId }) => {
 	useEffect(() => {
 		if (loadedData.length > 0) {
 			if (chartRef.current) chartRef.current.destroy();
-			const ctx = document.getElementById(`canvas_${queryId}_${graph.id}`);
+			const ctx = document.getElementById(`canvas_${identifierKey}_${graph.id}`);
 			const isPieChart = graph.type.toLowerCase() === 'pie';
 			const tempLoadedData = handle.active
 				? loadedData
@@ -204,9 +204,6 @@ const GraphRenderer = ({ graph, queryId }) => {
 						},
 						tooltip: {
 							callbacks: {
-								label: function (context) {
-									return context.dataset.label || '';
-								},
 								title: function (context) {
 									const index = context[0].dataIndex;
 									return finalDataObj.fullLabels[index];
@@ -223,7 +220,7 @@ const GraphRenderer = ({ graph, queryId }) => {
 		return () => {
 			if (chartRef.current) chartRef.current.destroy();
 		};
-	}, [loadedData, graph, queryId, handle.active]);
+	}, [loadedData, graph, identifierKey, handle.active]);
 
 	return (
 		<div className="bg-white rounded-3xl p-2 overflow-x-auto">
@@ -259,7 +256,7 @@ const GraphRenderer = ({ graph, queryId }) => {
 
 					<FullScreen handle={handle}>
 						<canvas
-							id={`canvas_${queryId}_${graph.id}`}
+							id={`canvas_${identifierKey}_${graph.id}`}
 							width="380"
 							height="250"
 							style={{

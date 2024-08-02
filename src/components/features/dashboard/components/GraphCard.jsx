@@ -68,11 +68,11 @@ const GraphCard = ({ data, isGraphLoading, setIsGraphLoading, selectedItem }) =>
 			chartRef.current = new Chart(ctx, {
 				type: chartState.type,
 				data: {
-					labels: loadedData.map((item) => item[chartState.xAxis]),
+					labels: loadedData?.map((item) => item[chartState.xAxis]),
 					datasets: [
 						{
 							label: chartState.yAxis,
-							data: loadedData.map((item) =>
+							data: loadedData?.map((item) =>
 								Number(item[chartState.yAxis]),
 							),
 							fill: false,

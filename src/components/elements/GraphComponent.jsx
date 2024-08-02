@@ -39,7 +39,7 @@ const GraphComponent = ({
 	];
 
 	function generateColumns(keys) {
-		return keys.map((key) => {
+		return keys?.map((key) => {
 			let headerTitle = key.replace(/_/g, ' ').toUpperCase();
 
 			return {
@@ -146,7 +146,7 @@ const GraphComponent = ({
 											<GraphRenderer
 												key={`${queryId}_${graph.id}`}
 												graph={graph}
-												queryId={queryId}
+												identifierKey={queryId}
 											/>
 										),
 								)}

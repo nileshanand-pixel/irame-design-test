@@ -58,7 +58,7 @@ const MultiGraphCard = ({ data, isGraphLoading }) => {
 									<GraphRenderer
 										key={graph.id}
 										graph={graph}
-										queryId={data.queryId}
+										identifierKey={data.dashboard_content_id}
 									/>
 								),
 						)}

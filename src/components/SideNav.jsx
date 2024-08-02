@@ -359,7 +359,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 														Today
 													</h3>
 													<div className="space-y-1">
-														{groupedSessions.today.map(
+														{groupedSessions?.today?.map(
 															(session) =>
 																renderSession(
 																	session,
@@ -368,13 +368,13 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 													</div>
 												</div>
 											)}
-											{groupedSessions.yesterday.length >
+											{groupedSessions?.yesterday?.length >
 												0 && (
 												<div>
 													<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
 														Yesterday
 													</h3>
-													{groupedSessions.yesterday.map(
+													{groupedSessions?.yesterday?.map(
 														(session) =>
 															renderSession(session),
 													)}
@@ -386,7 +386,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 													<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
 														Last 7 Days
 													</h3>
-													{groupedSessions.last7Days.map(
+													{groupedSessions?.last7Days?.map(
 														(session) =>
 															renderSession(session),
 													)}
@@ -397,7 +397,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 													<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
 														Earlier
 													</h3>
-													{groupedSessions.earlier.map(
+													{groupedSessions?.earlier?.map(
 														(session) =>
 															renderSession(session),
 													)}

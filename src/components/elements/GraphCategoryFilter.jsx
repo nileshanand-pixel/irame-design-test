@@ -37,7 +37,7 @@ export function GraphCategoryFilter({ filterData, onChange }) {
 					<SelectItem value="none" disabled={!selectedValue}>
 						None (Remove filter)
 					</SelectItem>
-					{filterData.options.map((option) => (
+					{filterData?.options?.map((option) => (
 						<SelectItem key={option.value} value={option.value}>
 							{option.label}
 						</SelectItem>
