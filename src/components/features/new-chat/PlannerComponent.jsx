@@ -11,9 +11,8 @@ const PlannerComponent = ({ data }) => {
 
 	// Initialize segments from data
 	useEffect(() => {
-		console.log(data);
-		if (data && data.tool_data) {
-			const rawSegments = data.tool_data.replace(/\\n/g, '\n').split('<slice/>');
+		if (data && data?.tool_data?.text) {
+			const rawSegments = data.tool_data.text.replace(/\\n/g, '\n').split('<slice/>');
 			setSegments(rawSegments.map((segment) => DOMPurify.sanitize(segment.trim())));
 		}
 	}, [data]);

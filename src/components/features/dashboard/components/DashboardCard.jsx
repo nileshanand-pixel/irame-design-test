@@ -14,7 +14,7 @@ import { queryClient } from '@/lib/react-query';
 
 const DashboardCard = ({ data, refetch, setRefetch }) => {
 	const [isEditing, setIsEditing] = useState(false);
-	const [editedTitle, setEditedTitle] = useState(data.tittle);
+	const [editedTitle, setEditedTitle] = useState(data.title);
 
 	const { navigate } = useRouter();
 
@@ -76,7 +76,7 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 				isEditing
 					? null
 					: navigate(
-							`/app/dashboard/content?id=${data?.dasboard_id}&name=${data?.tittle}`,
+							`/app/dashboard/content?id=${data?.dasboard_id}&name=${data?.title}`,
 						)
 			}
 		>
@@ -102,7 +102,7 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 						/>
 					) : (
 						<h4 className="text-primary80 text-medium font-semibold">
-							{data?.tittle}
+							{data?.title}
 						</h4>
 					)}
 

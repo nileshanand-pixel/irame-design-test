@@ -34,7 +34,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 				);
 			case WorkspaceEnum.Coder: {
 				const coderData = answerResp?.answer?.[WorkspaceEnum.Coder];
-				return <CoderComponent data={coderData?.tool_data} />;
+				return <CoderComponent data={coderData?.tool_data?.text} />;
 			}
 			case WorkspaceEnum.Graph:
 				return (

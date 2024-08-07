@@ -131,7 +131,7 @@ const Configuration = () => {
 
 		const data = {
 			name: datasourceName,
-			filepath:
+			raw_files:
 				Array.isArray(files) &&
 				files.map((file) => ({
 					file_name: file.name || file.file_name,
@@ -413,7 +413,7 @@ const Configuration = () => {
 								onClick={() => {
 									setExistingDataSourceId(source.datasource_id);
 									setHideUpload(true);
-									setFiles(source.filepath);
+									setFiles(source?.raw_files || []);
 								}}
 							>
 								<p className="text-primary80 font-medium max-w-[180px] truncate flex items-center">

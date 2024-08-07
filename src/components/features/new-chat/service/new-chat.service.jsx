@@ -38,14 +38,15 @@ export const getAnswerConfig = async (token) => {
 	return response.data;
 };
 
-export const getQueryAnswers = async (queryId, token) => {
-	const response = await axiosClient.get(`/query/${queryId}`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
-	return response.data;
-};
+// Not used anywhere as of now
+// export const getQueryAnswers = async (queryId, token) => {
+// 	const response = await axiosClient.get(`/query/${queryId}`, {
+// 		headers: {
+// 			Authorization: `Bearer ${token}`,
+// 		},
+// 	});
+// 	return response.data;
+// };
 
 export const getUserDetails = async (token) => {
 	const response = await axiosClient.get(`/oauth/google/user`, {
@@ -65,14 +66,16 @@ export const getUserSession = async (token) => {
 	return response.data?.session_list;
 };
 
-export const getQuerySession = async (sessionId, token) => {
-	const response = await axiosClient.get(`/query/session/${sessionId}`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
-	return response.data;
-};
+
+// Not used as of now
+// export const getQuerySession = async (sessionId, token) => {
+// 	const response = await axiosClient.get(`/query/session/${sessionId}`, {
+// 		headers: {
+// 			Authorization: `Bearer ${token}`,
+// 		},
+// 	});
+// 	return response.data;
+// };
 
 export const createQuery = async (data, token) => {
 	const response = await axiosClient.post(`/query`, data, {
