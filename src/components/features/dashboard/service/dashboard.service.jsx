@@ -43,7 +43,7 @@ export const getDashboardContent = async (token, id) => {
 export const createDashboard = async (token, name) => {
 	const response = await axiosClient.post(
 		`/dashboard`,
-		{ tittle: name },
+		{ title: name },
 		{
 			headers: {
 				Authorization: `Bearer ${token}`,
