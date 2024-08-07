@@ -49,6 +49,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 				return (
 					<SourceComponent
 						data={answerResp?.answer?.[workspace.activeTab]}
+						datasourceId = {answerResp?.datasource_id}
 					/>
 				);
 			default:

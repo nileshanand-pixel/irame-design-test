@@ -56,7 +56,7 @@ export const MultiSelect = React.forwardRef(
 		},
 		ref,
 	) => {
-		const [selectedValues, setSelectedValues] = React.useState(defaultValue);
+		const [selectedValues, setSelectedValues] = React.useState([]);
 		const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
 		const [isAnimating, setIsAnimating] = React.useState(false);
 		const [popoverWidth, setPopoverWidth] = React.useState(0);
@@ -69,10 +69,11 @@ export const MultiSelect = React.forwardRef(
 		}, []);
 
 		React.useEffect(() => {
-			if (JSON.stringify(selectedValues) !== JSON.stringify(defaultValue)) {
-				setSelectedValues(selectedValues);
-			}
-		}, [defaultValue, selectedValues]);
+				setSelectedValues(defaultValue);
+		}, [defaultValue]);
+
+
+		const visibleColumnCount = Math.min(selectedValues.length, maxCount);
 
 		const handleInputKeyDown = (event) => {
 			if (event.key === 'Enter') {
@@ -103,7 +104,7 @@ export const MultiSelect = React.forwardRef(
 		};
 
 		const clearExtraOptions = () => {
-			const newSelectedValues = selectedValues.slice(0, maxCount);
+			const newSelectedValues = selectedValues.slice(0, visibleColumnCount);
 			setSelectedValues(newSelectedValues);
 			onValueChange(newSelectedValues);
 		};
@@ -138,7 +139,7 @@ export const MultiSelect = React.forwardRef(
 							<div className="flex justify-between items-center w-full">
 								<div className="flex flex-wrap items-center">
 									{selectedValues
-										.slice(0, maxCount)
+										.slice(0, visibleColumnCount)
 										.map((value) => {
 											const option = options.find(
 												(o) => o.value === value,
@@ -162,7 +163,7 @@ export const MultiSelect = React.forwardRef(
 													{IconComponent && (
 														<IconComponent className="h-4 w-4 mr-2" />
 													)}
-													{option?.label}
+													{option?.label || value}
 													<XCircle
 														className="ml-2 h-4 w-4 cursor-pointer"
 														onClick={(event) => {

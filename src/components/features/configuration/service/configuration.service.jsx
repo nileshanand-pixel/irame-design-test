@@ -64,6 +64,16 @@ export const getDataSources = async (authToken) => {
 	return response.data?.datasource_list;
 };
 
+export const getDataSourceById = async(authToken, id) => {
+	const response = await axiosClient.get(`/config/datasource/${id}`, {
+		headers: {
+			Authorization: `Bearer ${authToken}`,
+		},
+	});
+
+	return response.data;
+}
+
 export const createNewDtaSource = async (data, authToken) => {
 	const response = await axiosClient.post(`/config/datasource`, data, {
 		headers: {
