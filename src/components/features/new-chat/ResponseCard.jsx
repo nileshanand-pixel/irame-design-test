@@ -36,8 +36,8 @@ const ResponseCard = ({
 	);
 
 	let safeHTML = '';
-	if (answerItem && answerItem[1]?.tool_data) {
-		safeHTML = DOMPurify.sanitize(answerItem[1]?.tool_data);
+	if (answerItem && answerItem[1]?.tool_data?.text) {
+		safeHTML = DOMPurify.sanitize(answerItem[1]?.tool_data?.text);
 	}
 
 	const graphDataItem = mainItems.find(

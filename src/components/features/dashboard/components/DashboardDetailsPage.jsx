@@ -17,8 +17,8 @@ const DashboardDetailsPage = () => {
 	const elementRef = useRef(null);
 
 	let safeHTML = '';
-	if (selectedItem && selectedItem?.content?.summary) {
-		safeHTML = DOMPurify.sanitize(selectedItem?.content?.summary);
+	if (selectedItem && selectedItem?.content?.summary?.text) {
+		safeHTML = DOMPurify.sanitize(selectedItem?.content?.summary?.text);
 	}
 
 	const dashboardDetailsQuery = useQuery({
@@ -183,7 +183,7 @@ const DashboardDetailsPage = () => {
 									</div>
 									<div className="max-h-[60%]">
 										<div className="h-[100%] mb-2">
-											{selectedItem?.content?.summary ? (
+											{selectedItem?.content?.summary?.text ? (
 												<p
 													className="text-primary80 font-normal h-[50%] overflow-y-clip mt-2"
 													style={{

@@ -73,7 +73,7 @@ const AddQueryToDashboard = ({ open, setDashboard }) => {
 
 	const filteredList = useMemo(() => {
 		return dashboards.filter((item) =>
-			item?.tittle?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
+			item?.title?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
 		);
 	}, [search, dashboards]);
 
@@ -129,7 +129,7 @@ const AddQueryToDashboard = ({ open, setDashboard }) => {
 									</div>
 									<div className="flex flex-col">
 										<h4 className="text-primary80 text-base font-semibold max-w-[16rem] truncate">
-											{dashboard.tittle}
+											{dashboard.title}
 										</h4>
 										<p className="text-primary60 text-sm font-normal max-w-[16rem] truncate">
 											{dashboard?.answer ||
