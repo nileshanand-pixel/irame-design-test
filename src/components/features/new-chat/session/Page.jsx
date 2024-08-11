@@ -147,7 +147,11 @@ const Workzone = () => {
 								return existingAnswer;
 							}
 
-							const graphKeyExists = existingAnswer?.answer && Object.keys(existingAnswer?.answer).includes("graph")
+							const graphKeyExists =
+								existingAnswer?.answer &&
+								Object.keys(existingAnswer?.answer).includes(
+									'graph',
+								);
 							const newGraph = newAnswer?.answer?.graph;
 
 							// Determine if we need to update the graph key -> helps in graph stopping graph reload
@@ -161,7 +165,7 @@ const Workzone = () => {
 							};
 						}
 
-						return newAnswer; 
+						return newAnswer;
 					});
 				});
 
@@ -563,12 +567,6 @@ const Workzone = () => {
 					workspace.show ? 'col-span-8' : 'col-span-12 mx-[8rem]',
 				)}
 			>
-				{/* {utilReducer?.selectedDataSource?.name && (
-					<div className="mt-2 mb-8 rounded-lg px-5 py-2 bg-purple-10 float-right text-primary80 font-medium max-w-[220px] truncate">
-						<i className="bi-database-check mr-2 text-primary80"></i>
-						{utilReducer?.selectedDataSource?.name}
-					</div>
-				)} */}
 				<div
 					ref={scrollRef}
 					className="mb-[4vh] h-[68vh] h-sm:h-[72vh] h-md:h-[76vh] h-lg:h-[76vh] h-xl:h-[78vh] overflow-y-auto w-full"

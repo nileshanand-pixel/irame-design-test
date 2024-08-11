@@ -8,15 +8,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 	useEffect(() => {
+		let firstTab;
 		if (!workspace?.activeTab && answerResp?.answer) {
-			const firstTab = Object.keys(answerResp.answer)[0];
+			firstTab = Object.keys(answerResp.answer)[0];
 			setWorkspace((prevState) => ({
 				...prevState,
 				activeTab: firstTab,
 				visitedTabs: { ...prevState.visitedTabs, [firstTab]: true },
 			}));
 		}
-		if (setWorkspace) {
+		if (setWorkspace && firstTab) {
 			setWorkspace((prevState) => ({
 				...prevState,
 				visitedTabs: { ...prevState.visitedTabs, planner: true },
@@ -34,7 +35,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 				);
 			case WorkspaceEnum.Coder: {
 				const coderData = answerResp?.answer?.[WorkspaceEnum.Coder];
-				return <CoderComponent data={coderData?.tool_data} />;
+				return <CoderComponent data={coderData?.tool_data?.text} />;
 			}
 			case WorkspaceEnum.Graph:
 				return (
@@ -58,7 +59,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 	return (
 		<div className=" rounded-2xl my-6 w-[100%] h-full overflow-hidden ">
 			<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">
-				{answerResp?.answer
+				{answerResp?.status !== 'in_queue' && answerResp?.answer
 					? Object.keys(answerResp?.answer)
 							?.filter(
 								(key) =>
@@ -92,7 +93,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 							/>
 						))}
 			</ul>
-			{answerResp?.answer ? (
+			{answerResp?.status !== 'in_queue' && answerResp?.answer ? (
 				<div className="w-full h-[98%] overflow-y-auto">
 					{renderedComponent}
 				</div>
