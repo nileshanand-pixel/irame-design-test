@@ -4,7 +4,7 @@ import DOMPurify from 'dompurify';
 const PlannerComponent = ({ data }) => {
 	let segments = [];
 	if (data && data.tool_data) {
-		const rawSegments = data.tool_data.replace(/\\n/g, '\n').split('<slice/>');
+		const rawSegments = data.tool_data.text.replace(/\\n/g, '\n').split('<slice/>');
 		segments = rawSegments.map((segment) => DOMPurify.sanitize(segment.trim()));
 	}
 

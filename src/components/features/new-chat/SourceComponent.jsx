@@ -30,7 +30,7 @@ const SourceComponent = ({ data }) => {
 									</h3>
 								</div>
 								<div className="flex flex-wrap gap-2 mt-6 border border-black/10 rounded-lg px-3 py-2.5">
-									{toolData[fileName].Columns_Used.map(
+									{toolData[fileName].columns_used.map(
 										(column, i) => (
 											<div
 												key={i}
