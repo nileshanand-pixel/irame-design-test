@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { getReports } from './service/reports.service';
 import ReportCard from './components/ReportCard';
+import CardSkeleton from './components/CardSkeletion';
 
 const Reports = () => {
 	const [reports, setReports] = useState([]);
@@ -63,7 +64,8 @@ const Reports = () => {
 					<Button
 						variant="secondary"
 						className="w-fit rounded-lg bg-purple-8 hover:bg-purple-16 text-purple-100 font-medium"
-						onClick={() => alert('Implement Nahi Karna abhi to')}
+						// onClick={() => alert('Implement Nahi Karna abhi to')}
+						disabled={true}
 					>
 						Create Report
 					</Button>
@@ -84,15 +86,11 @@ const Reports = () => {
 						No such Report found
 					</p>
 				</div>
-			) : reportsQuery.isLoading ? (
-				<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
-					<div className="flex items-center space-x-4">
-						<Skeleton className="h-12 w-16 rounded-xl bg-purple-4" />
-						<div className="space-y-2">
-							<Skeleton className="h-4 w-[250px] bg-purple-4" />
-							<Skeleton className="h-4 w-[200px] bg-purple-4" />
-						</div>
-					</div>
+			) :  reportsQuery.isLoading ? (
+				<div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
+					<CardSkeleton/>
+					<CardSkeleton/>
+					<CardSkeleton/>
 				</div>
 			) : (
 				<div className="w-full mt-6 p-6 bg-white">

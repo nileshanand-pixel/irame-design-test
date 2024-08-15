@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import capitalize from 'lodash.capitalize';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs) {
@@ -17,7 +18,7 @@ export const formatFileSize = (size) => {
 	}
 };
 
-export const tokenCookie = '';
+export const tokenCookie = import.meta.env.VITE_COOKIE_TOKEN;
 
 export const getToken = () => {
 	const cookieString = document.cookie;
@@ -49,4 +50,12 @@ export function toTitleCase(str) {
 	return str.replace(/\w\S*/g, function (txt) {
 		return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
 	});
+}
+export const getShortHandName = (fullName) => {
+	if(fullName.length > 0){
+		const splits = fullName.split(' ');
+		const firstLetter = splits[0].charAt(0);
+		const lastLetter = splits[splits.length - 1][0];
+		return capitalize(firstLetter + lastLetter);
+	}else return '--'
 }
