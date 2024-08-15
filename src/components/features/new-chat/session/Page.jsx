@@ -611,7 +611,7 @@ const Workzone = () => {
 			</div>
 
 			{workspace.show ? (
-				<div className="border sticky rounded-3xl py-4 px-4 col-span-4 shadow-1xl h-[90vh]">
+				<div className="border sticky rounded-3xl py-4 w-full px-4 col-span-4 shadow-1xl h-[90vh]">
 					<div className="flex justify-between">
 						<div className="flex items-center gap-1">
 							<img
