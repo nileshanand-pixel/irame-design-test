@@ -5,6 +5,8 @@ import CoderComponent from './CoderComponent';
 import { WorkspaceEnum, workSpaceMap } from './types/new-chat.enum';
 import GraphComponent from '@/components/elements/GraphComponent';
 import { Skeleton } from '@/components/ui/skeleton';
+import { WorkspaceEditProvider } from './components/WorkspaceEditProvider';
+import { useSelector } from 'react-redux';
 
 const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 	useEffect(() => {
@@ -28,10 +30,12 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 		switch (workspace?.activeTab) {
 			case WorkspaceEnum.Planner:
 				return (
-					<PlannerComponent
-						data={answerResp?.answer?.[WorkspaceEnum.Planner]}
-						status = {answerResp?.status}
-					/>
+					<WorkspaceEditProvider>
+						<PlannerComponent
+							data={answerResp?.answer?.[WorkspaceEnum.Planner]}
+							status={answerResp?.status}
+						/>
+					</WorkspaceEditProvider>
 				);
 			case WorkspaceEnum.Coder: {
 				const coderData = answerResp?.answer?.[WorkspaceEnum.Coder];
@@ -48,18 +52,19 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 			case WorkspaceEnum.Answer:
 			case WorkspaceEnum.Reference:
 				return (
-					<SourceComponent
-						data={answerResp?.answer?.[workspace.activeTab]}
-						datasourceId = {answerResp?.datasource_id}
-						status = {answerResp?.status}
-					/>
+					<WorkspaceEditProvider>
+						<SourceComponent
+							data={answerResp?.answer?.[workspace.activeTab]}
+							datasourceId={answerResp?.datasource_id}
+							status={answerResp?.status}
+						/>
+					</WorkspaceEditProvider>
 				);
 			default:
 				return null;
 		}
 	}, [workspace?.activeTab, answerResp?.answer]);
 
-	
 	return (
 		<div className=" rounded-2xl my-6 w-[100%] h-full overflow-hidden ">
 			<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">

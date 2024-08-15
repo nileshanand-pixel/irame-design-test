@@ -1,25 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
+import { EditContext } from './components/WorkspaceEditProvider';
+import { useSelector } from 'react-redux';
 
 const PlannerComponent = ({ data, status }) => {
-	const [segments, setSegments] = useState([]);
+	const { segments, setSegments } = useContext(EditContext);
 	const [isEditing, setIsEditing] = useState(false);
 	const [editIndex, setEditIndex] = useState(null);
 	const [editContent, setEditContent] = useState('');
 	const editRef = useRef(null);
+	const chatStoreReducer = useSelector(state => state.chatStoreReducer);
+
+
+	const setInitialSegments = () => {
+		const rawSegments = data.tool_data.text
+			.replace(/\\n/g, '\n')
+			.split('<slice/>');
+		setSegments(
+			rawSegments.map((segment) => DOMPurify.sanitize(segment.trim())),
+		);
+	};
 
 	// Initialize segments from data
 	useEffect(() => {
-		if (data && data?.tool_data?.text) {
-			const rawSegments = data.tool_data.text
-				.replace(/\\n/g, '\n')
-				.split('<slice/>');
-			setSegments(
-				rawSegments.map((segment) => DOMPurify.sanitize(segment.trim())),
-			);
-		}
+		if (!segments.length)setInitialSegments()
 	}, [data]);
+
+	useEffect(() => {
+		setInitialSegments();
+	}, [chatStoreReducer?.activeQueryId]);
 
 	const handleEdit = (index) => {
 		setIsEditing(true);
