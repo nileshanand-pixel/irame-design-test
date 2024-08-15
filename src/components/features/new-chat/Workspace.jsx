@@ -30,6 +30,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 				return (
 					<PlannerComponent
 						data={answerResp?.answer?.[WorkspaceEnum.Planner]}
+						status = {answerResp?.status}
 					/>
 				);
 			case WorkspaceEnum.Coder: {
@@ -50,12 +51,15 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 					<SourceComponent
 						data={answerResp?.answer?.[workspace.activeTab]}
 						datasourceId = {answerResp?.datasource_id}
+						status = {answerResp?.status}
 					/>
 				);
 			default:
 				return null;
 		}
 	}, [workspace?.activeTab, answerResp?.answer]);
+
+	
 	return (
 		<div className=" rounded-2xl my-6 w-[100%] h-full overflow-hidden ">
 			<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">

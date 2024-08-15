@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 
-const PlannerComponent = ({ data }) => {
+const PlannerComponent = ({ data, status }) => {
 	const [segments, setSegments] = useState([]);
 	const [isEditing, setIsEditing] = useState(false);
 	const [editIndex, setEditIndex] = useState(null);
@@ -12,8 +12,12 @@ const PlannerComponent = ({ data }) => {
 	// Initialize segments from data
 	useEffect(() => {
 		if (data && data?.tool_data?.text) {
-			const rawSegments = data.tool_data.text.replace(/\\n/g, '\n').split('<slice/>');
-			setSegments(rawSegments.map((segment) => DOMPurify.sanitize(segment.trim())));
+			const rawSegments = data.tool_data.text
+				.replace(/\\n/g, '\n')
+				.split('<slice/>');
+			setSegments(
+				rawSegments.map((segment) => DOMPurify.sanitize(segment.trim())),
+			);
 		}
 	}, [data]);
 
@@ -37,7 +41,6 @@ const PlannerComponent = ({ data }) => {
 		setEditIndex(null);
 		setEditContent('');
 	};
-    
 
 	return (
 		<div className="my-4 col-span-4 max-h-[80%] overflow-y-auto space-y-4">
@@ -73,15 +76,19 @@ const PlannerComponent = ({ data }) => {
 							</>
 						) : (
 							<div>
-								<div dangerouslySetInnerHTML={{ __html: segment }}></div>
-								<Button
-									variant="outline"
-									className="text-sm mt-2 font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
-									onClick={() => handleEdit(index)}
-									disabled = {isEditing && editIndex !== index}
-								>
-									Edit
-								</Button>
+								<div
+									dangerouslySetInnerHTML={{ __html: segment }}
+								></div>
+								{status === 'done' && (
+									<Button
+										variant="outline"
+										className="text-sm mt-2 font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
+										onClick={() => handleEdit(index)}
+										disabled={isEditing && editIndex !== index}
+									>
+										Edit
+									</Button>
+								)}
 							</div>
 						)}
 					</div>

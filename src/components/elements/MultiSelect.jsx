@@ -18,26 +18,23 @@ import {
 	CommandList,
 	CommandSeparator,
 } from '@/components/ui/command';
+import capitalize from 'lodash.capitalize';
 
-const multiSelectVariants = cva(
-	'm-1 transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300',
-	{
-		variants: {
-			variant: {
-				default:
-					'border-foreground/10 text-foreground bg-card hover:bg-card/80',
-				secondary:
-					'border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80',
-				destructive:
-					'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
-				inverted: 'inverted',
-			},
-		},
-		defaultVariants: {
-			variant: 'default',
+const multiSelectVariants = cva('m-1', {
+	variants: {
+		variant: {
+			default: 'text-foreground',
+			secondary:
+				'border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80',
+			destructive:
+				'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
+			inverted: 'inverted',
 		},
 	},
-);
+	defaultVariants: {
+		variant: 'default',
+	},
+});
 
 export const MultiSelect = React.forwardRef(
 	(
@@ -69,9 +66,8 @@ export const MultiSelect = React.forwardRef(
 		}, []);
 
 		React.useEffect(() => {
-				setSelectedValues(defaultValue);
+			setSelectedValues(defaultValue);
 		}, [defaultValue]);
-
 
 		const visibleColumnCount = Math.min(selectedValues.length, maxCount);
 
@@ -146,54 +142,37 @@ export const MultiSelect = React.forwardRef(
 											);
 											const IconComponent = option?.icon;
 											return (
-												<Badge
+												<div
 													key={value}
-													className={cn(
-														isAnimating
-															? 'animate-bounce'
-															: '',
-														multiSelectVariants({
-															variant,
-														}),
-													)}
-													style={{
-														animationDuration: `${animation}s`,
-													}}
+													className="h-2 pl-3 pr-1 py-4 my-1 mr-2 flex border rounded-[30px] font-semibold cursor-pointer bg-purple-8 text-[#26064ACC] items-center"
 												>
 													{IconComponent && (
 														<IconComponent className="h-4 w-4 mr-2" />
 													)}
-													{option?.label || value}
-													<XCircle
-														className="ml-2 h-4 w-4 cursor-pointer"
+													{capitalize(
+														option?.label || value,
+													)}
+													<i
+														className="ml-2 cursor-pointer text-3xl text-[#26064A66] font-semibold bi-x"
 														onClick={(event) => {
 															event.stopPropagation();
 															toggleOption(value);
 														}}
 													/>
-												</Badge>
+												</div>
 											);
 										})}
 									{selectedValues.length > maxCount && (
-										<Badge
-											className={cn(
-												'bg-transparent text-foreground border-foreground/1 hover:bg-transparent',
-												isAnimating ? 'animate-bounce' : '',
-												multiSelectVariants({ variant }),
-											)}
-											style={{
-												animationDuration: `${animation}s`,
-											}}
-										>
+										<div className="h-2 pl-3 pr-1 py-4 my-1 mr-2 flex border rounded-[30px] font-semibold cursor-pointer bg-purple-8 text-[#26064ACC] items-center">
 											{`+ ${selectedValues.length - maxCount} more`}
-											<XCircle
-												className="ml-2 h-4 w-4 cursor-pointer"
+											<i
+												className="ml-2 cursor-pointer text-3xl text-[#26064A66] font-semibold bi-x"
 												onClick={(event) => {
 													event.stopPropagation();
 													clearExtraOptions();
 												}}
 											/>
-										</Badge>
+										</div>
 									)}
 								</div>
 								<div className="flex items-center justify-between">
@@ -224,24 +203,6 @@ export const MultiSelect = React.forwardRef(
 						<CommandList>
 							<CommandEmpty>No results found.</CommandEmpty>
 							<CommandGroup>
-								<CommandItem
-									key="all"
-									onSelect={toggleAll}
-									className="cursor-pointer"
-									disabled={false}
-								>
-									<div
-										className={cn(
-											'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
-											selectedValues.length === options.length
-												? 'bg-primary text-primary-foreground'
-												: 'opacity-50 [&_svg]:invisible',
-										)}
-									>
-										<CheckIcon className="h-4 w-4" />
-									</div>
-									<span>(Select All)</span>
-								</CommandItem>
 								{options.map((option) => {
 									const isSelected = selectedValues.includes(
 										option.value,
@@ -276,21 +237,6 @@ export const MultiSelect = React.forwardRef(
 							<CommandSeparator />
 							<CommandGroup>
 								<div className="flex items-center justify-between">
-									{selectedValues.length > 0 && (
-										<>
-											<CommandItem
-												onSelect={handleClear}
-												className="flex-1 justify-center cursor-pointer"
-												disabled={false}
-											>
-												Clear
-											</CommandItem>
-											<Separator
-												orientation="vertical"
-												className="flex min-h-6 h-full"
-											/>
-										</>
-									)}
 									<CommandItem
 										onSelect={() => setIsPopoverOpen(false)}
 										className="flex-1 justify-center cursor-pointer max-w-full"
@@ -303,15 +249,6 @@ export const MultiSelect = React.forwardRef(
 						</CommandList>
 					</Command>
 				</PopoverContent>
-				{animation > 0 && selectedValues.length > 0 && (
-					<WandSparkles
-						className={cn(
-							'cursor-pointer my-2 text-foreground bg-background w-3 h-3',
-							isAnimating ? '' : 'text-muted-foreground',
-						)}
-						onClick={() => setIsAnimating(!isAnimating)}
-					/>
-				)}
 			</Popover>
 		);
 	},

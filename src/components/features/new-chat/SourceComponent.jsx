@@ -8,7 +8,6 @@ import { getDataSourceById } from '../configuration/service/configuration.servic
 import { getToken } from '@/lib/utils';
 
 const SourceComponent = ({ data, datasourceId }) => {
-	console.log(data);
 	const toolData =
 		data?.tool_data && typeof data?.tool_data === 'string'
 			? JSON.parse(data?.tool_data)
@@ -16,6 +15,23 @@ const SourceComponent = ({ data, datasourceId }) => {
 
 	const [selectedColumns, setSelectedColumns] = useState({});
 	const [originalColumns, setOriginalColumns] = useState({});
+
+	const { data: datasourceData, isLoading } = useQuery({
+		queryKey: ['get-single-datasource', datasourceId],
+		queryFn: () => fetchDatasource(datasourceId),
+		enabled: !!datasourceId,
+		refetchOnWindowFocus: false,
+		retry: false
+	});
+
+
+	async function fetchDatasource(datasourceId){
+		try {
+			return await getDataSourceById(getToken(), datasourceId);
+		} catch (error) {
+			console.error('Error fetching data source:', error);
+		}
+	};
 
 	useEffect(() => {
 		if (toolData) {
@@ -30,73 +46,6 @@ const SourceComponent = ({ data, datasourceId }) => {
 		}
 	}, [toolData]);
 
-	const fetchDatasource = async (datasourceId) => {
-		try {
-			return getDataSourceById(getToken(), datasourceId);
-		} catch (error) {
-			console.error('Error fetching data source:', error);
-		}
-	};
-
-	// let { datasourceData, isLoading } = useQuery({
-	// 	queryKey: ['get-single-datasource'],
-	// 	queryFn: fetchDatasource(datasourceId),
-	// 	enabled: !!datasourceId,
-	// 	retry: false
-	// });
-
-	const datasourceData = {
-		"datasource_id": "66af7295115b40706375b89a",
-		"user_id": "6672fc4e40e17047efca7a78",
-		"org_id": "default",
-		"name": "Blinkit_data_something_test3",
-		"raw_files": [
-			{
-				"file_name": "sampleblinkit.csv",
-				"file_id": "35416a6d-7cea-43a4-b90c-976556fbfbfe",
-				"file_url": "https://irame-sna.s3.amazonaws.com/something/65c270f4-d2bd-4c2a-b256-5264d9a6457c/Wallets.csv"
-			}
-		],
-		"version": "0.1.0",
-		"processed_files": {
-			"files": [
-				{
-					"id": "file1",
-					"filename": "sheet1.xlsx",
-					"type": "excel",
-					"worksheet": "sheet 1",
-					"url": "url1.com",
-					"columns": [
-						{
-							"name": "col1",
-							"description": "col_desc1"
-						},
-						{
-							"name": "col3",
-							"description": "desc_col3"
-						}
-					],
-					"metadata": {
-						"files": {
-							"file1.csv": {
-								"url": "url_file1.csv"
-							},
-							"file2.json": {
-								"url": "url_file1.json"
-							},
-							"file3.json": {
-								"url": "url_file3.json"
-							}
-						}
-					}
-				}
-			]
-		}
-	}
-
-
-
-
 	const handleColumnChange = (fileName) => (newSelectedColumns) => {
 		setSelectedColumns((prevState) => ({
 			...prevState,
@@ -104,45 +53,36 @@ const SourceComponent = ({ data, datasourceId }) => {
 		}));
 	};
 
-	const resetColumns = (fileName) => {
-		setSelectedColumns((prevState) => ({
-			...prevState,
-			[fileName]: originalColumns[fileName],
-		}));
-	};
-
-	const renderFile = () => {
-		console.log("toolData", toolData);
+	const renderFiles = () => {
 		let contentArr = [];
-		Object.keys(toolData || {}).map((fileId, index) => {
-			const fileData = datasourceData?.processed_files?.files?.find((item) => item.id === fileId);
-			console.log(fileData);
-			if(fileData.id){
+		if(!datasourceData?.processed_files?.files)return;
+		datasourceData?.processed_files?.files?.map((file, index) => {
+			if(file?.id){
 				const content = (<div
-					key={fileId}
+					key={file?.id}
 					className="mb-4 border border-purple-10 rounded-2xl p-4 "
 				>
 					<div className="flex items-center gap-2">
 						<img
-							src={getFileIcon(fileData?.filename)}
+							src={getFileIcon(file?.filename)}
 							width={20}
 							height={20}
 						/>
 						<h3 className="text-primary60 font-semibold ">
-							{fileData?.filename || 'File'}
+							{file?.filename || 'File'}
 						</h3>
 					</div>
 					<div className="flex flex-wrap gap-2 mt-4 rounded-lg py-2.5">
 						<MultiSelect
-							options={fileData?.columns?.map(
+							options={file?.columns?.map(
 								(column) => ({
 									label: column.name,
 									value: column.name,
 								}),
 							)}
-							defaultValue={selectedColumns[fileId]}
-							onValueChange={handleColumnChange(fileId)}
-							maxCount={5}
+							defaultValue={selectedColumns[file?.id]}
+							onValueChange={handleColumnChange(file?.id)}
+							maxCount={3}
 						/>
 					</div>
 				</div>)
@@ -158,11 +98,8 @@ const SourceComponent = ({ data, datasourceId }) => {
 	return (
 		<div className="rounded-2xl col-span-4 text-primary80 font-medium h-fit">
 			<div className="mb-4">
-				<h3 className="text-primary100 font-medium">
-					{/* {data.charAt(0).toUpperCase() + data.slice(1)} */}
-				</h3>
-				{toolData
-					? (renderFile())
+				{toolData && !isLoading
+					? (renderFiles())
 					: null}
 			</div>
 		</div>
