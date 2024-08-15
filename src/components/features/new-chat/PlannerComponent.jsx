@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { EditContext } from './components/WorkspaceEditProvider';
 import { useSelector } from 'react-redux';
 
-const PlannerComponent = ({ data, status }) => {
-	const { segments, setSegments } = useContext(EditContext);
+const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasChanges }) => {
+	const { segments, setSegments, changeSets,  setChangesets, editDisabled} = useContext(EditContext);
 	const [isEditing, setIsEditing] = useState(false);
 	const [editIndex, setEditIndex] = useState(null);
 	const [editContent, setEditContent] = useState('');
@@ -14,6 +14,7 @@ const PlannerComponent = ({ data, status }) => {
 
 
 	const setInitialSegments = () => {
+		if(!data?.tool_data?.text)return;
 		const rawSegments = data.tool_data.text
 			.replace(/\\n/g, '\n')
 			.split('<slice/>');
@@ -28,13 +29,16 @@ const PlannerComponent = ({ data, status }) => {
 	}, [data]);
 
 	useEffect(() => {
+		if(workspaceHasChanges)return;
 		setInitialSegments();
 	}, [chatStoreReducer?.activeQueryId]);
 
 	const handleEdit = (index) => {
+		setWorkspaceHasChanges(true);
 		setIsEditing(true);
 		setEditIndex(index);
 		setEditContent(segments[index]);
+		setChangesets({...changeSets, planner: true});
 	};
 
 	const handleSave = () => {
@@ -94,7 +98,7 @@ const PlannerComponent = ({ data, status }) => {
 										variant="outline"
 										className="text-sm mt-2 font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
 										onClick={() => handleEdit(index)}
-										disabled={isEditing && editIndex !== index}
+										disabled={isEditing && editIndex !== index && editDisabled}
 									>
 										Edit
 									</Button>

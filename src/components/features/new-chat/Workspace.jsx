@@ -5,10 +5,13 @@ import CoderComponent from './CoderComponent';
 import { WorkspaceEnum, workSpaceMap } from './types/new-chat.enum';
 import GraphComponent from '@/components/elements/GraphComponent';
 import { Skeleton } from '@/components/ui/skeleton';
-import { WorkspaceEditProvider } from './components/WorkspaceEditProvider';
+import { useWorkspaceEdit} from './components/WorkspaceEditProvider';
 import { Button } from '@/components/ui/button';
 
-const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
+const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace}) => {
+	const [workspaceHasChanges, setWorkspaceHasChanges] = useState(false);
+	const {regenerateResponse, editDisabled} = useWorkspaceEdit();
+
 	useEffect(() => {
 		if (!workspace?.activeTab && answerResp?.answer) {
 			const firstTab = Object.keys(answerResp.answer)[0];
@@ -33,6 +36,8 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 					<PlannerComponent
 						data={answerResp?.answer?.[WorkspaceEnum.Planner]}
 						status={answerResp?.status}
+						workspaceHasChanges = {workspaceHasChanges}
+						setWorkspaceHasChanges = {setWorkspaceHasChanges}
 					/>
 				);
 			case WorkspaceEnum.Coder: {
@@ -54,6 +59,8 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 						data={answerResp?.answer?.[workspace.activeTab]}
 						datasourceId={answerResp?.datasource_id}
 						status={answerResp?.status}
+						workspaceHasChanges = {workspaceHasChanges}
+						setWorkspaceHasChanges = {setWorkspaceHasChanges}
 					/>
 				);
 			default:
@@ -62,7 +69,6 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 	}, [workspace?.activeTab, answerResp?.answer]);
 
 	return (
-		<WorkspaceEditProvider>
 			<div className=" rounded-2xl my-6 w-[100%] h-full overflow-hidden relative ">
 				<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">
 					{answerResp?.answer
@@ -104,17 +110,12 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 						{renderedComponent}
 						<div className="my-2 flex gap-4 w-full absolute bottom-10">
 							<Button
-								variant="outline"
-								className="text-muted-foreground cursor-pointer w-1/2"
-								onClick={() => alert('implement reset')}
-							>
-								Reset
-							</Button>
-							<Button
-								className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80 w-1/2"
+								className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80 w-full"
 								onClick={() => {
-									alert('implement Regenerate Response');
+									regenerateResponse(answerResp);
+									setWorkspaceHasChanges(false);
 								}}
+								disabled={editDisabled}
 							>
 								Regenerate Response
 							</Button>
@@ -131,7 +132,6 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 					</div>
 				)}
 			</div>
-		</WorkspaceEditProvider>
 	);
 };
 

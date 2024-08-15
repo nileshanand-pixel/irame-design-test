@@ -20,6 +20,7 @@ import { queryClient } from '@/lib/react-query';
 import QueueStatus from '../QueueStatus';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import isEqual from 'lodash.isequal';
+import { WorkspaceEditProvider } from '../components/WorkspaceEditProvider';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -293,6 +294,67 @@ const Workzone = () => {
 			setPrompt('');
 		}
 	};
+
+	const handleRegenerateResponse = (answer, workspaceChanges) => {
+		try {
+			if (inputDisabled) return;
+			const tempPrompt = workspaceChanges.query;
+			const tempCurrentQueries = [
+				...chatStoreReducer?.queries,
+				{ id: '', question: tempPrompt, parentQueryId: answer.query_id },
+			];
+			dispatch(
+				updateChatStoreProp([{ key: 'queries', value: tempCurrentQueries }]),
+			);
+			createQuery(
+				{
+					child_no: parseInt(answer.child_no) + 1,
+					datasource_id: answer?.datasource_id,
+					parent_query_id: answer?.query_id,
+					query: tempPrompt,
+					session_id: answer?.session_id,
+					workspace_changes: workspaceChanges.apiConfig
+				},
+				getToken(),
+			).then((res) => {
+				const updatedQueries = tempCurrentQueries?.map((item) => {
+					if (item?.parentQueryId === res?.query_id) {
+						return { id: res.query_id, question: tempPrompt };
+					}
+					return { ...item };
+				});
+				setDoingScience((prevState) => {
+					const tempState = [...prevState];
+					tempState.push({ queryId: res?.query_id, status: true });
+					return tempState;
+				});
+				dispatch(
+					updateChatStoreProp([
+						{
+							key: 'refreshChat',
+							value: !chatStoreReducer?.refreshChat,
+						},
+						{ key: 'queries', value: updatedQueries },
+						{ key: 'activeQueryId', value: res?.query_id },
+					]),
+				);
+
+				queryClient.invalidateQueries(['chat-history'], {
+					refetchActive: true,
+					refetchInactive: true,
+				});
+			});
+
+			setResponseTimeElapsed(0);
+			setBanners((prevState) => ({
+				...prevState,
+				showFailedResponse: false,
+				showDelay: false,
+			}));
+		} catch (error) {
+			console.log(error);
+		}
+	}
 
 	const toggleIra = (targetQueryId) => {
 		if (!targetQueryId) return;
@@ -611,41 +673,44 @@ const Workzone = () => {
 			</div>
 
 			{workspace.show ? (
-				<div className="border sticky rounded-3xl py-4 w-full px-4 col-span-4 shadow-1xl h-[90vh]">
-					<div className="flex justify-between">
-						<div className="flex items-center gap-1">
-							<img
-								src={`https://d2vkmtgu2mxkyq.cloudfront.net/category.svg`}
-								className="me-1 size-6"
-							/>
-							<h3 className="text-primary80 font-semibold text-xl">
-								Ira's Workspace
-							</h3>
+				<WorkspaceEditProvider regenerator = {handleRegenerateResponse} 
+				>
+					<div className="border sticky rounded-3xl py-4 w-full px-4 col-span-4 shadow-1xl h-[90vh]">
+						<div className="flex justify-between">
+							<div className="flex items-center gap-1">
+								<img
+									src={`https://d2vkmtgu2mxkyq.cloudfront.net/category.svg`}
+									className="me-1 size-6"
+								/>
+								<h3 className="text-primary80 font-semibold text-xl">
+									Ira's Workspace
+								</h3>
+							</div>
+							<i
+								className="bi-x text-2xl cursor-pointer"
+								onClick={() =>
+									setWorkspace((prevState) => ({
+										...prevState,
+										show: false,
+									}))
+								}
+							></i>
 						</div>
-						<i
-							className="bi-x text-2xl cursor-pointer"
-							onClick={() =>
-								setWorkspace((prevState) => ({
-									...prevState,
-									show: false,
-								}))
-							}
-						></i>
-					</div>
 
-					<Workspace
-						handleTabClick={handleTabClick}
-						workspace={workspace}
-						answerResp={
-							answers.find(
-								(item) =>
-									item?.query_id ===
-									chatStoreReducer?.activeQueryId,
-							) || answers?.[0]
-						}
-						setWorkspace={setWorkspace}
-					/>
-				</div>
+						<Workspace
+							handleTabClick={handleTabClick}
+							workspace={workspace}
+							answerResp={
+								answers.find(
+									(item) =>
+										item?.query_id ===
+										chatStoreReducer?.activeQueryId,
+								) || answers?.[0]
+							}
+							setWorkspace={setWorkspace}
+						/>
+					</div>
+				</WorkspaceEditProvider>
 			) : null}
 			{dashboard?.showAdd ? (
 				<AddQueryToDashboard

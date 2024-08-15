@@ -8,9 +8,15 @@ import { getToken } from '@/lib/utils';
 import { EditContext } from './components/WorkspaceEditProvider';
 import { useSelector } from 'react-redux';
 
-const SourceComponent = ({ data, datasourceId }) => {
-	const { selectedColumns, setSelectedColumns, handleColumnChange } = useContext(EditContext);
-	const chatStoreReducer = useSelector(state => state.chatStoreReducer);
+const SourceComponent = ({
+	data,
+	datasourceId,
+	workspaceHasChanges,
+	setWorkspaceHasChanges,
+}) => {
+	const { changeSets, selectedColumns, setSelectedColumns, handleColumnChange, setChangesets, editDisabled } = useContext(EditContext);
+
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
 	const toolData =
 		data?.tool_data && typeof data?.tool_data === 'string'
@@ -36,12 +42,12 @@ const SourceComponent = ({ data, datasourceId }) => {
 	const setInitialState = () => {
 		const initialSelectedColumns = {};
 
-			Object.keys(toolData).forEach((fileId) => {
-				initialSelectedColumns[fileId] = toolData[fileId].columns_used || [];
-			});
-			setSelectedColumns(initialSelectedColumns);
-	}
-	
+		Object.keys(toolData || {}).forEach((fileId) => {
+			initialSelectedColumns[fileId] = toolData[fileId].columns_used || [];
+		});
+		setSelectedColumns(initialSelectedColumns);
+	};
+
 	useEffect(() => {
 		if (toolData && !Object.keys(selectedColumns).length) {
 			setInitialState();
@@ -49,13 +55,20 @@ const SourceComponent = ({ data, datasourceId }) => {
 	}, [toolData]);
 
 	useEffect(() => {
+		if (workspaceHasChanges) return;
 		setInitialState();
 	}, [chatStoreReducer?.activeQueryId]);
 
 	const renderFiles = () => {
 		let contentArr = [];
 		if (!datasourceData?.processed_files?.files) return;
-		datasourceData?.processed_files?.files?.map((file) => {
+		const sortedFiles = datasourceData?.processed_files?.files.sort((a, b) => {
+			const selectedColumnsCountA = selectedColumns[a.id]?.length || 0;
+			const selectedColumnsCountB = selectedColumns[b.id]?.length || 0;
+
+			return selectedColumnsCountB - selectedColumnsCountA;
+		});
+		sortedFiles?.map((file) => {
 			if (file?.id) {
 				const content = (
 					<div
@@ -79,9 +92,12 @@ const SourceComponent = ({ data, datasourceId }) => {
 									value: column.name,
 								}))}
 								defaultValue={selectedColumns[file?.id]}
-								onValueChange={(newSelectedColumns) =>
-									handleColumnChange(file?.id, newSelectedColumns)
-								}
+								onValueChange={(newSelectedColumns) => {
+									if(editDisabled)return;
+									setWorkspaceHasChanges(true);
+									setChangesets({...changeSets, reference: true});
+									handleColumnChange(file?.id, newSelectedColumns);
+								}}
 								maxCount={3}
 							/>
 						</div>
