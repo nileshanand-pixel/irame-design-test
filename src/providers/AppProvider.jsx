@@ -7,10 +7,11 @@ import { Provider } from 'react-redux';
 import reduxStore from '@/redux/GlobalStore';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 function AppProvider({ children }) {
 	return (
-		<QueryClientProvider client={queryClient}>
+		<QueryClientProvider client={queryClient}  >
 			<Provider store={reduxStore}>
 				<Router>
 					<ErrorBoundary FallbackComponent={ErrorFallback}>
@@ -25,6 +26,7 @@ function AppProvider({ children }) {
 					</ErrorBoundary>
 				</Router>
 			</Provider>
+			{/* <ReactQueryDevtools initialIsOpen={trfalsue} /> */}
 		</QueryClientProvider>
 	);
 }

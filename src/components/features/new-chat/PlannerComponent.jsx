@@ -1,12 +1,60 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import DOMPurify from 'dompurify';
+import { Button } from '@/components/ui/button';
+import { EditContext } from './components/WorkspaceEditProvider';
+import { useSelector } from 'react-redux';
 
-const PlannerComponent = ({ data }) => {
-	let segments = [];
-	if (data && data.tool_data) {
-		const rawSegments = data.tool_data.text.replace(/\\n/g, '\n').split('<slice/>');
-		segments = rawSegments.map((segment) => DOMPurify.sanitize(segment.trim()));
-	}
+const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasChanges }) => {
+	const { segments, setSegments, changeSets,  setChangesets, editDisabled} = useContext(EditContext);
+	const [isEditing, setIsEditing] = useState(false);
+	const [editIndex, setEditIndex] = useState(null);
+	const [editContent, setEditContent] = useState('');
+	const editRef = useRef(null);
+	const chatStoreReducer = useSelector(state => state.chatStoreReducer);
+
+
+	const setInitialSegments = () => {
+		if(!data?.tool_data?.text)return;
+		const rawSegments = data.tool_data.text
+			.replace(/\\n/g, '\n')
+			.split('<slice/>');
+		setSegments(
+			rawSegments.map((segment) => DOMPurify.sanitize(segment.trim())),
+		);
+	};
+
+	// Initialize segments from data
+	useEffect(() => {
+		if (!segments.length)setInitialSegments()
+	}, [data]);
+
+	useEffect(() => {
+		if(workspaceHasChanges)return;
+		setInitialSegments();
+	}, [chatStoreReducer?.activeQueryId]);
+
+	const handleEdit = (index) => {
+		setWorkspaceHasChanges(true);
+		setIsEditing(true);
+		setEditIndex(index);
+		setEditContent(segments[index]);
+		setChangesets({...changeSets, planner: true});
+	};
+
+	const handleSave = () => {
+		const updatedSegments = [...segments];
+		updatedSegments[editIndex] = DOMPurify.sanitize(editRef.current.innerHTML);
+		setSegments(updatedSegments);
+		setIsEditing(false);
+		setEditIndex(null);
+		setEditContent('');
+	};
+
+	const handleCancel = () => {
+		setIsEditing(false);
+		setEditIndex(null);
+		setEditContent('');
+	};
 
 	return (
 		<div className="my-4 col-span-4 max-h-[80%] overflow-y-auto space-y-4">
@@ -14,10 +62,50 @@ const PlannerComponent = ({ data }) => {
 				segments.map((segment, index) => (
 					<div
 						key={index}
-						className="text-primary80 border rounded-2xl py-4 px-4 font-medium my-2 w-full truncate"
+						className="text-primary80 border rounded-2xl py-4 px-4 font-medium my-2 w-full"
 						style={{ whiteSpace: 'pre-wrap' }}
-						dangerouslySetInnerHTML={{ __html: segment }}
-					></div>
+					>
+						{isEditing && editIndex === index ? (
+							<>
+								<div
+									ref={editRef}
+									contentEditable
+									dangerouslySetInnerHTML={{ __html: editContent }}
+								></div>
+								<div className="mt-2 flex gap-4">
+									<Button
+										variant="outline"
+										className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
+										onClick={handleCancel}
+									>
+										Cancel
+									</Button>
+									<Button
+										className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+										onClick={handleSave}
+									>
+										Save
+									</Button>
+								</div>
+							</>
+						) : (
+							<div>
+								<div
+									dangerouslySetInnerHTML={{ __html: segment }}
+								></div>
+								{status === 'done' && (
+									<Button
+										variant="outline"
+										className="text-sm mt-2 font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
+										onClick={() => handleEdit(index)}
+										disabled={isEditing && editIndex !== index && editDisabled}
+									>
+										Edit
+									</Button>
+								)}
+							</div>
+						)}
+					</div>
 				))
 			) : (
 				<div className="text-primary80 border rounded-2xl py-4 px-4 font-medium my-2">

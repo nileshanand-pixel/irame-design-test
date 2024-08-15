@@ -1,10 +1,38 @@
-import React from 'react'
-import QueueStatus from '@/components/features/new-chat/QueueStatus'
+import React from 'react';
+import { User, Zap, Star, Bell } from 'lucide-react';
+import MultiSelect from '@/components/elements/MultiSelect';
 
 const TestRoute = () => {
-  return (
-    <div><QueueStatus text='Your place in Queue  24' /></div>
-  )
-}
+  // Mock data for options
+  const options = [
+    { label: 'User', value: 'user', icon: User },
+    { label: 'Power', value: 'power', icon: Zap },
+    { label: 'Star', value: 'star', icon: Star },
+    { label: 'Notification', value: 'notification', icon: Bell },
+  ];
 
-export default TestRoute
+  // Handler for value changes
+  const handleValueChange = (selectedValues) => {
+    console.log('Selected values:', selectedValues);
+  };
+
+  return (
+    <div className="p-4 max-w-md mx-auto">
+      <h1 className="text-2xl font-bold mb-4">MultiSelect Test</h1>
+      <MultiSelect
+        options={options}
+        onValueChange={handleValueChange}
+        defaultValue={['user']}
+        placeholder="Select options"
+        modalPopover = {true}
+        animation={0.5}
+        maxCount={3}
+      />
+      <p className="mt-4 text-sm text-gray-600">
+        Check the console to see the selected values when you interact with the MultiSelect.
+      </p>
+    </div>
+  );
+};
+
+export default TestRoute;

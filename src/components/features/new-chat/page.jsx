@@ -18,7 +18,6 @@ import ResponseCard from './ResponseCard';
 import {
 	createQuery,
 	createQuerySession,
-	getQueryAnswers,
 	getUserDetails,
 	getUserSession,
 } from './service/new-chat.service';
@@ -338,76 +337,6 @@ const NewChat = () => {
 
 			if (query.step === '3') {
 				setCompletedSteps([1, 3]);
-			}
-
-			if (query.step === '4' && query.src !== 'history') {
-				setPrompt('');
-				let timer = 5000;
-				intervalId = setInterval(() => {
-					getQueryAnswers(query.queryId, getToken())
-						.then((res) => {
-							setAnswersList((prevState) => {
-								console.log(res);
-								if (prevState.length <= 0)
-									return [...prevState, res];
-								return prevState.map((item) => {
-									if (item?.query_id === res.query_id)
-										return { ...res };
-									return { ...item };
-								});
-							});
-
-							// if (res?.answer) {
-							// 	setAnswerConfig(res.answer);
-							// }
-							if (
-								!promptQuery.data ||
-								utilReducer?.promptQuery !== res.query
-							) {
-								setPromptQuery({ data: res.query });
-								dispatch(
-									updateUtilProp([
-										{ key: 'queryPrompt', value: res.query },
-									]),
-								);
-							}
-
-							if (
-								res.status === 'in_progress' ||
-								res.status === 'done'
-							) {
-								timer = 5000;
-								setDoingScience(false);
-								dispatch(
-									updateUtilProp([
-										{ key: 'resetChat', value: false },
-									]),
-								);
-							}
-							if (res.status === 'done') {
-								if (!res.answer?.graph && !res.answer?.answer) {
-									setShowFailedResponseBanner(true);
-									setDoingScience(false);
-									setIsGraphLoading(false);
-								}
-								clearInterval(intervalId);
-							}
-						})
-						.catch((error) => {
-							console.error('Error fetching query answers:', error);
-							setShowFailedResponseBanner(true);
-							setDoingScience(false);
-							setIsGraphLoading(false);
-							setShowResponseDelayBanner(false); // Reset delay banner when failed response banner is shown
-							clearInterval(intervalId);
-						});
-
-					setResponseTimeElapsed((prev) => {
-						const newElapsedTime = prev + 5;
-						handleResponseDelay(newElapsedTime);
-						return newElapsedTime;
-					});
-				}, timer);
 			}
 		} else {
 			setCompletedSteps([1]);
