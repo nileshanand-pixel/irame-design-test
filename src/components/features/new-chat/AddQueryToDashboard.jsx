@@ -48,7 +48,7 @@ const AddQueryToDashboard = ({ open, setDashboard }) => {
 						<Button
 							onClick={() => {
 								navigate(
-									`/app/dashboard/content?id=${res?.dashboard_id}&name=${selectedDashboard?.tittle}`,
+									`/app/dashboard/content?id=${res?.dashboard_id}&name=${selectedDashboard?.title}`,
 								);
 							}}
 							className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
