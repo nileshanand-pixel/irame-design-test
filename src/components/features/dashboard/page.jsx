@@ -55,7 +55,7 @@ const Dashboard = () => {
 
 	const filteredList = useMemo(() => {
 		return dashboard.filter((item) =>
-			item?.tittle?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
+			item?.title?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
 		);
 	}, [search, dashboard]);
 
