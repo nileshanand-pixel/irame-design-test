@@ -7,9 +7,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from '@/hooks/useRouter';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
-import { getReports } from './service/reports.service';
+import { getReportAccessDetails, getReports } from './service/reports.service';
 import ReportCard from './components/ReportCard';
 import CardSkeleton from './components/CardSkeletion';
+import ShareReportDialog from './components/ShareReportDialog';
+import { useSelector } from 'react-redux';
 
 const Reports = () => {
 	const [reports, setReports] = useState([]);
@@ -19,12 +21,13 @@ const Reports = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [refetch, setRefetch] = useState(false);
 
-	const { navigate } = useRouter();
 
 	const reportsQuery = useQuery({
 		queryKey: 'get-reports',
 		queryFn: () => getReports(getToken()),
 	});
+
+
 
 	const filteredList = useMemo(() => {
 		return reports.filter((item) =>
@@ -77,7 +80,12 @@ const Reports = () => {
 			filteredList.length > 0 ? (
 				<div className="w-full mt-6 bg-white grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 					{filteredList.map((item, idx) => {
-						return <ReportCard key={item.report_id} report={item} />;
+						return (
+							<ReportCard
+								key={item.report_id}
+								report={item}
+							/>
+						);
 					})}
 				</div>
 			) : search ? (
@@ -86,11 +94,11 @@ const Reports = () => {
 						No such Report found
 					</p>
 				</div>
-			) :  reportsQuery.isLoading ? (
-				<div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3'>
-					<CardSkeleton/>
-					<CardSkeleton/>
-					<CardSkeleton/>
+			) : reportsQuery.isLoading ? (
+				<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+					<CardSkeleton />
+					<CardSkeleton />
+					<CardSkeleton />
 				</div>
 			) : (
 				<div className="w-full mt-6 p-6 bg-white">
@@ -99,6 +107,7 @@ const Reports = () => {
 					</p>
 				</div>
 			)}
+			
 		</div>
 	);
 };

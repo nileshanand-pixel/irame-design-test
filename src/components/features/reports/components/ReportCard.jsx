@@ -1,24 +1,35 @@
-import { getShortHandName } from '@/lib/utils';
+import { getShortHandName, getToken } from '@/lib/utils';
+import capitalize from 'lodash.capitalize';
+import React, { useState } from 'react';
+import Tooltip from './Tooltip';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from '@radix-ui/react-dropdown-menu';
-import capitalize from 'lodash.capitalize';
-import React, { useState } from 'react';
-import Tooltip from './Tooltip';
+} from '@/components/ui/dropdown-menu';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateReportStoreProp } from '@/redux/reducer/reportReducer';
+import ShareReportDialog from './ShareReportDialog';
+import { useQuery } from '@tanstack/react-query';
+import { getReportAccessDetails } from '../service/reports.service';
 
 const ReportCard = ({ report }) => {
 	const [isHovered, setIsHovered] = useState(false);
 	const FALLBACK_PREVIEW_URL = '/assets/bgs/ira-logo.svg';
+	const dispatch = useDispatch();
+	const [shareModalOpen, setShareModalOpen] = useState(false);
 
 	const handleDownload = () => {
-		window.open(
-			report.data.file_url,
-			'_blank',
-		)
+		window.open(report.data.file_url, '_blank');
 	};
+
+	const handleShareClick = async() => {
+		// God level code, took 2 hours, no idea why this works. only god knows, some accessibility BS
+		await setTimeout(() => {}, 500); 
+		dispatch(updateReportStoreProp([{key: 'selectedReport', value: report}]))
+		setShareModalOpen(true);
+	}
 
 	return (
 		<div className="rounded-lg p-4 w-full text-[#26064ACC]">
@@ -38,7 +49,7 @@ const ReportCard = ({ report }) => {
 							className="bg-white text-black font-bold py-2 px-4 rounded"
 							onClick={handleDownload}
 						>
-							<i class="bi bi-download"></i>
+							<i className="bi bi-download"></i>
 						</button>
 					</div>
 				)}
@@ -49,22 +60,20 @@ const ReportCard = ({ report }) => {
 						{report?.name || 'EDA Report'}
 					</h3>
 					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
+						<DropdownMenuTrigger>
 							<i
-								className="bi-three-dots-vertical ms-3 me-1 items-end hover:bg-gray-200 rounded-[4px]  cursor-pointer"
+								className="bi-three-dots-vertical ms-3 items-end hover:bg-purple-4 rounded-[4px] py-1"
 								onClick={(e) => e.stopPropagation()}
 							></i>
 						</DropdownMenuTrigger>
-						{/* <DropdownMenuContent align="start">
-						<DropdownMenuItem
-							className="text-primary80 font-medium hover:bg-gray-50 cursor-pointer bg-white px-4 py-2 text-sm"
-							onClick={(e) =>
-								alert("need to implement download")
-							}
-						>
-							Download
-						</DropdownMenuItem>
-					</DropdownMenuContent> */}
+						<DropdownMenuContent align="start">
+							<DropdownMenuItem className="text-primary80 font-medium hover:!bg-purple-4" 
+								onClick={handleShareClick}
+							>
+								<i className="bi bi-share me-2 text-primary80 font-medium"></i>
+								Share
+							</DropdownMenuItem>
+						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
 				<div className="flex flex-wrap items-center gap-2 mt-2">
@@ -86,7 +95,9 @@ const ReportCard = ({ report }) => {
 						</span>
 					</Tooltip>
 				</div>
-				<p className="text-sm text-gray-500 mt-2 truncate-2">{report.data.summary}</p>
+				<p className="text-sm text-gray-500 mt-2 truncate-2">
+					{report.data.summary}
+				</p>
 				<div className="mt-4 text-gray-400 text-sm">
 					<p className="text-primary80 font-medium max-w-[180px] truncate flex items-center">
 						<img
@@ -98,7 +109,14 @@ const ReportCard = ({ report }) => {
 					</p>
 				</div>
 			</div>
+			{shareModalOpen && (
+			<ShareReportDialog
+				open={shareModalOpen}
+				closeModal={() => setShareModalOpen(false)}
+			/>
+		)}
 		</div>
+		
 	);
 };
 
