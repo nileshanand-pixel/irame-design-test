@@ -27,21 +27,3 @@ export const getReportAccessDetails = async(token, reportId) => {
 	});
 	return response.data;
 }
-
-
-const mockShareData = {
-	accesses: [
-		{
-			email: 'kuldeep.msvm@gmail.com',
-			name: 'Kuldeep',
-			level: 'edit',
-			created_at: '',
-		},
-		{
-			email: 'tushar.goel@irame.ai',
-			name: 'Tushar',
-			level: 'view',
-			created_at: '',
-		},
-	],
-};

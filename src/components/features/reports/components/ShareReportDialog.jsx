@@ -10,19 +10,24 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import AccessDropdown from './AccessDropdown';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getReportAccessDetails, shareReport } from '../service/reports.service';
 import { getToken } from '@/lib/utils';
 import { toast } from 'sonner';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import AccessSkeletonList from './AccessSkeleton';
+import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 
 const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) => {
 	const [invitedEmails, setInvitedEmails] = useState([]);
 	const [inputValue, setInputValue] = useState('');
 	const reportReducer = useSelector((state) => state.reportStoreReducer);
-	const [currentUser] = useLocalStorage('userDetails'); // Move useLocalStorage hook to top level
+	const authStoreReducer = useSelector((state) => state.authStoreReducer);
+	const utilReducer = useSelector((state) => state.utilReducer);
+	const dispatch = useDispatch();
+
+	const [currentUser] = useLocalStorage('userDetails'); 
 	const queryClient = useQueryClient();
 
 	const shareMutation = useMutation({
@@ -38,7 +43,6 @@ const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) 
 				refetchActive: true,
 				refetchInactive: true,
 			});
-			// closeModal();
 		},
 		onError: (err) => {
 			console.log('Error Sharing Report', err);
@@ -102,6 +106,16 @@ const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) 
 	);
 
 	const handleSave = useCallback(() => {
+		let currentUserId = authStoreReducer?.userId;
+		if(!currentUserId){
+			currentUserId = utilReducer?.sessionHistory?.[0]?.user_id;
+		}
+		dispatch(updateAuthStoreProp([{key: 'userId', value: currentUserId}]))
+		if(reportReducer?.selectedReport?.user_id !== currentUserId){
+			toast.error('You are not authorized for this operation!');
+			setInvitedEmails([]);
+			return;
+		}
 		shareMutation.mutate({
 			reportId: reportReducer?.selectedReport?.report_id,
 			accesses: invitedEmails,
@@ -241,7 +255,7 @@ const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) 
 					<Button
 						onClick={handleSave}
 						className="rounded-lg hover:bg-purple-100 w-full hover:text-white hover:opacity-80"
-						disabled={!invitedEmails.length || shareMutation.isPending}
+						disabled={!invitedEmails.length || shareMutation.isPending }
 					>
 						{shareMutation.isPending ? (
 							<i className="bi-arrow-clockwise animate-spin me-2"></i>

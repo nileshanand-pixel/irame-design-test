@@ -26,7 +26,7 @@ function AppProvider({ children }) {
 					</ErrorBoundary>
 				</Router>
 			</Provider>
-			<ReactQueryDevtools initialIsOpen={true} />
+			<ReactQueryDevtools initialIsOpen={false} />
 		</QueryClientProvider>
 	);
 }

@@ -25,6 +25,7 @@ import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import GradientSpinner from './elements/loading/GradientSpinner';
+import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -43,7 +44,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	const fetchUserSession = async () => {
 		try {
-			return getUserSession(getToken());
+			const data = await getUserSession(getToken());
+			return data;
 		} catch (error) {
 			console.error('Error fetching user session:', error);
 		}

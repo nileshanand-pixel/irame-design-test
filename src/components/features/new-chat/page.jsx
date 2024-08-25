@@ -33,6 +33,7 @@ import CreateDashboardDialog from '../dashboard/components/CreateDashboardDialog
 import { queryClient } from '@/lib/react-query';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
+import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -213,6 +214,7 @@ const NewChat = () => {
 			// if (utilReducer?.sessionHistory?.length > 0) return;
 			getUserSession(getToken()).then((res) => {
 				dispatch(updateUtilProp([{ key: 'sessionHistory', value: res }]));
+				dispatch(updateAuthStoreProp([{key: 'userId', value: res?.[0]?.user_id}]))
 			});
 		} catch (error) {
 			console.error('Error fetching user session:', error);
