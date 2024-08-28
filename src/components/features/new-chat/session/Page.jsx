@@ -107,6 +107,7 @@ const Workzone = () => {
 				const res = resp?.query_list;
 				if (res.length <= 0) return;
 				const dataSourceName = resp?.datasource_name;
+				const dataSourceDetails = resp?.datasource_details;
 				const dataSourceId = res[0].datasource_id;
 				// Update queries
 				const tempQueries = res?.map((item) => ({
@@ -120,7 +121,7 @@ const Workzone = () => {
 				);
 
 				//update datasource name in util reducer if not present
-				if (!utilReducer?.selectedDataSource?.name) {
+				if (!utilReducer?.selectedDataSource?.name || !utilReducer?.selectedDataSource?.details) {
 					dispatch(
 						updateUtilProp([
 							{
@@ -129,6 +130,7 @@ const Workzone = () => {
 									...utilReducer?.selectedDataSource,
 									name: dataSourceName,
 									id: dataSourceId,
+									details: dataSourceDetails
 								},
 							},
 						]),

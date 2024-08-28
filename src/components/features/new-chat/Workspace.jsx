@@ -8,9 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 	useEffect(() => {
-		let firstTab;
+		let firstTab = Object.keys(answerResp?.answer || {})?.[0] || 'planner'
 		if (!workspace?.activeTab && answerResp?.answer) {
-			firstTab = Object.keys(answerResp.answer)[0];
 			setWorkspace((prevState) => ({
 				...prevState,
 				activeTab: firstTab,
@@ -20,7 +19,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 		if (setWorkspace && firstTab) {
 			setWorkspace((prevState) => ({
 				...prevState,
-				visitedTabs: { ...prevState.visitedTabs, planner: true },
+				visitedTabs: { ...prevState.visitedTabs, [firstTab]: true },
 			}));
 		}
 	}, [answerResp, workspace?.activeTab]);
