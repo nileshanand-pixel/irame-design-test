@@ -7,7 +7,10 @@ import LoginForm from './LoginForm';
 import { COGNITO_CLIENT_ID, GOOGLE_AUTH_API_URL } from '@/config';
 import { grantType } from '@/config/auth.config';
 import { toast } from 'sonner';
-import { loginWithEmailPassword, loginWithGoogle } from './service/auth.service';
+import {
+	login,
+	LoginWithRefreshToken,
+} from './service/auth.service';
 import BoxLoader from '@/components/elements/loading/BoxLoader';
 import { setupAuthCookies } from '@/lib/cookies';
 import useAuth from '@/hooks/useAuth';
@@ -40,7 +43,7 @@ const SignInSignUp = () => {
 				redirect_uri: window.location.origin,
 			};
 
-			const response = await loginWithEmailPassword(payload);
+			const response = await login(payload);
 
 			if (response.status_code === 200) {
 				const { id_token, access_token, refresh_token, expires_in } =
@@ -81,7 +84,7 @@ const SignInSignUp = () => {
 			redirect_uri: window.location.origin,
 		};
 
-		loginWithGoogle(payload)
+		login(payload)
 			.then((response) => {
 				if (response.status_code === 200) {
 					const { id_token, access_token, refresh_token, expires_in } =
@@ -111,20 +114,11 @@ const SignInSignUp = () => {
 	};
 
 	const handleTokenRefresh = async () => {
-		const refreshToken = Cookies.get('refresh_token'); // Modified to use the string 'refresh_token'
+		const refreshToken = Cookies.get('refresh_token');
 		if (!refreshToken) return;
-
-		setIsLoading(true); // Set loading state before fetching the new token
-
-		const payload = {
-			grant_type: grantType.REFRESH_TOKEN,
-			client_id: COGNITO_CLIENT_ID,
-			redirect_uri: window.location.origin,
-			refresh_token: refreshToken,
-		};
-
+		setIsLoading(true);
 		try {
-			const response = await loginWithEmailPassword(payload);
+			const response = await LoginWithRefreshToken(refreshToken);
 			if (response.status_code === 200) {
 				const { id_token, access_token, refresh_token, expires_in } =
 					response.body;
@@ -138,13 +132,9 @@ const SignInSignUp = () => {
 				setupAuthCookies(cookiesData);
 
 				navigate('/app/new-chat');
-			} else {
-				toast.error('Failed to refresh token. Please log in again.');
 			}
 		} catch (error) {
-			toast.error(
-				'An error occurred while refreshing the token. Please try again.',
-			);
+			navigate('/login', { replace: true });
 		} finally {
 			setIsLoading(false);
 		}

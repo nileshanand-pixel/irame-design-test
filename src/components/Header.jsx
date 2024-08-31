@@ -1,6 +1,6 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
 import ThemeToggle from './ThemeToggle';
-import { logout } from './features/login/service/auth.service';
+import { fullLogout, logout } from './features/login/service/auth.service';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import {
 	DropdownMenu,
@@ -87,7 +87,7 @@ const Header = () => {
 							<DropdownMenuItem
 								className="text-primary100 text-sm font-medium"
 								onClick={() => {
-									logout(getToken());
+									fullLogout();
 									setValue({
 										userName: '',
 										email: '',

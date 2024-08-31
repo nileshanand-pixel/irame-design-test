@@ -1,11 +1,13 @@
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { capitalizeFirstLetterFullText } from './utils';
+import { grantType } from '@/config/auth.config';
 
-export const resetCookies = () => {
+export const resetCookies = (ignoreRefreshToken=false) => {
 	const allCookies = Cookies.get();
 
 	for (let cookieName in allCookies) {
+		if(ignoreRefreshToken && cookieName === grantType.REFRESH_TOKEN)continue;
 		Cookies.remove(cookieName);
 	}
 };
