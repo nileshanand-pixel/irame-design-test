@@ -1,3 +1,4 @@
+import React from 'react';
 import ErrorFallback from '@/components/error/ErrorFallback';
 import { ErrorBoundary } from 'react-error-boundary';
 import { BrowserRouter as Router } from 'react-router-dom';
@@ -11,7 +12,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 function AppProvider({ children }) {
 	return (
-		<QueryClientProvider client={queryClient}  >
+		<QueryClientProvider client={queryClient}>
 			<Provider store={reduxStore}>
 				<Router>
 					<ErrorBoundary FallbackComponent={ErrorFallback}>

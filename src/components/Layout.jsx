@@ -7,6 +7,7 @@ import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useRouter } from '@/hooks/useRouter';
 import { cn } from '@/lib/utils';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
+import GlobalPollReports from './features/reports/components/GlobalPollReports';
 
 const Layout = ({ children }) => {
 	// const [isSideNavOpen, setIsSideNavOpen] = useState(true);
@@ -60,6 +61,7 @@ const Layout = ({ children }) => {
 				>
 					{children}
 				</div>
+				{/* <GlobalPollReports /> */}
 			</main>
 		</div>
 	);

@@ -25,13 +25,15 @@ const Reports = () => {
 	const reportsQuery = useQuery({
 		queryKey: 'get-reports',
 		queryFn: () => getReports(getToken()),
+		refetchInterval: 10000,
 	});
 
 
 
 	const filteredList = useMemo(() => {
 		return reports.filter((item) =>
-			item?.name?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
+			item?.name?.toLowerCase()?.includes(search?.trim()?.toLowerCase()) ||
+			item?.datasource_name?.toLowerCase()?.includes(search?.trim()?.toLowerCase())
 		);
 	}, [search, reports]);
 
