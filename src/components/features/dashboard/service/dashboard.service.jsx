@@ -2,7 +2,7 @@ import axiosClient from '@/lib/axios';
 import { toast } from 'sonner';
 
 export const getUserDashboard = async (token) => {
-	const response = await axiosClient.get(`/dashboard`, {
+	const response = await axiosClient.get(`/dashboards`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -12,7 +12,7 @@ export const getUserDashboard = async (token) => {
 
 export const deleteUserDashboard = async (token, id) => {
 	try {
-		const response = await axiosClient.delete(`/dashboard/${id}`, {
+		const response = await axiosClient.delete(`/dashboards/${id}`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -27,7 +27,7 @@ export const deleteUserDashboard = async (token, id) => {
 
 export const getDashboardContent = async (token, id) => {
 	try {
-		const response = await axiosClient.get(`/dashboard/${id}/content`, {
+		const response = await axiosClient.get(`/dashboards/${id}/contents`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -42,7 +42,7 @@ export const getDashboardContent = async (token, id) => {
 
 export const createDashboard = async (token, name) => {
 	const response = await axiosClient.post(
-		`/dashboard`,
+		`/dashboards`,
 		{ title: name },
 		{
 			headers: {
@@ -55,7 +55,7 @@ export const createDashboard = async (token, name) => {
 
 export const createDashboardContent = async (token, id, content) => {
 	const response = await axiosClient.post(
-		`/dashboard/${id}/content`,
+		`/dashboards/${id}/contents`,
 		content,
 		{
 			headers: {
@@ -68,7 +68,7 @@ export const createDashboardContent = async (token, id, content) => {
 
 export const updateDashboardName = async (token, id, name) => {
 	const response = await axiosClient.put(
-		`/dashboard/${id}/?title=${name}`,
+		`/dashboards/${id}/?title=${name}`,
 		{},
 		{
 			headers: {

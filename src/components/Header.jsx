@@ -9,15 +9,43 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { tokenCookie, getToken, getInitials, cn } from '@/lib/utils';
+import { getToken, getInitials, cn } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
+import { getUserDetailsFromToken } from '@/lib/cookies';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
 	const { pathname, query } = useRouter();
 
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const renderAvatar = () => {
+		return (
+			<Avatar>
+				<AvatarImage src={value?.avatar} />
+				<AvatarFallback>{getInitials(value?.userName)}</AvatarFallback>
+			</Avatar>
+		);
+	};
+
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				if (value.userName && value.email && value.userId) return;
+				const userData = getUserDetailsFromToken();
+
+				// Update local state with user details
+				setValue({
+					...userData,
+					token: getToken(),
+				});
+			} catch (error) {
+				console.error('Error fetching user details:', error);
+			}
+		};
+		fetchData();
+	}, []);
 
 	const showDataSourceName =
 		utilReducer?.selectedDataSource?.name &&
@@ -52,12 +80,7 @@ const Header = () => {
 
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Avatar>
-							<AvatarImage src={value.avatar} />
-							<AvatarFallback>
-								{getInitials(value.userName)}
-							</AvatarFallback>
-						</Avatar>
+						{renderAvatar()}
 					</DropdownMenuTrigger>
 					<DropdownMenuContent className="w-46 mr-5">
 						<DropdownMenuGroup>

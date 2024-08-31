@@ -14,7 +14,14 @@ const SourceComponent = ({
 	workspaceHasChanges,
 	setWorkspaceHasChanges,
 }) => {
-	const { changeSets, selectedColumns, setSelectedColumns, handleColumnChange, setChangesets, editDisabled } = useContext(EditContext);
+	const {
+		changeSets,
+		selectedColumns,
+		setSelectedColumns,
+		handleColumnChange,
+		setChangesets,
+		editDisabled,
+	} = useContext(EditContext);
 
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
@@ -93,9 +100,12 @@ const SourceComponent = ({
 								}))}
 								defaultValue={selectedColumns[file?.id]}
 								onValueChange={(newSelectedColumns) => {
-									if(editDisabled)return;
+									if (editDisabled) return;
 									setWorkspaceHasChanges(true);
-									setChangesets({...changeSets, reference: true});
+									setChangesets({
+										...changeSets,
+										reference: true,
+									});
 									handleColumnChange(file?.id, newSelectedColumns);
 								}}
 								maxCount={3}

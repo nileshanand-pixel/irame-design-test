@@ -54,6 +54,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const { data, isLoading } = useQuery({
 		queryKey: ['chat-history'],
 		queryFn: fetchUserSession,
+		enabled: !!getToken()
 	});
 
 	const bottomMenuList = [

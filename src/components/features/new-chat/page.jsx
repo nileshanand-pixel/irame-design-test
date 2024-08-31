@@ -5,7 +5,6 @@ import ConnectDataSource from './ConnectDataSource';
 import SelectPrompt from './SelectPromt';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
-import useGetCookie from '@/hooks/useGetCookie';
 import { cn, getToken, getInitials } from '@/lib/utils';
 import ira from '@/assets/icons/ira_icon.svg';
 import failedIcon from '@/assets/icons/failed_icon.svg';
@@ -34,6 +33,8 @@ import { queryClient } from '@/lib/react-query';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
+import { getUserDetailsFromToken } from '@/lib/cookies';
+import capitalize from 'lodash.capitalize';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -43,7 +44,6 @@ const NewChat = () => {
 	const [searchParam, setSearchParam] = useSearchParams();
 
 	const { query, params, navigate, pathname } = useRouter();
-	const token = useGetCookie('token');
 
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
@@ -289,35 +289,7 @@ const NewChat = () => {
 	};
 
 	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				if (value.userName && value.email && value.avatar) return;
-				const userData = await getUserDetails(getToken());
-
-				// Update local state with user details
-				updateValue({
-					token: token,
-					userName: userData?.name,
-					email: userData?.email,
-					avatar: userData?.avatar,
-				});
-			} catch (error) {
-				console.error('Error fetching user details:', error);
-			}
-		};
-
-		fetchData();
 		fetchUserSession();
-
-		// setAnswerResp({
-		// 	...answerConfig,
-		// });
-		// for (const key in answerConfig) {
-		// 	if (answerConfig[key].tool_space === 'secondary') {
-		// 		setWorkSpaceTab(key);
-		// 		break;
-		// 	}
-		// }
 	}, []);
 
 	useEffect(() => {
@@ -703,7 +675,7 @@ const NewChat = () => {
 							<h1
 								className="text-5xl leading-[60px] font-semibold align-left"
 								style={gradientText}
-							>{`${welcomeTypography?.headingLine1} ${value.userName}`}</h1>
+							>{`${welcomeTypography?.headingLine1} ${value?.userName}`}</h1>
 							<h2 className="text-5xl leading-[60px] font-semibold text-primary20">
 								{completedSteps.includes(2) ||
 								completedSteps.includes(3)

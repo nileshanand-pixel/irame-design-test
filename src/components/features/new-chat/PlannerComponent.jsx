@@ -3,6 +3,7 @@ import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { EditContext } from './components/WorkspaceEditProvider';
 import { useSelector } from 'react-redux';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasChanges }) => {
 	const { segments, setSegments, changeSets,  setChangesets, editDisabled} = useContext(EditContext);
@@ -108,8 +109,12 @@ const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasCh
 					</div>
 				))
 			) : (
-				<div className="text-primary80 border rounded-2xl py-4 px-4 font-medium my-2">
-					No content available.
+				<div className="flex flex-col space-y-3">
+					<div className="space-y-2">
+						<Skeleton className="h-5 w-[50%] bg-purple-8" />
+						<Skeleton className="h-5 w-[90%] bg-purple-8" />
+					</div>
+					<Skeleton className="h-[125px] w-[250px] rounded-xl bg-purple-8" />
 				</div>
 			)}
 		</div>

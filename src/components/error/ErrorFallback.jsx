@@ -8,7 +8,6 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
 	return (
 		<div className='flex justify-center items-center h-screen flex-col gap-4'>
 			<h2>Oops! Something went wrong.</h2>
-			<p>{error.message}</p>
 			<Button
 				className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 				onClick={() => {

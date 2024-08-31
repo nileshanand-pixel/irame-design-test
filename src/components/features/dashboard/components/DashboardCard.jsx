@@ -60,23 +60,23 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 			label: 'Delete',
 			onClick: (e) => {
 				e.stopPropagation();
-				deleteMutation.mutateAsync(data?.dasboard_id);
+				deleteMutation.mutateAsync(data?.dashboard_id);
 			},
 		},
 	];
 
 	const handleEdit = () => {
-		editMutation.mutateAsync({ id: data.dasboard_id, name: editedTitle });
+		editMutation.mutateAsync({ id: data.dashboard_id, name: editedTitle });
 	};
 	return (
 		<div
-			key={data.dasboard_id}
+			key={data.dashboard_id}
 			className="p-6 flex justify-between w-full gap-6 border-b last:border-none border-primary10 cursor-pointer hover:bg-purple-2"
 			onClick={() =>
 				isEditing
 					? null
 					: navigate(
-							`/app/dashboard/content?id=${data?.dasboard_id}&name=${data?.title}`,
+							`/app/dashboard/content?id=${data?.dashboard_id}&name=${data?.title}`,
 						)
 			}
 		>

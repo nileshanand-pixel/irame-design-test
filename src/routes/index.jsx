@@ -5,21 +5,11 @@ import Dashboard from '@/components/features/dashboard/page';
 import Help from '@/components/features/help/page';
 import Layout from '@/components/Layout';
 import Configuration from '@/components/features/configuration/page';
-import useAuth from '@/hooks/useAuth';
-import DashboardDetailsPage from '@/components/features/dashboard/components/DashboardDetailsPage';
 import Workzone from '@/components/features/new-chat/session/Page';
+import DashboardDetailsPage from '@/components/features/dashboard/components/DashboardDetailsPage';
 import TestRoute from '@/components/features/testingUI/Page';
+import ProtectedRoute from './ProtectedRoute'; // Import the new ProtectedRoute component
 import Reports from '@/components/features/reports/Page';
-
-const ProtectedRoute = ({ element, ...rest }) => {
-	const { isAuthenticated } = useAuth();
-	return isAuthenticated ? (
-		<Route {...rest} element={element} />
-	) : (
-		// <Navigate to="/" replace />
-		<Route {...rest} element={element} />
-	);
-};
 
 const AppRoutes = () => {
 	return (
@@ -32,30 +22,48 @@ const AppRoutes = () => {
 						<Routes>
 							<Route path="/" element={<Navigate to="new-chat" />} />
 							<Route
-								path="/new-chat/session"
-								element={<Workzone />}
+								path="new-chat/session"
+								element={<ProtectedRoute element={<Workzone />} />}
 							/>
-							<Route path="new-chat/*" element={<NewChat />} />
-							<Route path="dashboard" element={<Dashboard />} />
+							<Route
+								path="new-chat/*"
+								element={<ProtectedRoute element={<NewChat />} />}
+							/>
+							<Route
+								path="dashboard"
+								element={<ProtectedRoute element={<Dashboard />} />}
+							/>
 							<Route
 								path="dashboard/content"
-								element={<DashboardDetailsPage />}
+								element={
+									<ProtectedRoute
+										element={<DashboardDetailsPage />}
+									/>
+								}
 							/>
-							<Route path="dashboard/*" element={<Dashboard />} />
+							<Route
+								path="dashboard/*"
+								element={<ProtectedRoute element={<Dashboard />} />}
+							/>
 							<Route
 								path="configuration"
-								element={<Configuration />}
+								element={
+									<ProtectedRoute element={<Configuration />} />
+								}
+							/>
+							<Route
+								path="help"
+								element={<ProtectedRoute element={<Help />} />}
 							/>
 							<Route
 								path="reports/*"
-								element={< Reports/>}
+								element={<ProtectedRoute element={<Reports />} />}
 							/>
-							<Route path="help" element={<Help />} />
-							<Route path="test" element={<TestRoute />} />
 						</Routes>
 					</Layout>
 				}
 			/>
+			<Route path="test" element={<TestRoute />} />
 		</Routes>
 	);
 };
