@@ -97,7 +97,7 @@ const ReportCard = ({ report }) => {
 							<DropdownMenuItem
 								className="text-primary80 font-medium hover:!bg-purple-4"
 								onClick={handleShareClick}
-								disabled={true}
+								disabled={report?.status === 'in_progress'}
 							>
 								<i className="bi bi-share me-2 text-primary80 font-medium"></i>
 								Share
