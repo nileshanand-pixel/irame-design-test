@@ -1,24 +1,41 @@
 import PropTypes from 'prop-types';
-import { Button } from '../ui/button';
 import { useRouter } from '@/hooks/useRouter';
 import { resetAllStores } from '@/redux/GlobalStore';
 
 const ErrorFallback = ({ error, resetErrorBoundary }) => {
-    const { pathname, navigate } = useRouter();
+	const { pathname, navigate } = useRouter();
+	const IMAGE_SRC = '/assets/bgs/error-boundary-image.png';
+
+	console.log(error.message)
+
 	return (
-		<div className='flex justify-center items-center h-screen flex-col gap-4'>
-			<h2>Oops! Something went wrong.</h2>
-			<p>{error.message}</p>
-			<Button
-				className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
-				onClick={() => {
-                    navigate('/app/new-chat', {replace: true})
-                    resetErrorBoundary();
-                    resetAllStores();
-				}}
-			>
-				Reset
-			</Button>
+		<div className="flex items-center justify-center h-screen p-10 gap-4">
+			<div className="text-left w-2/5">
+				<p className="font-semibold text-[#26064A99] ">Error 500</p>
+				<h2 className="text-[44px] font-bold text-[#26064A] my-2">
+					Oops! Something went wrong
+				</h2>
+				<p className="text-xl text-[#26064ACC] mb-4">
+					We couldn't find what you were looking for. Let's try again.
+				</p>
+				<button
+					className="px-5 mt-5 py-2 border border-gray-500 text-[#26064ACC] rounded-lg hover:text-white hover:bg-[#26064aca] transition"
+					onClick={() => {
+						navigate('/', { replace: true });
+						resetErrorBoundary();
+						resetAllStores();
+					}}
+				>
+					Reset
+				</button>
+			</div>
+			<div className="w-1/3">
+				<img
+					src={IMAGE_SRC}
+					alt="Error 404 Illustration"
+					className="w-full"
+				/>
+			</div>
 		</div>
 	);
 };
