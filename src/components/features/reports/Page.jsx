@@ -41,7 +41,7 @@ const Reports = () => {
 		if (reportsQuery.data) {
 			setReports(reportsQuery.data || []);
 		}
-	}, [refetch, reportsQuery.data]);
+	}, [reportsQuery.data]);
 
 	return (
 		<div className="w-full h-full ">

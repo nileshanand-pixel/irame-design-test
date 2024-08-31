@@ -1,6 +1,6 @@
 import { getShortHandName, getToken } from '@/lib/utils';
 import capitalize from 'lodash.capitalize';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Tooltip from './Tooltip';
 import {
 	DropdownMenu,
@@ -35,6 +35,10 @@ const ReportCard = ({ report }) => {
 		dispatch(updateReportStoreProp([{ key: 'selectedReport', value: report }]));
 		setShareModalOpen(true);
 	};
+
+	useEffect(() => {
+		if(report?.data?.preview_image_url)setImageSrc(report?.data?.preview_image_url);
+	}, [report?.data]) 
 
 
 	const renderPreview = () => {
