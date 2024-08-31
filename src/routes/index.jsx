@@ -14,7 +14,7 @@ import Reports from '@/components/features/reports/Page';
 const AppRoutes = () => {
 	return (
 		<Routes>
-			<Route exact path="/" element={<SignInSignUp />} />
+			<Route exact path="/*" element={<SignInSignUp />} />
 			<Route
 				path="/app/*"
 				element={

@@ -5,13 +5,13 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { LoginFormSchema } from './schema';
 
-
 const LoginForm = ({ onContinue }) => {
 	const {
 		register,
 		handleSubmit,
 		formState: { errors, isSubmitting },
 		clearErrors,
+		setValue,
 	} = useForm({
 		resolver: zodResolver(LoginFormSchema),
 		mode: 'all',
@@ -19,6 +19,22 @@ const LoginForm = ({ onContinue }) => {
 
 	const onSubmit = (data) => {
 		onContinue(data);
+	};
+
+	const handlePasswordChange = (e) => {
+		if (e.target.value === '') {
+			clearErrors('password');
+			return;
+		}
+		setValue('password', e.target.value);
+	};
+
+	const handleEmailChange = (e) => {
+		if (e.target.value === '') {
+			clearErrors('email');
+			return;
+		}
+		setValue('email', e.target.value);
 	};
 
 	return (
@@ -34,11 +50,7 @@ const LoginForm = ({ onContinue }) => {
 					id="email"
 					type="email"
 					{...register('email')}
-					onChange={(e) => {
-						if (e.target.value === '') {
-							clearErrors('email');
-						}
-					}}
+					onChange={handleEmailChange}
 					className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 				/>
 				{errors.email && (
@@ -59,11 +71,7 @@ const LoginForm = ({ onContinue }) => {
 					id="password"
 					type="password"
 					{...register('password')}
-					onChange={(e) => {
-						if (e.target.value === '') {
-							clearErrors('password');
-						}
-					}}
+					onChange={handlePasswordChange}
 					className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
 				/>
 				{errors.password && (

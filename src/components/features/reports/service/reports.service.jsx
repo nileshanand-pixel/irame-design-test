@@ -2,7 +2,7 @@ import axiosClient from '@/lib/axios';
 import { toast } from 'sonner';
 
 export const getReports = async (token) => {
-	const response = await axiosClient.get(`/report`, {
+	const response = await axiosClient.get(`/reports/all`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -11,7 +11,7 @@ export const getReports = async (token) => {
 };
 
 export const shareReport = async(token, reportId, data) => {
-	const response = await axiosClient.post(`/report/${reportId}/share`, data, {
+	const response = await axiosClient.post(`/reports/${reportId}/share`, data, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -20,7 +20,7 @@ export const shareReport = async(token, reportId, data) => {
 }
 
 export const getReportAccessDetails = async(token, reportId) => {
-	const response = await axiosClient.get(`/report/${reportId}/shared`, {
+	const response = await axiosClient.get(`/reports/${reportId}/shared`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
