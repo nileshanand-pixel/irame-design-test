@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import DOMPurify from 'dompurify';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const PlannerComponent = ({ data }) => {
 	let segments = [];

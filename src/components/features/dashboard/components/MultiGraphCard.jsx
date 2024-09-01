@@ -5,7 +5,6 @@ import ScrollList from '@/components/elements/ScrollList';
 
 const MultiGraphCard = ({ data, isGraphLoading }) => {
 	const graphList = data?.content?.graph?.graphs || [];
-	const [activeGraphTab, setActiveGraphTab] = useState(graphList[0]?.id || null);
 
 	const supportedChartTypes = [
 		'bar',
@@ -21,6 +20,9 @@ const MultiGraphCard = ({ data, isGraphLoading }) => {
 	const supportedGraphsData = graphList.filter((item) =>
 		supportedChartTypes.includes(item.type.toLowerCase()),
 	);
+
+	const [activeGraphTab, setActiveGraphTab] = useState(supportedGraphsData?.[0]?.id || null);
+
 
 
 

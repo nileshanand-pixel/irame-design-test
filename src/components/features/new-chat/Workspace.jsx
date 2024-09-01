@@ -15,9 +15,9 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 		)
 		.map((item) => item[1]);
 
-	let firstTab = workspaceItems?.[0]?.tool_type;
+	let firstTab = workspaceItems?.[0]?.tool_type || 'planner'
 	useEffect(() => {
-		firstTab = workspaceItems?.length ? workspaceItems[0]?.tool_type : '';
+		firstTab = workspaceItems?.length ? workspaceItems[0]?.tool_type : 'planner';
 		if (!firstTab) return;
 		if (!workspace?.activeTab && answerResp?.answer) {
 			setWorkspace((prevState) => ({

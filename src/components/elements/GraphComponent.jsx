@@ -8,6 +8,18 @@ import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import GraphRenderer from './GraphRenderer';
 import ScrollList from './ScrollList';
 
+
+const supportedChartTypes = [
+	'bar',
+	'line',
+	'scatter',
+	'bubble',
+	'pie',
+	'doughnut',
+	'polarArea',
+	'radar',
+];
+
 const GraphComponent = ({
 	data,
 	isGraphLoading,
@@ -21,22 +33,19 @@ const GraphComponent = ({
 	const [activeTab, setActiveTab] = useState(tab);
 	const graphList = data?.graph?.tool_data?.graphs || [];
 	const tableData = data?.table?.tool_data;
-	const [activeGraphTab, setActiveGraphTab] = useState(graphList[0]?.id || null);
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+
 	const containerRef = useRef(null);
 	const [isOverflowing, setIsOverflowing] = useState(false);
 
-	const supportedChartTypes = [
-		'bar',
-		'line',
-		'scatter',
-		'bubble',
-		'pie',
-		'doughnut',
-		'polarArea',
-		'radar',
-	];
+
+
+	const supportedGraphsData = graphList.filter((item) =>
+		supportedChartTypes.includes(item.type.toLowerCase()),
+	);
+	const [activeGraphTab, setActiveGraphTab] = useState(supportedGraphsData?.[0]?.id || null);
+
 
 	function generateColumns(keys) {
 		return keys?.map((key) => {
@@ -91,9 +100,7 @@ const GraphComponent = ({
 		}
 	}, [chatStoreReducer?.activateGraphOnLast]);
 
-	const supportedGraphsData = graphList.filter((item) =>
-		supportedChartTypes.includes(item.type.toLowerCase()),
-	);
+
 
 
 
