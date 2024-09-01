@@ -1,4 +1,6 @@
 import { clsx } from 'clsx';
+import Cookies from 'js-cookie';
+import capitalize from 'lodash.capitalize';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs) {
@@ -20,21 +22,12 @@ export const formatFileSize = (size) => {
 export const tokenCookie = '';
 
 export const getToken = () => {
-	const cookieString = document.cookie;
-
-	const cookies = cookieString.split(';').map((cookie) => cookie.trim());
-
-	for (const cookie of cookies) {
-		if (cookie.startsWith('token')) {
-			let tokenMatch = cookie.match(/token="([^"]+)"/);
-			let tokenValue = tokenMatch ? tokenMatch[1] : null;
-			return tokenValue;
-		}
-	}
-	return tokenCookie;
+	const token = Cookies.get('id_token');
+	return token ? token : tokenCookie;
 };
 
 export const getInitials = (userName) => {
+	if (!userName) return;
 	const words = userName.split(' ');
 
 	const initials = words.map((word) => word.charAt(0).toUpperCase());
@@ -50,3 +43,20 @@ export function toTitleCase(str) {
 		return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
 	});
 }
+
+export const getShortHandName = (fullName) => {
+	if (fullName.length > 0) {
+		const splits = fullName.split(' ');
+		const firstLetter = splits[0].charAt(0);
+		const lastLetter = splits[splits.length - 1][0];
+		return capitalize(firstLetter + lastLetter);
+	} else return '--';
+};
+
+export const capitalizeFirstLetterFullText = (text) => {
+	if (!text) return;
+	return text
+		.split(' ')
+		.map((sentence) => capitalize(sentence))
+		.join(' ');
+};

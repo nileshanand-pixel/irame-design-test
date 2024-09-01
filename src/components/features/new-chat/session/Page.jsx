@@ -19,7 +19,6 @@ import { createDashboard } from '../../dashboard/service/dashboard.service';
 import { queryClient } from '@/lib/react-query';
 import QueueStatus from '../QueueStatus';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
-import isEqual from 'lodash.isequal';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -33,7 +32,7 @@ const Workzone = () => {
 
 	const [workspace, setWorkspace] = useState({
 		show: true,
-		activeTab: 'planner',
+		activeTab: '',
 		visitedTabs: [],
 	});
 	const [prompt, setPrompt] = useState(chatStoreReducer?.inputPrompt || ''); // input field controlled state
@@ -353,9 +352,7 @@ const Workzone = () => {
 								{prompt}
 							</p>
 						) : (
-							<>
 								<Skeleton className="h-6 w-full bg-purple-8 ms-1" />
-							</>
 						)}
 					</div>
 				</div>
@@ -369,7 +366,6 @@ const Workzone = () => {
 				doingScience.find((loadingObj) => loadingObj.queryId === query?.id)
 					?.status || !!query?.parentQueryId;
 			return (
-				<>
 					<div key={query.id} className="my-2 w-full">
 						<div className="ml-10 flex items-center gap-2.5 flex-row-reverse">
 							<Avatar className="size-9">
@@ -442,7 +438,6 @@ const Workzone = () => {
 							/>
 						</div>
 					</div>
-				</>
 			);
 		});
 	};

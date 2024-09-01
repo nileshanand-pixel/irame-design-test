@@ -10,6 +10,7 @@ const CoderComponent = ({ data }) => {
 				defaultLanguage="python"
 				defaultValue={data || '# no data'}
 				className="[&>.monaco-editor]:rounded-2xl bg-primary40"
+				options={{readOnly: true, readOnlyMessage: { value: 'Read Only' }}}
 			/>
 		</div>
 	);

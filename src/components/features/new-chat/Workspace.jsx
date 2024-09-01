@@ -7,8 +7,18 @@ import GraphComponent from '@/components/elements/GraphComponent';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
+	const workspaceItems = Object.entries(answerResp?.answer || {})
+		.filter(
+			([key, value]) =>
+				value?.tool_space === 'secondary' &&
+				value?.tool_type !== WorkspaceEnum.Answer,
+		)
+		.map((item) => item[1]);
+
+	let firstTab = workspaceItems?.[0]?.tool_type;
 	useEffect(() => {
-		let firstTab = Object.keys(answerResp?.answer || {})?.[0] || 'planner'
+		firstTab = workspaceItems?.length ? workspaceItems[0]?.tool_type : '';
+		if (!firstTab) return;
 		if (!workspace?.activeTab && answerResp?.answer) {
 			setWorkspace((prevState) => ({
 				...prevState,
@@ -56,9 +66,9 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 		}
 	}, [workspace?.activeTab, answerResp?.answer]);
 	return (
-		<div className=" rounded-2xl my-6 w-[100%] h-full overflow-hidden ">
+		<div className=" rounded-2xl my-6 w-[100%] h-full overflow-hidden relative ">
 			<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">
-				{answerResp?.status !== 'in_queue' && answerResp?.answer
+				{answerResp?.answer && firstTab
 					? Object.keys(answerResp?.answer)
 							?.filter(
 								(key) =>
@@ -92,8 +102,8 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 							/>
 						))}
 			</ul>
-			{answerResp?.status !== 'in_queue' && answerResp?.answer ? (
-				<div className="w-full h-[98%] overflow-y-auto">
+			{answerResp?.answer && firstTab ? (
+				<div className="w-full h-[95%] overflow-y-auto">
 					{renderedComponent}
 				</div>
 			) : (

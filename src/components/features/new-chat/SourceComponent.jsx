@@ -13,7 +13,6 @@ const SourceComponent = ({ data }) => {
 
 	const getFileName = (fileId) => {
 		const fileDetails = utilReducer?.selectedDataSource?.details?.processed_files?.files?.find((item) => item?.id === fileId);
-		console.log(fileDetails);
 		return fileDetails?.filename || fileId;
 	}
 	return (

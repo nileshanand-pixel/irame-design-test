@@ -1,23 +1,17 @@
+import { getToken } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 
 const useAuth = () => {
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
-		const cookieExists = (name) => {
-			return document.cookie
-				.split(';')
-				.some((cookie) => cookie.trim().startsWith(`${name}=`));
-		};
-
-		if (cookieExists('userId') && cookieExists('token')) {
-			setIsAuthenticated(true);
-		} else {
-			setIsAuthenticated(false);
-		}
+		const token = getToken();
+		setIsAuthenticated(!!token);
+		setIsLoading(false); // Set loading to false once the auth check is done
 	}, []);
 
-	return { isAuthenticated };
+	return { isAuthenticated, isLoading };
 };
 
 export default useAuth;

@@ -38,7 +38,7 @@ const AddQueryToDashboard = ({ open, setDashboard }) => {
 
 	const handleAddQueryToDashboard = () => {
 		setIsLoading(true);
-		createDashboardContent(getToken(), selectedDashboard.dasboard_id, {
+		createDashboardContent(getToken(), selectedDashboard.dashboard_id, {
 			query_id: chatStoreReducer?.activeQueryId,
 		})
 			.then((res) => {
@@ -138,8 +138,8 @@ const AddQueryToDashboard = ({ open, setDashboard }) => {
 									</div>
 								</div>
 								{selectedDashboard &&
-								selectedDashboard.dasboard_id ===
-									dashboard.dasboard_id ? (
+								selectedDashboard.dashboard_id ===
+									dashboard.dashboard_id ? (
 									<Button variant="icon" size="sm" className="">
 										<span className="material-icons-outlined text-purple-100">
 											radio_button_checked

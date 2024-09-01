@@ -3,10 +3,8 @@ import { useEffect, useState } from 'react';
 import {
 	createQuerySession,
 	fetchSuggestions,
-	getAnswerConfig,
 } from './service/new-chat.service';
 import { useRouter } from '@/hooks/useRouter';
-import useGetCookie from '@/hooks/useGetCookie';
 import { tokenCookie, getToken } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import useLocalStorage from '@/hooks/useLocalStorage';
@@ -26,7 +24,6 @@ const SelectPrompt = ({
 	const [activeTab, setActiveTab] = useState('');
 	const [data, setData] = useState([]);
 	const { query, navigate } = useRouter();
-	const token = useGetCookie('token');
 
 	const dispatch = useDispatch();
 	const utilReducer = useSelector((state) => state.utilReducer);

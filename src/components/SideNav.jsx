@@ -25,6 +25,7 @@ import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import GradientSpinner from './elements/loading/GradientSpinner';
+import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -43,7 +44,9 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	const fetchUserSession = async () => {
 		try {
-			return getUserSession(getToken());
+			const data = await getUserSession(getToken());
+			dispatch(updateAuthStoreProp([{key: 'userId', value: data?.[0]?.user_id}]))
+			return data;
 		} catch (error) {
 			console.error('Error fetching user session:', error);
 		}
@@ -52,6 +55,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const { data, isLoading } = useQuery({
 		queryKey: ['chat-history'],
 		queryFn: fetchUserSession,
+		enabled: !!getToken(),
 	});
 
 	const bottomMenuList = [
@@ -67,6 +71,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					link: '/app/configuration',
 					text: 'Configuration',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/gear.svg',
+				},
+				{
+					link: '/app/reports',
+					text: 'Reports',
+					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/reports-icon.svg',
 				},
 			],
 		},

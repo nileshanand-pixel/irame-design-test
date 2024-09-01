@@ -5,7 +5,6 @@ import ConnectDataSource from './ConnectDataSource';
 import SelectPrompt from './SelectPromt';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
-import useGetCookie from '@/hooks/useGetCookie';
 import { cn, getToken, getInitials } from '@/lib/utils';
 import ira from '@/assets/icons/ira_icon.svg';
 import failedIcon from '@/assets/icons/failed_icon.svg';
@@ -34,6 +33,9 @@ import CreateDashboardDialog from '../dashboard/components/CreateDashboardDialog
 import { queryClient } from '@/lib/react-query';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
+import { getUserDetailsFromToken } from '@/lib/cookies';
+import capitalize from 'lodash.capitalize';
+import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -43,7 +45,6 @@ const NewChat = () => {
 	const [searchParam, setSearchParam] = useSearchParams();
 
 	const { query, params, navigate, pathname } = useRouter();
-	const token = useGetCookie('token');
 
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
@@ -214,6 +215,12 @@ const NewChat = () => {
 			// if (utilReducer?.sessionHistory?.length > 0) return;
 			getUserSession(getToken()).then((res) => {
 				dispatch(updateUtilProp([{ key: 'sessionHistory', value: res }]));
+				if (!authStoreReducer?.userId)
+					dispatch(
+						updateAuthStoreProp([
+							{ key: 'userId', value: res?.[0]?.user_id },
+						]),
+					);
 			});
 		} catch (error) {
 			console.error('Error fetching user session:', error);
@@ -288,35 +295,7 @@ const NewChat = () => {
 	};
 
 	useEffect(() => {
-		const fetchData = async () => {
-			try {
-				if (value.userName && value.email && value.avatar) return;
-				const userData = await getUserDetails(getToken());
-
-				// Update local state with user details
-				updateValue({
-					token: token,
-					userName: userData?.name,
-					email: userData?.email,
-					avatar: userData?.avatar,
-				});
-			} catch (error) {
-				console.error('Error fetching user details:', error);
-			}
-		};
-
-		fetchData();
 		fetchUserSession();
-
-		// setAnswerResp({
-		// 	...answerConfig,
-		// });
-		// for (const key in answerConfig) {
-		// 	if (answerConfig[key].tool_space === 'secondary') {
-		// 		setWorkSpaceTab(key);
-		// 		break;
-		// 	}
-		// }
 	}, []);
 
 	useEffect(() => {
@@ -338,76 +317,6 @@ const NewChat = () => {
 
 			if (query.step === '3') {
 				setCompletedSteps([1, 3]);
-			}
-
-			if (query.step === '4' && query.src !== 'history') {
-				setPrompt('');
-				let timer = 5000;
-				intervalId = setInterval(() => {
-					getQueryAnswers(query.queryId, getToken())
-						.then((res) => {
-							setAnswersList((prevState) => {
-								console.log(res);
-								if (prevState.length <= 0)
-									return [...prevState, res];
-								return prevState.map((item) => {
-									if (item?.query_id === res.query_id)
-										return { ...res };
-									return { ...item };
-								});
-							});
-
-							// if (res?.answer) {
-							// 	setAnswerConfig(res.answer);
-							// }
-							if (
-								!promptQuery.data ||
-								utilReducer?.promptQuery !== res.query
-							) {
-								setPromptQuery({ data: res.query });
-								dispatch(
-									updateUtilProp([
-										{ key: 'queryPrompt', value: res.query },
-									]),
-								);
-							}
-
-							if (
-								res.status === 'in_progress' ||
-								res.status === 'done'
-							) {
-								timer = 5000;
-								setDoingScience(false);
-								dispatch(
-									updateUtilProp([
-										{ key: 'resetChat', value: false },
-									]),
-								);
-							}
-							if (res.status === 'done') {
-								if (!res.answer?.graph && !res.answer?.answer) {
-									setShowFailedResponseBanner(true);
-									setDoingScience(false);
-									setIsGraphLoading(false);
-								}
-								clearInterval(intervalId);
-							}
-						})
-						.catch((error) => {
-							console.error('Error fetching query answers:', error);
-							setShowFailedResponseBanner(true);
-							setDoingScience(false);
-							setIsGraphLoading(false);
-							setShowResponseDelayBanner(false); // Reset delay banner when failed response banner is shown
-							clearInterval(intervalId);
-						});
-
-					setResponseTimeElapsed((prev) => {
-						const newElapsedTime = prev + 5;
-						handleResponseDelay(newElapsedTime);
-						return newElapsedTime;
-					});
-				}, timer);
 			}
 		} else {
 			setCompletedSteps([1]);
@@ -772,7 +681,7 @@ const NewChat = () => {
 							<h1
 								className="text-5xl leading-[60px] font-semibold align-left"
 								style={gradientText}
-							>{`${welcomeTypography?.headingLine1} ${value.userName}`}</h1>
+							>{`${welcomeTypography?.headingLine1} ${value?.userName}`}</h1>
 							<h2 className="text-5xl leading-[60px] font-semibold text-primary20">
 								{completedSteps.includes(2) ||
 								completedSteps.includes(3)
