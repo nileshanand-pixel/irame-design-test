@@ -136,7 +136,7 @@ const ResponseCard = ({
 									onClick={() =>
 										window.open(
 											dataFrameItem[1]?.tool_data
-												?.response_csv_curl,
+												?.csv_url,
 											'_blank',
 										)
 									}
