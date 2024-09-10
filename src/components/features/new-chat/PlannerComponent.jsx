@@ -10,6 +10,7 @@ const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasCh
 	const [isEditing, setIsEditing] = useState(false);
 	const [editIndex, setEditIndex] = useState(null);
 	const [editContent, setEditContent] = useState('');
+	const [enableSaveButton, setEnableSaveButton] = useState(false);
 	const editRef = useRef(null);
 	const chatStoreReducer = useSelector(state => state.chatStoreReducer);
 
@@ -35,7 +36,6 @@ const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasCh
 	}, [chatStoreReducer?.activeQueryId]);
 
 	const handleEdit = (index) => {
-		setWorkspaceHasChanges(true);
 		setIsEditing(true);
 		setEditIndex(index);
 		setEditContent(segments[index]);
@@ -43,6 +43,7 @@ const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasCh
 	};
 
 	const handleSave = () => {
+		setWorkspaceHasChanges(true);
 		const updatedSegments = [...segments];
 		updatedSegments[editIndex] = DOMPurify.sanitize(editRef.current.innerHTML);
 		setSegments(updatedSegments);
@@ -69,6 +70,7 @@ const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasCh
 						{isEditing && editIndex === index ? (
 							<>
 								<div
+									onInput={() => setEnableSaveButton(true)}
 									ref={editRef}
 									contentEditable
 									dangerouslySetInnerHTML={{ __html: editContent }}
@@ -84,6 +86,7 @@ const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasCh
 									<Button
 										className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 										onClick={handleSave}
+										disabled={!enableSaveButton}
 									>
 										Save
 									</Button>

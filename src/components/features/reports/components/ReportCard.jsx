@@ -1,6 +1,6 @@
-import { getShortHandName, getToken } from '@/lib/utils';
-import capitalize from 'lodash.capitalize';
 import React, { useEffect, useState } from 'react';
+import { getShortHandName } from '@/lib/utils';
+import capitalize from 'lodash.capitalize';
 import Tooltip from './Tooltip';
 import {
 	DropdownMenu,
@@ -8,10 +8,17 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { updateReportStoreProp } from '@/redux/reducer/reportReducer';
 import ShareReportDialog from './ShareReportDialog';
-import { getReportAccessDetails } from '../service/reports.service';
+import Lottie from '@/components/elements/loading/LottieRender';
+
+// Lottie animation URL
+const LOADING_ANIMATION_URL =
+	'https://d2vkmtgu2mxkyq.cloudfront.net/report-progress-loader.json';
+
+
+
 
 const ReportCard = ({ report }) => {
 	const [isHovered, setIsHovered] = useState(false);
@@ -22,30 +29,30 @@ const ReportCard = ({ report }) => {
 		report?.data?.preview_image_url || FALLBACK_PREVIEW_URL,
 	);
 
-	const LOADING_GIF_URL =
-		'https://s3-alpha-sig.figma.com/img/2642/14ea/373dce0df188993e1b512af32c6ce3d8?Expires=1725840000&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4&Signature=VPmhYex8MaXmAyfqjuLM2v26~Dc3i6IzqyQc8g6bG3nIcI~g85YFUMSZYw5XfWgZ8rTJ5fIWzdSiE15lnm2Of02v33ZMyXZlvHLQwvlv5yRty3KhZmBHtmqcq49Ap164oTs0zW62mIJ0MFv7fGMgjLvW2U71eaxZTHmh0Q8Em5RtmgwJVlHDVv1oDRDXJ~v4AeNl8rFkgu4F4YnjqILP4zVXRnsJNjzfHP6la86P2MMUi3MK8LANwNuhPsZzU-nAFiFkJUmZan41hoj4ga-8Rra28q8rujH1fLUnY1ZAr3bjlrALrgWWX7Uc8D5y4BdyVId57ZKo1gE-Stjn~pn6JA__';
-
 	const handleDownload = () => {
 		window.open(report.data.file_url, '_blank');
 	};
 
 	const handleShareClick = async () => {
-		// God level code, took 2 hours, no idea why this works. only god knows, some accessibility BS
 		await setTimeout(() => {}, 500);
 		dispatch(updateReportStoreProp([{ key: 'selectedReport', value: report }]));
 		setShareModalOpen(true);
 	};
 
 	useEffect(() => {
-		if(report?.data?.preview_image_url)setImageSrc(report?.data?.preview_image_url);
-	}, [report?.data]) 
-
+		if (report?.data?.preview_image_url)
+			setImageSrc(report?.data?.preview_image_url);
+	}, [report?.data]);
 
 	const renderPreview = () => {
 		if (report?.status === 'in_progress') {
 			return (
 				<div className="absolute inset-0 flex items-center justify-center bg-[#F5F5F5]">
-					<img src={LOADING_GIF_URL} alt="Loading" />
+					<Lottie
+						path={LOADING_ANIMATION_URL}
+						width="300px"
+						height="200px"
+					/>
 				</div>
 			);
 		} else {
@@ -75,7 +82,7 @@ const ReportCard = ({ report }) => {
 	return (
 		<div className="rounded-lg p-4 w-full text-[#26064ACC]">
 			<div
-				className="relative pb-[56.25%] overflow-hidden rounded-lg" // Aspect ratio for 16:9 (pb-56% is for that)
+				className="relative pb-[56.25%] overflow-hidden rounded-lg"
 				onMouseEnter={() => setIsHovered(true)}
 				onMouseLeave={() => setIsHovered(false)}
 			>
@@ -97,7 +104,7 @@ const ReportCard = ({ report }) => {
 							<DropdownMenuItem
 								className="text-primary80 font-medium hover:!bg-purple-4"
 								onClick={handleShareClick}
-								disabled={report?.status === 'in_progress'}
+								disabled={report?.status === 'in_progress' || report?.level !== 'owner'}
 							>
 								<i className="bi bi-share me-2 text-primary80 font-medium"></i>
 								Share

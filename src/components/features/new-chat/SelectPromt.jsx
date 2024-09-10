@@ -42,6 +42,7 @@ const SelectPrompt = ({
 					{ key: 'refreshChat', value: !chatStoreReducer?.refreshChat },
 				]),
 			);
+			if(utilReducer.isSideNavOpen)dispatch(updateUtilProp([{key: 'isSideNavOpen', value: false}]))
 			createQuerySession(query.dataSourceId, question, getToken()).then(
 				(res) => {
 					dispatch(

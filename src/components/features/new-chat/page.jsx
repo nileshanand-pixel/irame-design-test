@@ -214,7 +214,12 @@ const NewChat = () => {
 			// if (utilReducer?.sessionHistory?.length > 0) return;
 			getUserSession(getToken()).then((res) => {
 				dispatch(updateUtilProp([{ key: 'sessionHistory', value: res }]));
-				dispatch(updateAuthStoreProp([{key: 'userId', value: res?.[0]?.user_id}]))
+				if (!authStoreReducer?.userId)
+					dispatch(
+						updateAuthStoreProp([
+							{ key: 'userId', value: res?.[0]?.user_id },
+						]),
+					);
 			});
 		} catch (error) {
 			console.error('Error fetching user session:', error);
@@ -598,6 +603,7 @@ const NewChat = () => {
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
 									<Input
 										placeholder="Ask IRA"
+										onFocus={() => dispatch(updateUtilProp([{key: 'isSideNavOpen', value: false}]))}
 										className="border-0 outline-none rounded-none bg-transparent w-full"
 										value={prompt}
 										onChange={(e) => handlePromptChange(e)}
@@ -707,6 +713,7 @@ const NewChat = () => {
 								<div className="rounded-[100px] flex justify-between bg-purple-4 px-3 py-2 mb-2 w-full">
 									<Input
 										placeholder="Ask IRA"
+										onFocus={() => dispatch(updateUtilProp([{key: 'isSideNavOpen', value: false}]))}
 										className="border-0 outline-none rounded-none bg-transparent w-full mr-2 !h-auto"
 										value={prompt}
 										onChange={(e) => {

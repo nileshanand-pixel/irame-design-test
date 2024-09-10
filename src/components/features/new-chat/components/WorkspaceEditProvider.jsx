@@ -54,21 +54,23 @@ export const WorkspaceEditProvider = ({ children, regenerator, editDisabled }) =
 
   const regenerateResponse = async (answer) => {
     if(Object.keys(answer).length <= 0) return;
-    let query = '';
-    if(state.changeSets.planner && state.changeSets.reference){
-      query+= "Updated planner and reference"
-    }else if(state.changeSets.planner){
-      query+= "Updated Planner"
-    }else if(state.changeSets.reference){
-      query += "Updated Reference"
-    }
+    // let query = '';
 
-    if(query){
-      query += ` for earlier query(${answer.query})`;
-    }
+    // // Removing updated keyword 
+    // // if(state.changeSets.planner && state.changeSets.reference){
+    // //   query+= "Updated planner and reference"
+    // // }else if(state.changeSets.planner){
+    // //   query+= "Updated Planner"
+    // // }else if(state.changeSets.reference){
+    // //   query += "Updated Reference"
+    // // }
+
+    // if(query){
+    //   query += ` for earlier query(${answer.query})`;
+    // }
 
     const workspaceChanges = {};
-    workspaceChanges.query = query;
+    workspaceChanges.query = answer.query;
     workspaceChanges.apiConfig = {
       previous_query_id: answer.query_id
     }

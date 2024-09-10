@@ -34,7 +34,7 @@ export const getUserDetailsFromToken = () => {
 		const userDetails = {
 			userName: capitalizeFirstLetterFullText(decodedToken?.name) || '',
 			email: decodedToken.email || '',
-			userId: decodedToken['cognito:username'] || '',
+			userId: decodedToken['sub'] || '',
 			avatar: '',
 		};
 

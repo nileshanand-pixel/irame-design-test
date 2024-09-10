@@ -39,7 +39,6 @@ export const getAnswerConfig = async (token) => {
 	return response.data;
 };
 
-
 // NO API PRESENT
 export const getUserDetails = async (token) => {
 	const response = await axiosClient.get(`/oauth/google/user`, {
@@ -85,6 +84,7 @@ export const deleteSession = async (sessionId, token) => {
 	}
 };
 
+// DONE
 export const getQueriesOfSession = async (sessionId, token) => {
 	try {
 		const response = await axiosClient.get(`/queries/session/${sessionId}`, {

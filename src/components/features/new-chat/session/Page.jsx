@@ -619,12 +619,22 @@ const Workzone = () => {
 		}
 	}, [query]);
 
+	const showWorkSpace = () => {
+		const markerAnswer = answers.find(
+			(item) =>
+				item?.query_id ===
+				chatStoreReducer?.activeQueryId,
+		) || answers?.[0]
+
+		return workspace.show && markerAnswer?.answer?.planner?.tool_data?.text
+	}
+
 	return (
 		<div className="grid grid-cols-12 gap-4 min-h-[90vh] max-h-[90vh] w-full">
 			<div
 				className={cn(
 					'border rounded-2xl pt-8 px-4 shadow-1xl relative h-full flex-col',
-					workspace.show ? 'col-span-8' : 'col-span-12 mx-[8rem]',
+					showWorkSpace() ? 'col-span-8' : 'col-span-12 mx-[8rem]',
 				)}
 			>
 				<div
@@ -641,6 +651,7 @@ const Workzone = () => {
 								placeholder="Ask IRA"
 								className="border-0 outline-none rounded-none bg-transparent w-full mr-2"
 								value={prompt}
+								onFocus={() => dispatch(updateUtilProp([{key: 'isSideNavOpen', value: false}]))}
 								onChange={(e) => handlePromptChange(e)}
 								onKeyDown={(e) => {
 									if (e.key === 'Enter') handleAppendQuery();
@@ -670,8 +681,8 @@ const Workzone = () => {
 				</div>
 			</div>
 
-			{workspace.show ? (
-				<WorkspaceEditProvider regenerator = {handleRegenerateResponse} 
+			{showWorkSpace() ? (
+				<WorkspaceEditProvider editDisabled={inputDisabled} regenerator = {handleRegenerateResponse} 
 				>
 					<div className="border sticky rounded-3xl py-4 w-full px-4 col-span-4 shadow-1xl h-[90vh]">
 						<div className="flex justify-between">

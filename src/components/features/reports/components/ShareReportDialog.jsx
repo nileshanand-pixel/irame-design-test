@@ -110,7 +110,7 @@ const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) 
 		if(!currentUserId){
 			currentUserId = utilReducer?.sessionHistory?.[0]?.user_id;
 		}
-		dispatch(updateAuthStoreProp([{key: 'userId', value: currentUserId}]))
+		if(!authStoreReducer?.userId)dispatch(updateAuthStoreProp([{key: 'userId', value: currentUserId}]))
 		if(reportReducer?.selectedReport?.user_id !== currentUserId){
 			toast.error('You are not authorized for this operation!');
 			setInvitedEmails([]);
