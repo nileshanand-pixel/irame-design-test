@@ -156,6 +156,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					return session;
 				}
 			});
+			if (!confirm("Are you sure you want to delete this session?")) return;
 			await deleteSession(sessionId, getToken());
 			dispatch(
 				updateUtilProp([{ key: 'sessionHistory', value: updatedList }]),
