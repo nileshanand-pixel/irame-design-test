@@ -164,6 +164,7 @@ const Configuration = () => {
 					return source;
 				}
 			});
+			if (!confirm("Are you sure you want to delete this datasource?")) return;
 			await deleteDataSource(dataSourceId, getToken());
 			dispatch(updateUtilProp([{ key: 'dataSources', value: updatedList }]));
 			setDataSources(updatedList);
