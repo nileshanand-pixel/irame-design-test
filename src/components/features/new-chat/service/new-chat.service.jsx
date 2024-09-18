@@ -13,19 +13,12 @@ export const fetchSuggestions = async (dataSourceId, token) => {
 	return response.data;
 };
 
-export const createQuerySession = async (dataSourceId, prompt, token) => {
-	const response = await axiosClient.post(
-		`/queries/session`,
-		{
-			datasource_id: dataSourceId,
-			query: prompt,
+export const createQuerySession = async (data, token) => {
+	const response = await axiosClient.post(`/queries/session`, data, {
+		headers: {
+			Authorization: `Bearer ${token}`,
 		},
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		},
-	);
+	});
 	return response.data;
 };
 
@@ -57,7 +50,6 @@ export const getUserSession = async (token) => {
 	});
 	return response.data?.session_list;
 };
-
 
 export const createQuery = async (data, token) => {
 	const response = await axiosClient.post(`/queries`, data, {
@@ -94,6 +86,52 @@ export const getQueriesOfSession = async (sessionId, token) => {
 			params: {
 				sort_param: 'created_at',
 				sort_order: 'asc',
+			},
+		});
+		return response.data;
+	} catch (error) {
+		toast.error('Failed to get session');
+		throw error;
+	}
+};
+
+export const getTemplate = async (templateId, token) => {
+	try {
+		const response = await axiosClient.get(`/saved-queries/${templateId}`, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
+		return response.data;
+	} catch (error) {
+		toast.error('Failed to get session');
+		throw error;
+	}
+};
+
+export const editTemplate = async (templateId, data, token) => {
+	try {
+		const response = await axiosClient.patch(
+			`/saved-queries/${templateId}`,
+			data,
+			{
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			},
+		);
+		return response.data;
+	} catch (error) {
+		toast.error('Failed to get session');
+		throw error;
+	}
+};
+
+export const deleteTemplate = async (templateId, token) => {
+	try {
+		const response = await axiosClient.delete(`/saved-queries/${templateId}`, {
+			headers: {
+				Authorization: `Bearer ${token}`,
 			},
 		});
 		return response.data;

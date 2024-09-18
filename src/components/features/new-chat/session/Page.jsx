@@ -21,6 +21,11 @@ import QueueStatus from '../QueueStatus';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 import { WorkspaceEditProvider } from '../components/WorkspaceEditProvider';
+import CHAT_CONSTANTS from '@/constants/chat.constant';
+import QueryDisplay from './components/QueryDisplay';
+import Clarification from '../Clarification';
+import { WorkspaceEnum } from '../types/new-chat.enum';
+import InputArea from '../InputArea';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -38,6 +43,11 @@ const Workzone = () => {
 		visitedTabs: [],
 	});
 	const [prompt, setPrompt] = useState(chatStoreReducer?.inputPrompt || ''); // input field controlled state
+	const [bulkPrompt, setBulkPrompt] = useState([
+		{ id: 1, text: 'Hi' },
+		{ id: 2, text: 'Bi' },
+		{ id: 3, text: 'Ji' },
+	]);
 	const [answers, setAnswers] = useState([]);
 	const [doingScience, setDoingScience] = useState([]);
 	const [dashboard, setDashboard] = useState({
@@ -56,6 +66,7 @@ const Workzone = () => {
 	const [isGraphLoading, setIsGraphLoading] = useState(true);
 	const [responseTimeElapsed, setResponseTimeElapsed] = useState(0);
 	const [inputDisabled, setInputDisabled] = useState(false);
+	const [activeQueryResponse, setActiveQueryResponse] = useState({});
 	const queries = chatStoreReducer?.queries;
 
 	const scrollToBottom = () => {
@@ -103,6 +114,10 @@ const Workzone = () => {
 			);
 		};
 
+		const sessionMode = (firstAnswer) => {
+			return firstAnswer?.type || 'single';
+		};
+
 		getQueriesOfSession(chatStoreReducer?.activeChatSession?.id, getToken())
 			.then((resp) => {
 				const res = resp?.query_list;
@@ -114,15 +129,27 @@ const Workzone = () => {
 				const tempQueries = res?.map((item) => ({
 					id: item?.query_id,
 					question: item?.query,
+					type: item?.type,
+					metadata: item?.metadata,
 				}));
 				dispatch(
 					updateChatStoreProp([
 						{ key: 'queries', value: [...tempQueries] },
+						{
+							key: 'activeChatSession',
+							value: {
+								...chatStoreReducer?.activeChatSession,
+								mode: sessionMode(res[0]),
+							},
+						},
 					]),
 				);
 
 				//update datasource name in util reducer if not present
-				if (!utilReducer?.selectedDataSource?.name || !utilReducer?.selectedDataSource?.details) {
+				if (
+					!utilReducer?.selectedDataSource?.name ||
+					!utilReducer?.selectedDataSource?.details
+				) {
 					dispatch(
 						updateUtilProp([
 							{
@@ -131,7 +158,7 @@ const Workzone = () => {
 									...utilReducer?.selectedDataSource,
 									name: dataSourceName,
 									id: dataSourceId,
-									details: dataSourceDetails
+									details: dataSourceDetails,
 								},
 							},
 						]),
@@ -184,6 +211,7 @@ const Workzone = () => {
 				const activeQueryResp = res?.find(
 					(item) => item?.query_id === chatStoreReducer?.activeQueryId,
 				);
+				setActiveQueryResponse(activeQueryResp);
 				if (!!activeQueryResp) {
 					dispatch(
 						updateChatStoreProp([
@@ -233,27 +261,37 @@ const Workzone = () => {
 		setPrompt(e.target.value);
 	};
 
-	const handleAppendQuery = () => {
+	const handleAppendQuery = (prompt, queries, mode="single") => {
 		try {
 			if (inputDisabled) return;
-			if (!prompt || !prompt?.trim()) return;
+			if (mode === 'single' && (!prompt || !prompt?.trim())) return;
 			const lastAns = answers[answers.length - 1];
 			const tempPrompt = prompt;
 			const tempCurrentQueries = [
 				...chatStoreReducer?.queries,
 				{ id: '', question: tempPrompt, parentQueryId: lastAns?.query_id },
 			];
+
+			if(queries && queries?.length > 0){
+				metadata = {
+					queries: queries.filter((query) => query?.text?.length > 0).map((item)=> ({query: item?.text}))
+				}	
+			}
+			const payload = {
+				type: mode,
+				child_no: parseInt(lastAns.child_no) + 1,
+				datasource_id: lastAns?.datasource_id,
+				parent_query_id: lastAns?.query_id,
+				session_id: lastAns?.session_id,
+			}
+
+			if(mode ==='single' && prompt)payload.query = prompt;
+			if(mode!=='single' && metadata)payload.metadata = metadata;
 			dispatch(
 				updateChatStoreProp([{ key: 'queries', value: tempCurrentQueries }]),
 			);
 			createQuery(
-				{
-					child_no: parseInt(lastAns.child_no) + 1,
-					datasource_id: lastAns?.datasource_id,
-					parent_query_id: lastAns?.query_id,
-					query: tempPrompt,
-					session_id: lastAns?.session_id,
-				},
+				payload,
 				getToken(),
 			).then((res) => {
 				const updatedQueries = tempCurrentQueries?.map((item) => {
@@ -315,7 +353,7 @@ const Workzone = () => {
 					parent_query_id: answer?.query_id,
 					query: tempPrompt,
 					session_id: answer?.session_id,
-					workspace_changes: workspaceChanges.apiConfig
+					workspace_changes: workspaceChanges.apiConfig,
 				},
 				getToken(),
 			).then((res) => {
@@ -356,7 +394,7 @@ const Workzone = () => {
 		} catch (error) {
 			console.log(error);
 		}
-	}
+	};
 
 	const toggleIra = (targetQueryId) => {
 		if (!targetQueryId) return;
@@ -410,45 +448,42 @@ const Workzone = () => {
 								{getInitials(value.userName)}
 							</AvatarFallback>
 						</Avatar>
-						{prompt ? (
-							<p className="max-w-[90%] ms-2 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px] min-w-[90%] min-h-6">
-								{prompt}
-							</p>
-						) : (
-								<Skeleton className="h-6 w-full bg-purple-8 ms-1" />
-						)}
+						<QueryDisplay />
 					</div>
 				</div>
 			);
 		}
 		return queries?.map((query, key) => {
 			const answerElem = answers.find((item) => item.query_id === query.id);
+			const hasClarification = !!answerElem?.answer?.clarification;
 			const hasIraGeneratedGraph = !!answerElem?.answer?.graph;
 			!hasIraGeneratedGraph && answerElem?.status !== 'done';
 			const currentDoingScience =
 				doingScience.find((loadingObj) => loadingObj.queryId === query?.id)
 					?.status || !!query?.parentQueryId;
+			const showWorkspaceToggle =
+				!hasClarification && answerElem?.type === 'single';
 			return (
-					<div key={query.id} className="my-2 w-full">
-						<div className="ml-10 flex items-center gap-2.5 flex-row-reverse">
-							<Avatar className="size-9">
-								<AvatarImage src={value?.avatar} />
-								<AvatarFallback>
-									{getInitials(value.userName)}
-								</AvatarFallback>
-							</Avatar>
-							{query?.question ? (
-								<p className="ms-2 mr-1 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px]">
-									{query.question}
-								</p>
-							) : (
-								<>
-									<Skeleton className="h-6 w-[90%] bg-purple-8 ms-1" />
-								</>
-							)}
-						</div>
-						<div className="mt-10 flex items-center space-x-2">
-							<img src={ira} alt="ira" className="size-10" />
+				<div key={query.id} className="my-2 w-full">
+					<div
+						className={`ml-10 flex ${query?.type === 'single' && 'items-center'} gap-2.5 flex-row-reverse`}
+					>
+						<Avatar className="size-9">
+							<AvatarImage src={value?.avatar} />
+							<AvatarFallback>
+								{getInitials(value.userName)}
+							</AvatarFallback>
+						</Avatar>
+						<QueryDisplay
+							mode={query?.type}
+							bulkPrompt={query?.metadata?.queries}
+							prompt={query?.question}
+						/>
+					</div>
+
+					<div className="mt-10 flex items-center space-x-2">
+						<img src={ira} alt="ira" className="size-10" />
+						{showWorkspaceToggle && (
 							<Button
 								variant="outline"
 								className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
@@ -465,42 +500,37 @@ const Workzone = () => {
 									: 'Show'}{' '}
 								Workspace
 							</Button>
-						</div>
-						<div
-							className={cn(
-								'mt-8',
-								currentDoingScience ? 'mb-16' : '',
-							)}
-						>
-							<div className="ml-12 my-10">
-								{currentDoingScience && (
-									<QueueStatus
-										text={
-											answerElem?.status_text ||
-											'Doing Science'
-										}
-									/>
-								)}
-							</div>
-							<ResponseCard
-								answerResp={answerElem}
-								isGraphLoading={isGraphLoading}
-								setIsGraphLoading={setIsGraphLoading}
-								setAnswerResp={setAnswers}
-								setDoingScience={setDoingScience}
-								setResponseTimeElapsed={setResponseTimeElapsed}
-								setBanners={setBanners}
-								doingScience={currentDoingScience}
-								setDashboard={setDashboard}
-								showTable={
-									!answerElem?.answer?.response_dataframe &&
-									answerElem?.answer?.graph
-								}
-								setIsTableLoading={setIsTableLoading}
-								isTableLoading={isTableLoading}
-							/>
-						</div>
+						)}
+						{hasClarification && <Clarification />}
 					</div>
+
+					<div className={cn('mt-8', currentDoingScience ? 'mb-16' : '')}>
+						<div className="ml-12 my-10">
+							{currentDoingScience && (
+								<QueueStatus
+									text={answerElem?.status_text || 'Doing Science'}
+								/>
+							)}
+						</div>
+						<ResponseCard
+							answerResp={answerElem}
+							isGraphLoading={isGraphLoading}
+							setIsGraphLoading={setIsGraphLoading}
+							setAnswerResp={setAnswers}
+							setDoingScience={setDoingScience}
+							setResponseTimeElapsed={setResponseTimeElapsed}
+							setBanners={setBanners}
+							doingScience={currentDoingScience}
+							setDashboard={setDashboard}
+							showTable={
+								!answerElem?.answer?.response_dataframe &&
+								answerElem?.answer?.graph
+							}
+							setIsTableLoading={setIsTableLoading}
+							isTableLoading={isTableLoading}
+						/>
+					</div>
+				</div>
 			);
 		});
 	};
@@ -620,21 +650,38 @@ const Workzone = () => {
 	}, [query]);
 
 	const showWorkSpace = () => {
-		const markerAnswer = answers.find(
-			(item) =>
-				item?.query_id ===
-				chatStoreReducer?.activeQueryId,
-		) || answers?.[0]
+		const markerAnswer =
+			answers.find(
+				(item) => item?.query_id === chatStoreReducer?.activeQueryId,
+			) || answers?.[0];
+		const secondaryItems = Object.entries(markerAnswer?.answer || {}).filter(
+			([key, value]) => value?.tool_space === 'secondary',
+		);
+		const hasClarification = !!markerAnswer?.answer?.clarification;
+		const updatedPlannerCondition =
+			secondaryItems?.length > 1 || markerAnswer?.status === 'done';
+		return (
+			workspace.show &&
+			updatedPlannerCondition &&
+			markerAnswer?.type === 'single' &&
+			!hasClarification
+		);
+	};
 
-		return workspace.show && markerAnswer?.answer?.planner?.tool_data?.text
-	}
+	const config = {
+		queryInBulk: { enabled: false },
+		workflowQuery: { enabled: true },
+		createReport: { enabled: false },
+		createDashboard: { enabled: false },
+		savedQueries: { enabled: false },
+	};
 
 	return (
 		<div className="grid grid-cols-12 gap-4 min-h-[90vh] max-h-[90vh] w-full">
 			<div
 				className={cn(
 					'border rounded-2xl pt-8 px-4 shadow-1xl relative h-full flex-col',
-					showWorkSpace() ? 'col-span-8' : 'col-span-12 mx-[8rem]',
+					showWorkSpace() ? 'col-span-8' : 'col-span-12 lg:mx-[128px]',
 				)}
 			>
 				<div
@@ -646,33 +693,7 @@ const Workzone = () => {
 
 				<div className="bg-white flex justify-center mt-4 pt-2">
 					<div className="absolute bottom-4 w-[96%] flex flex-col items-center justify-center z-20 bg-white">
-						<div className="rounded-[100px] w-full flex justify-between bg-purple-4 px-3 py-2 mb-2 ">
-							<Input
-								placeholder="Ask IRA"
-								className="border-0 outline-none rounded-none bg-transparent w-full mr-2"
-								value={prompt}
-								onFocus={() => dispatch(updateUtilProp([{key: 'isSideNavOpen', value: false}]))}
-								onChange={(e) => handlePromptChange(e)}
-								onKeyDown={(e) => {
-									if (e.key === 'Enter') handleAppendQuery();
-								}}
-							/>
-							{!inputDisabled ? (
-								<div
-									className="flex gap-2 items-center pr-3 cursor-pointer"
-									onClick={handleAppendQuery}
-								>
-									<img
-										src={`https://d2vkmtgu2mxkyq.cloudfront.net/send.svg`}
-										className="size-6"
-									/>
-								</div>
-							) : (
-								<div className="flex gap-2 items-center pr-3 cursor-not-allowed">
-									<i className="bi bi-arrow-repeat animate-spin text-purple-40 text-xl"></i>
-								</div>
-							)}
-						</div>
+						<InputArea config={config} onAppendQuery={handleAppendQuery} disabled={inputDisabled}/>
 						<p className="text-xs text-primary40 font-normal">
 							Irame.ai may display inaccurate info, including about
 							people, so double-check its responses.
@@ -682,7 +703,9 @@ const Workzone = () => {
 			</div>
 
 			{showWorkSpace() ? (
-				<WorkspaceEditProvider editDisabled={inputDisabled} regenerator = {handleRegenerateResponse} 
+				<WorkspaceEditProvider
+					editDisabled={inputDisabled}
+					regenerator={handleRegenerateResponse}
 				>
 					<div className="border sticky rounded-3xl py-4 w-full px-4 col-span-4 shadow-1xl h-[90vh]">
 						<div className="flex justify-between">

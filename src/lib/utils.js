@@ -59,3 +59,8 @@ export const capitalizeFirstLetterFullText = (text) => {
 		.map((sentence) => capitalize(sentence))
 		.join(' ');
 };
+
+export const chatCommandInitiator = (str) =>{
+    const regex = /^\/$/;
+    return regex.test(str);
+}

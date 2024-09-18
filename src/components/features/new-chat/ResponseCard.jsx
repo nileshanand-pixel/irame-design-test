@@ -35,9 +35,17 @@ const ResponseCard = ({
 			value?.tool_space === 'main' && value?.tool_type === WorkspaceEnum.Answer,
 	);
 
+	const clarificationItem = Object.entries(answerResp?.answer || {}).find(
+		([key, value]) =>
+			value?.tool_space === 'main' && value?.tool_type === WorkspaceEnum.Clarification,
+	);
+
 	let safeHTML = '';
 	if (answerItem && answerItem[1]?.tool_data?.text) {
 		safeHTML = DOMPurify.sanitize(answerItem[1]?.tool_data?.text);
+	}else if(clarificationItem && clarificationItem[1]?.tool_data?.text){
+		safeHTML = DOMPurify.sanitize(clarificationItem[1]?.tool_data?.text);
+		console.log(safeHTML);
 	}
 
 	const graphDataItem = mainItems.find(
@@ -58,9 +66,9 @@ const ResponseCard = ({
 
 	return (
 		<>
-			{(answerItem || (mainItems && mainItems.length > 0)) && (
+			{(safeHTML || (mainItems && mainItems.length > 0)) && (
 				<div className="mt-4 mx-12">
-					{answerItem && (
+					{safeHTML && (
 						<div className="mb-8 bg-purple-4 p-4 rounded-tl-md rounded-e-xl rounded-bl-xl">
 							<p
 								className="text-primary80 font-medium"
