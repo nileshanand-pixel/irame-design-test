@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import CHAT_CONSTANTS from '@/constants/chat.constant';
 import MoreActionsModal from './MoreActionsModal';
-import { Button } from '@/components/ui/button';
 import { chatCommandInitiator } from '@/lib/utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
