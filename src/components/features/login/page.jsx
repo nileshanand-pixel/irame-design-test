@@ -30,7 +30,6 @@ const SignInSignUp = () => {
 			toast.error('Failed to initiate Google login.');
 			setIsLoading(false);
 		}
-		
 	};
 
 	const handleEmailLogin = async (data) => {
