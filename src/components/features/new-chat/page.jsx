@@ -128,7 +128,6 @@ const NewChat = () => {
 
 	const handleCreateSession = (prompt, queries, mode="single") => {
 		try {
-			console.log(prompt);
 			if (mode === 'single' && (!prompt || !prompt?.trim())) return;
 			let metadata;
 			if(queries && queries?.length > 0){

@@ -60,6 +60,7 @@ const InputArea = ({ config, onAppendQuery, disabled }) => {
 	const handleSingleKeyDown = (e) => {
 		if (e.key === 'Enter') {
 			onAppendQuery(prompt, queries, mode);
+			setPrompt('');
 		}
 	};
 
@@ -194,7 +195,7 @@ const InputArea = ({ config, onAppendQuery, disabled }) => {
 				{!inputDisabled ? (
 					<div
 						className={`flex ${mode === 'single' && 'items-center'} gap-2 pr-3 cursor-pointer`}
-						onClick={() => onAppendQuery(prompt, queries, mode)}
+						onClick={handleSingleKeyDown}
 					>
 						<img
 							src={`https://d2vkmtgu2mxkyq.cloudfront.net/send.svg`}

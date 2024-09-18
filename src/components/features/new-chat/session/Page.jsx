@@ -271,7 +271,7 @@ const Workzone = () => {
 				...chatStoreReducer?.queries,
 				{ id: '', question: tempPrompt, parentQueryId: lastAns?.query_id },
 			];
-
+			let metadata;
 			if(queries && queries?.length > 0){
 				metadata = {
 					queries: queries.filter((query) => query?.text?.length > 0).map((item)=> ({query: item?.text}))
@@ -479,8 +479,7 @@ const Workzone = () => {
 							bulkPrompt={query?.metadata?.queries}
 							prompt={query?.question}
 						/>
-					</div>
-
+					</div>		
 					<div className="mt-10 flex items-center space-x-2">
 						<img src={ira} alt="ira" className="size-10" />
 						{showWorkspaceToggle && (
