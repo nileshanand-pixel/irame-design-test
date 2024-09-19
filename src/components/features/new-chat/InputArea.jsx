@@ -6,10 +6,9 @@ import { chatCommandInitiator } from '@/lib/utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
-const InputArea = ({ config, onAppendQuery, disabled }) => {
+const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const [prompt, setPrompt] = useState('');
 	const [showModal, setShowModal] = useState(false);
-	const [inputDisabled, setInputDisabled] = useState(disabled);
 	const [mode, setMode] = useState('single');
 	const [queries, setQueries] = useState([{ id: 1, text: '' }]);
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -58,8 +57,7 @@ const InputArea = ({ config, onAppendQuery, disabled }) => {
 
 	const handleSingleKeyDown = (e) => {
 		if (e.key === 'Enter') {
-			onAppendQuery(prompt, queries, mode);
-			setPrompt('');
+			handleSend();
 		}
 	};
 
@@ -104,6 +102,13 @@ const InputArea = ({ config, onAppendQuery, disabled }) => {
 			}
 		}
 	};
+
+	const handleSend=async()=>{
+		await onAppendQuery(prompt, queries, mode);
+		setPrompt('');
+		setQueries([]);
+		setMode("single");
+	}
 
 	const renderBulkMode = (label) => (
 		<div className="w-[90%] flex flex-col gap-2 pr-2">
@@ -153,7 +158,7 @@ const InputArea = ({ config, onAppendQuery, disabled }) => {
 			value={prompt}
 			onChange={handlePromptChange}
 			onKeyDown={handleSingleKeyDown}
-			disabled={inputDisabled}
+			disabled={disabled}
 			ref={simpleInputRef}
 		/>
 	);
@@ -191,10 +196,10 @@ const InputArea = ({ config, onAppendQuery, disabled }) => {
 				className={`w-full ${inputBorder()} flex justify-between bg-purple-4 px-3 py-2 mb-2`}
 			>
 				{renderInputArea()}
-				{!inputDisabled ? (
+				{!disabled ? (
 					<div
 						className={`flex ${mode === 'single' && 'items-center'} gap-2 pr-3 cursor-pointer`}
-						onClick={handleSingleKeyDown}
+						onClick={handleSend}
 					>
 						<img
 							src={`https://d2vkmtgu2mxkyq.cloudfront.net/send.svg`}

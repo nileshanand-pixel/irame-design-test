@@ -45,7 +45,6 @@ const ResponseCard = ({
 		safeHTML = DOMPurify.sanitize(answerItem[1]?.tool_data?.text);
 	}else if(clarificationItem && clarificationItem[1]?.tool_data?.text){
 		safeHTML = DOMPurify.sanitize(clarificationItem[1]?.tool_data?.text);
-		console.log(safeHTML);
 	}
 
 	const graphDataItem = mainItems.find(

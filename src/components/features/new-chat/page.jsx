@@ -143,8 +143,6 @@ const NewChat = () => {
 			if(mode ==='single' && prompt)payload.query = prompt;
 			if(mode!=='single' && metadata)payload.metadata = metadata;
 
-			console.log(payload)
-
 			navigate(`/app/new-chat/session`);
 			dispatch(
 				updateChatStoreProp([

@@ -265,6 +265,7 @@ const Workzone = () => {
 		try {
 			if (inputDisabled) return;
 			if (mode === 'single' && (!prompt || !prompt?.trim())) return;
+			setInputDisabled(true);
 			const lastAns = answers[answers.length - 1];
 			const tempPrompt = prompt;
 			const tempCurrentQueries = [
@@ -332,7 +333,11 @@ const Workzone = () => {
 		} catch (error) {
 			console.log(error);
 			setPrompt('');
+			
+		}finally{
+			setInputDisabled(false);
 		}
+		
 	};
 
 	const handleRegenerateResponse = (answer, workspaceChanges) => {
