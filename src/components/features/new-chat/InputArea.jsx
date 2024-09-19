@@ -106,7 +106,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const handleSend=async()=>{
 		await onAppendQuery(prompt, queries, mode);
 		setPrompt('');
-		setQueries([]);
+		setQueries([{ id: 1, text: '' }]);
 		setMode("single");
 	}
 
