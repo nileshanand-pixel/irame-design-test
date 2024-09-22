@@ -17,6 +17,7 @@ import Lottie from '@/components/elements/loading/LottieRender';
 const LOADING_ANIMATION_URL =
 	'https://d2vkmtgu2mxkyq.cloudfront.net/report-progress-loader.json';
 
+
 const ReportCard = ({ report }) => {
 	const [isHovered, setIsHovered] = useState(false);
 	const FALLBACK_PREVIEW_URL = '/assets/bgs/ira-logo.svg';
@@ -101,10 +102,7 @@ const ReportCard = ({ report }) => {
 							<DropdownMenuItem
 								className="text-primary80 font-medium hover:!bg-purple-4"
 								onClick={handleShareClick}
-								disabled={
-									report?.status === 'in_progress' ||
-									report?.level !== 'owner'
-								}
+								disabled={report?.status === 'in_progress' || report?.level !== 'owner'}
 							>
 								<i className="bi bi-share me-2 text-primary80 font-medium"></i>
 								Share

@@ -11,7 +11,7 @@ export const logout = async () => {
 	resetCookies(ignoreRefreshToken);
 };
 
-export const fullLogout = async () => {
+export const fullLogout = () => {
 	window.location.href = `${serviceUrlMap.AUTH_SERVICE}/logout?client_id=${COGNITO_CLIENT_ID}&logout_uri=${window.location.origin}`;
 	resetCookies();
 	resetAllStores();

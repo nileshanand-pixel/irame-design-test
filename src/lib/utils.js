@@ -43,7 +43,6 @@ export function toTitleCase(str) {
 		return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
 	});
 }
-
 export const getShortHandName = (fullName) => {
 	if (fullName.length > 0) {
 		const splits = fullName.split(' ');
@@ -60,3 +59,8 @@ export const capitalizeFirstLetterFullText = (text) => {
 		.map((sentence) => capitalize(sentence))
 		.join(' ');
 };
+
+export const chatCommandInitiator = (str) =>{
+    const regex = /^\/$/;
+    return regex.test(str);
+}

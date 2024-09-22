@@ -4,6 +4,7 @@ import { useRouter } from '@/hooks/useRouter';
 import { getToken } from '@/lib/utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const FollowUpQuestions = ({
 	question,
@@ -16,14 +17,19 @@ const FollowUpQuestions = ({
 	const { query, navigate } = useRouter();
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+	const utilReducer = useSelector((state) => state.utilReducer);
+
 	const handlePrompt = () => {
 		try {
 			const tempCurrentQueries = [
 				...chatStoreReducer?.queries,
 				{ id: '', question: question, parentQueryId: answerResp?.query_id },
 			];
-			dispatch(
+			if(utilReducer.isSideNavOpen)dispatch(
 				updateChatStoreProp([{ key: 'queries', value: tempCurrentQueries }]),
+			);
+			dispatch(
+				updateUtilProp([{ key: 'isSideNavOpen', value: false }]),
 			);
 			createQuery(
 				{

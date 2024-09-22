@@ -68,15 +68,15 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/dashboard_columns.svg',
 				},
 				{
+					link: '/app/reports',
+					text: 'Reports',
+					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/report-icon.svg',
+				},
+				{
 					link: '/app/configuration',
 					text: 'Configuration',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/gear.svg',
-				},
-				{
-					link: '/app/reports',
-					text: 'Reports',
-					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/reports-icon.svg',
-				},
+				}
 			],
 		},
 	];
@@ -431,3 +431,4 @@ SideNav.propTypes = {
 };
 
 export default SideNav;
+

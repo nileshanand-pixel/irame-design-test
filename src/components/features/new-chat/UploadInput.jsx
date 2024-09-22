@@ -14,7 +14,6 @@ const UploadInput = ({ onFileUpload, files, setFiles, progress, setOpen }) => {
 	const [showFormats, setShowFormats] = useState(false);
 
 	useEffect(() => {
-		console.log(progress);
 	}, [progress]);
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
