@@ -48,9 +48,7 @@ const Header = () => {
 	}, []);
 
 	const showDataSourceName =
-		utilReducer?.selectedDataSource?.name &&
-		!pathname.includes('/dashboard') &&
-		!pathname.includes('/configuration');
+		utilReducer?.selectedDataSource?.name && pathname.includes('/new-chat');
 	return (
 		<header
 			className={cn(
@@ -88,13 +86,7 @@ const Header = () => {
 								className="text-primary100 text-sm font-medium"
 								onClick={() => {
 									fullLogout();
-									setValue({
-										userName: '',
-										email: '',
-										userId: '',
-										token: '',
-										avatar: '',
-									});
+									setValue({});
 								}}
 							>
 								<i className="bi-box-arrow-left mr-2 text-primary100"></i>

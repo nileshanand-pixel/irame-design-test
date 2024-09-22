@@ -1,19 +1,15 @@
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import useGetDashboard from './hooks/useGetDashboard';
-import { useEffect, useMemo, useState } from 'react';
-import {
-	createDashboard,
-	getDashboardContent,
-	getUserDashboard,
-} from './service/dashboard.service';
 import { cn, getToken } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { createDashboard, getUserDashboard } from './service/dashboard.service';
 import DashboardCard from './components/DashboardCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from '@/hooks/useRouter';
 import CreateDashboardDialog from './components/CreateDashboardDialog';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
+import EmptyState from '@/components/elements/EmptyState';
 
 const Dashboard = () => {
 	const [dashboard, setDashboard] = useState([]);
@@ -68,6 +64,15 @@ const Dashboard = () => {
 	useEffect(() => {
 		setErrors({});
 	}, [dashboardName]);
+
+	const emptyStateConfig = {
+		image: 'https://d2vkmtgu2mxkyq.cloudfront.net/empty-state.svg',
+		reactionText: 'Create your first dashboard...',
+		ctaText: 'Create a Dashboard',
+		ctaDisabled: false,
+		ctaClickHandler: () => setShowCreateDashboard(true),
+	};
+
 	return (
 		<div className="w-full h-full ">
 			<div className="w-full flex justify-between mt-2 ">
@@ -101,27 +106,7 @@ const Dashboard = () => {
 				</div>
 			</div>
 
-			{filteredList &&
-			Array.isArray(filteredList) &&
-			filteredList.length > 0 ? (
-				<div className="w-full mt-6 bg-white border border-primary10 rounded-s-xl rounded-e-xl">
-					{filteredList.map((item, idx) => {
-						return (
-							<DashboardCard
-								data={item}
-								refetch={refetch}
-								setRefetch={setRefetch}
-							/>
-						);
-					})}
-				</div>
-			) : search ? (
-				<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
-					<p className="text-sm text-primary60 font-medium">
-						No such dashboard found
-					</p>
-				</div>
-			) : userDashboardQuery.isLoading ? (
+			{userDashboardQuery.isLoading ? (
 				<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
 					<div className="flex items-center space-x-4">
 						<Skeleton className="h-12 w-16 rounded-xl bg-purple-4" />
@@ -131,14 +116,28 @@ const Dashboard = () => {
 						</div>
 					</div>
 				</div>
+			) : dashboard.length === 0 ? (
+				<EmptyState config={emptyStateConfig} />
+			) : filteredList.length > 0 ? (
+				<div className="w-full mt-6 bg-white border border-primary10 rounded-s-xl rounded-e-xl">
+					{filteredList.map((item, idx) => (
+						<DashboardCard
+							key={idx}
+							data={item}
+							refetch={refetch}
+							setRefetch={setRefetch}
+						/>
+					))}
+				</div>
 			) : (
 				<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
 					<p className="text-sm text-primary60 font-medium">
-						No dashboards found
+						{search ? 'No such dashboard found' : 'No dashboards found'}
 					</p>
 				</div>
 			)}
-			{showCreateDashboard ? (
+
+			{showCreateDashboard && (
 				<CreateDashboardDialog
 					open={showCreateDashboard}
 					setOpen={setShowCreateDashboard}
@@ -148,7 +147,7 @@ const Dashboard = () => {
 					errors={errors}
 					isLoading={isLoading}
 				/>
-			) : null}
+			)}
 		</div>
 	);
 };

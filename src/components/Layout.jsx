@@ -8,15 +8,14 @@ import { useRouter } from '@/hooks/useRouter';
 import { cn } from '@/lib/utils';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import GlobalPollReports from './features/reports/components/GlobalPollReports';
+import FreshdeskWidget from './features/freshdesk/FreshdeskWidget';
 
 const Layout = ({ children }) => {
-	// const [isSideNavOpen, setIsSideNavOpen] = useState(true);
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const dispatch = useDispatch();
 	const { pathname } = useRouter();
 
 	const toggleSideNav = () => {
-		// setIsSideNavOpen(!isSideNavOpen);
 		dispatch(
 			updateUtilProp([
 				{ key: 'isSideNavOpen', value: !utilReducer.isSideNavOpen },
@@ -63,6 +62,7 @@ const Layout = ({ children }) => {
 				</div>
 				{/* <GlobalPollReports /> */}
 			</main>
+			<FreshdeskWidget/>
 		</div>
 	);
 };

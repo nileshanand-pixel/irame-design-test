@@ -1,3 +1,4 @@
+
 export const WorkspaceEnum = {
 	Planner: 'planner',
 	Coder: 'coder',
@@ -7,6 +8,7 @@ export const WorkspaceEnum = {
 	Answer: 'answer',
 	Reference: 'reference',
 	DataFrame: 'response_dataframe',
+	Clarification: 'clarification',
 };
 
 export const workSpaceMap = {

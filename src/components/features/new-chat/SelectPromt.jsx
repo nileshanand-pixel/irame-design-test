@@ -15,11 +15,7 @@ import { queryClient } from '@/lib/react-query';
 import ScrollList from '@/components/elements/ScrollList';
 
 const SelectPrompt = ({
-	handleNextStep,
 	setPrompt,
-	setAnswerResp,
-	setPromptQuery,
-	setDoingScience,
 }) => {
 	const [activeTab, setActiveTab] = useState('');
 	const [data, setData] = useState([]);
@@ -42,7 +38,13 @@ const SelectPrompt = ({
 					{ key: 'refreshChat', value: !chatStoreReducer?.refreshChat },
 				]),
 			);
-			createQuerySession(query.dataSourceId, question, getToken()).then(
+			if(utilReducer.isSideNavOpen)dispatch(updateUtilProp([{key: 'isSideNavOpen', value: false}]))
+			const payload = {
+				datasource_id: query.dataSourceId,
+				query: question,
+				type: 'single',
+			}
+			createQuerySession(payload, getToken()).then(
 				(res) => {
 					dispatch(
 						updateChatStoreProp([
