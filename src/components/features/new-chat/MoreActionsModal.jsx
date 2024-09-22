@@ -1,57 +1,63 @@
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 // Action components
-const QueryInBulk = ({ onClick }) => (
+const QueryInBulk = forwardRef(({ onClick}, ref) => (
 	<ActionButton
 		icon="format_list_bulleted"
 		title="Query in Bulk"
 		onClick={onClick}
+		ref={ref}
 	/>
-);
+));
 
-const CreateReport = ({ onClick }) => (
+const CreateReport = forwardRef(({ onClick}, ref) => (
 	<ActionButton
 		icon="description"
 		title="Create a Report"
 		onClick={() => onClick('createReport')}
+		ref={ref}
 	/>
-);
+));
 
-const CreateDashboard = ({ onClick }) => (
+const CreateDashboard = forwardRef(({ onClick}, ref) => (
 	<ActionButton
 		icon="dashboard"
 		title="Create a Dashboard"
 		onClick={() => onClick('createDashboard')}
+		ref={ref}
 	/>
-);
+));
 
-const SavedQueries = ({ onClick }) => (
+const SavedQueries = forwardRef(({ onClick}, ref) => (
 	<ActionButton
 		icon="bookmarks"
 		title="Saved Queries"
 		onClick={() => onClick('savedQueries')}
+		ref={ref}
 	/>
-);
+));
 
-const WorkFlowQuery = ({ onClick }) => (
+const WorkFlowQuery = forwardRef(({ onClick}, ref) => (
 	<ActionButton
 		icon="format_list_bulleted"
 		title="Work Flow"
 		onClick={onClick}
+		ref={ref}
 	/>
-);
+));
 
 // Generic ActionButton component
-const ActionButton = ({ icon, title, onClick }) => (
+const ActionButton = forwardRef(({ icon, title, onClick}, ref) => (
 	<button
 		onClick={onClick}
 		className="w-full text-left p-2 rounded-md flex items-center space-x-2 hover:bg-[#6A12CD0A]"
+		ref = {ref}
 	>
 		<span className="material-symbols-outlined">{icon}</span>
 		<span>{title}</span>
 	</button>
-);
+));
 
 // Configuration object
 const actionConfig = [
@@ -62,14 +68,14 @@ const actionConfig = [
 	{ id: 'createDashboard', component: CreateDashboard },
 ];
 
-const MoreActionsModal = ({ config, onSelect, }) => {
+const MoreActionsModal = forwardRef(({ config, onSelect}, ref) => {
 	// Function to render actions based on configuration
 	const renderActions = () => {
 		return actionConfig
 			.filter((action) => config[action.id]?.enabled)
-			.map((action) => {
+			.map((action, index) => {
 				const ActionComponent = action.component;
-				return <ActionComponent key={action.id} onClick={() => onSelect(action.id)} />
+				return <ActionComponent key={action.id} onClick={() => onSelect(action.id)} ref = {index === 0 ? ref : null}/>
 			});
 	};
 
@@ -83,6 +89,6 @@ const MoreActionsModal = ({ config, onSelect, }) => {
 				</div>
 			</div>
 	);
-};
+});
 
 export default MoreActionsModal;
