@@ -56,6 +56,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	};
 
 	const handleSingleKeyDown = (e) => {
+		if(showModal)return;
 		if (e.key === 'Enter') {
 			handleSend();
 		}

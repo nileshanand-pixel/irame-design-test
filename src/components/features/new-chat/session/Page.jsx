@@ -658,15 +658,14 @@ const Workzone = () => {
 			answers.find(
 				(item) => item?.query_id === chatStoreReducer?.activeQueryId,
 			) || answers?.[0];
-		const secondaryItems = Object.entries(markerAnswer?.answer || {}).filter(
-			([key, value]) => value?.tool_space === 'secondary',
-		);
+		// const secondaryItems = Object.entries(markerAnswer?.answer || {}).filter(
+		// 	([key, value]) => value?.tool_space === 'secondary',
+		// );
 		const hasClarification = !!markerAnswer?.answer?.clarification;
-		const updatedPlannerCondition =
-			secondaryItems?.length > 1 || markerAnswer?.status === 'done';
+		// const updatedPlannerCondition =
+		// 	secondaryItems?.length > 1 || markerAnswer?.status === 'done';
 		return (
 			workspace.show &&
-			updatedPlannerCondition &&
 			markerAnswer?.type === 'single' &&
 			!hasClarification
 		);
