@@ -13,7 +13,6 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const [queries, setQueries] = useState([{ id: 1, text: '' }]);
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const dispatch = useDispatch();
-	const DISABLE_MULTI_MODE=true
 
 	const inputRefs = useRef([]);
 	const simpleInputRef = useRef(null);
@@ -26,7 +25,6 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const handlePromptChange = (e) => {
 		const value = e.target.value;
 		setPrompt(value);
-		if(DISABLE_MULTI_MODE)return;
 		if (!value) setShowModal(false);
 		if (chatCommandInitiator(value)) {
 			setShowModal(true);

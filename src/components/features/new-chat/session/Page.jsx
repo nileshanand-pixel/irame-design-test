@@ -673,7 +673,7 @@ const Workzone = () => {
 
 	const config = {
 		queryInBulk: { enabled: false },
-		workflowQuery: { enabled: false },
+		workflowQuery: { enabled: true },
 		createReport: { enabled: false },
 		createDashboard: { enabled: false },
 		savedQueries: { enabled: false },
