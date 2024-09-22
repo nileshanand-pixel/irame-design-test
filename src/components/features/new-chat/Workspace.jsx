@@ -9,8 +9,7 @@ import { WorkspaceEnum, workSpaceMap } from './types/new-chat.enum';
 const TAB_ORDER = [
 	WorkspaceEnum.Planner,
 	WorkspaceEnum.Reference,
-	WorkspaceEnum.Coder,
-	WorkspaceEnum.Graph,
+	WorkspaceEnum.Coder
 ];
 import { useWorkspaceEdit } from './components/WorkspaceEditProvider';
 import { Button } from '@/components/ui/button';
@@ -25,8 +24,8 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 	}, [answerResp?.answer]);
 
 	useEffect(() => {
-		const defaultTab = availableTabs.includes(WorkspaceEnum.Planner)
-			? WorkspaceEnum.Planner
+		const defaultTab = availableTabs.includes(WorkspaceEnum.Reference)
+			? WorkspaceEnum.Reference
 			: availableTabs[0];
 		setWorkspace((prev) => ({
 			...prev,

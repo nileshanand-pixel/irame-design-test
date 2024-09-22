@@ -57,6 +57,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	};
 
 	const handleSingleKeyDown = (e) => {
+		if(showModal)return;
 		if (e.key === 'Enter') {
 			if(showModal) {
 				if(firstActionRef && firstActionRef?.current && firstActionRef?.current?.click) {
