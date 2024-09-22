@@ -215,7 +215,7 @@ const NewChat = () => {
 
 	const config = {
 		queryInBulk: { enabled: false },
-		workflowQuery: { enabled: true },
+		workflowQuery: { enabled: false },
 		createReport: { enabled: false },
 		createDashboard: { enabled: false },
 		savedQueries: { enabled: false },
