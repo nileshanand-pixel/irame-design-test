@@ -16,6 +16,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 
 	const inputRefs = useRef([]);
 	const simpleInputRef = useRef(null);
+	const firstActionRef = useRef(null);
 
 	// Effect to manage inputRefs cleanup and focus
 	useEffect(() => {
@@ -57,7 +58,13 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 
 	const handleSingleKeyDown = (e) => {
 		if (e.key === 'Enter') {
-			handleSend();
+			if(showModal) {
+				if(firstActionRef && firstActionRef?.current && firstActionRef?.current?.click) {
+					firstActionRef?.current?.click();
+				}
+			} else {
+				handleSend();
+			}
 		}
 	};
 
@@ -190,7 +197,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	return (
 		<div className="relative w-full">
 			{showModal && (
-				<MoreActionsModal config={config} onSelect={handleActionSelect} />
+				<MoreActionsModal config={config} onSelect={handleActionSelect} ref={firstActionRef}/>
 			)}
 			<div
 				className={`w-full ${inputBorder()} flex justify-between bg-purple-4 px-3 py-2 mb-2`}
