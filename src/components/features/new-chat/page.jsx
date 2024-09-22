@@ -5,37 +5,17 @@ import ConnectDataSource from './ConnectDataSource';
 import SelectPrompt from './SelectPromt';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
-import { cn, getToken, getInitials } from '@/lib/utils';
-import ira from '@/assets/icons/ira_icon.svg';
-import failedIcon from '@/assets/icons/failed_icon.svg';
-import warningIcon from '@/assets/icons/warning_icon.svg';
-import { Button } from '@/components/ui/button';
-import Workspace from './Workspace';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import ResponseCard from './ResponseCard';
+import { getToken } from '@/lib/utils';
 import {
-	createQuery,
 	createQuerySession,
-	getUserDetails,
 	getUserSession,
 } from './service/new-chat.service';
-import { useSearchParams } from 'react-router-dom';
-import { Input } from '@/components/ui/input';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { getDataSources } from '../configuration/service/configuration.service';
-import AddQueryToDashboard from './AddQueryToDashboard';
-import { createDashboard } from '../dashboard/service/dashboard.service';
-import { toast } from 'sonner';
-import CreateDashboardDialog from '../dashboard/components/CreateDashboardDialog';
-import { queryClient } from '@/lib/react-query';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
-import { getUserDetailsFromToken } from '@/lib/cookies';
-import capitalize from 'lodash.capitalize';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
-import CHAT_CONSTANTS from '@/constants/chat.constant';
 import InputArea from './InputArea';
 
 const NewChat = () => {
@@ -178,7 +158,10 @@ const NewChat = () => {
 						]),
 					);
 				},
-			);
+			).catch((error) => {
+				navigate('/app/new-chat');
+				toast.error('Error Creating Session, Please Try Again');
+			})
 		} catch (error) {
 			console.log(error);
 		}
@@ -296,15 +279,6 @@ const NewChat = () => {
 			setDoingScience(true);
 		}
 	}, [utilReducer?.dataSources, utilReducer?.resetChat]);
-
-	/**
-	 * Gives data of current queryId response from state
-	 * @param {*} queryId
-	 * @returns
-	 */
-	const getCurrentQueryAns = (queryId) => {
-		return answersList.find((item) => item.query_id === queryId);
-	};
 
 	return (
 		<>
