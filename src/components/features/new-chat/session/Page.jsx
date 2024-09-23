@@ -466,8 +466,7 @@ const Workzone = () => {
 			const currentDoingScience =
 				doingScience.find((loadingObj) => loadingObj.queryId === query?.id)
 					?.status || !!query?.parentQueryId;
-			const showWorkspaceToggle =
-				!hasClarification && answerElem?.type === 'single';
+			const showWorkspaceToggle = !hasClarification ;
 			return (
 				<div key={query.id} className="my-2 w-full">
 					<div
@@ -666,14 +665,14 @@ const Workzone = () => {
 		// 	secondaryItems?.length > 1 || markerAnswer?.status === 'done';
 		return (
 			workspace.show &&
-			markerAnswer?.type === 'single' &&
+			// markerAnswer?.type === 'single' &&
 			!hasClarification
 		);
 	};
 
 	const config = {
 		queryInBulk: { enabled: false },
-		workflowQuery: { enabled: false },
+		workflowQuery: { enabled: true },
 		createReport: { enabled: false },
 		createDashboard: { enabled: false },
 		savedQueries: { enabled: false },

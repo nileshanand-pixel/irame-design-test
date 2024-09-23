@@ -13,10 +13,10 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const [queries, setQueries] = useState([{ id: 1, text: '' }]);
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const dispatch = useDispatch();
-	const DISABLE_MULTI_MODE=true
 
 	const inputRefs = useRef([]);
 	const simpleInputRef = useRef(null);
+	const firstActionRef = useRef(null);
 
 	// Effect to manage inputRefs cleanup and focus
 	useEffect(() => {
@@ -26,7 +26,6 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const handlePromptChange = (e) => {
 		const value = e.target.value;
 		setPrompt(value);
-		if(DISABLE_MULTI_MODE)return;
 		if (!value) setShowModal(false);
 		if (chatCommandInitiator(value)) {
 			setShowModal(true);
@@ -58,9 +57,14 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	};
 
 	const handleSingleKeyDown = (e) => {
-		if(showModal)return;
 		if (e.key === 'Enter') {
-			handleSend();
+			if(showModal) {
+				if(firstActionRef && firstActionRef?.current && firstActionRef?.current?.click) {
+					firstActionRef?.current?.click();
+				}
+			} else {
+				handleSend();
+			}
 		}
 	};
 
@@ -70,14 +74,33 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 
 		if (e.key === 'Enter') {
 			e.preventDefault();
-			const lastQuery = queries[queries.length - 1];
-
-			if (lastQuery.text.trim() !== '') {
-				setQueries([...queries, { id: queries.length + 1, text: '' }]);
-				setTimeout(() => {
-					inputRefs.current[queries.length].focus();
-				}, 0);
+			
+			if (currentQuery.text.trim() === '') { 
+				return;
 			}
+
+			const newQuery = { id: currentQuery?.id + 1, text: '' };
+
+			setQueries((prev) => {
+				const newQueries = [];
+
+				prev?.forEach((query, index) => {
+					if(index < currentQueryIndex) {
+						newQueries.push({...query});
+					} else if(index === currentQueryIndex) {
+						newQueries.push({...query});
+						newQueries.push(newQuery);
+					} else {
+						newQueries.push({...query, id: query?.id + 1})
+					}
+				})
+
+				return [...newQueries];
+			})
+
+			setTimeout(() => {
+				inputRefs.current[currentQueryIndex + 1].focus();
+			}, 0)
 		}
 
 		if (
@@ -193,7 +216,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	return (
 		<div className="relative w-full">
 			{showModal && (
-				<MoreActionsModal config={config} onSelect={handleActionSelect} />
+				<MoreActionsModal config={config} onSelect={handleActionSelect} ref={firstActionRef}/>
 			)}
 			<div
 				className={`w-full ${inputBorder()} flex justify-between bg-purple-4 px-3 py-2 mb-2`}
