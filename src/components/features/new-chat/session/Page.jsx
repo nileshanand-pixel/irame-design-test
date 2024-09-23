@@ -39,8 +39,8 @@ const Workzone = () => {
 
 	const [workspace, setWorkspace] = useState({
 		show: true,
-		activeTab: '',
-		visitedTabs: [],
+		activeTab: "planner",
+		visitedTabs: {"planner": true},
 	});
 	const [prompt, setPrompt] = useState(chatStoreReducer?.inputPrompt || ''); // input field controlled state
 	const [bulkPrompt, setBulkPrompt] = useState([
@@ -741,6 +741,7 @@ const Workzone = () => {
 										chatStoreReducer?.activeQueryId,
 								) || answers?.[0]
 							}
+							canEdit={answers.every((item) => item?.status === "done")}
 							setWorkspace={setWorkspace}
 						/>
 					</div>

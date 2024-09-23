@@ -18,8 +18,6 @@ const LOADING_ANIMATION_URL =
 	'https://d2vkmtgu2mxkyq.cloudfront.net/report-progress-loader.json';
 
 
-
-
 const ReportCard = ({ report }) => {
 	const [isHovered, setIsHovered] = useState(false);
 	const FALLBACK_PREVIEW_URL = '/assets/bgs/ira-logo.svg';

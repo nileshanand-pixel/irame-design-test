@@ -25,8 +25,8 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 
 	const handlePromptChange = (e) => {
 		const value = e.target.value;
-		if (!value) setShowModal(false);
 		setPrompt(value);
+		if (!value) setShowModal(false);
 		if (chatCommandInitiator(value)) {
 			setShowModal(true);
 		} else {

@@ -2,7 +2,6 @@ import { isMobileOnly } from 'react-device-detect';
 import AppProvider from './providers/AppProvider';
 import AppRoutes from './routes';
 import { ThemeProvider } from './providers/ThemeProvider';
-import FreshdeskWidget from './components/features/freshdesk/FreshdeskWidget';
 
 export default function App() {
   if (isMobileOnly) {
@@ -15,6 +14,7 @@ export default function App() {
   }
   return (
     <AppProvider>
+      
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <AppRoutes />
       </ThemeProvider>

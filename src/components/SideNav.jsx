@@ -45,9 +45,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const fetchUserSession = async () => {
 		try {
 			const data = await getUserSession(getToken());
-			dispatch(
-				updateAuthStoreProp([{ key: 'userId', value: data?.[0]?.user_id }]),
-			);
+			dispatch(updateAuthStoreProp([{key: 'userId', value: data?.[0]?.user_id}]))
 			return data;
 		} catch (error) {
 			console.error('Error fetching user session:', error);
@@ -158,6 +156,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					return session;
 				}
 			});
+			if (!confirm("Are you sure you want to delete this session?")) return;
 			await deleteSession(sessionId, getToken());
 			dispatch(
 				updateUtilProp([{ key: 'sessionHistory', value: updatedList }]),
