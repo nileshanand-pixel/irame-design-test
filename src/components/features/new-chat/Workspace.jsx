@@ -14,7 +14,7 @@ const TAB_ORDER = [
 import { useWorkspaceEdit } from './components/WorkspaceEditProvider';
 import { Button } from '@/components/ui/button';
 
-const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
+const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace, canEdit }) => {
 	const [workspaceHasChanges, setWorkspaceHasChanges] = useState(false);
 	const { regenerateResponse, editDisabled } = useWorkspaceEdit();
 	const availableTabs = useMemo(() => {
@@ -23,23 +23,12 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace }) => {
 		);
 	}, [answerResp?.answer]);
 
-	useEffect(() => {
-		const defaultTab = availableTabs.includes(WorkspaceEnum.Reference)
-			? WorkspaceEnum.Reference
-			: availableTabs[0];
-		setWorkspace((prev) => ({
-			...prev,
-			activeTab: defaultTab,
-			visitedTabs: { [defaultTab]: true },
-		}));
-	}, [answerResp, availableTabs, setWorkspace]);
-
 	const renderedComponent = useMemo(() => {
 		const componentMap = {
 			[WorkspaceEnum.Planner]: () => (
 				<PlannerComponent
 					data={answerResp?.answer?.[WorkspaceEnum.Planner]}
-					status={answerResp?.status}
+					canEdit={canEdit}
 					workspaceHasChanges={workspaceHasChanges}
 					setWorkspaceHasChanges={setWorkspaceHasChanges}
 				/>
