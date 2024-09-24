@@ -1,14 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { getReports } from '@/components/features/reports/service/reports.service';
 import useAuth from '@/hooks/useAuth';
 import { getToken } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const GlobalPollReports = () => {
+	const [previousReports, setPreviousReports] = useState([]);
+
 	const navigate = useNavigate();
 	const { isAuthenticated } = useAuth();
-	const previousReportsRef = useRef([]);
 
 	useEffect(() => {
 		if (!isAuthenticated) return;
@@ -16,50 +18,51 @@ const GlobalPollReports = () => {
 		const pollReports = async () => {
 			try {
 				const currentReports = await getReports(getToken());
-				const previousReports = previousReportsRef.current;
 
-				if (previousReports.length > 0) {
-					currentReports.forEach((currentReport) => {
-						const previousReport = previousReports.find(
-							(r) => r.id === currentReport.id,
+				currentReports.forEach((currentReport) => {
+					const currentReportId = currentReport?.report_id;
+
+					const correspondingPrevReport = previousReports?.filter(
+						(report) => report?.report_id === currentReportId
+					)?.[0];
+
+					if(
+						correspondingPrevReport && 
+						correspondingPrevReport?.status === "in_progress" && 
+						currentReport?.status === "done"
+					) {
+						toast(`Report "${currentReport.name}" is now done!`, {
+							duration: 30000,
+							action: (
+								<Button
+									onClick={() => {
+										navigate('/app/reports/');
+									}}
+									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+								>
+									View Reports
+								</Button>
+							),
+							},
 						);
-
-						if (
-							previousReport &&
-							previousReport.status === 'in progress' &&
-							currentReport.status === 'done'
-						) {
-							toast.success(
-								`Report "${currentReport.name}" is now done!`,
-								{
-									duration: 30000,
-									action: (
-										<button
-											onClick={() => {
-												navigate('/app/reports/');
-											}}
-											className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
-										>
-											View Reports
-										</button>
-									),
-								},
-							);
-						}
-					});
-				}
+					}
+				})
 
 				// Update the previous reports reference with the latest data
-				previousReportsRef.current = currentReports;
-			} catch (error) {}
+				setPreviousReports([...currentReports]);
+			} catch (error) {
+				console.log(error);
+			}
 		};
 
 		// Start polling every 10 seconds
-		const intervalId = setInterval(pollReports, 10000);
+		const intervalId = setInterval(() => {
+			pollReports()
+		}, 10000);
 
 		// Clean up the interval when the component is unmounted or user logs out
 		return () => clearInterval(intervalId);
-	}, [isAuthenticated, navigate]);
+	}, [isAuthenticated, navigate, previousReports]);
 
 	return null; 
 };
