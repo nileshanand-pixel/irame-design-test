@@ -5,15 +5,14 @@ import { EditContext } from './components/WorkspaceEditProvider';
 import { useSelector } from 'react-redux';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasChanges }) => {
+const PlannerComponent = ({ data, canEdit, workspaceHasChanges, setWorkspaceHasChanges }) => {
 	const { segments, setSegments, changeSets,  setChangesets, editDisabled} = useContext(EditContext);
-	const [isEditing, setIsEditing] = useState(false);
+	const [isEditing, setIsEditing] = useState(false); 
 	const [editIndex, setEditIndex] = useState(null);
 	const [editContent, setEditContent] = useState('');
 	const [enableSaveButton, setEnableSaveButton] = useState(false);
 	const editRef = useRef(null);
 	const chatStoreReducer = useSelector(state => state.chatStoreReducer);
-
 
 	const setInitialSegments = () => {
 		if(!data?.tool_data?.text)return;
@@ -27,7 +26,7 @@ const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasCh
 
 	// Initialize segments from data
 	useEffect(() => {
-		if (!segments.length)setInitialSegments()
+		if (!workspaceHasChanges)setInitialSegments()
 	}, [data]);
 
 	useEffect(() => {
@@ -97,7 +96,7 @@ const PlannerComponent = ({ data, status, workspaceHasChanges, setWorkspaceHasCh
 								<div
 									dangerouslySetInnerHTML={{ __html: segment }}
 								></div>
-								{status === 'done' && (
+								{canEdit && (
 									<Button
 										variant="outline"
 										className="text-sm mt-2 font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
