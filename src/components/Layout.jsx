@@ -38,6 +38,7 @@ const Layout = ({ children }) => {
 			);
 		}
 	}, [pathname]);
+
 	return (
 		<div className={`flex items-start justify-between`}>
 			<SideNav
@@ -60,7 +61,7 @@ const Layout = ({ children }) => {
 				>
 					{children}
 				</div>
-				{/* <GlobalPollReports /> */}
+				<GlobalPollReports />
 			</main>
 			<FreshdeskWidget/>
 		</div>
