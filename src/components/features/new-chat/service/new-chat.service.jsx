@@ -109,6 +109,38 @@ export const getTemplate = async (templateId, token) => {
 	}
 };
 
+export const saveTemplate = async (data, token) => {
+	try {
+		const response = await axiosClient.post(
+			`/saved-queries`,
+			data,
+			{
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			},
+		);
+		return response.data;
+	} catch(error) {
+		toast.error('Failed to save template');
+		throw error;
+	}
+}
+
+export const getTemplates = async (token) => {
+	try {
+		const response = await axiosClient.get(`/saved-queries`, {
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		});
+		return response.data;
+	} catch (error) {
+		toast.error('Failed to get saved Templates!');
+		throw error;
+	}
+};
+
 export const editTemplate = async (templateId, data, token) => {
 	try {
 		const response = await axiosClient.patch(
@@ -122,7 +154,7 @@ export const editTemplate = async (templateId, data, token) => {
 		);
 		return response.data;
 	} catch (error) {
-		toast.error('Failed to get session');
+		toast.error('Failed to update Template');
 		throw error;
 	}
 };
@@ -136,7 +168,8 @@ export const deleteTemplate = async (templateId, token) => {
 		});
 		return response.data;
 	} catch (error) {
-		toast.error('Failed to get session');
+		toast.error('Failed to delete Template');
 		throw error;
 	}
 };
+
