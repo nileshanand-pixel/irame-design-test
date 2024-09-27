@@ -97,7 +97,7 @@ const actionConfig = [
 	{ id: 'createDashboard', component: CreateDashboard },
 ];
 
-const SavedQueriesSecondaryModal = ({ savedQueriesData, handleDeleteSavedQuery, handleEditSavedQuery, handleSelectQuery }) => {
+const SavedQueriesSecondaryModal = ({ templatesData, handleDeleteTemplate, handleEditTemplate, handleTemplateSelect }) => {
 	return (
 		<div className = "flex flex-col gap-2 max-h-[200px] min-w-[285px]">
 			<h3 className="text-xs font-semibold text-[#26064A99] h-[16px]">
@@ -106,16 +106,16 @@ const SavedQueriesSecondaryModal = ({ savedQueriesData, handleDeleteSavedQuery, 
 
 			<div className = "overflow-scroll h-[calc(100%-28px)]">
 				{
-					savedQueriesData && savedQueriesData?.length !== 0 ? (
+					templatesData && templatesData?.saved_queries?.length !== 0 ? (
 						<div>
 							{
-								savedQueriesData?.saved_queries?.map((data) => {
+								templatesData?.saved_queries?.map((data) => {
 									return <SavedQueryBtn
 										key={data?.external_id}
 										title={data?.name}
-										onClick={() => handleSelectQuery(data?.external_id)}
-										onDelete={() => handleDeleteSavedQuery(data?.external_id)}
-										onEdit={() => handleEditSavedQuery(data?.external_id)}
+										onClick={() => handleTemplateSelect(data?.external_id)}
+										onDelete={() => handleDeleteTemplate(data?.external_id)}
+										onEdit={() => handleEditTemplate(data?.external_id)}
 									/>
 								})
 							}
@@ -135,7 +135,7 @@ const secondaryModalConfig = [
 	{ id: "savedQueries-secondaryModal", component: SavedQueriesSecondaryModal }
 ]
 
-const MoreActionsModal = forwardRef(({ config, onSelect, savedQueriesData, showSecondaryModal, secondaryModalId, handleDeleteSavedQuery, handleEditSavedQuery, handleSelectQuery}, ref) => {
+const MoreActionsModal = forwardRef(({ config, onSelect, templatesData, showSecondaryModal, secondaryModalId, handleDeleteTemplate, handleEditTemplate, handleTemplateSelect}, ref) => {
 	// Function to render actions based on configuration
 	const renderActions = () => {
 		return actionConfig
@@ -159,10 +159,10 @@ const MoreActionsModal = forwardRef(({ config, onSelect, savedQueriesData, showS
 					{
 						MainComponent && 
 						<MainComponent 
-							savedQueriesData={savedQueriesData}
-							handleDeleteSavedQuery={handleDeleteSavedQuery}
-							handleEditSavedQuery={handleEditSavedQuery}
-							handleSelectQuery={handleSelectQuery}
+							templatesData={templatesData}
+							handleDeleteTemplate={handleDeleteTemplate}
+							handleEditTemplate={handleEditTemplate}
+							handleTemplateSelect={handleTemplateSelect}
 						/>
 					}
 			 	</div>

@@ -16,11 +16,15 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const [mode, setMode] = useState('single');
 	const [queries, setQueries] = useState([{ id: 1, text: '' }]);
 	const [showSaveEditTemplateModal, setShowSaveEditTemplateModal] = useState(false);
-	const [isEditingTemplate, setIsEditingTemplate] = useState(false);
-	const [templateName, setTemplateName] = useState("");
-	const [templateId, setTemplateId] = useState("");
-	const [showSecondaryModal, setShowSecondaryModal] = useState(false);
-	const [secondaryModalId, setSecondaryModalId] = useState("");
+	const [editTemplateData, setEditTemplateData] = useState({
+		name: "",
+		id: "",
+		isEditing: false,
+	});
+	const [secondaryModalData, setSecondaryModalData] = useState({
+		isVisible: false,
+		id: "",
+	});
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const dispatch = useDispatch();
 
@@ -28,25 +32,20 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const simpleInputRef = useRef(null);
 	const firstActionRef = useRef(null);
 
-	const {
-		data: savedQueriesData,
-		isLoading: isLoadingSavedQueries,
-		error: errorInFetchingSavedQueries,
-		refetch: refetchSavedQueries,
-	} = useQuery({
+	const getTemplatesQuery = useQuery({
 		queryKey: 'saved-queries',
 		queryFn: () => getTemplates(getToken()),
 		enabled: !!config?.savedQueries,
 	});
 
-	const deleteSavedQueryMutation = useMutation({
-        mutationFn: async (queryId) => {
-            await deleteTemplate(queryId, getToken());
+	const deleteTemplateMutation = useMutation({
+        mutationFn: async (templateId) => {
+            await deleteTemplate(templateId, getToken());
         },
         onSuccess: () => {
-			refetchSavedQueries();
+			getTemplatesQuery?.refetch();
 			toast.success('Template deleted Successfully');
-            closeModal();
+            handleCloseSaveEditTemplateModal();
 		},
 		onError: (err) => {
 			console.log('Error deleting Template', err);
@@ -59,10 +58,20 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 		inputRefs.current = inputRefs.current.slice(0, queries.length);
 	}, [queries]);
 
+	const resetSecondaryModalData = () => {
+		setSecondaryModalData({
+			id: "",
+			isVisible: false,
+		});
+	};
+
 	const handlePromptChange = (e) => {
 		const value = e.target.value;
 		setPrompt(value);
-		if (!value) setShowModal(false);
+		if (!value) {
+			setShowModal(false);
+			resetSecondaryModalData();
+		}
 		if (chatCommandInitiator(value)) {
 			setShowModal(true);
 		} else {
@@ -79,8 +88,13 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 				setMode('workflow');
 				break;
 			case "savedQueries": 
-				setSecondaryModalId("savedQueries-secondaryModal");
-				setShowSecondaryModal((prev) => !prev);
+				setSecondaryModalData((prev) => {
+					return {
+						...prev,
+						id: "savedQueries-secondaryModal",
+						isVisible: !prev.isVisible
+					}
+				})
 				return;
 			default:
 				break;
@@ -180,15 +194,15 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 		setShowSaveEditTemplateModal(true);
 	}
 
-	const handleDeleteSavedQuery = (queryId) => {
+	const handleDeleteTemplate = (templateId) => {
 		if(confirm("Are you sure that you want to delete this template?")) {
-			deleteSavedQueryMutation?.mutate(queryId);
+			deleteTemplateMutation?.mutate(templateId);
 		}
 	}
 
-	const handleEditSavedQuery = (queryId) => {
-		const queriesToEditData = savedQueriesData?.saved_queries?.filter((data) => {
-			if(data?.external_id === queryId) {
+	const handleEditTemplate = (templateId) => {
+		const queriesToEditData = getTemplatesQuery?.data?.saved_queries?.filter((data) => {
+			if(data?.external_id === templateId) {
 				return true;
 			}
 			return false;
@@ -203,26 +217,36 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 					id: index + 1
 				};
 			}));
-			setIsEditingTemplate(true);
-			setTemplateName(queriesToEditData?.name);
+			setEditTemplateData((prev) => {
+				return {
+					...prev,
+					isEditing: true,
+					name: queriesToEditData?.name,
+					id: queriesToEditData?.external_id,
+				}
+			});
 			setShowSaveEditTemplateModal(true);
 			setMode(queriesToEditData?.type);
-			setTemplateId(queriesToEditData?.external_id);
 		}
 	} 
 
 	const handleCloseSaveEditTemplateModal = () => {
-		if(isEditingTemplate) {
-			setIsEditingTemplate(false);
+		if(editTemplateData?.isEditing) {
+			setEditTemplateData((prev) => {
+				return {
+					...prev,
+					isEditing: false,
+				}
+			});
 			setMode("single");
 		}
 
-		setShowSaveEditTemplateModal(false)
+		setShowSaveEditTemplateModal(false);
 	}
 
-	const handleSelectQuery = (queryId) => {
-		const currentQueries = savedQueriesData?.saved_queries?.filter((data) => {
-			if(data?.external_id === queryId) {
+	const handleTemplateSelect = (templateId) => {
+		getTemplatesQuery?.data?.saved_queries?.forEach((data) => {
+			if(data?.external_id === templateId) {
 				setMode(data?.type);
 				setQueries(data?.data?.queries?.map((query, queryIndex) => {
 					return {
@@ -230,10 +254,15 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 						id: queryIndex + 1,
 					};
 				}));
-				setShowSecondaryModal(false);
+				setSecondaryModalData((prev) => {
+					return {
+						...prev,
+						isVisible: false,
+					}
+				});
 				setShowModal(false);
 			}
-		})
+		});
 	}
 
 	const renderBulkMode = (label) => (
@@ -242,13 +271,11 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 				<SaveEditTemplateModal
 					open={showSaveEditTemplateModal}
 					closeModal={handleCloseSaveEditTemplateModal}
-					isEditingTemplate={isEditingTemplate}
+					templateData={editTemplateData}
 					queries={queries}
 					setQueries={setQueries}
 					label={label}
-					name={templateName}
-					refetchSavedQueries={refetchSavedQueries}
-					templateId={templateId}
+					refetchSavedQueries={getTemplatesQuery?.refetch}
 				/>
 			)}
 			<div className="flex flex-col gap-2 rounded-lg max-h-40 w-full overflow-y-scroll">
@@ -333,12 +360,12 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 					config={config} 
 					onSelect={handleActionSelect} 
 					ref={firstActionRef} 
-					savedQueriesData={savedQueriesData || []}
-					showSecondaryModal={showSecondaryModal}
-					secondaryModalId={secondaryModalId}
-					handleDeleteSavedQuery={handleDeleteSavedQuery}
-					handleEditSavedQuery={handleEditSavedQuery}
-					handleSelectQuery={handleSelectQuery}
+					templatesData={getTemplatesQuery?.data || []}
+					showSecondaryModal={secondaryModalData?.isVisible}
+					secondaryModalId={secondaryModalData?.id}
+					handleDeleteTemplate={handleDeleteTemplate}
+					handleEditTemplate={handleEditTemplate}
+					handleTemplateSelect={handleTemplateSelect}
 				/>
 			)}
 			<div

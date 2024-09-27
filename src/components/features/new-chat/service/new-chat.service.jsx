@@ -136,7 +136,7 @@ export const getTemplates = async (token) => {
 		});
 		return response.data;
 	} catch (error) {
-		toast.error('Failed to get saved Templates!');
+		toast.error('Failed to get saved Templates');
 		throw error;
 	}
 };

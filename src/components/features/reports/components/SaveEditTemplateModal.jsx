@@ -21,39 +21,33 @@ import { editTemplate, saveTemplate } from '../../new-chat/service/new-chat.serv
 const SaveEditTemplateModal = React.memo(({ 
 	open, 
 	closeModal, 
-	isEditingTemplate, 
     label, 
     queries,
     setQueries,
-	name,
 	refetchSavedQueries,
-	templateId={templateId}
+	templateData,
 }) => {
-    const [templateName, setTemplateName] = useState(name);
+    const [templateName, setTemplateName] = useState(templateData?.name || "");
     const inputRefs = useRef([])
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const dispatch = useDispatch();
 
     useEffect(() => {
-		inputRefs.current = inputRefs.current.slice(0, queries.length);
+		inputRefs.current = inputRefs.current.slice(0, queries?.length);
 	}, [queries]);
 
     const isValidData = () => {
-        try {
-            if(templateName.trim() === "") {
-                toast("Template name can't be empty!");
-                return false;
-            }
+		if(templateName.trim() === "") {
+			toast("Template name can't be empty!");
+			return false;
+		}
 
-            const isEmptryQueryPresent = queries?.some((query) => query?.text?.trim() === "");
-            if(isEmptryQueryPresent) {
-                toast("Query can't be empty!");
-                return false;
-            } 
-            return true;
-        } catch(error) {
-            console.log(error);
-        }
+		const isEmptryQueryPresent = queries?.some((query) => query?.text?.trim() === "");
+		if(isEmptryQueryPresent) {
+			toast("Query can't be empty!");
+			return false;
+		} 
+		return true;
     }
 
     const saveTemplateMutation = useMutation({
@@ -107,7 +101,6 @@ const SaveEditTemplateModal = React.memo(({
                 }
             };
 
-			console.log(data);
             await editTemplate(templateId, data, getToken());
         },
         onSuccess: () => {
@@ -122,22 +115,18 @@ const SaveEditTemplateModal = React.memo(({
     });
 
     const handleSave = () => {
-        try {
-            if(!isValidData()) {
-                return;
-            }
+		if(!isValidData()) {
+			return;
+		}
 
-			if(isEditingTemplate) {
-				updateTemplateMutation?.mutate({
-					templateId,
-					queries
-				});
-			} else {
-				saveTemplateMutation?.mutate(queries);
-			}
-        } catch(error) {
-            console.log(error);
-        }
+		if(templateData?.isEditing) {
+			updateTemplateMutation?.mutate({
+				templateId: templateData?.id,
+				queries,
+			});
+		} else {
+			saveTemplateMutation?.mutate(queries);
+		}
     }
 
     const handleQueryChange = (id, newText) => {
@@ -188,11 +177,11 @@ const SaveEditTemplateModal = React.memo(({
 		) {
 			e.preventDefault();
 
-			if (queries.length > 1) {
+			if (queries?.length > 1) {
 				const updatedQueries = queries.filter((query) => query.id !== id);
 				setQueries(updatedQueries);
 				setTimeout(() => {
-					inputRefs.current[updatedQueries.length - 1].focus();
+					inputRefs.current[updatedQueries?.length - 1].focus();
 				}, 0);
 			} 
 		}
@@ -207,9 +196,9 @@ const SaveEditTemplateModal = React.memo(({
                             <img src = {saveEditTemplateDialogIcon} alt = "icon" />
                         </div>
                         <div className='flex flex-col gap-2'>
-                            <DialogTitle>{isEditingTemplate ? "Edit" : "Save"} Bulk Query</DialogTitle>
+                            <DialogTitle>{templateData?.isEditing ? "Edit" : "Save"} Bulk Query</DialogTitle>
                             <DialogDescription>
-                                You can {isEditingTemplate ? "edit" : "save"} your bulk query as a template 
+                                You can {templateData?.isEditing ? "edit" : "save"} your bulk query as a template 
                             </DialogDescription>   
                         </div>
                     </div>
@@ -224,7 +213,7 @@ const SaveEditTemplateModal = React.memo(({
 							value={templateName}
 							onChange={(e) => setTemplateName(e.target.value)}
 							placeholder={
-								templateName.length === 0
+								templateName === 0
 									? 'Type template name'
 									: ''
 							}
