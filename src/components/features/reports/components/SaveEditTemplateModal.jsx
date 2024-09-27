@@ -26,6 +26,7 @@ const SaveEditTemplateModal = React.memo(({
     setQueries,
 	refetchSavedQueries,
 	templateData,
+	mode,
 }) => {
     const [templateName, setTemplateName] = useState(templateData?.name || "");
     const inputRefs = useRef([])
@@ -52,14 +53,10 @@ const SaveEditTemplateModal = React.memo(({
 
     const saveTemplateMutation = useMutation({
         mutationFn: async (queries) => {
-            let type = "";
-            if(label === "Step") {
-                type = "workflow";
-            }
 
             const data = {
                 name: templateName,
-                type: type,
+                type: mode,
                 data: {   
                     queries: queries?.map((query) => {
                         return {
@@ -84,14 +81,9 @@ const SaveEditTemplateModal = React.memo(({
 
 	const updateTemplateMutation = useMutation({
         mutationFn: async ({templateId, queries}) => {
-            let type = "";
-            if(label === "Step") {
-                type = "workflow";
-            }
-
             const data = {
                 name: templateName,
-                type: type,
+                type: mode,
                 data: {   
                     queries: queries?.map((query) => {
                         return {
@@ -196,9 +188,9 @@ const SaveEditTemplateModal = React.memo(({
                             <img src = {saveEditTemplateDialogIcon} alt = "icon" />
                         </div>
                         <div className='flex flex-col gap-2'>
-                            <DialogTitle>{templateData?.isEditing ? "Edit" : "Save"} Bulk Query</DialogTitle>
+                            <DialogTitle>{templateData?.isEditing ? "Edit" : "Save"} {mode === "workflow" ? "Workflow" : "To be decided"}</DialogTitle>
                             <DialogDescription>
-                                You can {templateData?.isEditing ? "edit" : "save"} your bulk query as a template 
+                                You can {templateData?.isEditing ? "edit" : "save"} your {mode === "workflow" ? "workflow" : "To be decided"} as a template 
                             </DialogDescription>   
                         </div>
                     </div>

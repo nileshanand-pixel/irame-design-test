@@ -65,6 +65,18 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 		});
 	};
 
+	const resetQueries = () => {
+		setQueries([{ id: 1, text: '' }]);
+	}
+
+	const resetEditTemplateData = () => {
+		setEditTemplateData({
+			id: "",
+			isEditing: false,
+			name: ""
+		})
+	}
+
 	const handlePromptChange = (e) => {
 		const value = e.target.value;
 		setPrompt(value);
@@ -100,6 +112,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 				break;
 		}
 		setShowModal(false);
+		resetSecondaryModalData();
 	};
 
 	// Handle the input change for queries in bulk/workflow mode
@@ -232,12 +245,8 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 
 	const handleCloseSaveEditTemplateModal = () => {
 		if(editTemplateData?.isEditing) {
-			setEditTemplateData((prev) => {
-				return {
-					...prev,
-					isEditing: false,
-				}
-			});
+			resetEditTemplateData();
+			resetQueries();
 			setMode("single");
 		}
 
@@ -276,6 +285,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 					setQueries={setQueries}
 					label={label}
 					refetchSavedQueries={getTemplatesQuery?.refetch}
+					mode={mode}
 				/>
 			)}
 			<div className="flex flex-col gap-2 rounded-lg max-h-40 w-full overflow-y-scroll">
