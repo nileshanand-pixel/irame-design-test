@@ -13,7 +13,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useMutation } from '@tanstack/react-query';
 import { getToken } from '@/lib/utils';
 import { toast } from 'sonner';
-import saveEditTemplateDialogIcon from "@/assets/icons/save-edit-template-dialog-icon.svg";
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { Input } from '@/components/ui/input';
 import { editTemplate, saveTemplate } from '../../new-chat/service/new-chat.service';
@@ -185,7 +184,7 @@ const SaveEditTemplateModal = React.memo(({
 				<DialogHeader className="border-b pb-3">
                     <div className="flex gap-6 items-center">
                         <div>
-                            <img src = {saveEditTemplateDialogIcon} alt = "icon" />
+                            <img src = "https://d2vkmtgu2mxkyq.cloudfront.net/save-edit-template-dialog-icon.svg" alt = "icon" />
                         </div>
                         <div className='flex flex-col gap-2'>
                             <DialogTitle>{templateData?.isEditing ? "Edit" : "Save"} {mode === "workflow" ? "Workflow" : "To be decided"}</DialogTitle>
