@@ -27,3 +27,5 @@ dist-ssr
 
 # certificates
 *.pem
+
+**/.DS_Store
