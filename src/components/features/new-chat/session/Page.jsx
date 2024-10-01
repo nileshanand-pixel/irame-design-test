@@ -675,7 +675,7 @@ const Workzone = () => {
 		workflowQuery: { enabled: true },
 		createReport: { enabled: false },
 		createDashboard: { enabled: false },
-		savedQueries: { enabled: false },
+		savedQueries: { enabled: true },
 	};
 
 	return (
