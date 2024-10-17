@@ -2,7 +2,7 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import { toast } from 'sonner';
 import {
-    fullLogout,
+	fullLogout,
 	LoginWithRefreshToken,
 } from '@/components/features/login/service/auth.service';
 import { serviceUrlMap } from '@/config/url.config';
@@ -73,7 +73,7 @@ const setupInterceptors = (axiosClient) => {
 					// Token refresh failed, proceed to log out
 					toast.error('Session expired. Logging out...');
 					isLoggingOut = true;
-					fullLogout();
+					await fullLogout();
 				}
 			}
 			return Promise.reject(error);
