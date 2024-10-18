@@ -8,7 +8,7 @@ import { useRouter } from '@/hooks/useRouter';
 import { cn } from '@/lib/utils';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import GlobalPollReports from './features/reports/components/GlobalPollReports';
-import FreshdeskWidget from './features/freshdesk/FreshdeskWidget';
+// import FreshdeskWidget from './features/freshdesk/FreshdeskWidget';
 
 const Layout = ({ children }) => {
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -63,7 +63,7 @@ const Layout = ({ children }) => {
 				</div>
 				<GlobalPollReports />
 			</main>
-			<FreshdeskWidget/>
+			{/* <FreshdeskWidget/> */}
 		</div>
 	);
 };
