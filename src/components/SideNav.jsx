@@ -283,6 +283,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			setActiveTab('');
 		} else {
 			setActiveTab(pathname);
+			if(pathname.includes('configuration'))setActiveTab('/app/configuration')
 		}
 	}, [pathname]);
 

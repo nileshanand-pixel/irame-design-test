@@ -10,6 +10,7 @@ import DashboardDetailsPage from '@/components/features/dashboard/components/Das
 import TestRoute from '@/components/features/testingUI/Page';
 import ProtectedRoute from './ProtectedRoute'; // Import the new ProtectedRoute component
 import Reports from '@/components/features/reports/Page';
+import DataSource from '@/components/features/configuration/datasource/page';
 
 const AppRoutes = () => {
 	return (
@@ -44,6 +45,12 @@ const AppRoutes = () => {
 							<Route
 								path="dashboard/*"
 								element={<ProtectedRoute element={<Dashboard />} />}
+							/>
+							<Route
+								path="configuration/datasource"
+								element={
+									<ProtectedRoute element={<DataSource />} />
+								}
 							/>
 							<Route
 								path="configuration"

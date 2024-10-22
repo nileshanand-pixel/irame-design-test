@@ -1,7 +1,7 @@
 import InputText from '@/components/elements/InputText';
 import { Input } from '@/components/ui/input';
-import { formatFileSize, getToken } from '@/lib/utils';
-import { useEffect, useRef, useState } from 'react';
+import { cn, formatFileSize, getToken } from '@/lib/utils';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import excel from '@/assets/icons/ms_excel.svg';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,19 +17,22 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { queryClient } from '@/lib/react-query';
 import { useQuery } from '@tanstack/react-query';
-import QueueStatus from '../new-chat/QueueStatus';
 import { intent } from './configuration.content';
+import BackdropLoader from '@/components/elements/loading/BackDropLoader';
+import { Textarea } from '@/components/ui/textarea';
 
 const Configuration = () => {
 	const [files, setFiles] = useState([]);
 	const [progress, setProgress] = useState({});
 	const [datasourceName, setDatasourceName] = useState('');
+	const [description, setDescription] = useState('');
 	const [formErrors, setFormErrors] = useState({});
 	const [dataSources, setDataSources] = useState([]);
-	const [hideUpload, setHideUpload] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
-	const [existingDatasourceId, setExistingDataSourceId] = useState(null);
 	const [dataSourceIntent, setDataSourceIntent] = useState([]);
+	const [isFocused, setIsFocused] = useState(false);
+	const [search, setSearch] = useState('');
+	const [showForm, setShowForm] = useState(false);
 
 	const dispatch = useDispatch();
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -51,7 +54,6 @@ const Configuration = () => {
 			delete tempProgress[file.name];
 			return tempProgress;
 		});
-		setHideUpload(false);
 	};
 
 	const handleFileChange = (e) => {
@@ -122,10 +124,6 @@ const Configuration = () => {
 		}
 	};
 	const createDataSource = async () => {
-		if (hideUpload && existingDatasourceId) {
-			navigate(`/app/new-chat/?step=3&dataSourceId=${existingDatasourceId}`);
-			return;
-		}
 		setIsLoading(true);
 		const token = getToken();
 
@@ -138,6 +136,7 @@ const Configuration = () => {
 					file_id: uuid(),
 					file_url: file.url || file.file_url,
 				})),
+			description,
 			intent: [...dataSourceIntent],
 		};
 
@@ -164,7 +163,7 @@ const Configuration = () => {
 					return source;
 				}
 			});
-			if (!confirm("Are you sure you want to delete this datasource?")) return;
+			if (!confirm('Are you sure you want to delete this datasource?')) return;
 			await deleteDataSource(dataSourceId, getToken());
 			dispatch(updateUtilProp([{ key: 'dataSources', value: updatedList }]));
 			setDataSources(updatedList);
@@ -177,10 +176,6 @@ const Configuration = () => {
 		if (files.every((item) => item.file_url)) return true;
 		if (Object.keys(progress).length === 0) return false;
 		return Object.values(progress).every((value) => value === 100);
-	};
-
-	const checkIfExistingDatasourceUsed = () => {
-		return hideUpload && existingDatasourceId;
 	};
 
 	const fetchDataSources = async () => {
@@ -209,9 +204,18 @@ const Configuration = () => {
 		}
 	}, [data]);
 
+	const filteredList = useMemo(() => {
+		return dataSources.filter((item) =>
+			item?.name?.toLowerCase()?.startsWith(search?.trim()?.toLowerCase()),
+		);
+	}, [search, dataSources]);
+
 	useEffect(() => {
-		if (files.length && !hideUpload) {
+		if (files.length) {
 			uploadFileHelper();
+			setShowForm(true);
+		} else {
+			setShowForm(false);
 		}
 	}, [files.length, isLoading]);
 
@@ -227,95 +231,137 @@ const Configuration = () => {
 		setDataSourceIntent(initialIntents);
 	}, []);
 
+	const renderUploadButtons = () => {
+		const zeroFiles = files.length === 0;
+		const uploadButtonObj = {
+			bgCss: zeroFiles
+				? 'hover:bg-purple-100 hover:text-white hover:opacity-80'
+				: 'bg-purple-8 hover:bg-purple-16 text-purple-100',
+			text: zeroFiles ? 'Upload Dataset' : 'Upload More',
+		};
+		return (
+			<div className="flex gap-2 items-center">
+				<Button
+					className={` w-full ${uploadButtonObj.bgCss} rounded-lg ${
+						!isAllFilesUploaded() || isLoading
+							? 'cursor-not-allowed opacity-80'
+							: 'cursor-pointer'
+					}`}
+					onClick={(e) => {
+						e.preventDefault();
+						if (!isAllFilesUploaded() || isLoading) return;
+						inputRef.current.click();
+					}}
+				>
+					<label
+						htmlFor="file-upload"
+						className=" block text-center cursor-pointer px-4"
+					>
+						{uploadButtonObj.text}
+					</label>
+				</Button>
+
+				{showForm && (
+					<Button
+						className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+						onClick={() => {
+							createDataSource();
+						}}
+						disabled={
+							!isAllFilesUploaded() ||
+							isLoading ||
+							formErrors.datasourceName ||
+							!datasourceName
+						}
+					>
+						Save Dataset
+					</Button>
+				)}
+
+				<Input
+					type="file"
+					multiple
+					ref={inputRef}
+					className="absolute top-0 w-0 -z-1 opacity-0"
+					onChange={(e) => handleFileChange(e)}
+					id="file-upload"
+					accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, application/vnd.ms-excel.sheet.binary.macroEnabled.12, .pdf"
+				/>
+			</div>
+		);
+	};
+
 	return (
 		<div className="grid grid-cols-12 gap-4 pt-6">
 			{/* Upload Section */}
-			<div className="border rounded-3xl py-4 px-6 col-span-9 shadow-1xl h-fit">
+			
+			<div className="border rounded-3xl py-4 px-6 col-span-12 shadow-1xl h-fit">
+				{isLoading && <div> <BackdropLoader /></div> }
 				<div className="flex justify-between items-center">
-					<h3 className="text-primary80 font-semibold text-xl">
-						Connect your datasource
-					</h3>
-					{checkIfExistingDatasourceUsed() && (
-						<div
-							className="text-purple-100 text-sm font-medium cursor-pointer hover:opacity-80"
-							onClick={() => {
-								setHideUpload(false);
-								setExistingDataSourceId(null);
-								setFiles([]);
-							}}
-						>
-							Create new datasource?
-						</div>
-					)}
-				</div>
-				<p className="text-primary40 text-sm">
-					Securely connect to a data source
-				</p>
-				{!hideUpload && (
-					<div className="mt-4 space-y-6 mb-10">
-						<InputText
-							label="Data Source Name"
-							placeholder="Name your data source"
-							value={datasourceName}
-							setValue={(e) => setDatasourceName(e)}
-							error={formErrors.datasourceName}
-							errorText={formErrors.datasourceName}
-							labelClassName="text-sm font-medium text-primary40"
-						/>
-						<div>
-							<p className="text-sm font-medium text-primary40 mb-3">
-								Choose Analysis Type
-							</p>
-							<div className="flex flex-wrap gap-2">
-								{Array.isArray(intent) &&
-									intent.map((useCase, index) => (
-										<span
-											key={useCase.value}
-											onClick={() =>
-												handleSelectUseCase(useCase.value)
-											}
-											className={`text-sm font-normal text-black/60 px-3 py-1.5 border border-black/10 rounded-[30px] cursor-pointer hover:bg-purple-8 hover:text-purple-100 ${
-												dataSourceIntent.includes(
-													useCase.value,
-												)
-													? 'bg-purple-8 text-purple-100 border-[1.2px] border-primary'
-													: ''
-											}`}
-										>
-											{useCase?.label}
-										</span>
-									))}
-							</div>
-						</div>
-						<div
-							className={` w-full bg-purple-4 hover:bg-purple-8 text-purple-100 text-sm font-medium hover:text-purple-100 rounded-lg ${
-								!isAllFilesUploaded() || isLoading
-									? 'cursor-not-allowed opacity-80'
-									: 'cursor-pointer'
-							}`}
-							onClick={(e) => {
-								e.preventDefault();
-								if (!isAllFilesUploaded() || isLoading) return;
-								inputRef.current.click();
-							}}
-						>
-							<label
-								htmlFor="file-upload"
-								className=" block text-center cursor-pointer py-2 px-4"
-							>
-								Upload your Data Source
-							</label>
-						</div>
-						<Input
-							type="file"
-							multiple
-							ref={inputRef}
-							className="absolute top-0 w-0 -z-1 opacity-0"
-							onChange={(e) => handleFileChange(e)}
-							id="file-upload"
-							accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, application/vnd.ms-excel.sheet.binary.macroEnabled.12, .pdf"
-						/>
+					<div>
+						<h3 className="text-primary80 font-semibold text-xl">
+							Connect New Dataset
+						</h3>
+						<p className="text-primary40 text-sm">
+							Securely upload your dataset
+						</p>
 					</div>
+
+					{renderUploadButtons()}
+				</div>
+
+				{showForm && (
+					<div className="mt-4 space-y-6 mb-10">
+					<InputText
+						placeholder="Enter name here"
+						label="Data Set Name"
+						value={datasourceName}
+						setValue={(e) => setDatasourceName(e)}
+						error={formErrors.datasourceName}
+						errorText={formErrors.datasourceName}
+						labelClassName="text-sm font-medium text-primary40"
+					/>
+				
+					<div className="flex flex-col">
+						<label className="text-sm font-medium text-primary40 mb-2">
+							What do you want to do with this Data Set
+						</label>
+						<Textarea
+							placeholder="Add Description here"
+							className=" border rounded-md !focus:outline-none text-black/60 text-sm font-normal resize-none"
+							value={description}
+							onChange={(e) => setDescription(e.target.value)}
+						/>
+						{formErrors.description && (
+							<p className="text-red-500 text-xs mt-1">
+								{formErrors.description}
+							</p>
+						)}
+					</div>
+				
+					<div>
+						<p className="text-sm font-medium text-primary40 mb-3">
+							Choose Analysis Type
+						</p>
+						<div className="flex flex-wrap gap-2">
+							{Array.isArray(intent) &&
+								intent.map((useCase, index) => (
+									<span
+										key={useCase.value}
+										onClick={() => handleSelectUseCase(useCase.value)}
+										className={`text-sm font-normal text-black/60 px-3 py-1.5 border border-black/10 rounded-[30px] cursor-pointer hover:bg-purple-8 hover:text-purple-100 ${
+											dataSourceIntent.includes(useCase.value)
+												? 'bg-purple-8 text-purple-100 border-[1.2px] border-primary'
+												: ''
+										}`}
+									>
+										{useCase?.label}
+									</span>
+								))}
+						</div>
+					</div>
+				</div>
+				
 				)}
 				{/* Render Files and their progress */}
 				{Array.isArray(files) &&
@@ -341,33 +387,30 @@ const Configuration = () => {
 									</div>
 								</div>
 								<div className="flex items-center text-sm font-medium">
-									{(!hideUpload || file.url) &&
-									progress[file.name] < 100 ? (
+									{file.url && progress[file.name] < 100 ? (
 										<p className="mr-4">uploading...</p>
 									) : null}
-									<div
+									{/* <div
 										onClick={() =>
 											window.open(file.file_url, '_blank')
 										}
 										className="text-md px-2 py-1 rounded-md bg-purple-8 hover:bg-purple-8"
 									>
 										<i className="bi-download text-lg text-primary80  font-semibold cursor-pointer "></i>
-									</div>
-									{!checkIfExistingDatasourceUsed() &&
-										file.url && (
-											<div
-												onClick={(e) =>
-													handleRemoveFile(e, file, idx)
-												}
-												className="text-md px-2 py-1 rounded-md bg-purple-8  hover:bg-purple-8 ml-2"
-											>
-												<i className="bi-x text-xl text-primary80  font-semibold cursor-pointer"></i>
-											</div>
-										)}
+									</div> */}
+									{file.url && (
+										<div
+											onClick={(e) =>
+												handleRemoveFile(e, file, idx)
+											}
+											className="text-md px-2 py-1 rounded-md bg-purple-8  hover:bg-purple-8 ml-2"
+										>
+											<i className="bi-x text-xl text-primary80  font-semibold cursor-pointer"></i>
+										</div>
+									)}
 								</div>
 							</div>
-							{(!hideUpload || file.url) &&
-							progress[file.name] <= 99 ? (
+							{file.url && progress[file.name] <= 99 ? (
 								<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
 									<div
 										className="h-full bg-purple-100"
@@ -377,70 +420,95 @@ const Configuration = () => {
 							) : null}
 						</div>
 					))}
-				{/*  Start Querying Button */}
-				{Array.isArray(files) && files?.length ? (
-					<div className="mt-4">
-						<Button
-							className="w-full hover:bg-purple-100 hover:text-white hover:opacity-80"
-							onClick={() => createDataSource()}
-							disabled={isLoading || !isAllFilesUploaded()}
-						>
-							{isLoading ? (
-								<i className="bi-arrow-repeat animate-spin mr-2"></i>
-							) : null}
-							Start Querying
-						</Button>
-					</div>
-				) : null}
 			</div>
 			{/* Right Section Manage Data Source */}
-			<div className="border rounded-3xl py-4 px-6 col-span-3 shadow-1xl max-h-[86vh] min-h-fit">
-				<h3 className="text-primary80 font-semibold text-xl">
-					Manage Data Source
-				</h3>
-				<p className="text-primary40 text-sm">
-					Securely connect to a data source
-				</p>
+			<div className="border rounded-3xl py-4 px-6 col-span-12 shadow-1xl max-h-[86vh] min-h-fit">
+				<div className="flex justify-between mb-4">
+					<div>
+						<h3 className="text-primary80 font-semibold text-xl">
+							Choose from Existing Dataset
+						</h3>
+						<p className="text-primary40 text-sm">
+							Manage, view and edit your connected Dataset
+						</p>
+					</div>
+
+					<div
+						className={cn(
+							'flex items-center border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300',
+							{ 'w-[300px]': isFocused, 'w-[118px]': !isFocused },
+						)}
+					>
+						<i className="bi-search text-primary40 me-2"></i>
+						<Input
+							placeholder="Search"
+							className={cn(
+								'border-none rounded-sm px-0 text-primary40 font-medium bg-transparent',
+							)}
+							value={search}
+							onChange={(e) => setSearch(e.target.value)}
+							onFocus={() => setIsFocused(true)}
+							onBlur={() => setIsFocused(false)}
+						/>
+					</div>
+				</div>
 				<div className="mt-4 space-y-2 max-h-[90%] overflow-y-auto">
-					{isFetchingData ? (
+					{isFetchingData && (
 						<div className="flex items-center justify-center w-[14.84rem]">
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>
-					) : dataSources.length ? (
-						dataSources.map((source) => (
-							<div
-								className="flex justify-between items-center bg-purple-4 py-2 px-4 rounded-xl cursor-pointer"
-								key={source.datasource_id}
-								onClick={() => {
-									setExistingDataSourceId(source.datasource_id);
-									setHideUpload(true);
-									setFiles(source?.raw_files || []);
-								}}
-							>
-								<p className="text-primary80 font-medium max-w-[180px] truncate flex items-center">
-									<img
-										src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
-										alt="database"
-										className="mr-2 size-5"
-									/>
-									{source.name}
-								</p>
-								<i
-									className="bi-trash text-primary80 text-sm cursor-pointer hover:bg-purple-8 rounded-md p-1"
-									onClick={(e) =>
-										handleDeleteDataSource(
-											e,
-											source.datasource_id,
-										)
-									}
-								></i>
-							</div>
-						))
-					) : (
-						<p className="text-primary40 text-sm">
-							No data sources found
-						</p>
 					)}
+					<div className="grid  sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+						{filteredList.length ? (
+							filteredList.map((source) => (
+								<div
+									className="flex justify-between items-center bg-[#6A12CD0A] p-4 rounded-xl gap-4"
+									key={source.datasource_id}
+								>
+									<p
+										className="text-[#26064ACC]/80 font-medium max-w-[180px] truncate flex cursor-pointer items-center"
+										onClick={() => {
+											navigate(
+												`/app/new-chat/?step=3&dataSourceId=${source.datasource_id}`,
+											);
+										}}
+									>
+										<img
+											src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
+											alt="database"
+											className="mr-2 size-5"
+										/>
+										{source.name}
+									</p>
+									<div className="flex gap-1 items-center">
+										<i
+											className="bi-trash text-primary80 text-sm cursor-pointer hover:bg-purple-8 rounded-md p-1"
+											onClick={(e) =>
+												handleDeleteDataSource(
+													e,
+													source.datasource_id,
+												)
+											}
+										></i>
+										<span
+											className="material-symbols-outlined text-sm text-primary60 cursor-pointer hover:bg-purple-4 rounded-md p-1"
+											onClick={() => {
+												navigate(
+													`datasource?id=${source.datasource_id}`,
+												);
+											}}
+										>
+											edit
+										</span>
+									</div>
+								</div>
+							))
+						) : (
+							<p className="text-primary40 text-sm">
+								No data sources found
+							</p>
+						)}
+					</div>
 				</div>
 			</div>
 		</div>
