@@ -105,7 +105,6 @@ export const deleteDataSource = async (dataSourceId, authToken) => {
 };
 
 export const updateDataSource = async (id, data, authToken) => {
-	console.log(id, data, authToken);
 	const response = await axiosClient.patch(`/datasources/${id}`, data, {
 		headers: {
 			Authorization: `Bearer ${authToken}`,

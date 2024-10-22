@@ -57,15 +57,15 @@ const DataSource = () => {
 				refetchInactive: true,
 			});
 			setForm({
-				name: payload.name || datasourceQuery?.data?.name,
+				name: form?.name || datasourceQuery?.data?.name,
 				hasChanges: true
 			})
 		},
 		onError: (err) => {
 			console.log('Error updating data source', err);
 			toast.error(
-				'Something went wrong while updating Data source' + err.message,
-			);
+				'Something went wrong while updating Data source ' + err.message,
+			)
 		},
 	});
 
@@ -98,13 +98,7 @@ const DataSource = () => {
 			},
 			name: form.name,
 		};
-		console.log(payload);
-		if (
-			!confirm(
-				'Are you sure you want to save these changes to your data source?',
-			)
-		)
-			return;
+		if (!confirm('Are you sure you want to save these changes to your data source?'))return;
 		editMutation.mutateAsync({ id: query?.id, payload });
 	};
 
