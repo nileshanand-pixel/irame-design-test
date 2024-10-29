@@ -36,10 +36,7 @@ const DataSource = () => {
 		mutationFn: (id) => deleteDataSource(id, getToken()),
 		onSuccess: () => {
 			toast.success('Data source deleted successfully');
-			queryClient.invalidateQueries(['data-sources'], {
-				refetchActive: true,
-				refetchInactive: true,
-			});
+			queryClient.invalidateQueries(['get-datasource-by-id', 'data-sources']);
 			navigate('/app/configuration');
 		},
 		onError: (err) => {
@@ -52,22 +49,17 @@ const DataSource = () => {
 		mutationFn: ({ id, payload }) => updateDataSource(id, payload, getToken()),
 		onSuccess: () => {
 			toast.success('Dataset updated successfully');
-			queryClient.invalidateQueries(['get-datasource-by-id', 'data-sources'], {
-				refetchActive: true,
-				refetchInactive: true,
-			});
-			setForm({
-				name: form?.name || datasourceQuery?.data?.name,
-				hasChanges: true
-			})
+			// Invalidate and refetch to force fresh data
+			queryClient.invalidateQueries(['get-datasource-by-id', query?.id]);
 		},
 		onError: (err) => {
 			console.log('Error updating data source', err);
 			toast.error(
 				'Something went wrong while updating Data source ' + err.message,
-			)
+			);
 		},
 	});
+	
 
 	const handleNameChange = (e) => {
 		setForm({ ...form, name: e.target.value, hasChanges: true });
@@ -152,19 +144,27 @@ const DataSource = () => {
 	};
 
 	useEffect(() => {
-		if (datasourceQuery.isSuccess || editMutation.isSuccess) {
-			setForm({
-				processed_files: datasourceQuery?.data?.processed_files,
-				name: datasourceQuery?.data?.name,
-				hasChanges: false,
-			});
+		if (datasourceQuery.isSuccess) {
+			const fetchedData = datasourceQuery.data;
+			if (
+				!form ||
+				form.name !== fetchedData.name ||
+				JSON.stringify(form.processed_files) !== JSON.stringify(fetchedData.processed_files)
+			) {
+				setForm({
+					processed_files: fetchedData.processed_files,
+					name: fetchedData.name,
+					hasChanges: false,
+				});
+			}
 		}
-	}, [datasourceQuery.isSuccess, editMutation.isPending]);
+	}, [datasourceQuery.isSuccess, datasourceQuery.data]);
+	
 
 	return (
 		<div className="w-full relative h-[85vh] sm:h-[80vh] grid grid-cols-1 pt-8">
 
-			{editMutation.isPending || deleteMutation.isPending && <BackdropLoader/>}
+			{(editMutation.isPending || deleteMutation.isPending) && <BackdropLoader/>}
 			<div className="text-primary80 gap-2">
 				<span
 					className="text-2xl font-semibold cursor-pointer"

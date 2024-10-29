@@ -86,6 +86,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			throw new Error('No token available');
 		}
 		const data = await getDataSources(token);
+		dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		return Array.isArray(data) ? data : [];
 	};
 
@@ -96,10 +97,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	} = useQuery({
 		queryKey: 'data-sources',
 		queryFn: fetchDataSources,
-		onSuccess: (data) => {
-			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
-		},
-		enabled: !!getToken(), // Only run the query if the token exists
 	});
 
 	const getChatHistoryDataSourceName = (dataSourceId) => {

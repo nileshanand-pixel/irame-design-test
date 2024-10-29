@@ -87,7 +87,7 @@ const Glossary = ({ data, setForm, form }) => {
 					className="flex flex-col md:flex-row gap-4 items-start justify-center"
 				>
 					<div className="w-full md:w-1/4 flex flex-col gap-2">
-						<Label>Word</Label>
+						<Label>Term</Label>
 						<div className="flex justify-between items-center">
 							<textarea
 								placeholder="Enter Word Here"

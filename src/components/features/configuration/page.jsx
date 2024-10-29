@@ -147,7 +147,7 @@ const Configuration = () => {
 				refetchInactive: true,
 			});
 			toast.success('Data source created successfully');
-			navigate(`/app/new-chat/?step=3&dataSourceId=${response.datasource_id}`);
+			startChatting(response);
 			setProgress({});
 			setIsLoading(false);
 		} catch (error) {
@@ -196,6 +196,18 @@ const Configuration = () => {
 			setDataSourceIntent((prev) => [...prev, value]);
 		}
 	};
+
+	const startChatting = (data) => {
+		dispatch(
+			updateUtilProp([
+				{
+					key: 'selectedDataSource',
+					value: { id: data.datasource_id, name: data.name },
+				},
+			]),
+		);
+		navigate(`/app/new-chat/?step=3&dataSourceId=${data.datasource_id}`);
+	}
 
 	useEffect(() => {
 		if (data?.length > 0) {
@@ -292,9 +304,18 @@ const Configuration = () => {
 	};
 
 	return (
-		<div className="grid grid-cols-12 gap-4 pt-6">
+		<div className="grid grid-cols-1 gap-4 pt-6 w-full">
 			{/* Upload Section */}
-			
+			<div className="text-primary80 gap-2">
+				<span
+					className="text-2xl font-semibold"
+				>
+					Configuration
+				</span>
+				<span className="text-sm font-medium">
+					/ Connect New Dataset
+				</span>
+			</div>
 			<div className="border rounded-3xl py-4 px-6 col-span-12 shadow-1xl h-fit">
 				{isLoading && <div> <BackdropLoader /></div> }
 				<div className="flex justify-between items-center">
@@ -436,7 +457,7 @@ const Configuration = () => {
 					<div
 						className={cn(
 							'flex items-center border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300',
-							{ 'w-[300px]': isFocused, 'w-[118px]': !isFocused },
+							{ 'w-[300px]': isFocused, 'w-[180px]': !isFocused },
 						)}
 					>
 						<i className="bi-search text-primary40 me-2"></i>
@@ -454,7 +475,7 @@ const Configuration = () => {
 				</div>
 				<div className="mt-4 space-y-2 max-h-[90%] overflow-y-auto">
 					{isFetchingData && (
-						<div className="flex items-center justify-center w-[14.84rem]">
+						<div className="flex items-center justify-center w-full">
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>
 					)}
@@ -466,12 +487,8 @@ const Configuration = () => {
 									key={source.datasource_id}
 								>
 									<p
-										className="text-[#26064ACC]/80 font-medium max-w-[180px] truncate flex cursor-pointer items-center"
-										onClick={() => {
-											navigate(
-												`/app/new-chat/?step=3&dataSourceId=${source.datasource_id}`,
-											);
-										}}
+										className="text-[#26064ACC]/80 font-medium max-w-[200px] truncate flex cursor-pointer items-center"
+										onClick={() => startChatting(source)}
 									>
 										<img
 											src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
@@ -480,9 +497,9 @@ const Configuration = () => {
 										/>
 										{source.name}
 									</p>
-									<div className="flex gap-1 items-center">
+									<div className="flex gap-2 items-center">
 										<i
-											className="bi-trash text-primary80 text-sm cursor-pointer hover:bg-purple-8 rounded-md p-1"
+											className="bi-trash text-primary80 text-xl font-bold cursor-pointer hover:bg-purple-8 rounded-md p-1"
 											onClick={(e) =>
 												handleDeleteDataSource(
 													e,
@@ -491,7 +508,7 @@ const Configuration = () => {
 											}
 										></i>
 										<span
-											className="material-symbols-outlined text-sm text-primary60 cursor-pointer hover:bg-purple-4 rounded-md p-1"
+											className="material-symbols-outlined text-xl text-primary60 cursor-pointer hover:bg-purple-4 rounded-md p-1"
 											onClick={() => {
 												navigate(
 													`datasource?id=${source.datasource_id}`,
