@@ -15,6 +15,7 @@ import { useRouter } from '@/hooks/useRouter';
 import { getToken } from '@/lib/utils';
 import ReportCardSkeleton from './ReportCardSkeletion';
 import { useSelector } from 'react-redux';
+import { toast } from 'sonner';
 
 const ReportGenerationDialog = React.memo(
 	({ open, setOpen, closeModal }) => {
@@ -25,7 +26,6 @@ const ReportGenerationDialog = React.memo(
 
 		const reportsGetter = useCallback(() => {
 			if (!query?.sessionId) return;
-			console.log(query.sessionId)
 			return getSessionReports(
 				getToken(),
 				query?.sessionId,
@@ -35,7 +35,8 @@ const ReportGenerationDialog = React.memo(
 		const sessionReportsData = useQuery({
 			queryKey: ['get-session-reports', query.sessionId],
 			queryFn: reportsGetter,
-			enabled: !!query?.sessionId
+			enabled: !!query?.sessionId,
+			refetchInterval: 10000
 		});
 
 		const createSessionReportMutation = useMutation({
@@ -54,6 +55,10 @@ const ReportGenerationDialog = React.memo(
 			onError: (err) => {
 				console.log('Error in Generating Report', err);
 				toast.error('Something went wrong while sharing report');
+				queryClient.invalidateQueries(['get-session-reports'], {
+					refetchActive: true,
+					refetchInactive: true,
+				});
 			},
 		});
 
@@ -143,7 +148,7 @@ const ReportGenerationDialog = React.memo(
 									</div>
 									<div className="w-full border-t border-primary8"></div>
 									<div className="bg-purple-8 w-fit rounded-lg py-2 px-4 text-primary100">
-										5 Queries
+										{report.data.query_count || 0} Queries
 									</div>
 								</div>
 							))
