@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import SaveEditTemplateModal from '../reports/components/SaveEditTemplateModal';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { deleteTemplate, getTemplates } from './service/new-chat.service';
+import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 
 const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const [prompt, setPrompt] = useState('');
@@ -256,6 +257,10 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const handleTemplateSelect = (templateId) => {
 		getTemplatesQuery?.data?.saved_queries?.forEach((data) => {
 			if(data?.external_id === templateId) {
+				// set workflow title in the beginning of session. 
+				// if another workflow template is used in same session, then that won't change the name
+				// not happy about this.
+				if(chatStoreReducer?.queries?.length === 0)dispatch((updateChatStoreProp([{key: 'workflowTitle', value: data?.name || 'Untitled Workflow'}])))
 				setMode(data?.type);
 				setQueries(data?.data?.queries?.map((query, queryIndex) => {
 					return {

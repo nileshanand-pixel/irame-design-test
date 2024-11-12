@@ -1,13 +1,11 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useRouter } from '@/hooks/useRouter';
 import { cn, getInitials, getToken } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createQuery, getQueriesOfSession } from '../service/new-chat.service';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import ResponseCard from '../ResponseCard';
 import ira from '@/assets/icons/ira_icon.svg';

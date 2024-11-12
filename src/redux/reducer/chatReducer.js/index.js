@@ -21,6 +21,7 @@ const initialState = {
 	activeQueryId: '',
 	resetIra: false,
 	activateGraphOnLatest: false,
+	workflowTitle: 'Untitled workflow'
 };
 
 const chatStoreSlice = createSlice({
