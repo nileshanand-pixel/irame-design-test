@@ -95,7 +95,7 @@ const ReportFolders = () => {
 				</div>
 			</div>
 
-			{datasourcesQuery.isLoading || true? (
+			{datasourcesQuery.isLoading? (
 				<div className=" w-full grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-6">
 					{Array.from({length: 16}).map((_, i) => (<DataSourceCardSkeleton key={i}/>))}
 				</div>
