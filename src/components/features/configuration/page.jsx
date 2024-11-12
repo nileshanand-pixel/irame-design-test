@@ -408,7 +408,7 @@ const Configuration = () => {
 									</div>
 								</div>
 								<div className="flex items-center text-sm font-medium">
-									{progress[file.name] < 100 ? (
+									{file.url && progress[file.name] < 100 ? (
 										<p className="mr-4">uploading...</p>
 									) : null}
 									{/* <div
@@ -431,7 +431,7 @@ const Configuration = () => {
 									)}
 								</div>
 							</div>
-							{progress[file.name] <= 99 ? (
+							{file.url && progress[file.name] <= 99 ? (
 								<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
 									<div
 										className="h-full bg-purple-100"
