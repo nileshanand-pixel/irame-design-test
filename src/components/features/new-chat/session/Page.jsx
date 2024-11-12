@@ -24,6 +24,7 @@ import QueryDisplay from './components/QueryDisplay';
 import Clarification from '../Clarification';
 import { WorkspaceEnum } from '../types/new-chat.enum';
 import InputArea from '../InputArea';
+import ReportGenerationDialog from './components/ReportGenerationDialog';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -555,6 +556,10 @@ const Workzone = () => {
 		);
 	};
 
+	const closeReportGenerateModal = () => {
+		dispatch(updateUtilProp([{key: 'isGenerateReportModalOpen', value: false}]))
+	}
+
 	useEffect(() => {
 		const allDone =
 			doingScience.length && doingScience.every((item) => !item.status);
@@ -649,6 +654,8 @@ const Workzone = () => {
 			);
 		}
 	}, [query]);
+
+	useEffect(() => {}, [utilReducer?.isGenerateReportModalOpen])
 
 	const showWorkSpace = () => {
 		const markerAnswer =
@@ -766,6 +773,9 @@ const Workzone = () => {
 					isLoading={dashboard.isCreating}
 				/>
 			) : null}
+
+			{utilReducer.isGenerateReportModalOpen &&
+			<ReportGenerationDialog open={utilReducer.isGenerateReportModalOpen} closeModal={closeReportGenerateModal}/>}
 		</div>
 	);
 };

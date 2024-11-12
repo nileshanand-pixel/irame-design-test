@@ -68,6 +68,7 @@ module.exports = {
     			primary2: 'rgba(38, 6, 74, 0.02)',
     			primary4: 'rgba(38, 6, 74, 0.04)',
     			primary8: 'rgba(38, 6, 74, 0.08)',
+    			primary10: 'rgba(38, 6, 74, 0.1)',
     			primary16: 'rgba(38, 6, 74, 0.16)',
     			primary20: 'rgba(38, 6, 74, 0.2)',
     			primary60: 'rgba(38, 6, 74, 0.6)',
@@ -75,10 +76,18 @@ module.exports = {
     			primary40: 'rgba(38, 6, 74, 0.4)',
     			primary100: 'rgba(38, 6, 74, 1)',
     			purpleDark: 'rgba(81, 55, 110, 1)',
+				state: {
+					inProgress: 'rgb(181,71,8)',
+					done:'rgb(2,122,72)',
+				},
     			gray: {
     				'1': 'rgba(78, 78, 78, 0.1)',
     				muted: 'rgba(242, 244, 249, 1)'
-    			}
+				},
+				secondary: {
+					lightPurple: 'rgba(249, 245, 255, 1)',
+					textPurple: 'rgba(105, 65, 198, 1)',
+				}
     		},
     		keyframes: {
     			'accordion-down': {

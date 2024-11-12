@@ -10,9 +10,18 @@ import { setupAuthCookies } from './cookies';
 
 let isLoggingOut = false;
 
-// Client for the data manager service
-const axiosClient = axios.create({
-	baseURL: serviceUrlMap.DATA_MANAGER_SERVICE,
+// Client for the data manager service v1
+const axiosClientV1 = axios.create({
+	baseURL: serviceUrlMap.DATA_MANAGER_SERVICE_V1,
+	headers: {
+		'Content-Type': 'application/json',
+	},
+});
+
+
+// Client for the data manager service v2
+const axiosClientV2 = axios.create({
+	baseURL: serviceUrlMap.DATA_MANAGER_SERVICE_V2,
 	headers: {
 		'Content-Type': 'application/json',
 	},
@@ -82,8 +91,9 @@ const setupInterceptors = (axiosClient) => {
 };
 
 // Attach interceptors to both clients
-setupInterceptors(axiosClient);
+setupInterceptors(axiosClientV1);
+setupInterceptors(axiosClientV2);
 setupInterceptors(authAxiosClient);
 
-export default axiosClient;
-export { authAxiosClient };
+export default axiosClientV1;
+export { authAxiosClient, axiosClientV2 };

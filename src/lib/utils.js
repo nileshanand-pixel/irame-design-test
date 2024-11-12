@@ -44,7 +44,7 @@ export function toTitleCase(str) {
 	});
 }
 export const getShortHandName = (fullName) => {
-	if (fullName.length > 0) {
+	if (fullName?.length > 0) {
 		const splits = fullName.split(' ');
 		const firstLetter = splits[0].charAt(0);
 		const lastLetter = splits[splits.length - 1][0];

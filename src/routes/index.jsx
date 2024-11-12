@@ -8,9 +8,10 @@ import Configuration from '@/components/features/configuration/page';
 import Workzone from '@/components/features/new-chat/session/Page';
 import DashboardDetailsPage from '@/components/features/dashboard/components/DashboardDetailsPage';
 import TestRoute from '@/components/features/testingUI/Page';
-import ProtectedRoute from './ProtectedRoute'; // Import the new ProtectedRoute component
-import Reports from '@/components/features/reports/Page';
+import ProtectedRoute from './ProtectedRoute';
 import DataSource from '@/components/features/configuration/datasource/page';
+import ReportsInDatasource from '@/components/features/reports/datasource_reports/Page';
+import ReportFolders from '@/components/features/reports/Page';
 
 const AppRoutes = () => {
 	return (
@@ -63,8 +64,12 @@ const AppRoutes = () => {
 								element={<ProtectedRoute element={<Help />} />}
 							/>
 							<Route
-								path="reports/*"
-								element={<ProtectedRoute element={<Reports />} />}
+								path="reports/datasources/report"
+								element={<ProtectedRoute element={<ReportsInDatasource />} />}
+							/>
+							<Route
+								path="reports/datasources"
+								element={<ProtectedRoute element={<ReportFolders />} />}
 							/>
 						</Routes>
 					</Layout>

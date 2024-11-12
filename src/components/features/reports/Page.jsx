@@ -3,37 +3,54 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn, getToken } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { getReports } from './service/reports.service';
-import ReportCard from './components/ReportCard';
-import CardSkeleton from './components/CardSkeletion';
+import { getDatasources, getReports, getSharedReports } from './service/reports.service';
 import EmptyState from '@/components/elements/EmptyState';
+import DataSourceCard from './components/DataSourceCard';
+import DataSourceCardSkeleton from './components/DatasourceCardSkeleton';
 
-const Reports = () => {
-	const [reports, setReports] = useState([]);
+const ReportFolders = () => {
+	const [datasources, setDatasources] = useState([]);
 	const [isFocused, setIsFocused] = useState(false);
 	const [search, setSearch] = useState('');
 
-	const reportsQuery = useQuery({
-		queryKey: 'get-reports',
-		queryFn: () => getReports(getToken()),
+	const datasourcesQuery = useQuery({
+		queryKey: 'get-datasources-reports',
+		queryFn: () => getDatasources(getToken()),
 		refetchInterval: 10000,
 	});
 
+	const sharedReportsQuery = useQuery({
+		queryKey: ['get-shared-reports', getToken()],
+		queryFn: () => getSharedReports(getToken()),
+		refetchInterval: 600000,
+	});
+
 	const filteredList = useMemo(() => {
-		return reports.filter(
+		return datasources.filter(
 			(item) =>
-				item?.name?.toLowerCase()?.startsWith(search?.trim()?.toLowerCase()) ||
 				item?.datasource_name
 					?.toLowerCase()
 					?.startsWith(search?.trim()?.toLowerCase()),
 		);
-	}, [search, reports]);
+	}, [search, datasources]);
 
 	useEffect(() => {
-		if (reportsQuery.data) {
-			setReports(reportsQuery.data || []);
+		if (datasourcesQuery.data) {
+			let updatedDatasources = datasourcesQuery.data.datasources || [];
+			
+			const sharedReports = sharedReportsQuery.data?.reports || [];
+			if (sharedReports.length > 0) {
+				const sharedDatasource = {
+					datasource_id: 'shared',
+					datasource_name: 'Shared',
+					report_count: sharedReports.length,
+					reports: sharedReports,
+				};
+				updatedDatasources = [sharedDatasource, ...updatedDatasources];
+			}
+			setDatasources(updatedDatasources);
 		}
-	}, [reportsQuery.data]);
+	}, [datasourcesQuery.data, sharedReportsQuery.data]);
 
 	const emptyStateConfig = {
 		image: 'https://d2vkmtgu2mxkyq.cloudfront.net/empty-state.svg',
@@ -78,24 +95,22 @@ const Reports = () => {
 				</div>
 			</div>
 
-			{reportsQuery.isLoading ? (
-				<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
-					<CardSkeleton />
-					<CardSkeleton />
-					<CardSkeleton />
+			{datasourcesQuery.isLoading || true? (
+				<div className=" w-full grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-6">
+					{Array.from({length: 16}).map((_, i) => (<DataSourceCardSkeleton key={i}/>))}
 				</div>
-			) : reports.length === 0 ? (
+			) : datasources.length === 0 ? (
 				<EmptyState config={emptyStateConfig} />
 			) : filteredList.length > 0 ? (
-				<div className="w-full mt-6 bg-white grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+				<div className="w-full mt-6 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 					{filteredList.map((item) => (
-						<ReportCard key={item.report_id} report={item} />
+						<DataSourceCard key={item.datasource_id} data={item} />
 					))}
 				</div>
 			) : (
 				<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
 					<p className="text-sm text-primary60 font-medium">
-						No such Report found
+						No such Datasource found
 					</p>
 				</div>
 			)}
@@ -103,4 +118,4 @@ const Reports = () => {
 	);
 };
 
-export default Reports;
+export default ReportFolders;

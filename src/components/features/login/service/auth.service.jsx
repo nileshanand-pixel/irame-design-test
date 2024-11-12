@@ -3,7 +3,7 @@ import { COGNITO_CLIENT_ID } from '@/config';
 import { grantType } from '@/config/auth.config';
 import { serviceUrlMap } from '@/config/url.config';
 import { authAxiosClient } from '@/lib/axios';
-import axiosClient from '@/lib/axios';
+import axiosClientV1 from '@/lib/axios';
 import { resetCookies } from '@/lib/cookies';
 import { resetAllStores } from '@/redux/GlobalStore';
 
@@ -21,7 +21,7 @@ export const fullLogout = async () => {
 }
 
 export const login = async (data) => {
-	const response = await axiosClient.post('users/authenticate', data);
+	const response = await axiosClientV1.post('users/authenticate', data);
 	return response.data;
 };
 
@@ -47,7 +47,7 @@ export const revokeToken = async() => {
 		id_token: idToken,
 	};
 	try {
-		const response = await axiosClient.post('users/logout', data);
+		const response = await axiosClientV1.post('users/logout', data);
 	} catch(error) {
 		console.error("Failed to revoke token while logging out");
 	}

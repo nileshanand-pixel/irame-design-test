@@ -68,7 +68,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/dashboard_columns.svg',
 				},
 				{
-					link: '/app/reports',
+					link: '/app/reports/datasources',
 					text: 'Reports',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/report-icon.svg',
 				},
@@ -281,6 +281,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		} else {
 			setActiveTab(pathname);
 			if(pathname.includes('configuration'))setActiveTab('/app/configuration')
+			if(pathname.includes('reports'))setActiveTab('/app/reports/datasources')
 		}
 	}, [pathname]);
 
