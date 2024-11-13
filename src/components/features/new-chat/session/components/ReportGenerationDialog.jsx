@@ -54,7 +54,7 @@ const ReportGenerationDialog = React.memo(
 			},
 			onError: (err) => {
 				console.log('Error in Generating Report', err);
-				toast.error('Something went wrong while sharing report');
+				toast.error('Something went wrong while generating report');
 				queryClient.invalidateQueries(['get-session-reports'], {
 					refetchActive: true,
 					refetchInactive: true,
