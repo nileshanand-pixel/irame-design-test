@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import React from 'react';
 import { useSelector } from 'react-redux';
 
-const QueryDisplay = ({ bulkPrompt = [], mode, prompt }) => {
+const QueryDisplay = ({ bulkPrompt = [], mode, prompt, workflowTitle }) => {
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	if (!bulkPrompt || !prompt) {
 		return <Skeleton className="h-6 w-full bg-purple-8 ms-1" />;
@@ -36,7 +36,7 @@ const QueryDisplay = ({ bulkPrompt = [], mode, prompt }) => {
 					{mode === 'workflow' && index === 0 && (
 						<>
 							<span className="text-sm px-2 font-medium  text-primary40 ">
-								{chatStoreReducer?.workflowTitle}
+								{workflowTitle || 'Untitled Workflow'}
 							</span>
 							<Separator className="!mt-1 !ml-2 w-9/10" />
 						</>

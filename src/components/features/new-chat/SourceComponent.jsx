@@ -1,6 +1,7 @@
 import React, { useContext, useEffect } from 'react';
 import xlsIcon from '@/assets/icons/ms_excel.svg';
 import csvIcon from '@/assets/icons/csv_icon.svg';
+import pdfIcon from '@/assets/icons/pdf_icon.svg';
 import MultiSelect from '@/components/elements/MultiSelect';
 import { useQuery } from '@tanstack/react-query';
 import { getDataSourceById } from '../configuration/service/configuration.service';
@@ -69,6 +70,7 @@ const SourceComponent = ({
 	const renderFiles = () => {
 		let contentArr = [];
 		if (!datasourceData?.processed_files?.files) return;
+		// sort files, files with most selected columns will come first
 		const sortedFiles = datasourceData?.processed_files?.files.sort((a, b) => {
 			const selectedColumnsCountA = selectedColumns[a.id]?.length || 0;
 			const selectedColumnsCountB = selectedColumns[b.id]?.length || 0;
@@ -92,6 +94,7 @@ const SourceComponent = ({
 								{file?.filename || 'File'}
 							</h3>
 						</div>
+						{file?.type !== 'pdf' &&
 						<div className="flex flex-wrap gap-2 mt-4 rounded-lg py-2.5">
 							<MultiSelect
 								options={file?.columns?.map((column) => ({
@@ -110,7 +113,7 @@ const SourceComponent = ({
 								}}
 								maxCount={3}
 							/>
-						</div>
+						</div> }
 					</div>
 				);
 
@@ -140,6 +143,8 @@ const getFileIcon = (fileName) => {
 		case 'xlsx':
 		case 'xlxb':
 			return xlsIcon;
+		case 'pdf':
+			return pdfIcon;
 		default:
 			return xlsIcon;
 	}

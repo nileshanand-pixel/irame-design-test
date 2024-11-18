@@ -153,6 +153,7 @@ const DashboardDetailsPage = () => {
 								</div>
 								<div className="mt-8 pb-8 h-[90%] overflow-y-auto">
 									<div className="flex items-center justify-between">
+										{selectedItem?.content?.graph?.title && 
 										<TooltipWrapper
 											tooltip={
 												selectedItem?.content?.graph?.title
@@ -161,7 +162,24 @@ const DashboardDetailsPage = () => {
 											<p className="text-lg font-semibold text-primary80 max-w-[10rem] truncate">
 												{selectedItem?.content?.graph?.title}
 											</p>
-										</TooltipWrapper>
+										</TooltipWrapper>}
+
+										{selectedItem?.content?.table?.csv_url && (
+											<Button
+												variant="outlined"
+												className="text-sm font-medium text-purple-100 bg-purple-8 hover:bg-purple-16 border-none flex items-center"
+												onClick={() =>
+													window.open(
+														selectedItem?.content?.table
+															?.csv_url,
+														'_blank',
+													)
+												}
+											>
+												<i className="bi-download mr-2"></i>
+												Download CSV
+											</Button>
+										)}
 
 										<Button
 											variant="secondary"

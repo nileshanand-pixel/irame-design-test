@@ -9,13 +9,13 @@ import { Button } from '@/components/ui/button';
 import SaveEditTemplateModal from '../reports/components/SaveEditTemplateModal';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { deleteTemplate, getTemplates } from './service/new-chat.service';
-import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 
 const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const [prompt, setPrompt] = useState('');
 	const [showModal, setShowModal] = useState(false);
 	const [mode, setMode] = useState('single');
 	const [queries, setQueries] = useState([{ id: 1, text: '' }]);
+	const [savedQueryReference, setSavedQueryReference] = useState({id: '', title: ''})
 	const [showSaveEditTemplateModal, setShowSaveEditTemplateModal] = useState(false);
 	const [editTemplateData, setEditTemplateData] = useState({
 		name: "",
@@ -199,7 +199,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	};
 
 	const handleSend=async()=>{
-		await onAppendQuery(prompt, queries, mode);
+		await onAppendQuery(prompt, queries, savedQueryReference, mode);
 		setPrompt('');
 		setQueries([{ id: 1, text: '' }]);
 		setMode("single");
@@ -258,10 +258,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const handleTemplateSelect = (templateId) => {
 		getTemplatesQuery?.data?.saved_queries?.forEach((data) => {
 			if(data?.external_id === templateId) {
-				// set workflow title in the beginning of session. 
-				// if another workflow template is used in same session, then that won't change the name
-				// not happy about this.
-				if(chatStoreReducer?.queries?.length === 0)dispatch((updateChatStoreProp([{key: 'workflowTitle', value: data?.name || 'Untitled Workflow'}])))
+				setSavedQueryReference({id: templateId, title: data.name})
 				setMode(data?.type);
 				setQueries(data?.data?.queries?.map((query, queryIndex) => {
 					return {
