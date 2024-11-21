@@ -261,7 +261,7 @@ const Workzone = () => {
 		setPrompt(e.target.value);
 	};
 
-	const handleAppendQuery = (prompt, queries, mode="single") => {
+	const handleAppendQuery = (prompt, queries, savedQueryReference, mode="single") => {
 		try {
 			if (inputDisabled) return;
 			if (mode === 'single' && (!prompt || !prompt?.trim())) return;
@@ -275,7 +275,8 @@ const Workzone = () => {
 			let metadata;
 			if(queries && queries?.length > 0){
 				metadata = {
-					queries: queries.filter((query) => query?.text?.length > 0).map((item)=> ({query: item?.text}))
+					queries: queries.filter((query) => query?.text?.length > 0).map((item)=> ({query: item?.text})),
+					saved_query_reference: savedQueryReference
 				}	
 			}
 			const payload = {
@@ -481,6 +482,7 @@ const Workzone = () => {
 						<QueryDisplay
 							mode={query?.type}
 							bulkPrompt={query?.metadata?.queries}
+							workflowTitle = {query?.metadata?.saved_query_reference?.title}
 							prompt={query?.question}
 						/>
 					</div>		
@@ -683,7 +685,7 @@ const Workzone = () => {
 			<div
 				className={cn(
 					'border rounded-2xl pt-8 px-4 shadow-1xl relative h-full flex-col',
-					showWorkSpace() ? 'col-span-8' : 'col-span-12 lg:mx-[128px]',
+					showWorkSpace() ? 'col-span-12 lg:col-span-8' : 'col-span-12 lg:mx-[128px]',
 				)}
 			>
 				<div
@@ -709,7 +711,7 @@ const Workzone = () => {
 					editDisabled={inputDisabled}
 					regenerator={handleRegenerateResponse}
 				>
-					<div className="border sticky rounded-3xl py-4 w-full px-4 col-span-4 shadow-1xl h-[90vh]">
+					<div className="border sticky rounded-3xl py-4 w-full px-4 col-span-12 lg:col-span-4 shadow-1xl h-[90vh]">
 						<div className="flex justify-between">
 							<div className="flex items-center gap-1">
 								<img

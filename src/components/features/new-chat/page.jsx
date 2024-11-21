@@ -106,13 +106,14 @@ const NewChat = () => {
 	};
 
 
-	const handleCreateSession = (prompt, queries, mode="single") => {
+	const handleCreateSession = (prompt, queries, savedQueryReference, mode="single") => {
 		try {
 			if (mode === 'single' && (!prompt || !prompt?.trim())) return;
 			let metadata;
 			if(queries && queries?.length > 0){
 				metadata = {
-					queries: queries.filter((query) => query?.text?.length > 0).map((item)=> ({query: item?.text}))
+					queries: queries.filter((query) => query?.text?.length > 0).map((item)=> ({query: item?.text})),
+					saved_query_reference: savedQueryReference
 				}	
 			}
 			const payload = {

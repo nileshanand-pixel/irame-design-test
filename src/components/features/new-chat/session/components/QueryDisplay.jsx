@@ -2,8 +2,10 @@ import { SelectSeparator } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import React from 'react';
+import { useSelector } from 'react-redux';
 
-const QueryDisplay = ({ bulkPrompt=[], mode, prompt }) => {
+const QueryDisplay = ({ bulkPrompt = [], mode, prompt, workflowTitle }) => {
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	if (!bulkPrompt || !prompt) {
 		return <Skeleton className="h-6 w-full bg-purple-8 ms-1" />;
 	}
@@ -31,6 +33,14 @@ const QueryDisplay = ({ bulkPrompt=[], mode, prompt }) => {
 		<div className="space-y-4 bg-[#6A12CD0A] px-2 py-4 rounded-lg w-2/5">
 			{bulkPrompt?.map((query, index) => (
 				<>
+					{mode === 'workflow' && index === 0 && (
+						<>
+							<span className="text-sm px-2 font-medium  text-primary40 ">
+								{workflowTitle || 'Untitled Workflow'}
+							</span>
+							<Separator className="!mt-1 !ml-2 w-9/10" />
+						</>
+					)}
 					<div key={query.id} className="px-2 rounded-lg">
 						<h2 className="text-xs font-semibold text-[#26064A66] ">
 							{getLabel(index) + ':'}
