@@ -361,6 +361,7 @@ const Workzone = () => {
 					session_id: answer?.session_id,
 					workspace_changes: workspaceChanges.apiConfig,
 					metadata: workspaceChanges.metadata,
+					type: answer?.type,
 				},
 				getToken(),
 			).then((res) => {
