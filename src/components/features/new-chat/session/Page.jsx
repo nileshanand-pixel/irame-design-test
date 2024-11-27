@@ -359,6 +359,7 @@ const Workzone = () => {
 					query: tempPrompt,
 					session_id: answer?.session_id,
 					workspace_changes: workspaceChanges.apiConfig,
+					metadata: workspaceChanges.metadata,
 				},
 				getToken(),
 			).then((res) => {
