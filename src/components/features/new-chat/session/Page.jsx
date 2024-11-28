@@ -360,6 +360,11 @@ const Workzone = () => {
 					query: tempPrompt,
 					session_id: answer?.session_id,
 					workspace_changes: workspaceChanges.apiConfig,
+					metadata: {
+						queries: answer?.metadata?.queries.filter((query) => query?.text?.length > 0).map((item)=> ({query: item?.text})),
+						saved_query_reference: answer?.metadata?.saved_query_reference
+					},
+					type: answer?.type,
 				},
 				getToken(),
 			).then((res) => {
