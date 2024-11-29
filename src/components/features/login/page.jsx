@@ -7,10 +7,7 @@ import LoginForm from './LoginForm';
 import { COGNITO_CLIENT_ID, GOOGLE_AUTH_API_URL } from '@/config';
 import { grantType } from '@/config/auth.config';
 import { toast } from 'sonner';
-import {
-	login,
-	LoginWithRefreshToken,
-} from './service/auth.service';
+import { login, LoginWithRefreshToken } from './service/auth.service';
 import BoxLoader from '@/components/elements/loading/BoxLoader';
 import { setupAuthCookies } from '@/lib/cookies';
 import useAuth from '@/hooks/useAuth';
@@ -21,6 +18,7 @@ const SignInSignUp = () => {
 	const { isAuthenticated } = useAuth();
 
 	const [isLoading, setIsLoading] = useState(false);
+	const [team, setTeam] = useState('');
 
 	const handleGoogleRedirect = async () => {
 		setIsLoading(true);
@@ -29,6 +27,24 @@ const SignInSignUp = () => {
 		} catch (error) {
 			toast.error('Failed to initiate Google login.');
 			setIsLoading(false);
+		}
+	};
+
+	const handleSSORedirect = async () => {
+		setIsLoading(true);
+		try {
+			window.location.href = `https://auth.irame.ai/oauth2/authorize?client_id=1pnoea35m9apf5eb565m3tcaqr&scope=email+openid+profile&response_type=code&redirect_uri=${window.location.origin}&identity_provider=pwc-prod-oidc`;
+		} catch (error) {
+			toast.error('Failed to initiate Google login.');
+			setIsLoading(false);
+		}
+	};
+
+	const handleSSOLogin = () => {
+		if (team.toLowerCase() === 'pwc') {
+			handleSSORedirect();
+		} else {
+			toast.error('Your team does not support SSO, Please contact admin!');
 		}
 	};
 
@@ -188,7 +204,7 @@ const SignInSignUp = () => {
 							</p>
 						</div>
 
-						<LoginForm onContinue={handleContinue} />
+						<LoginForm team={team} onContinue={handleContinue} />
 
 						<div className="mt-6">
 							<Button
@@ -204,6 +220,29 @@ const SignInSignUp = () => {
 								/>
 								Continue with Google
 							</Button>
+						</div>
+
+						<div className="mt-6">
+							<label
+								htmlFor="team"
+								className="block text-sm font-medium text-gray-700"
+							>
+								Team Name
+							</label>
+							<input
+								type="text"
+								id="team"
+								value={team}
+								onChange={(e) => setTeam(e.target.value)}
+								placeholder="Enter your team name"
+								className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+							/>
+							<button
+								onClick={handleSSOLogin}
+								className="w-full mt-4 text-white bg-primary hover:bg-purple-80/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+							>
+								Continue with SSO
+							</button>
 						</div>
 					</div>
 				</div>
@@ -233,4 +272,3 @@ const SignInSignUp = () => {
 };
 
 export default SignInSignUp;
-
