@@ -16,9 +16,9 @@ const SignInSignUp = () => {
 	const navigate = useNavigate();
 	const router = useRouter();
 	const { isAuthenticated } = useAuth();
-
 	const [isLoading, setIsLoading] = useState(false);
 	const [team, setTeam] = useState('');
+	const [showTeamInput, setShowTeamInput] = useState(false);
 
 	const handleGoogleRedirect = async () => {
 		setIsLoading(true);
@@ -41,6 +41,15 @@ const SignInSignUp = () => {
 	};
 
 	const handleSSOLogin = () => {
+		// First show the input field , then continue with redirection
+		if(!showTeamInput){
+			setShowTeamInput(true);
+			return;
+		}
+		if(!team?.trim()){
+			toast.error('Please enter valid team name');
+			return;
+		}
 		if (team.toLowerCase() === 'pwc') {
 			handleSSORedirect();
 		} else {
@@ -223,26 +232,31 @@ const SignInSignUp = () => {
 						</div>
 
 						<div className="mt-6">
-							<label
-								htmlFor="team"
-								className="block text-sm font-medium text-gray-700"
-							>
-								Team Name
-							</label>
-							<input
-								type="text"
-								id="team"
-								value={team}
-								onChange={(e) => setTeam(e.target.value)}
-								placeholder="Enter your team name"
-								className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-							/>
-							<button
-								onClick={handleSSOLogin}
-								className="w-full mt-4 text-white bg-primary hover:bg-purple-80/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-							>
-								Continue with SSO
-							</button>
+							{showTeamInput && (
+								<div className='animate-in animate-s'>
+									<label
+										htmlFor="team"
+										className="block text-sm font-medium text-gray-700"
+									>
+										Team Name
+									</label>
+									<input
+										type="text"
+										id="team"
+										value={team}
+										onChange={(e) => setTeam(e.target.value)}
+										placeholder="Enter your team name"
+										className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+									/>
+								</div>
+							)}
+							<Button
+							variant="outline"
+							onClick={handleSSOLogin}
+							className=" w-full text-sm mt-4 font-semibold text-purple-100 bg-purple-8 border-none hover:text-purple-100 hover:opacity-80 flex items-center"
+						>
+							Continue with SSO
+						</Button>
 						</div>
 					</div>
 				</div>
