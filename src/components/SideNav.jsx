@@ -95,7 +95,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		isLoading: isLoadingDataSources,
 		error,
 	} = useQuery({
-		queryKey: 'data-sources',
+		queryKey: ['data-sources'],
 		queryFn: fetchDataSources,
 	});
 

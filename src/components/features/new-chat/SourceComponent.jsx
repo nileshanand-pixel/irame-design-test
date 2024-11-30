@@ -1,7 +1,4 @@
 import React, { useContext, useEffect } from 'react';
-import xlsIcon from '@/assets/icons/ms_excel.svg';
-import csvIcon from '@/assets/icons/csv_icon.svg';
-import pdfIcon from '@/assets/icons/pdf_icon.svg';
 import MultiSelect from '@/components/elements/MultiSelect';
 import { useQuery } from '@tanstack/react-query';
 import { getDataSourceById } from '../configuration/service/configuration.service';
@@ -134,18 +131,4 @@ const SourceComponent = ({
 
 export default SourceComponent;
 
-const getFileIcon = (fileName) => {
-	const fileExtension = fileName.split('.').pop();
-	switch (fileExtension) {
-		case 'csv':
-			return csvIcon;
-		case 'xls':
-		case 'xlsx':
-		case 'xlxb':
-			return xlsIcon;
-		case 'pdf':
-			return pdfIcon;
-		default:
-			return xlsIcon;
-	}
-};
+

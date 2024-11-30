@@ -190,7 +190,7 @@ const NewChat = () => {
 		isLoading,
 		error,
 	} = useQuery({
-		queryKey: 'data-sources',
+		queryKey: ['data-sources'],
 		queryFn: () => getDataSources(getToken()),
 		onSuccess: (data) => {
 			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));

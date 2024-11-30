@@ -140,7 +140,10 @@ const SignInSignUp = () => {
 
 	const handleTokenRefresh = async () => {
 		const refreshToken = Cookies.get('refresh_token');
-		if (!refreshToken) return;
+		if (!refreshToken){
+			localStorage.removeItem("userDetails");
+			return;
+		}
 		setIsLoading(true);
 		try {
 			const response = await LoginWithRefreshToken(refreshToken);

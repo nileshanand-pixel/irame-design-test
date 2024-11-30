@@ -1,6 +1,6 @@
 import InputText from '@/components/elements/InputText';
 import { Input } from '@/components/ui/input';
-import { cn, formatFileSize, getToken } from '@/lib/utils';
+import { cn, formatFileSize, getFileIcon, getToken } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import excel from '@/assets/icons/ms_excel.svg';
 import { Button } from '@/components/ui/button';
@@ -207,7 +207,7 @@ const Configuration = () => {
 			]),
 		);
 		navigate(`/app/new-chat/?step=3&dataSourceId=${data.datasource_id}`);
-	}
+	};
 
 	useEffect(() => {
 		if (data?.length > 0) {
@@ -307,17 +307,16 @@ const Configuration = () => {
 		<div className="grid grid-cols-1 gap-4 pt-6 w-full">
 			{/* Upload Section */}
 			<div className="text-primary80 gap-2">
-				<span
-					className="text-2xl font-semibold"
-				>
-					Configuration
-				</span>
-				<span className="text-sm font-medium">
-					/ Connect New Dataset
-				</span>
+				<span className="text-2xl font-semibold">Configuration</span>
+				<span className="text-sm font-medium">/ Connect New Dataset</span>
 			</div>
 			<div className="border rounded-3xl py-4 px-6 col-span-12 shadow-1xl h-fit">
-				{isLoading && <div> <BackdropLoader /></div> }
+				{isLoading && (
+					<div>
+						{' '}
+						<BackdropLoader />
+					</div>
+				)}
 				<div className="flex justify-between items-center">
 					<div>
 						<h3 className="text-primary80 font-semibold text-xl">
@@ -333,56 +332,59 @@ const Configuration = () => {
 
 				{showForm && (
 					<div className="mt-4 space-y-6 mb-10">
-					<InputText
-						placeholder="Enter name here"
-						label="Data Set Name"
-						value={datasourceName}
-						setValue={(e) => setDatasourceName(e)}
-						error={formErrors.datasourceName}
-						errorText={formErrors.datasourceName}
-						labelClassName="text-sm font-medium text-primary40"
-					/>
-				
-					<div className="flex flex-col">
-						<label className="text-sm font-medium text-primary40 mb-2">
-							What do you want to do with this Data Set
-						</label>
-						<Textarea
-							placeholder="Add Description here"
-							className=" border rounded-md !focus:outline-none text-black/60 text-sm font-normal resize-none"
-							value={description}
-							onChange={(e) => setDescription(e.target.value)}
+						<InputText
+							placeholder="Enter name here"
+							label="Data Set Name"
+							value={datasourceName}
+							setValue={(e) => setDatasourceName(e)}
+							error={!!formErrors.datasourceName}
+							errorText={formErrors.datasourceName}
+							labelClassName="text-sm font-medium text-primary40"
 						/>
-						{formErrors.description && (
-							<p className="text-red-500 text-xs mt-1">
-								{formErrors.description}
+
+						<div className="flex flex-col">
+							<label className="text-sm font-medium text-primary40 mb-2">
+								What do you want to do with this Data Set
+							</label>
+							<Textarea
+								placeholder="Add Description here"
+								className=" border rounded-md !focus:outline-none text-black/60 text-sm font-normal resize-none"
+								value={description}
+								onChange={(e) => setDescription(e.target.value)}
+							/>
+							{formErrors.description && (
+								<p className="text-red-500 text-xs mt-1">
+									{formErrors.description}
+								</p>
+							)}
+						</div>
+
+						<div>
+							<p className="text-sm font-medium text-primary40 mb-3">
+								Choose Analysis Type
 							</p>
-						)}
-					</div>
-				
-					<div>
-						<p className="text-sm font-medium text-primary40 mb-3">
-							Choose Analysis Type
-						</p>
-						<div className="flex flex-wrap gap-2">
-							{Array.isArray(intent) &&
-								intent.map((useCase, index) => (
-									<span
-										key={useCase.value}
-										onClick={() => handleSelectUseCase(useCase.value)}
-										className={`text-sm font-normal text-black/60 px-3 py-1.5 border border-black/10 rounded-[30px] cursor-pointer hover:bg-purple-8 hover:text-purple-100 ${
-											dataSourceIntent.includes(useCase.value)
-												? 'bg-purple-8 text-purple-100 border-[1.2px] border-primary'
-												: ''
-										}`}
-									>
-										{useCase?.label}
-									</span>
-								))}
+							<div className="flex flex-wrap gap-2">
+								{Array.isArray(intent) &&
+									intent.map((useCase, index) => (
+										<span
+											key={useCase.value}
+											onClick={() =>
+												handleSelectUseCase(useCase.value)
+											}
+											className={`text-sm font-normal text-black/60 px-3 py-1.5 border border-black/10 rounded-[30px] cursor-pointer hover:bg-purple-8 hover:text-purple-100 ${
+												dataSourceIntent.includes(
+													useCase.value,
+												)
+													? 'bg-purple-8 text-purple-100 border-[1.2px] border-primary'
+													: ''
+											}`}
+										>
+											{useCase?.label}
+										</span>
+									))}
+							</div>
 						</div>
 					</div>
-				</div>
-				
 				)}
 				{/* Render Files and their progress */}
 				{Array.isArray(files) &&
@@ -394,7 +396,7 @@ const Configuration = () => {
 							<div className="flex justify-between">
 								<div className="flex gap-2 items-center">
 									<img
-										src={excel}
+										src={getFileIcon(file?.name)}
 										alt="file-icon"
 										className="size-6"
 									/>

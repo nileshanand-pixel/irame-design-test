@@ -14,7 +14,7 @@ const ReportFolders = () => {
 	const [search, setSearch] = useState('');
 
 	const datasourcesQuery = useQuery({
-		queryKey: 'get-datasources-reports',
+		queryKey: ['get-datasources-reports'],
 		queryFn: () => getDatasources(getToken()),
 		refetchInterval: 10000,
 	});

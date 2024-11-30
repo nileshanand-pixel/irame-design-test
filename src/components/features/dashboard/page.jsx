@@ -24,7 +24,7 @@ const Dashboard = () => {
 	const { navigate } = useRouter();
 
 	const userDashboardQuery = useQuery({
-		queryKey: 'user-dashboard',
+		queryKey: ['user-dashboard'],
 		queryFn: () => getUserDashboard(getToken()),
 	});
 

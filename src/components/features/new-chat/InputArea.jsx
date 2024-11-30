@@ -35,7 +35,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	const firstActionRef = useRef(null);
 
 	const getTemplatesQuery = useQuery({
-		queryKey: 'saved-queries',
+		queryKey: ['saved-queries'],
 		queryFn: () => getTemplates(getToken()),
 		enabled: !!config?.savedQueries,
 	});
