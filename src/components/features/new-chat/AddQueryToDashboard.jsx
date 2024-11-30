@@ -32,7 +32,7 @@ const AddQueryToDashboard = ({ open, setDashboard }) => {
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
 	const userDashboardQuery = useQuery({
-		queryKey: 'user-dashboard',
+		queryKey: ['user-dashboard'],
 		queryFn: () => getUserDashboard(getToken()),
 	});
 

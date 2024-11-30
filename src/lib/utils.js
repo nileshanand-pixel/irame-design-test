@@ -2,6 +2,9 @@ import { clsx } from 'clsx';
 import Cookies from 'js-cookie';
 import capitalize from 'lodash.capitalize';
 import { twMerge } from 'tailwind-merge';
+import xlsIcon from '@/assets/icons/ms_excel.svg';
+import csvIcon from '@/assets/icons/csv_icon.svg';
+import pdfIcon from '@/assets/icons/pdf_icon.svg';
 
 export function cn(...inputs) {
 	return twMerge(clsx(inputs));
@@ -64,3 +67,21 @@ export const chatCommandInitiator = (str) =>{
     const regex = /^\/$/;
     return regex.test(str);
 }
+
+
+export const getFileIcon = (fileName) => {
+	if(!fileName)return
+	const fileExtension = fileName.split('.').pop();
+	switch (fileExtension) {
+		case 'csv':
+			return csvIcon;
+		case 'xls':
+		case 'xlsx':
+		case 'xlxb':
+			return xlsIcon;
+		case 'pdf':
+			return pdfIcon;
+		default:
+			return xlsIcon;
+	}
+};

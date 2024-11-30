@@ -1,8 +1,7 @@
 import InputText from '@/components/elements/InputText';
 import { Input } from '@/components/ui/input';
-import { formatFileSize, getToken } from '@/lib/utils';
+import { formatFileSize, getFileIcon, getToken } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
-import excel from '@/assets/icons/ms_excel.svg';
 import { Button } from '@/components/ui/button';
 import {
 	createNewDtaSource,
@@ -17,7 +16,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { queryClient } from '@/lib/react-query';
 import { useQuery } from '@tanstack/react-query';
-import QueueStatus from '../new-chat/QueueStatus';
 import { intent } from './configuration.content';
 
 const Configuration = () => {
@@ -327,7 +325,7 @@ const Configuration = () => {
 							<div className="flex justify-between">
 								<div className="flex gap-2 items-center">
 									<img
-										src={excel}
+										src={getFileIcon(file?.name)}
 										alt="file-icon"
 										className="size-6"
 									/>

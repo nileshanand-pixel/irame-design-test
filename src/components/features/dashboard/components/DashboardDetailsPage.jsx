@@ -22,7 +22,7 @@ const DashboardDetailsPage = () => {
 	}
 
 	const dashboardDetailsQuery = useQuery({
-		queryKey: 'dashboard-details',
+		queryKey: ['dashboard-details'],
 		queryFn: () => getDashboardContent(getToken(), query.id),
 	});
 	const handleItemClick = (item) => {
