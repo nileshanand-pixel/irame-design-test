@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from 'react';
 import MultiSelect from '@/components/elements/MultiSelect';
 import { useQuery } from '@tanstack/react-query';
 import { getDataSourceById } from '../configuration/service/configuration.service';
-import { getToken } from '@/lib/utils';
+import { getFileIcon, getToken } from '@/lib/utils';
 import { EditContext } from './components/WorkspaceEditProvider';
 import { useSelector } from 'react-redux';
 
