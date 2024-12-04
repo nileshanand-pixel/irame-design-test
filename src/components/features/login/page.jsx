@@ -7,10 +7,7 @@ import LoginForm from './LoginForm';
 import { COGNITO_CLIENT_ID, GOOGLE_AUTH_API_URL } from '@/config';
 import { grantType } from '@/config/auth.config';
 import { toast } from 'sonner';
-import {
-	login,
-	LoginWithRefreshToken,
-} from './service/auth.service';
+import { login, LoginWithRefreshToken } from './service/auth.service';
 import BoxLoader from '@/components/elements/loading/BoxLoader';
 import { setupAuthCookies } from '@/lib/cookies';
 import useAuth from '@/hooks/useAuth';
@@ -19,8 +16,9 @@ const SignInSignUp = () => {
 	const navigate = useNavigate();
 	const router = useRouter();
 	const { isAuthenticated } = useAuth();
-
 	const [isLoading, setIsLoading] = useState(false);
+	const [team, setTeam] = useState('');
+	const [showTeamInput, setShowTeamInput] = useState(false);
 
 	const handleGoogleRedirect = async () => {
 		setIsLoading(true);
@@ -29,6 +27,33 @@ const SignInSignUp = () => {
 		} catch (error) {
 			toast.error('Failed to initiate Google login.');
 			setIsLoading(false);
+		}
+	};
+
+	const handleSSORedirect = async () => {
+		setIsLoading(true);
+		try {
+			window.location.href = `https://auth.irame.ai/oauth2/authorize?client_id=1pnoea35m9apf5eb565m3tcaqr&scope=email+openid+profile&response_type=code&redirect_uri=${window.location.origin}&identity_provider=pwc-prod-oidc`;
+		} catch (error) {
+			toast.error('Failed to initiate Google login.');
+			setIsLoading(false);
+		}
+	};
+
+	const handleSSOLogin = () => {
+		// First show the input field , then continue with redirection
+		if(!showTeamInput){
+			setShowTeamInput(true);
+			return;
+		}
+		if(!team?.trim()){
+			toast.error('Please enter valid team name');
+			return;
+		}
+		if (team.toLowerCase() === 'pwc') {
+			handleSSORedirect();
+		} else {
+			toast.error('Your team does not support SSO, Please contact admin!');
 		}
 	};
 
@@ -60,11 +85,16 @@ const SignInSignUp = () => {
 				navigate('/app/new-chat');
 			} else {
 				toast.error(
-					'Login failed. Please check your credentials and try again.',
+					'Login failed. Invalid Credentials.',
 				);
 			}
 		} catch (error) {
-			toast.error('An error occurred during login. Please try again.');
+			if(error?.code === 'ERR_BAD_REQUEST'){
+				toast.error(
+					'Login failed. Invalid Credentials.',
+				);
+			}
+			else toast.error('An error occurred during login. Please try again.');
 		} finally {
 			setTimeout(() => {
 				setIsLoading(false);
@@ -115,7 +145,10 @@ const SignInSignUp = () => {
 
 	const handleTokenRefresh = async () => {
 		const refreshToken = Cookies.get('refresh_token');
-		if (!refreshToken) return;
+		if (!refreshToken){
+			localStorage.removeItem("userDetails");
+			return;
+		}
 		setIsLoading(true);
 		try {
 			const response = await LoginWithRefreshToken(refreshToken);
@@ -188,7 +221,7 @@ const SignInSignUp = () => {
 							</p>
 						</div>
 
-						<LoginForm onContinue={handleContinue} />
+						<LoginForm team={team} onContinue={handleContinue} />
 
 						<div className="mt-6">
 							<Button
@@ -204,6 +237,34 @@ const SignInSignUp = () => {
 								/>
 								Continue with Google
 							</Button>
+						</div>
+
+						<div className="mt-6">
+							{showTeamInput && (
+								<div className='animate-in animate-s'>
+									<label
+										htmlFor="team"
+										className="block text-sm font-medium text-gray-700"
+									>
+										Team Name
+									</label>
+									<input
+										type="text"
+										id="team"
+										value={team}
+										onChange={(e) => setTeam(e.target.value)}
+										placeholder="Enter your team name"
+										className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+									/>
+								</div>
+							)}
+							<Button
+							variant="outline"
+							onClick={handleSSOLogin}
+							className=" w-full text-sm mt-4 font-semibold text-purple-100 bg-purple-8 border-none hover:text-purple-100 hover:opacity-80 flex items-center"
+						>
+							Continue with SSO
+						</Button>
 						</div>
 					</div>
 				</div>
@@ -233,4 +294,3 @@ const SignInSignUp = () => {
 };
 
 export default SignInSignUp;
-

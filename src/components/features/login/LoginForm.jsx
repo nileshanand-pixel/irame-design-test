@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { LoginFormSchema } from './schema';
 
-const LoginForm = ({ onContinue }) => {
+const LoginForm = ({ onContinue, team }) => {
 	const {
 		register,
 		handleSubmit,
@@ -38,6 +38,7 @@ const LoginForm = ({ onContinue }) => {
 
 	useEffect(() => {
 		const handleEnterKey = (event) => {
+			if (team) return;
 			if (event.key === 'Enter' && !isSubmitting && isValid) {
 				handleSubmit(onSubmit)();
 			}
