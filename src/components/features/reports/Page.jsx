@@ -13,9 +13,9 @@ const Reports = () => {
 	const [isFocused, setIsFocused] = useState(false);
 	const [search, setSearch] = useState('');
 
-	const datasourcesQuery = useQuery({
-		queryKey: ['get-datasources-reports'],
-		queryFn: () => getDatasources(getToken()),
+	const reportsQuery = useQuery({
+		queryKey: ['get-reports'],
+		queryFn: () => getReports(getToken()),
 		refetchInterval: 10000,
 	});
 
