@@ -239,7 +239,7 @@ const SignInSignUp = () => {
 							</Button>
 						</div>
 
-						{/* <div className="mt-6">
+						<div className="mt-6">
 							{showTeamInput && (
 								<div className='animate-in animate-s'>
 									<label
@@ -265,7 +265,7 @@ const SignInSignUp = () => {
 						>
 							Continue with SSO
 						</Button>
-						</div> */}
+						</div>
 					</div>
 				</div>
 
