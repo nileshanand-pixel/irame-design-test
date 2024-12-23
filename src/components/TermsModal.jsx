@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
+import { Button } from './ui/button';
 
 const TermsModal = () => {
 	const [isVisible, setIsVisible] = useState(false);
@@ -43,12 +44,12 @@ const TermsModal = () => {
 					</a>
 					. By continuing, you agree to the terms listed here.
 				</p>
-				<button
+				<Button
 					onClick={handleAgree}
-					className="bg-black text-white px-4 py-2 w-full rounded hover:bg-gray-800"
+					className="w-full text-white bg-primary hover:bg-purple-80/80 font-medium rounded-lg text-sm px-5 py-2.5 mt-4 text-center"
 				>
 					Continue
-				</button>
+				</Button>
 			</div>
 		</div>
 	);
