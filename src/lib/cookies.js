@@ -6,8 +6,11 @@ import { grantType } from '@/config/auth.config';
 export const resetCookies = (ignoreRefreshToken=false) => {
 	const allCookies = Cookies.get();
 
+	const alwaysIgnoredCookies = ['termsAccepted'];
+
 	for (let cookieName in allCookies) {
 		if(ignoreRefreshToken && cookieName === grantType.REFRESH_TOKEN)continue;
+		if(alwaysIgnoredCookies.includes(cookieName))continue;
 		Cookies.remove(cookieName);
 	}
 };
