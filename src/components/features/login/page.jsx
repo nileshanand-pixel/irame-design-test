@@ -85,11 +85,16 @@ const SignInSignUp = () => {
 				navigate('/app/new-chat');
 			} else {
 				toast.error(
-					'Login failed. Please check your credentials and try again.',
+					'Login failed. Invalid Credentials.',
 				);
 			}
 		} catch (error) {
-			toast.error('An error occurred during login. Please try again.');
+			if(error?.code === 'ERR_BAD_REQUEST'){
+				toast.error(
+					'Login failed. Invalid Credentials.',
+				);
+			}
+			else toast.error('An error occurred during login. Please try again.');
 		} finally {
 			setTimeout(() => {
 				setIsLoading(false);

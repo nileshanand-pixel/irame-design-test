@@ -9,11 +9,14 @@ import { Button } from '@/components/ui/button';
 import { intent as intentMap } from '../configuration.content';
 import PreviewTable from './PreviewTable';
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
+import PreviewPdf from './PreviewPdf';
+import { getPdfPageCount } from '@/lib/utils';
 
 const formatFileSize = (sizeInBytes) => {
 	if (sizeInBytes < 1024) return `${sizeInBytes} B`;
 	else if (sizeInBytes < 1048576) return `${(sizeInBytes / 1024).toFixed(1)} KB`;
-	else if (sizeInBytes < 1073741824) return `${(sizeInBytes / 1048576).toFixed(1)} MB`;
+	else if (sizeInBytes < 1073741824)
+		return `${(sizeInBytes / 1048576).toFixed(1)} MB`;
 	else return `${(sizeInBytes / 1073741824).toFixed(1)} GB`;
 };
 
@@ -37,23 +40,33 @@ const DataCard = ({ data, form, setForm }) => {
 	const [originalDescription, setOriginalDescription] = useState(description);
 	const [activeAccordion, setActiveAccordion] = useState(
 		form?.processed_files?.files[0]?.id,
-	); 
+	);
 	const [fileSizes, setFileSizes] = useState({});
 	const editRef = useRef(null);
-	const handle = useFullScreenHandle(); 
+	const handle = useFullScreenHandle();
+
+	const [pageCounts, setPageCounts] = useState({});
 
 	useEffect(() => {
-		// Fetch file sizes when component mounts
-		const fetchFileSizes = async () => {
+		// Fetch file sizes and page counts when component mounts
+		const fetchFileData = async () => {
 			const sizes = {};
+			const pages = {};
+
 			for (const file of form?.processed_files?.files || []) {
 				const fileUrl = calculateFileUrl(file);
 				sizes[file.id] = await getFileSize(fileUrl);
+
+				if (file.type === 'pdf') {
+					pages[file.id] = await getPdfPageCount(fileUrl);
+				}
 			}
+
 			setFileSizes(sizes);
+			setPageCounts(pages);
 		};
 
-		fetchFileSizes();
+		fetchFileData();
 	}, [form?.processed_files?.files]);
 
 	const handleDescriptionEdit = () => {
@@ -88,7 +101,7 @@ const DataCard = ({ data, form, setForm }) => {
 	const handleDownloadFile = (e, file) => {
 		if (e) e.stopPropagation();
 		const fileUrl = calculateFileUrl(file);
-		if(fileUrl)window.open(fileUrl, '_blank');
+		if (fileUrl) window.open(fileUrl, '_blank');
 	};
 
 	const calculateFileUrl = (file) => {
@@ -97,7 +110,7 @@ const DataCard = ({ data, form, setForm }) => {
 			return metadata.files[`${worksheet}.csv`].url;
 		} else if (type === 'csv' && filename && metadata?.files?.[filename]) {
 			return metadata.files[filename].url;
-		} else if (sample_url) {
+		} else if (type === 'pdf' || sample_url) {
 			return sample_url;
 		} else {
 			return url;
@@ -174,59 +187,71 @@ const DataCard = ({ data, form, setForm }) => {
 				type="single"
 				className="border-none"
 				value={activeAccordion}
-				onValueChange={setActiveAccordion} 
+				onValueChange={setActiveAccordion}
 				collapsible
 			>
 				{form?.processed_files?.files.map((file) => (
 					<AccordionItem key={file?.id} value={file?.id}>
 						<AccordionTrigger className="bg-purple-4 rounded-lg py-2 pl-4 pr-2 mt-2 border-none no-underline flex justify-between items-center">
-							<div className='flex w-full mr-5 justify-between'>
-							<div className='flex gap-6'>
-								<div>
-									{/* Display filename and size */}
-									{file.filename === file.worksheet || !file.worksheet
-										? file.filename
-										: `${file.filename} (${file.worksheet})`}
-									<span className="ml-2 text-primary60 font-normal">
-										({formatFileSize(fileSizes[file.id] || 0)})
-									</span>
+							<div className="flex w-full mr-5 justify-between">
+								<div className="flex gap-6">
+									<div>
+										{/* Display filename and size */}
+										{file.filename === file.worksheet ||
+										!file.worksheet
+											? file.filename
+											: `${file.filename} (${file.worksheet})`}
+										<span className="ml-2 text-primary60 font-normal">
+											(
+											{formatFileSize(fileSizes[file.id] || 0)}
+											)
+										</span>
+									</div>
 								</div>
-							</div>
-							<div className="flex gap-6 font-medium">
-								<span>{`${file?.columns?.length} Columns`}</span>
-								<i
-									onClick={
-										activeAccordion === file.id
-											? handleFullScreen
-											: null
-									}
-									className={`bi bi-fullscreen text-lg !font-bold cursor-pointer ${
-										activeAccordion === file.id
-											? ''
-											: 'text-gray-400 cursor-not-allowed'
-									}`}
-								></i>
-								<i
-									onClick={(e) => handleDownloadFile(e, file)}
-									className="bi bi-download text-lg font-bold cursor-pointer"
-								></i>
-							</div>
+								<div className="flex gap-6 font-medium">
+									{/* Show page count for PDFs or column count otherwise */}
+									<span>
+										{file.type === 'pdf'
+											? `${pageCounts[file.id] || 'Loading...'} Pages`
+											: `${file?.columns?.length || 0} Columns`}
+									</span>
+									<i
+										onClick={
+											activeAccordion === file.id
+												? handleFullScreen
+												: null
+										}
+										className={`bi bi-fullscreen text-lg !font-bold cursor-pointer ${
+											activeAccordion === file.id
+												? ''
+												: 'text-gray-400 cursor-not-allowed'
+										}`}
+									></i>
+									<i
+										onClick={(e) => handleDownloadFile(e, file)}
+										className="bi bi-download text-lg font-bold cursor-pointer"
+									></i>
+								</div>
 							</div>
 						</AccordionTrigger>
 
 						<AccordionContent>
 							<FullScreen handle={handle}>
 								<div
-									className={`overflow-x-auto mt-4 w-full ${handle.active ? 'p-4 overflow-y-auto h-screen' : ''}`}
-									style={{								
-										backgroundColor: 'white', 
+									className={`overflow-x-auto mt-4 w-full ${handle.active ? 'p-4 overflow-y-auto h-screen' : 'h-full'}`}
+									style={{
+										backgroundColor: 'white',
 									}}
 								>
-									<PreviewTable
-										form={form}
-										setForm={setForm}
-										data={file}
-									/>
+									{file.type === 'pdf' ? (
+										<PreviewPdf url={calculateFileUrl(file)} />
+									) : (
+										<PreviewTable
+											form={form}
+											setForm={setForm}
+											data={file}
+										/>
+									)}
 								</div>
 							</FullScreen>
 						</AccordionContent>

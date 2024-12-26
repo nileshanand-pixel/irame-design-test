@@ -2,7 +2,6 @@ import InputText from '@/components/elements/InputText';
 import { Input } from '@/components/ui/input';
 import { cn, formatFileSize, getFileIcon, getToken } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import excel from '@/assets/icons/ms_excel.svg';
 import { Button } from '@/components/ui/button';
 import {
 	createNewDtaSource,
@@ -92,7 +91,6 @@ const Configuration = () => {
 			const filesToUpload = files.filter((file) => !file.url); // Filter out files with a URL
 
 			if (filesToUpload.length === 0) {
-				// toast.success('All files are already uploaded');
 				return;
 			}
 
@@ -101,8 +99,6 @@ const Configuration = () => {
 			);
 
 			const uploadedData = await Promise.all(uploadPromises);
-
-			// console.log('uploadedData===', uploadedData);
 
 			const newFiles = files.map((file) => {
 				const uploadedFile = uploadedData.find(
@@ -410,7 +406,7 @@ const Configuration = () => {
 									</div>
 								</div>
 								<div className="flex items-center text-sm font-medium">
-									{file.url && progress[file.name] < 100 ? (
+									{progress[file.name] < 100 ? (
 										<p className="mr-4">uploading...</p>
 									) : null}
 									{/* <div
@@ -433,7 +429,7 @@ const Configuration = () => {
 									)}
 								</div>
 							</div>
-							{file.url && progress[file.name] <= 99 ? (
+							{progress[file.name] <= 99 ? (
 								<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
 									<div
 										className="h-full bg-purple-100"
