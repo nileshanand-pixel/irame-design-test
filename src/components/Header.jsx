@@ -96,7 +96,7 @@ const Header = () => {
 					{'Irame.ai'}
 				</span>
 			)}
-			{renderGenerateSessionReport()}
+			{/* {renderGenerateSessionReport()} */}
 			</div>
 			
 			<div className="flex gap-6">
