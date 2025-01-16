@@ -5,6 +5,7 @@ import { twMerge } from 'tailwind-merge';
 import xlsIcon from '@/assets/icons/ms_excel.svg';
 import csvIcon from '@/assets/icons/csv_icon.svg';
 import pdfIcon from '@/assets/icons/pdf_icon.svg';
+import { pdfjs } from 'react-pdf'
 
 export function cn(...inputs) {
 	return twMerge(clsx(inputs));
@@ -47,7 +48,7 @@ export function toTitleCase(str) {
 	});
 }
 export const getShortHandName = (fullName) => {
-	if (fullName.length > 0) {
+	if (fullName?.length > 0) {
 		const splits = fullName.split(' ');
 		const firstLetter = splits[0].charAt(0);
 		const lastLetter = splits[splits.length - 1][0];
@@ -84,4 +85,14 @@ export const getFileIcon = (fileName) => {
 		default:
 			return xlsIcon;
 	}
+};
+
+export const getPdfPageCount = async (url) => {
+    try {
+        const pdf = await pdfjs.getDocument(url).promise;
+        return pdf.numPages;
+    } catch (error) {
+        console.error('Error fetching PDF page count:', error);
+        return 0; // Fallback in case of an error
+    }
 };

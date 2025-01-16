@@ -1,10 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import axiosClient from '@/lib/axios';
+import axiosClientV1 from '@/lib/axios';
 
 
 export const getPresignedUrl = async (fileName, authToken) => {
-	const response = await axiosClient.get(
+	const response = await axiosClientV1.get(
 		`/datasources/presigned-url?file_name=${fileName}&datasource_id=${uuidv4()}`,
 		{
 			headers: {
@@ -23,7 +23,7 @@ export const uploadFile = async (file, setProgress, authToken) => {
 			authToken,
 		);
 
-		await axiosClient.put(presigned_url, file, {
+		await axiosClientV1.put(presigned_url, file, {
 			headers: {
 				'Content-Type': file.type,
 			},
@@ -55,7 +55,7 @@ export const uploadFile = async (file, setProgress, authToken) => {
 };
 
 export const getDataSources = async (authToken) => {
-	const response = await axiosClient.get(`/datasources`, {
+	const response = await axiosClientV1.get(`/datasources`, {
 		headers: {
 			Authorization: `Bearer ${authToken}`,
 		},
@@ -65,7 +65,7 @@ export const getDataSources = async (authToken) => {
 };
 
 export const getDataSourceById = async(authToken, id) => {
-	const response = await axiosClient.get(`/datasources/${id}`, {
+	const response = await axiosClientV1.get(`/datasources/${id}`, {
 		headers: {
 			Authorization: `Bearer ${authToken}`,
 		},
@@ -75,7 +75,7 @@ export const getDataSourceById = async(authToken, id) => {
 }
 
 export const createNewDtaSource = async (data, authToken) => {
-	const response = await axiosClient.post(`/datasources`, data, {
+	const response = await axiosClientV1.post(`/datasources`, data, {
 		headers: {
 			Authorization: `Bearer ${authToken}`,
 		},
@@ -86,7 +86,7 @@ export const createNewDtaSource = async (data, authToken) => {
 
 export const deleteDataSource = async (dataSourceId, authToken) => {
 	try {
-		const response = await axiosClient.delete(
+		const response = await axiosClientV1.delete(
 			`/datasources/${dataSourceId}`,
 			{
 				headers: {
@@ -102,4 +102,15 @@ export const deleteDataSource = async (dataSourceId, authToken) => {
 
 		throw error;
 	}
+};
+
+export const updateDataSource = async (id, data, authToken) => {
+	const response = await axiosClientV1.patch(`/datasources/${id}`, data, {
+		headers: {
+			Authorization: `Bearer ${authToken}`,
+			"Content-Type": "application/json",
+		},
+	});
+
+	return response.data;
 };

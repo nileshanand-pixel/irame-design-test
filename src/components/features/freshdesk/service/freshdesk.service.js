@@ -1,7 +1,7 @@
-import axiosClient from '@/lib/axios';
+import axiosClientV1 from '@/lib/axios';
 
 export const getFreshdeskToken = async (token) => {
-	const response = await axiosClient.post(
+	const response = await axiosClientV1.post(
 		`/freshdesk/authenticate`,
 		{},
 		{

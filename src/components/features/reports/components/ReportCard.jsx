@@ -12,13 +12,14 @@ import { useDispatch } from 'react-redux';
 import { updateReportStoreProp } from '@/redux/reducer/reportReducer';
 import ShareReportDialog from './ShareReportDialog';
 import Lottie from '@/components/elements/loading/LottieRender';
+import { useRouter } from '@/hooks/useRouter';
 
 // Lottie animation URL
 const LOADING_ANIMATION_URL =
 	'https://d2vkmtgu2mxkyq.cloudfront.net/report-progress-loader.json';
 
-
 const ReportCard = ({ report }) => {
+	const { query } = useRouter();
 	const [isHovered, setIsHovered] = useState(false);
 	const FALLBACK_PREVIEW_URL = '/assets/bgs/ira-logo.svg';
 	const dispatch = useDispatch();
@@ -102,7 +103,10 @@ const ReportCard = ({ report }) => {
 							<DropdownMenuItem
 								className="text-primary80 font-medium hover:!bg-purple-4"
 								onClick={handleShareClick}
-								disabled={report?.status === 'in_progress' || report?.level !== 'owner'}
+								disabled={
+									report?.status === 'in_progress' ||
+									query?.datasourceId === 'shared'
+								}
 							>
 								<i className="bi bi-share me-2 text-primary80 font-medium"></i>
 								Share
@@ -121,32 +125,37 @@ const ReportCard = ({ report }) => {
 					<span
 						className={`px-2 py-1 text-xs rounded ${
 							report?.status === 'in_progress'
-								? 'bg-[#FFFAEB] text-[#B54708]'
-								: 'bg-[#ECFDF3] text-[#027A48]'
+								? 'bg-[#FFFAEB] text-[rgb(181,71,8)]'
+								: 'bg-[#ECFDF3] text-[rgb(2,122,72)]'
 						} text-nowrap`}
 					>
 						{report?.status === 'in_progress' ? 'In progress' : 'Done'}
 					</span>
-					<Tooltip content={report?.user_name}>
-						<span className="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-700">
-							{getShortHandName(report?.user_name)?.toUpperCase() ||
-								'SU'}
-						</span>
-					</Tooltip>
+					{report?.user_name && (
+						<Tooltip content={report?.user_name}>
+							<span className="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-700">
+								{getShortHandName(
+									report?.user_name,
+								)?.toUpperCase() || 'SU'}
+							</span>
+						</Tooltip>
+					)}
 				</div>
 				<p className="text-sm text-gray-500 mt-2 truncate-2">
 					{report.data.summary}
 				</p>
-				<div className="mt-4 text-gray-400 text-sm">
-					<p className="text-primary80 font-medium max-w-[180px] truncate flex items-center">
-						<img
-							src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
-							alt="database"
-							className="mr-2 size-5"
-						/>
-						{capitalize(report.datasource_name) || 'DS'}
-					</p>
-				</div>
+				{report?.datasource_name && (
+					<div className="mt-4 text-gray-400 text-sm">
+						<p className="text-primary80 font-medium max-w-[180px] truncate flex items-center">
+							<img
+								src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
+								alt="database"
+								className="mr-2 size-5"
+							/>
+							{capitalize(report?.datasource_name) || 'DS'}
+						</p>
+					</div>
+				)}
 			</div>
 			{shareModalOpen && (
 				<ShareReportDialog

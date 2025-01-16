@@ -1,8 +1,8 @@
-import axiosClient from '@/lib/axios';
+import axiosClientV1 from '@/lib/axios';
 import { toast } from 'sonner';
 
 export const fetchSuggestions = async (dataSourceId, token) => {
-	const response = await axiosClient.get(
+	const response = await axiosClientV1.get(
 		`/datasources/${dataSourceId}/suggestions`,
 		{
 			headers: {
@@ -14,7 +14,7 @@ export const fetchSuggestions = async (dataSourceId, token) => {
 };
 
 export const createQuerySession = async (data, token) => {
-	const response = await axiosClient.post(`/queries/session`, data, {
+	const response = await axiosClientV1.post(`/queries/session`, data, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -24,7 +24,7 @@ export const createQuerySession = async (data, token) => {
 
 // This is not used anywhere as of now. Need to remove
 export const getAnswerConfig = async (token) => {
-	const response = await axiosClient.get(`/config/answer`, {
+	const response = await axiosClientV1.get(`/config/answer`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -34,7 +34,7 @@ export const getAnswerConfig = async (token) => {
 
 // NO API PRESENT
 export const getUserDetails = async (token) => {
-	const response = await axiosClient.get(`/oauth/google/user`, {
+	const response = await axiosClientV1.get(`/oauth/google/user`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -43,7 +43,7 @@ export const getUserDetails = async (token) => {
 };
 
 export const getUserSession = async (token) => {
-	const response = await axiosClient.get(`/sessions`, {
+	const response = await axiosClientV1.get(`/sessions`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -52,7 +52,7 @@ export const getUserSession = async (token) => {
 };
 
 export const createQuery = async (data, token) => {
-	const response = await axiosClient.post(`/queries`, data, {
+	const response = await axiosClientV1.post(`/queries`, data, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -62,7 +62,7 @@ export const createQuery = async (data, token) => {
 
 export const deleteSession = async (sessionId, token) => {
 	try {
-		const response = await axiosClient.delete(`/sessions/${sessionId}`, {
+		const response = await axiosClientV1.delete(`/sessions/${sessionId}`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -79,7 +79,7 @@ export const deleteSession = async (sessionId, token) => {
 // DONE
 export const getQueriesOfSession = async (sessionId, token) => {
 	try {
-		const response = await axiosClient.get(`/queries/session/${sessionId}`, {
+		const response = await axiosClientV1.get(`/queries/session/${sessionId}`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -97,7 +97,7 @@ export const getQueriesOfSession = async (sessionId, token) => {
 
 export const getTemplate = async (templateId, token) => {
 	try {
-		const response = await axiosClient.get(`/saved-queries/${templateId}`, {
+		const response = await axiosClientV1.get(`/saved-queries/${templateId}`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -111,7 +111,7 @@ export const getTemplate = async (templateId, token) => {
 
 export const saveTemplate = async (data, token) => {
 	try {
-		const response = await axiosClient.post(
+		const response = await axiosClientV1.post(
 			`/saved-queries`,
 			data,
 			{
@@ -129,7 +129,7 @@ export const saveTemplate = async (data, token) => {
 
 export const getTemplates = async (token) => {
 	try {
-		const response = await axiosClient.get(`/saved-queries`, {
+		const response = await axiosClientV1.get(`/saved-queries`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},
@@ -143,7 +143,7 @@ export const getTemplates = async (token) => {
 
 export const editTemplate = async (templateId, data, token) => {
 	try {
-		const response = await axiosClient.patch(
+		const response = await axiosClientV1.patch(
 			`/saved-queries/${templateId}`,
 			data,
 			{
@@ -161,7 +161,7 @@ export const editTemplate = async (templateId, data, token) => {
 
 export const deleteTemplate = async (templateId, token) => {
 	try {
-		const response = await axiosClient.delete(`/saved-queries/${templateId}`, {
+		const response = await axiosClientV1.delete(`/saved-queries/${templateId}`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 			},

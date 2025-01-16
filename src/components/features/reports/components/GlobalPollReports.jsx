@@ -11,9 +11,11 @@ const GlobalPollReports = () => {
 
 	const navigate = useNavigate();
 	const { isAuthenticated } = useAuth();
+	// added this for manually stopping polling to help development while keeping network tab clean
+	const stopPolling = localStorage.getItem('stopPolling') 
 
 	useEffect(() => {
-		if (!isAuthenticated) return;
+		if (!isAuthenticated || stopPolling === 'yes') return;
 
 		const pollReports = async () => {
 			try {

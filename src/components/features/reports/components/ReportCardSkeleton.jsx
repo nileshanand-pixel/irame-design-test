@@ -1,7 +1,7 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import React from 'react';
 
-const CardSkeleton = () => {
+const ReportCardSkeleton = () => {
 	return (
 		<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-xl space-y-4">
 			{/* Placeholder for the image */}
@@ -30,4 +30,4 @@ const CardSkeleton = () => {
 	);
 };
 
-export default CardSkeleton;
+export default ReportCardSkeleton;
