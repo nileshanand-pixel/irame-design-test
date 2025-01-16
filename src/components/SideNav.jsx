@@ -68,7 +68,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/dashboard_columns.svg',
 				},
 				{
-					link: '/app/reports',
+					link: '/app/reports/datasources',
 					text: 'Reports',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/report-icon.svg',
 				},
@@ -86,6 +86,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			throw new Error('No token available');
 		}
 		const data = await getDataSources(token);
+		dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		return Array.isArray(data) ? data : [];
 	};
 
@@ -96,10 +97,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	} = useQuery({
 		queryKey: ['data-sources'],
 		queryFn: fetchDataSources,
-		onSuccess: (data) => {
-			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
-		},
-		enabled: !!getToken(), // Only run the query if the token exists
 	});
 
 	const getChatHistoryDataSourceName = (dataSourceId) => {
@@ -283,6 +280,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			setActiveTab('');
 		} else {
 			setActiveTab(pathname);
+			if(pathname.includes('configuration'))setActiveTab('/app/configuration')
+			if(pathname.includes('reports'))setActiveTab('/app/reports/datasources')
 		}
 	}, [pathname]);
 

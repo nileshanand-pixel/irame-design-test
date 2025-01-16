@@ -1,13 +1,11 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useRouter } from '@/hooks/useRouter';
 import { cn, getInitials, getToken } from '@/lib/utils';
-import { Input } from '@/components/ui/input';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createQuery, getQueriesOfSession } from '../service/new-chat.service';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import ResponseCard from '../ResponseCard';
 import ira from '@/assets/icons/ira_icon.svg';
@@ -26,6 +24,7 @@ import QueryDisplay from './components/QueryDisplay';
 import Clarification from '../Clarification';
 import { WorkspaceEnum } from '../types/new-chat.enum';
 import InputArea from '../InputArea';
+import ReportGenerationDialog from './components/ReportGenerationDialog';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -564,6 +563,10 @@ const Workzone = () => {
 		);
 	};
 
+	const closeReportGenerateModal = () => {
+		dispatch(updateUtilProp([{key: 'isGenerateReportModalOpen', value: false}]))
+	}
+
 	useEffect(() => {
 		const allDone =
 			doingScience.length && doingScience.every((item) => !item.status);
@@ -658,6 +661,8 @@ const Workzone = () => {
 			);
 		}
 	}, [query]);
+
+	useEffect(() => {}, [utilReducer?.isGenerateReportModalOpen])
 
 	const showWorkSpace = () => {
 		const markerAnswer =
@@ -775,6 +780,9 @@ const Workzone = () => {
 					isLoading={dashboard.isCreating}
 				/>
 			) : null}
+
+			{utilReducer.isGenerateReportModalOpen &&
+			<ReportGenerationDialog open={utilReducer.isGenerateReportModalOpen} closeModal={closeReportGenerateModal}/>}
 		</div>
 	);
 };

@@ -30,7 +30,7 @@ const QueryDisplay = ({ bulkPrompt = [], mode, prompt, workflowTitle }) => {
 	};
 
 	return (
-		<div className="space-y-4 bg-[#6A12CD0A] px-2 py-4 rounded-lg w-2/5">
+		<div className="space-y-4 bg-[#6A12CD0A] px-2 py-4 rounded-lg min-w-[60%] max-w-[80%]">
 			{bulkPrompt?.map((query, index) => (
 				<>
 					{mode === 'workflow' && index === 0 && (
@@ -42,10 +42,10 @@ const QueryDisplay = ({ bulkPrompt = [], mode, prompt, workflowTitle }) => {
 						</>
 					)}
 					<div key={query.id} className="px-2 rounded-lg">
-						<h2 className="text-xs font-semibold text-[#26064A66] ">
+						<h2 className="text-xs font-semibold text-primary40 ">
 							{getLabel(index) + ':'}
 						</h2>
-						<p className="text-[#26064A] ">{query.text}</p>
+						<p className="text-primary100 ">{query.text}</p>
 					</div>
 					{index !== bulkPrompt.length - 1 && <Separator />}
 				</>

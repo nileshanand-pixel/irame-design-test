@@ -185,15 +185,6 @@ const NewChat = () => {
 		}
 	};
 
-	const fetchDataSources = async () => {
-		const token = getToken();
-		if (!token) {
-			throw new Error('No token available');
-		}
-		const data = await getDataSources(token);
-		return Array.isArray(data) ? data : [];
-	};
-
 	const {
 		data: dataSources,
 		isLoading,
@@ -204,14 +195,14 @@ const NewChat = () => {
 		onSuccess: (data) => {
 			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		},
-		enabled: !!getToken(), // Only run the query if the token exists
 	});
 
 	const getChatHistoryDataSourceName = (dataSourceId) => {
-		const dataSource = dataSources?.find(
+		const datasets = dataSources || utilReducer?.dataSources
+		const dataSource = datasets?.find(
 			(source) => source.datasource_id === dataSourceId,
 		);
-		return dataSource?.name;
+		return {id: dataSourceId, name: dataSource?.name}
 	};
 
 	const config = {
@@ -263,7 +254,7 @@ const NewChat = () => {
 		if (!utilReducer?.selectedDataSource && dataSource?.name) {
 			dispatch(
 				updateUtilProp([
-					{ key: 'selectedDataSource', value: dataSource?.name },
+					{ key: 'selectedDataSource', value: {id: query.dataSourceId, value: dataSource?.name} },
 				]),
 			);
 		} else {

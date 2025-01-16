@@ -27,6 +27,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 		id: "",
 	});
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const dispatch = useDispatch();
 
 	const inputRefs = useRef([]);

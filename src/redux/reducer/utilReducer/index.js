@@ -8,6 +8,7 @@ const initialState = {
 	selectedDataSource: {id: "", name: ""},
 	resetChat: false,
 	answerFromHistory: {},
+	isGenerateReportModalOpen: false,
 };
 
 const utilSlice = createSlice({

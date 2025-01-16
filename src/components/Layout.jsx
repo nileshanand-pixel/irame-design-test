@@ -8,7 +8,12 @@ import { useRouter } from '@/hooks/useRouter';
 import { cn } from '@/lib/utils';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import GlobalPollReports from './features/reports/components/GlobalPollReports';
-// import FreshdeskWidget from './features/freshdesk/FreshdeskWidget';
+import { pdfjs } from 'react-pdf';
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+	'pdfjs-dist/build/pdf.worker.min.mjs',
+	import.meta.url,
+).toString();
 
 const Layout = ({ children }) => {
 	const utilReducer = useSelector((state) => state.utilReducer);

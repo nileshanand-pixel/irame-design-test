@@ -11,15 +11,17 @@ import {
 } from './ui/dropdown-menu';
 import { getToken, getInitials, cn } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { getUserDetailsFromToken } from '@/lib/cookies';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
 	const { pathname, query } = useRouter();
 
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const dispatch = useDispatch();
 	const renderAvatar = () => {
 		return (
 			<Avatar>
@@ -49,6 +51,26 @@ const Header = () => {
 
 	const showDataSourceName =
 		utilReducer?.selectedDataSource?.name && pathname.includes('/new-chat');
+
+	const openReportGenerateModal = () => {
+		dispatch(updateUtilProp([{key: 'isGenerateReportModalOpen', value: true}]))
+	}
+
+	const renderGenerateSessionReport = () => {
+		const validPath = pathname.includes('session');
+		const validSession = !!query.sessionId;
+		const enabled = validPath && validSession;
+		let uiContent = '';
+		if (enabled) {
+			uiContent = (
+				<div className={`flex gap-1 mb-4 p-2  items-center rounded-lg ${enabled ? 'cursor-pointer bg-purple-10 text-primary80': 'bg-gray-1 text-primary40'}`} onClick={() => enabled && openReportGenerateModal()} >
+					<span className="material-symbols-outlined">description</span>
+					<span className='text-sm font-medium'>Generate Session Report</span>
+				</div>
+			);
+		}
+		return uiContent;
+	};
 	return (
 		<header
 			className={cn(
@@ -56,6 +78,7 @@ const Header = () => {
 				pathname.includes('/dashboard') ? 'bg-gray-muted' : 'bg-white',
 			)}
 		>
+			<div className='flex gap-6'>
 			{showDataSourceName ? (
 				<div className="mb-4 flex gap-2 items-center rounded-lg px-3 py-2 bg-purple-10 text-primary80 text-sm font-medium w-fit truncate">
 					<img
@@ -73,6 +96,9 @@ const Header = () => {
 					{'Irame.ai'}
 				</span>
 			)}
+			{/* {renderGenerateSessionReport()} */}
+			</div>
+			
 			<div className="flex gap-6">
 				{/* <ThemeToggle /> */}
 

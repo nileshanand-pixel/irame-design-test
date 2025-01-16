@@ -10,7 +10,9 @@ import Workzone from '@/components/features/new-chat/session/Page';
 import DashboardDetailsPage from '@/components/features/dashboard/components/DashboardDetailsPage';
 import TestRoute from '@/components/features/testingUI/Page';
 import ProtectedRoute from './ProtectedRoute';
-import Reports from '@/components/features/reports/Page';
+import DataSource from '@/components/features/configuration/datasource/page';
+import ReportsInDatasource from '@/components/features/reports/datasource_reports/Page';
+import ReportFolders from '@/components/features/reports/Page';
 import TermsModal from '@/components/TermsModal';
 
 const AppRoutes = () => {
@@ -61,6 +63,12 @@ const AppRoutes = () => {
 									}
 								/>
 								<Route
+									path="configuration/datasource"
+									element={
+										<ProtectedRoute element={<DataSource />} />
+									}
+								/>
+								<Route
 									path="configuration"
 									element={
 										<ProtectedRoute
@@ -73,9 +81,19 @@ const AppRoutes = () => {
 									element={<ProtectedRoute element={<Help />} />}
 								/>
 								<Route
-									path="reports/*"
+									path="reports/datasources/report"
 									element={
-										<ProtectedRoute element={<Reports />} />
+										<ProtectedRoute
+											element={<ReportsInDatasource />}
+										/>
+									}
+								/>
+								<Route
+									path="reports/datasources"
+									element={
+										<ProtectedRoute
+											element={<ReportFolders />}
+										/>
 									}
 								/>
 							</Routes>
