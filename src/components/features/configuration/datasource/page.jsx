@@ -17,7 +17,7 @@ import BackdropLoader from '@/components/elements/loading/BackDropLoader';
 
 const tabs = [
 	{ name: 'Data Card', component: DataCard },
-	// { name: 'Glossary', component: Glossary },
+	{ name: 'Glossary', component: Glossary },
 ];
 
 const DataSource = () => {
