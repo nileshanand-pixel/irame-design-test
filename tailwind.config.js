@@ -87,6 +87,11 @@ module.exports = {
 				secondary: {
 					lightPurple: 'rgba(249, 245, 255, 1)',
 					textPurple: 'rgba(105, 65, 198, 1)',
+				},
+				misc: {
+					offWhite: 'rgba(249, 250, 251, 1)',
+					black2: 'rgba(0, 0, 0, 0.02)',
+					black4: 'rgba(0, 0, 0, 0.04)'
 				}
     		},
     		keyframes: {

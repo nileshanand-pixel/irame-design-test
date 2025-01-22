@@ -63,6 +63,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			group: '',
 			items: [
 				{
+					link: '/app/business-process',
+					text: 'Business Process',
+					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/gear.svg',
+				},
+				{
 					link: '/app/dashboard',
 					text: 'Dashboard',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/dashboard_columns.svg',
@@ -282,6 +287,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			setActiveTab(pathname);
 			if(pathname.includes('configuration'))setActiveTab('/app/configuration')
 			if(pathname.includes('reports'))setActiveTab('/app/reports/datasources')
+			if(pathname.includes('business-process'))setActiveTab('/app/business-process')
 		}
 	}, [pathname]);
 
