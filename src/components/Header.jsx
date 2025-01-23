@@ -74,7 +74,7 @@ const Header = () => {
 	return (
 		<header
 			className={cn(
-				'flex justify-between px-5 py-4 text-lg text-primary100',
+				'flex justify-between items-center h-[64px] px-5 text-lg text-primary100',
 				pathname.includes('/dashboard') ? 'bg-gray-muted' : 'bg-white',
 			)}
 		>

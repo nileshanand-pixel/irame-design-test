@@ -86,24 +86,33 @@
 
 	/* WebKit scrollbar styles (Chrome, Safari) */
 	::-webkit-scrollbar {
-		width: 4px;
-		height: 4px;
+		width: 8px;
+		height: 8px;
 	}
 
 	/* Track */
 	::-webkit-scrollbar-track {
-		background: transparent;
+		background-color: rgb(243 244 246);
+		border-radius: 9999px;
 	}
+
+	/* [&::-webkit-scrollbar]:w-2
+  [&::-webkit-scrollbar-track]:rounded-full
+  [&::-webkit-scrollbar-track]:bg-gray-100
+  [&::-webkit-scrollbar-thumb]:rounded-full
+  [&::-webkit-scrollbar-thumb]:bg-gray-300
+  dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+  dark:[&::-webkit-scrollbar-thumb]:bg-neutral-50 */
 
 	/* Handle */
 	::-webkit-scrollbar-thumb {
-		background: transparent;
-		border-radius: 4px;
+		background-color: rgb(209 213 219);
+		border-radius: 9999px;
 	}
 
 	/* Handle on hover */
 	::-webkit-scrollbar-thumb:hover {
-		background: transparent;
+		background: black;
 	}
 
 	/* Firefox scrollbar styles */

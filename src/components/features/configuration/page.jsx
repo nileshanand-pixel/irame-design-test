@@ -300,7 +300,7 @@ const Configuration = () => {
 	};
 
 	return (
-		<div className="grid grid-cols-1 gap-4 pt-6 w-full">
+		<div className="grid grid-cols-1 gap-4 pt-6 h-full w-full">
 			{/* Upload Section */}
 			<div className="text-primary80 gap-2">
 				<span className="text-2xl font-semibold">Configuration</span>

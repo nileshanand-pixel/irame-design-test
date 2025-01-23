@@ -45,7 +45,7 @@ const Layout = ({ children }) => {
 	}, [pathname]);
 
 	return (
-		<div className={`flex items-start justify-between`}>
+		<div className={`flex items-start h-screen justify-between`}>
 			<SideNav
 				toggleSideNav={toggleSideNav}
 				isSideNavOpen={utilReducer?.isSideNavOpen}
@@ -58,10 +58,11 @@ const Layout = ({ children }) => {
 				<Header />
 				<div
 					className={cn(
-						'px-8 pt-0 flex items-center justify-center h-full w-full',
+						'pt-0 flex items-center bg-gray-300 justify-center h-[calc(100vh-64px)] w-full',
 						pathname.includes('/dashboard')
 							? 'bg-gray-muted min-h-[92vh] overflow-y-auto'
 							: 'bg-white',
+							pathname.includes('workflows') ? 'px-0' : 'px-8'
 					)}
 				>
 					{children}

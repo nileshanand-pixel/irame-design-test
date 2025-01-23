@@ -69,7 +69,7 @@ const ReportsInDatasource = () => {
 	};
 
 	return (
-		<div className="w-full h-full ">
+		<div className="w-full h-full">
 			<div className="w-full flex justify-between mt-2 ">
 			<div className=" flex items-end text-primary80 gap-2">
 				<div
@@ -125,7 +125,7 @@ const ReportsInDatasource = () => {
 			) : reports.length === 0 ? (
 				<EmptyState config={emptyStateConfig} />
 			) : filteredList.length > 0 ? (
-				<div className="w-full mt-6 bg-white grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+				<div className="w-full h-[90%] mt-6 bg-white grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 					{filteredList.map((item) => (
 						<ReportCard key={item.report_id} report={item} />
 					))}
