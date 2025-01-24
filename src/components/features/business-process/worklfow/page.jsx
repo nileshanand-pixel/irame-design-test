@@ -86,7 +86,7 @@ export default function WorkflowPage() {
             {/* RIGHT PANEL */}
             {sidebarOpen && (
               <>
-                <PanelResizeHandle className="w-[2.5px] h-full cursor-col-resize bg-primary16 hover:bg-primary40" />
+                <PanelResizeHandle className="w-2 h-full cursor-col-resize bg-gray-200 hover:bg-gray-300" />
                 <Panel defaultSize={30} minSize={15}>
                   <div className=" border-l border-gray-200 overflow-y-auto h-full flex flex-col">
                     <SessionHistoryPanel onClose={() => setSidebarOpen(false)} />
