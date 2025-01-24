@@ -14,6 +14,7 @@ import {
   CardDescription,
   CardContent,
 } from '@/components/ui/card';
+import SessionHistoryPanel from './SessionHistoryPanel';
 
 // ================================
 // Fake Data & Constants
@@ -85,9 +86,9 @@ export default function WorkflowPage() {
             {/* RIGHT PANEL */}
             {sidebarOpen && (
               <>
-                <PanelResizeHandle className="w-2 h-full cursor-col-resize bg-gray-200 hover:bg-gray-300" />
-                <Panel defaultSize={25} minSize={15}>
-                  <div className="bg-gray-50 border-l border-gray-200 overflow-y-auto h-full flex flex-col">
+                <PanelResizeHandle className="w-[2.5px] h-full cursor-col-resize bg-primary16 hover:bg-primary40" />
+                <Panel defaultSize={30} minSize={15}>
+                  <div className=" border-l border-gray-200 overflow-y-auto h-full flex flex-col">
                     <SessionHistoryPanel onClose={() => setSidebarOpen(false)} />
                   </div>
                 </Panel>
@@ -289,23 +290,3 @@ const DetailsForm = ({ fields }) => (
   </div>
 );
 
-const SessionHistoryPanel = ({ onClose }) => {
-  return (
-    <div className="w-full h-full flex flex-col">
-      <div className="flex justify-end border-b p-2">
-        <button
-          onClick={onClose}
-          className="text-gray-600 hover:text-black font-bold text-xl"
-          aria-label="Close History"
-        >
-          ×
-        </button>
-      </div>
-      <div className="p-4">
-        <p className="text-gray-500">
-          (Session History content is not required to implement.)
-        </p>
-      </div>
-    </div>
-  );
-};
