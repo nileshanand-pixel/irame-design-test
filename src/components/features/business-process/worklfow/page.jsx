@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { DndProvider, useDrag, useDrop, useDragLayer } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+} from 'react-resizable-panels';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -37,165 +40,69 @@ const WORKFLOW_DETAILS = {
 };
 
 // ================================
-// React DnD: constants, hooks
+// Top-Level Workflow Page
 // ================================
-const ItemTypes = {
-  RESIZE_HANDLE: 'RESIZE_HANDLE',
-};
-
-/**
- * This is the small draggable "handle" on the left edge
- * of the sidebar. We store the sidebar's starting width
- * in the item, so the drop target can continuously
- * compute new widths.
- */
-function ResizeHandle({ sidebarWidthPct }) {
-  // This component doesn’t do the actual resizing—just a “drag source.”
-  // The drop target’s “hover” callback does the continuous updates.
-  const [, dragRef] = useDrag(() => ({
-    type: ItemTypes.RESIZE_HANDLE,
-    item: { startWidthPct: sidebarWidthPct },
-  }));
-
-  return (
-    <div
-      ref={dragRef}
-      className="w-2 h-full cursor-col-resize bg-gray-200 hover:bg-gray-300"
-      style={{ touchAction: 'none' }} // helps on touch devices
-    />
-  );
-}
-
-/**
- * The top-level container that sets up the DnD context.
- * Inside it, we have the actual WorkflowPage layout, plus
- * the drop target that adjusts the sidebar size in `hover`.
- */
-export default function WorkflowPageContainer() {
-  return (
-    <DndProvider backend={HTML5Backend}>
-      <WorkflowPage />
-    </DndProvider>
-  );
-}
-
-// ================================
-// Main Layout Component
-// ================================
-function WorkflowPage() {
+export default function WorkflowPage() {
   const { businessProcessId } = useParams();
   const navigate = useNavigate();
 
-  // Is the right sidebar open?
+  // Toggles the right sidebar
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // Sidebar width in *percent* (not px). Defaults to 25%.
-  const [sidebarWidthPct, setSidebarWidthPct] = useState(25);
-
-  /**
-   * We'll define a drop target over the entire layout,
-   * so that we can “hover” anywhere while dragging the handle
-   * to continuously update the sidebar width.
-   */
-  const [, dropRef] = useDrop(() => ({
-    accept: ItemTypes.RESIZE_HANDLE,
-    hover: (dragItem, monitor) => {
-      // The “difference from initial offset” is how far
-      // the mouse has moved horizontally since drag started.
-      const delta = monitor.getDifferenceFromInitialOffset();
-      if (!delta) return;
-
-      // The initial sidebar width percentage:
-      const startWidth = dragItem.startWidthPct;
-
-      // The main pointer movement in x:
-      const moveX = delta.x; // positive => dragging to the right
-
-      // We want to convert moveX to an approximate percentage shift.
-      // The simplest approach: assume the container is the window’s width.
-      const containerWidth = window.innerWidth;
-
-      // new width is start + (movement in px / total width) * 100
-      let newWidth = startWidth - (moveX / containerWidth) * 100;
-
-      // clamp it so it’s not too small or too big
-      if (newWidth < 15) newWidth = 15;
-      if (newWidth > 50) newWidth = 50;
-
-      setSidebarWidthPct(newWidth);
-    },
-  }));
 
   return (
-    <div
-      ref={dropRef}
-      // Make this container "overflow-hidden" so each column can scroll independently
-      className="h-full w-full overflow-hidden text-primary80"
-    >
+    <div className="h-full w-full overflow-hidden text-primary80">
+      {/* Breadcrumb */}
       <Breadcrumb items={BREADCRUMB_ITEMS(businessProcessId)} navigate={navigate} />
 
-      {/**
-       * We'll use CSS grid with 2 columns:
-       * - If sidebarOpen = false,  left col is "auto" but we keep the original centered style.
-       *   The right col is `0%` or hidden.
-       * - If sidebarOpen = true,   left col is `(100% - sidebarWidthPct)%` and the right col is `sidebarWidthPct%`.
-       *
-       * We'll keep the left container "mx-auto w-3/5" if closed, or remove it if open
-       * so that it can expand. However, you can adapt as desired.
-       */}
       <div
-        className="grid transition-all duration-300 ease-in-out h-[calc(100vh-64px)]" 
-        style={{
-          gridTemplateColumns: sidebarOpen
-            ? `calc(${100 - sidebarWidthPct}% ) ${sidebarWidthPct}%`
-            : '100% 0%',
-        }}
+        className={`h-[calc(100vh-64px)] overflow-x-auto ${
+          sidebarOpen ? 'md:w-full' : 'md:w-3/5 md:mx-auto'
+        } transition-all ease-in-out duration-300`}
       >
-        {/** LEFT COLUMN: main content, with its own scroll. */}
-        <div className="overflow-y-auto h-full bg-white relative">
-          <div
-            // conditionally center it if the sidebar is closed
-            className={`p-4 flex flex-col min-h-full ${
-              sidebarOpen ? '' : 'mx-auto w-3/5'
-            }`}
-          >
-            {/* The entire main content */}
-            <WorkflowDetails
-              sidebarOpen={sidebarOpen}
-              onViewHistory={() => setSidebarOpen(true)}
-            />
-            <DataSourceCard />
-            <StepsList steps={STEPS_DATA} disabled />
+        <div className="min-w-[900px] h-full">
+          <PanelGroup direction="horizontal" className="w-full h-full">
+            {/* LEFT PANEL */}
+            <Panel defaultSize={60} minSize={40}>
+              <div className="overflow-y-auto h-full bg-white relative p-4 flex flex-col min-h-full">
+                <WorkflowDetails
+                  sidebarOpen={sidebarOpen}
+                  onViewHistory={() => setSidebarOpen(true)}
+                />
+                <DataSourceCard />
+                <StepsList steps={STEPS_DATA} disabled />
 
-            {/**
-             * The "Run Workflow" CTA is pinned at the bottom *inside*
-             * the scrollable container. We'll use `sticky` so that
-             * it remains visible as you scroll to the bottom.
-             */}
-            <div className="mt-auto sticky bottom-12 left-0 flex justify-center py-4 ">
-              <Button
-                className="rounded-lg hover:bg-purple-100 h-12 py-1 hover:text-white hover:opacity-80 w-3/4"
-                onClick={() => alert('implement run workflow')}
-              >
-                Run Workflow
-              </Button>
-            </div>
-          </div>
-        </div>
+                <div className="mt-auto sticky bottom-12 left-0 flex justify-center py-4">
+                  <Button
+                    className="rounded-lg hover:bg-purple-100 h-12 py-1 hover:text-white hover:opacity-80 w-3/4"
+                    onClick={() => alert('implement run workflow')}
+                  >
+                    Run Workflow
+                  </Button>
+                </div>
+              </div>
+            </Panel>
 
-        {/** RIGHT COLUMN: session history (plus the resize handle) */}
-        <div className="bg-gray-50 border-l border-gray-200 overflow-y-auto relative h-full flex">
-          {/* The drag handle on the left edge of the sidebar. */}
-          <ResizeHandle sidebarWidthPct={sidebarWidthPct} />
-
-          {sidebarOpen && <SessionHistoryPanel onClose={() => setSidebarOpen(false)} />}
+            {/* RIGHT PANEL */}
+            {sidebarOpen && (
+              <>
+                <PanelResizeHandle className="w-2 h-full cursor-col-resize bg-gray-200 hover:bg-gray-300" />
+                <Panel defaultSize={25} minSize={15}>
+                  <div className="bg-gray-50 border-l border-gray-200 overflow-y-auto h-full flex flex-col">
+                    <SessionHistoryPanel onClose={() => setSidebarOpen(false)} />
+                  </div>
+                </Panel>
+              </>
+            )}
+          </PanelGroup>
         </div>
       </div>
     </div>
   );
 }
 
+
 // ================================
-// Sub-Components (same as before)
+// Sub-Components
 // ================================
 const Breadcrumb = ({ items, navigate }) => (
   <div className="w-full px-5 py-3 border-t-2 border-b-2">
