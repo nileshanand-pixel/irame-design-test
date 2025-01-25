@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Panel,
@@ -16,6 +16,9 @@ import {
 } from '@/components/ui/card';
 import SessionHistoryPanel from './SessionHistoryPanel';
 import { DataSourceSelector } from './DataSourceSelector'; // Import your modal component
+import { CheckCircle2, XCircle } from 'lucide-react';
+import QueueStatus from '../../new-chat/QueueStatus';
+
 
 // ================================
 // Fake Data & Constants
@@ -155,9 +158,60 @@ const Step = ({ step, index, disabled }) => {
 };
 
 
-
 const DataSourceCard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDataSource, setSelectedDataSource] = useState(null);
+  const [validationStatus, setValidationStatus] = useState('idle'); // idle | validating | success | error
+  const [currentValidationText, setCurrentValidationText] = useState('');
+  const [validationResult, setValidationResult] = useState(null);
+
+  useEffect(() => {
+    if (validationStatus === 'validating') {
+      const texts = [
+        'Validating data source...',
+        'Checking data integrity...',
+        'Verifying permissions...',
+        'Finalizing...'
+      ];
+      let currentIndex = 0;
+      setCurrentValidationText(texts[currentIndex]);
+
+      const interval = setInterval(() => {
+        currentIndex = (currentIndex + 1) % texts.length;
+        setCurrentValidationText(texts[currentIndex]);
+      }, 2000);
+
+      const timeout = setTimeout(() => {
+        clearInterval(interval);
+        const isSuccess = Math.random() > 0.5;
+        if (isSuccess) {
+          setValidationStatus('success');
+          setValidationResult({
+            fields: [
+              { name: 'sales', type: 'number' },
+              { name: 'region', type: 'string' }
+            ]
+          });
+        } else {
+          setValidationStatus('error');
+          setValidationResult({
+            fileName: 'Untitled_1039.pdf (2,579K)',
+            error: 'Error found'
+          });
+        }
+      }, 6000);
+
+      return () => {
+        clearInterval(interval);
+        clearTimeout(timeout);
+      };
+    }
+  }, [validationStatus]);
+
+  const handleContinue = (dataSource) => {
+    setSelectedDataSource(dataSource);
+    setValidationStatus('validating');
+  };
 
   return (
     <>
@@ -180,16 +234,52 @@ const DataSourceCard = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="h-48 pb-4 border-b flex items-center justify-center rounded-md">
-            <p className="text-gray-500 text-sm">Recommendations will come here</p>
-          </div>
+          {validationStatus === 'idle' ? (
+            <div className="h-48 pb-4 border-b flex items-center justify-center rounded-md">
+              <p className="text-gray-500 text-sm">Recommendations will come here</p>
+            </div>
+          ) : validationStatus === 'validating' ? (
+            <div className="h-48 pb-4 border-b flex items-center justify-center rounded-md">
+              <QueueStatus text={currentValidationText} />
+            </div>
+          ) : validationStatus === 'success' ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <span className="font-medium">{selectedDataSource.name}</span>
+                <span className="text-green-600">Validated</span>
+              </div>
+              <div className="space-y-2">
+                {validationResult?.fields?.map((field) => (
+                  <div key={field.name} className="flex items-center gap-2">
+                    <span className="text-gray-700">{field.name}</span>
+                    <span className="text-gray-500 text-sm">{field.type}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : validationStatus === 'error' ? (
+            <div
+              className="p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+              onClick={() => alert('Error details modal to be implemented')}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{validationResult?.fileName}</span>
+                <span className="text-red-600 text-sm flex items-center gap-1">
+                  <XCircle className="w-4 h-4" />
+                  Error found
+                </span>
+              </div>
+            </div>
+          ) : null}
           <VariablesSection />
         </CardContent>
       </Card>
 
-      <DataSourceSelector 
+      <DataSourceSelector
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
+        onContinue={handleContinue}
       />
     </>
   );

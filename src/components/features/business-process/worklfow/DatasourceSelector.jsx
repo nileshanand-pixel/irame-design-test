@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import DividerWithText from '@/components/elements/DividerWithText';
+import PropTypes from 'prop-types';
 
-export function DataSourceSelector({ open, onOpenChange }) {
+export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedDataSourceId, setSelectedDataSourceId] = useState(null);
 	const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +43,7 @@ export function DataSourceSelector({ open, onOpenChange }) {
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-screen-sm rounded-lg p-4 text-primary80">
+			<DialogContent className="max-w-lg rounded-lg p-4 text-primary80">
 				<DialogHeader className="">
 					<div className="flex gap-4 items-center">
 						<img
@@ -74,7 +75,7 @@ export function DataSourceSelector({ open, onOpenChange }) {
 				</div>
 
 				{/* Data List Area */}
-				<div className="max-h-72 overflow-y-auto border-2 rounded-lg">
+				<div className="max-h-96 overflow-y-auto border-2 rounded-lg">
 					{isLoading ? (
 						// Loading Skeletons
 						Array.from({ length: 5 }).map((_, i) => (
@@ -140,8 +141,12 @@ export function DataSourceSelector({ open, onOpenChange }) {
 						disabled={!selectedDataSourceId}
 						className="w-1/2"
 						onClick={() => {
-							// Handle continue action here
-							console.log('Selected ID:', selectedDataSourceId);
+							const selectedDataSource = mockData.find(
+								(item) => item.id === selectedDataSourceId,
+							);
+							if (selectedDataSource) {
+								onContinue(selectedDataSource);
+							}
 							onOpenChange(false);
 						}}
 					>
@@ -152,3 +157,9 @@ export function DataSourceSelector({ open, onOpenChange }) {
 		</Dialog>
 	);
 }
+
+DataSourceSelector.propTypes = {
+	open: PropTypes.bool,
+	onOpenChange: PropTypes.func,
+	onContinue: PropTypes.func,
+};
