@@ -15,6 +15,7 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import SessionHistoryPanel from './SessionHistoryPanel';
+import { DataSourceSelector } from './DataSourceSelector'; // Import your modal component
 
 // ================================
 // Fake Data & Constants
@@ -153,33 +154,47 @@ const Step = ({ step, index, disabled }) => {
   );
 };
 
-const DataSourceCard = () => (
-  <Card className="mb-8 text-primary80 border border-black/10 rounded-xl shadow-none">
-    <CardHeader>
-      <div className="flex justify-between border-b pb-3">
-        <div>
-          <CardTitle className="text-lg font-semibold">Data Source</CardTitle>
-          <CardDescription className="text-sm text-primary60">
-            Securely connect to a datasource
-          </CardDescription>
-        </div>
-        <Button
-          variant="outline"
-          className="rounded-lg bg-purple-8 font-medium border-none hover:bg-purple-4"
-          onClick={() => alert('We will have a modal')}
-        >
-          Connect Data Source
-        </Button>
-      </div>
-    </CardHeader>
-    <CardContent className="space-y-6">
-      <div className="h-48 pb-4 border-b flex items-center justify-center rounded-md">
-        <p className="text-gray-500 text-sm">Recommendations will come here</p>
-      </div>
-      <VariablesSection />
-    </CardContent>
-  </Card>
-);
+
+
+const DataSourceCard = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  return (
+    <>
+      <Card className="mb-8 text-primary80 border border-black/10 rounded-xl shadow-none">
+        <CardHeader>
+          <div className="flex justify-between border-b pb-3">
+            <div>
+              <CardTitle className="text-lg font-semibold">Data Source</CardTitle>
+              <CardDescription className="text-sm text-primary60">
+                Securely connect to a datasource
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              className="rounded-lg bg-purple-8 font-medium border-none hover:bg-purple-4"
+              onClick={() => setIsModalOpen(true)}
+            >
+              Connect Data Source
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="h-48 pb-4 border-b flex items-center justify-center rounded-md">
+            <p className="text-gray-500 text-sm">Recommendations will come here</p>
+          </div>
+          <VariablesSection />
+        </CardContent>
+      </Card>
+
+      <DataSourceSelector 
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+      />
+    </>
+  );
+};
+
 
 const VariablesSection = () => (
   <div>
