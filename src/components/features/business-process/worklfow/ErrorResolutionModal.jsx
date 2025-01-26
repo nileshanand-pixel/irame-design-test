@@ -120,8 +120,8 @@ export const ErrorResolutionModal = ({
 						<div className="col-span-2 flex items-center py-4 px-3 border-r-2">
 							S. No.
 						</div>
-						<div className="col-span-4 flex py-4 px-3 items-center border-r-2">
-							Required Field
+						<div className="col-span-4 flex py-4 px-3 items-center border-r-2 whitespace-nowrap">
+							Required Field (not found)
 						</div>
 						<div className="col-span-6 flex py-4 px-3 items-center">
 							Add Field
@@ -165,7 +165,7 @@ export const ErrorResolutionModal = ({
 															column,
 														)
 													}
-													className="hover:bg-purple-4 text-primary80 px-4 py-2 flex justify-between items-center"
+													className={` ${mappings[index] === column && 'bg-purple-4'} text-primary80 px-4 py-2 flex justify-between items-center`}
 												>
 													<span>{column}</span>
 													{mappings[index] === column && (

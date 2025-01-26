@@ -67,10 +67,10 @@ export default function WorkflowPage() {
 
 			<div
 				className={`h-[calc(100vh-64px)] overflow-x-auto ${
-					sidebarOpen ? 'md:w-full' : 'md:w-3/5 md:mx-auto'
+					sidebarOpen ? 'md:w-full' : 'w-full lg:w-3/5 md:mx-auto'
 				} transition-all ease-in-out duration-300`}
 			>
-				<div className="min-w-[900px] h-full">
+				<div className="w-full h-full">
 					<PanelGroup direction="horizontal" className="w-full h-full">
 						{/* LEFT PANEL */}
 						<Panel defaultSize={60} minSize={40}>
@@ -266,7 +266,7 @@ const DataSourceCard = ({ onValidationSuccess }) => {
 							fileName: 'Untitled_1039.xlsx',
 							status: isSuccess ? 'success' : 'error',
 							error: isSuccess ? null : 'Format validation failed',
-							missingFields: ['Email', 'Email', 'Email', 'Email'], // Mock missing fields
+							missingFields: ['Email', 'Name', 'Job', 'City'], // Mock missing fields
 							// Other file properties...
 						},
 						{
