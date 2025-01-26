@@ -24,8 +24,8 @@ const SearchBar = ({ value, onChange }) => (
 );
 
 const EmptyStateWrapper = ({ config }) => (
-	<div className="h-full flex items-center justify-center">
-		<EmptyState config={config} />
+	<div className="flex justify-center">
+		<EmptyState className="h-full" config={config} />
 	</div>
 );
 
