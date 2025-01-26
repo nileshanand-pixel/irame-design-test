@@ -79,6 +79,11 @@ module.exports = {
 				state: {
 					inProgress: 'rgb(181,71,8)',
 					done:'rgb(2,122,72)',
+					error: 'rgba(220, 104, 3, 1)'
+				},
+				stateBg: {
+					inProgress: 'rgb(255, 250, 235)',
+					done: 'rgb(236, 253, 243)'
 				},
     			gray: {
     				'1': 'rgba(78, 78, 78, 0.1)',

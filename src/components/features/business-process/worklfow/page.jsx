@@ -12,8 +12,15 @@ import {
 } from '@/components/ui/card';
 import SessionHistoryPanel from './SessionHistoryPanel';
 import { DataSourceSelector } from './DataSourceSelector'; // Import your modal component
-import { CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import QueueStatus from '../../new-chat/QueueStatus';
+import { getFileIcon } from '@/lib/utils';
+import { ErrorResolutionModal } from './ErrorResolutionModal';
+
+const gradientStyle = {
+	background: `
+linear-gradient(180deg, rgba(106, 18, 205, 0.02) 0%, rgba(106, 18, 205, 0.04) 100%)`,
+};
 
 // ================================
 // Fake Data & Constants
@@ -164,27 +171,37 @@ const Step = ({ step, index, disabled }) => {
 
 const ValidationStatus = ({ validationResult, onErrorClick }) => {
 	return (
-		<div className="space-y-4 w-full text-left">
+		<div className="space-y-4 w-full text-left mb-6">
 			{validationResult?.files?.map((file, index) => (
 				<div
 					key={index}
-					className="p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
-					onClick={file.status === 'error' ? onErrorClick : undefined}
+					className="p-3 border-[1.5px] border-purple-1 rounded-xl hover:bg-gray-50 flex justify-between items-center"
+					style={gradientStyle}
 				>
-					<div className="flex items-center gap-2">
+					<div className="flex items-center gap-3">
+						<img
+							src={getFileIcon(file?.fileName)}
+							alt="file-icon"
+							className="size-6"
+						/>
 						<span className="text-sm font-medium">{file.fileName}</span>
-						{file.status === 'success' ? (
-							<span className="text-green-600 text-sm flex items-center gap-1">
-								<CheckCircle2 className="w-4 h-4" />
-								Validated
-							</span>
-						) : (
-							<span className="text-red-600 text-sm flex items-center gap-1">
-								<XCircle className="w-4 h-4" />
-								{file.error || 'Error found'}
-							</span>
-						)}
 					</div>
+					{file.status === 'success' ? (
+						<span className="text-state-done bg-stateBg-done px-2 py-1 rounded-lg font-semibold text-sm flex items-center gap-1">
+							<span class="material-symbols-outlined">
+								check_circle
+							</span>
+							Validated
+						</span>
+					) : (
+						<span
+							onClick={() => onErrorClick(file)}
+							className="text-state-error bg-stateBg-inProgress text-sm px-2 rounded-lg font-semibold py-1 flex items-center gap-1"
+						>
+							<span class="material-symbols-outlined">error</span>
+							{file.error || 'Error found'}
+						</span>
+					)}
 				</div>
 			))}
 		</div>
@@ -198,6 +215,28 @@ const DataSourceCard = ({ onValidationSuccess }) => {
 	const [currentValidationText, setCurrentValidationText] = useState('');
 	const [validationResult, setValidationResult] = useState(null);
 	const [hasAttemptedResolution, setHasAttemptedResolution] = useState(false);
+	const [resolutionFile, setResolutionFile] = useState(null);
+	const [isResolutionOpen, setIsResolutionOpen] = useState(false);
+
+	const handleErrorClick = (file) => {
+		setResolutionFile(file);
+		setIsResolutionOpen(true);
+	};
+
+	const handleResolutionComplete = ({ fileName, mappings }) => {
+		setValidationResult((prev) => ({
+			...prev,
+			files: prev.files.map((f) =>
+				f.fileName === fileName
+					? {
+							...f,
+							status: 'resolved',
+							mappings,
+						}
+					: f,
+			),
+		}));
+	};
 
 	useEffect(() => {
 		if (validationStatus === 'validating') {
@@ -224,14 +263,18 @@ const DataSourceCard = ({ onValidationSuccess }) => {
 				const result = {
 					files: [
 						{
-							fileName: 'Untitled_1039.pdf (2,579K)',
+							fileName: 'Untitled_1039.xlsx',
 							status: isSuccess ? 'success' : 'error',
 							error: isSuccess ? null : 'Format validation failed',
+							missingFields: ['Email', 'Email', 'Email', 'Email'], // Mock missing fields
+							// Other file properties...
 						},
 						{
-							fileName: 'Sales_Q2.csv (1,234K)',
+							fileName: 'Sales_Q2.csv',
 							status: isSuccess ? 'success' : 'error',
-							error: isSuccess ? null : 'Data mismatch',
+							error: isSuccess ? null : 'Data Mismatch',
+							missingFields: ['CustomerID', 'OrderDate'], // Mock different missing fields
+							// Other file properties...
 						},
 					],
 				};
@@ -257,15 +300,26 @@ const DataSourceCard = ({ onValidationSuccess }) => {
 		setValidationStatus('validating');
 	};
 
+	const handleOpenModal = () => {
+		if (validationStatus === 'validating') return;
+
+		if (validationResult || selectedDataSource) {
+			const confirm = window.confirm(
+				'Your progress will be lost. Do you want to continue?',
+			);
+			if (!confirm) return;
+
+			setSelectedDataSource(null);
+			setValidationResult(null);
+			setValidationStatus('idle');
+		}
+
+		setIsModalOpen(true);
+	};
+
 	const handleRevalidate = () => {
 		setHasAttemptedResolution(true);
 		setValidationStatus('validating');
-	};
-
-	const handleErrorClick = () => {
-		// This will open the error resolution modal
-		setHasAttemptedResolution(true);
-		alert('Error resolution modal to be implemented');
 	};
 
 	return (
@@ -281,28 +335,32 @@ const DataSourceCard = ({ onValidationSuccess }) => {
 								Securely connect to a datasource
 							</CardDescription>
 						</div>
-						{validationStatus === 'error' ? (
+						<div className="flex gap-2">
+							{validationResult && (
+								<Button
+									variant="outline"
+									className="rounded-lg font-medium"
+									onClick={handleRevalidate}
+									disabled={validationStatus === 'validating'}
+								>
+									<RefreshCw className="w-4 h-4 mr-2" />
+									Re-validate
+								</Button>
+							)}
 							<Button
 								variant="outline"
 								className="rounded-lg bg-purple-8 font-medium border-none hover:bg-purple-4"
-								onClick={handleRevalidate}
+								onClick={handleOpenModal}
+								disabled={validationStatus === 'validating'}
 							>
-								<RefreshCw className="w-4 h-4 mr-2" />
-								Re-validate
+								{selectedDataSource
+									? 'Try another data source'
+									: 'Connect Data Source'}
 							</Button>
-						) : (
-							<Button
-								variant="outline"
-								className="rounded-lg bg-purple-8 font-medium border-none hover:bg-purple-4"
-								onClick={() => setIsModalOpen(true)}
-							>
-								Connect Data Source
-							</Button>
-						)}
+						</div>
 					</div>
 				</CardHeader>
 				<CardContent className="space-y-6">
-					{/* Validation Status Section */}
 					{validationStatus !== 'idle' && (
 						<div className="border-b pb-6">
 							{validationStatus === 'validating' ? (
@@ -333,6 +391,12 @@ const DataSourceCard = ({ onValidationSuccess }) => {
 				open={isModalOpen}
 				onOpenChange={setIsModalOpen}
 				onContinue={handleContinue}
+			/>
+			<ErrorResolutionModal
+				open={isResolutionOpen}
+				onOpenChange={setIsResolutionOpen}
+				file={resolutionFile}
+				onResolutionComplete={handleResolutionComplete}
 			/>
 		</>
 	);
@@ -449,3 +513,15 @@ const DetailsForm = ({ fields }) => (
 		))}
 	</div>
 );
+
+const generateMockColumns = (count) => {
+	const baseColumns = ['Name', 'Address', 'Phone', 'Company', 'JobTitle'];
+	const remaining = count - baseColumns.length;
+	return [
+		...baseColumns,
+		...Array.from(
+			{ length: remaining },
+			(_, i) => `Column_${(i + 1).toString().padStart(2, '0')}`,
+		),
+	];
+};
