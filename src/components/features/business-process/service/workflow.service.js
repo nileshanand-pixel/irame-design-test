@@ -27,4 +27,3 @@ export const getWorkflowDetails = async (token, workflowCheckId) => {
 	});
 	return response.data;
 };
-

@@ -31,12 +31,12 @@ const WorkflowDetails = ({ workflowDetails, sidebarOpen, onViewHistory }) => {
                 <span className="material-symbols-outlined text-xl rounded-md p-1">history</span>
               </Button>
             )}
-            <Button
+            {/* <Button
               className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
               onClick={() => alert('implement update workflow')}
             >
               Update Workflow
-            </Button>
+            </Button> */}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">

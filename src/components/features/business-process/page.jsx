@@ -87,12 +87,12 @@ const BusinessProcessPage = () => {
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
 					/>
-					<Button
+					{/* <Button
 						className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 						disabled
 					>
 						Create New Process
-					</Button>
+					</Button> */}
 				</div>
 
 				<div className="px-4 py-2 mb-4 overflow-y-auto max-h-[calc(100vh-270px)]">
