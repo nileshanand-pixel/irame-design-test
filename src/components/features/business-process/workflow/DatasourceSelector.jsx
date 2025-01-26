@@ -1,44 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { cn, getToken } from '@/lib/utils';
 import DividerWithText from '@/components/elements/DividerWithText';
 import PropTypes from 'prop-types';
+import { getDataSources } from '../../configuration/service/configuration.service';
 
 export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedDataSourceId, setSelectedDataSourceId] = useState(null);
-	const [isLoading, setIsLoading] = useState(true);
-	const [mockData, setMockData] = useState([]);
 
-	// Simulated API call
-	useEffect(() => {
-		const fetchData = async () => {
-			// Simulate API delay
-			await new Promise((resolve) => setTimeout(resolve, 10000));
+	const fetchDataSources = async () => {
+		const token = getToken();
+		const data = await getDataSources(token);
+		return Array.isArray(data) ? data : [];
+	};
 
-			// Mock data - replace with actual API call
-			setMockData([
-				{ id: '1', name: 'Q1 Sales data' },
-				{ id: '2', name: 'Q2 Marketing data' },
-				{ id: '3', name: '2023 Customer analytics' },
-				{ id: '4', name: 'Q1 Sales data' },
-				{ id: '5', name: 'Q2 Marketing data' },
-				{ id: '6', name: '2023 Customer analytics' },
-				{ id: '7', name: 'Q1 Sales data' },
-				{ id: '8', name: 'Q2 Marketing data' },
-				{ id: '9', name: '2023 Customer analytics' },
-			]);
-			setIsLoading(false);
-		};
+	const { data: dataSources, isLoading: isFetchingData } = useQuery({
+		queryKey: ['data-sources'],
+		queryFn: fetchDataSources,
+	});
 
-		fetchData();
-	}, []);
-
-	const filteredData = mockData.filter((item) =>
-		item.name.toLowerCase().includes(searchQuery.toLowerCase()),
+	const filteredData = (dataSources || []).filter((item) =>
+		item.name.toLowerCase().startsWith(searchQuery.toLowerCase()),
 	);
 
 	return (
@@ -76,8 +63,7 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 
 				{/* Data List Area */}
 				<div className="max-h-96 overflow-y-auto border-2 rounded-lg">
-					{isLoading ? (
-						// Loading Skeletons
+					{isFetchingData ? (
 						Array.from({ length: 5 }).map((_, i) => (
 							<div key={i} className="flex items-center gap-4 p-3">
 								<Skeleton className="h-5 w-5 rounded-full" />
@@ -85,12 +71,10 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 							</div>
 						))
 					) : filteredData.length === 0 ? (
-						// No results state
 						<div className="h-32 flex items-center justify-center text-muted-foreground">
 							No such data source found
 						</div>
 					) : (
-						// Data source list
 						filteredData.map((item) => (
 							<label
 								key={item.id}
@@ -116,7 +100,6 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 
 				<DividerWithText className="-my-2" text="Or" />
 
-				{/* Upload Data Source (Placeholder) */}
 				<Button
 					variant="outline"
 					onClick={() => alert('implement upload')}
@@ -128,7 +111,6 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 					<span>Upload Data Source</span>
 				</Button>
 
-				{/* Footer Buttons */}
 				<div className="flex justify-between gap-3 pt-2">
 					<Button
 						className="w-1/2"
@@ -141,7 +123,7 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 						disabled={!selectedDataSourceId}
 						className="w-1/2"
 						onClick={() => {
-							const selectedDataSource = mockData.find(
+							const selectedDataSource = (dataSources || []).find(
 								(item) => item.id === selectedDataSourceId,
 							);
 							if (selectedDataSource) {
