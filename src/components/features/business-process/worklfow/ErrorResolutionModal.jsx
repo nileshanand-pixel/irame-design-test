@@ -23,9 +23,10 @@ export const ErrorResolutionModal = ({
 	onResolutionComplete,
 }) => {
 	const [mappings, setMappings] = useState({});
+	const [clarification, setClarification] = useState('');
 	const [hasChanges, setHasChanges] = useState(false);
 
-	// Mock columns data - 48 columns as per the example
+	// Mock columns data
 	const availableColumns = [
 		'Name',
 		'Address',
@@ -38,21 +39,15 @@ export const ErrorResolutionModal = ({
 		),
 	];
 
-	// Mock required missing fields (from validation result)
-	const missingFields = file?.missingFields || [
-		'Email',
-		'Email',
-		'Email',
-		'Email',
-	];
+	const missingFields = file?.missingFields || ['Email', 'Name', 'Job', 'City'];
 
 	useEffect(() => {
-		// Initialize mappings
 		const initialMappings = {};
 		missingFields.forEach((_, index) => {
 			initialMappings[index] = '';
 		});
 		setMappings(initialMappings);
+		setClarification('');
 		setHasChanges(false);
 	}, [file]);
 
@@ -64,10 +59,16 @@ export const ErrorResolutionModal = ({
 		setHasChanges(true);
 	};
 
+	const handleClarificationChange = (e) => {
+		setClarification(e.target.value);
+		setHasChanges(true);
+	};
+
 	const handleContinue = () => {
 		onResolutionComplete({
 			fileName: file.fileName,
 			mappings,
+			clarification,
 		});
 		onOpenChange(false);
 	};
@@ -78,8 +79,7 @@ export const ErrorResolutionModal = ({
 				<DialogHeader>
 					<div className="flex gap-4 items-center">
 						<img
-							src="https://d2vkmtgu2mxkyq.cloudfront.net/file_validation_error_modal_header.svg
-"
+							src="https://d2vkmtgu2mxkyq.cloudfront.net/file_validation_error_modal_header.svg"
 							alt="icon"
 						/>
 						<div className="flex flex-col">
@@ -109,25 +109,30 @@ export const ErrorResolutionModal = ({
 						<div>{availableColumns.length} Columns</div>
 					</div>
 					<div className="text-state-error gap-2 items-center font-semibold flex w-fit bg-stateBg-inProgress px-3 py-1 rounded-md text-sm">
-						<span class="material-symbols-outlined">error</span>
+						<span className="material-symbols-outlined">error</span>
 						Required Field not found: {file?.missingFields?.length || 0}
 					</div>
 				</div>
-				{/* Table Section */}
+
+				{/* Scrollable Table Section */}
 				<div className="border-2 mx-2 rounded-lg overflow-hidden">
-					{/* Table Header */}
-					<div className="grid grid-cols-12 bg-gray-100 text-black font-semibold text-sm  border-b-2">
-						<div className="col-span-2 flex items-center py-4 px-3 border-r-2 ">S. No.</div>
-						<div className="col-span-4 flex py-4 px-3 items-center border-r-2 ">Required Field (not found)</div>
-						<div className="col-span-6 flex py-4 px-3 items-center  ">Add Field</div>
+					<div className="sticky top-0 grid grid-cols-12 bg-gray-100 text-black font-semibold text-sm border-b-2 z-10">
+						<div className="col-span-2 flex items-center py-4 px-3 border-r-2">
+							S. No.
+						</div>
+						<div className="col-span-4 flex py-4 px-3 items-center border-r-2">
+							Required Field
+						</div>
+						<div className="col-span-6 flex py-4 px-3 items-center">
+							Add Field
+						</div>
 					</div>
 
-					{/* Table Rows */}
-					<div className="divide-y">
+					<div className="max-h-52 overflow-y-auto">
 						{file?.missingFields?.map((field, index) => (
 							<div
 								key={index}
-								className="grid grid-cols-12"
+								className={`grid grid-cols-12 ${index === file?.missingFields?.length - 1 ? '' : 'border-b-2'}`}
 							>
 								<div className="col-span-2 hover:bg-gray-100 flex items-center py-1 px-3 border-r-2">
 									{index + 1}
@@ -135,21 +140,22 @@ export const ErrorResolutionModal = ({
 								<div className="col-span-4 flex hover:bg-gray-100 items-center py-1 px-3 border-r-2 font-medium">
 									{field}
 								</div>
-								<div className="col-span-6 flex  items-center py-1 px-3">
+								<div className="col-span-6 flex items-center py-1 px-3">
 									<DropdownMenu>
 										<DropdownMenuTrigger asChild>
 											<Button
 												variant="outline"
 												className={cn(
-													'w-full justify-between border-none hover:bg-transparent cursor-pointer text-purple-100 hover:text-purple-80',
-													mappings[index] &&
-														'text-purple-100',
+													'w-full justify-between border-none hover:bg-transparent hover:text-black/50 cursor-pointer outline-none',
+													mappings[index]
+														? 'text-black/80'
+														: 'text-purple-100',
 												)}
 											>
 												{mappings[index] || '+ Add Field'}
 											</Button>
 										</DropdownMenuTrigger>
-										<DropdownMenuContent className="max-h-60 overflow-y-auto p-0">
+										<DropdownMenuContent className="max-h-60 w-64 overflow-y-auto p-0">
 											{availableColumns.map((column) => (
 												<DropdownMenuItem
 													key={column}
@@ -159,9 +165,14 @@ export const ErrorResolutionModal = ({
 															column,
 														)
 													}
-                                                    className="hover:bg-purple-4 text-primary80 border-b font-medium px-4 py-2"
+													className="hover:bg-purple-4 text-primary80 px-4 py-2 flex justify-between items-center"
 												>
-													{column}
+													<span>{column}</span>
+													{mappings[index] === column && (
+														<span className="material-symbols-outlined text-purple-100">
+															check
+														</span>
+													)}
 												</DropdownMenuItem>
 											))}
 										</DropdownMenuContent>
@@ -174,23 +185,25 @@ export const ErrorResolutionModal = ({
 
 				<DividerWithText className="-my-2" text="Or" />
 
-				{/* Written Clarification */}
+				{/* Scrollable Textarea */}
 				<div className="mx-2 flex flex-col">
 					<Label
 						htmlFor="clarification_text"
-						className="block text-sm font-medium text-gray-700 mb-1"
+						className="block font-medium text-lg mb-1"
 					>
 						Write Clarification
 					</Label>
-
 					<textarea
 						id="clarification_text"
-						value=""
-						className="w-full px-3 py-2 border rounded-md bg-purple-4/8 text-gray-500 focus:outline-none resize-none"
+						value={clarification}
+						onChange={handleClarificationChange}
+						className="w-full px-3 py-2 border text-black/60 rounded-md bg-purple-4/8 focus:outline-none 
+                     resize-none max-h-48 overflow-y-auto h-32 min-h-[8rem]"
+						placeholder="Enter your clarification..."
 					/>
 				</div>
 
-				{/* Footer */}
+				{/* Footer Buttons */}
 				<div className="flex justify-between gap-3 pt-4">
 					<Button
 						className="w-1/2"
@@ -203,7 +216,8 @@ export const ErrorResolutionModal = ({
 						onClick={handleContinue}
 						disabled={!hasChanges}
 						className={cn(
-							!hasChanges && 'opacity-50 cursor-not-allowed', 'w-1/2'
+							'w-1/2',
+							!hasChanges && 'opacity-50 cursor-not-allowed',
 						)}
 					>
 						Continue
