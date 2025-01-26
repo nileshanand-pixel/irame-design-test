@@ -142,12 +142,12 @@ const SingleBusinessProcessPage = () => {
                 isFocused={isFocused}
                 setIsFocused={setIsFocused}
               />
-              <Button
+              {/* <Button
                 className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
                 onClick={() => alert('implement create new workflow')}
               >
                 Create New Workflow
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>
