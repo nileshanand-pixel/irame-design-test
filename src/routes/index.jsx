@@ -14,8 +14,8 @@ import ReportsInDatasource from '@/components/features/reports/datasource_report
 import ReportFolders from '@/components/features/reports/Page';
 import TermsModal from '@/components/TermsModal';
 import BusinessProcessPage from '@/components/features/business-process/page';
-import SingleBusinessProcessPage from '@/components/features/business-process/SingleBusinessProcess';
-import WorkflowPage from '@/components/features/business-process/worklfow/page';
+import WorkflowPage from '@/components/features/business-process/workflow/page';
+import SingleBusinessProcessPage from '@/components/features/business-process/single-business-process/SingleBusinessProcess';
 
 
 const AppRoutes = () => {

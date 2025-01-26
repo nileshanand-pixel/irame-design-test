@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,8 @@ import { cn, getToken } from '@/lib/utils';
 import EmptyState from '@/components/elements/EmptyState';
 import WorkflowCard from './WorkflowCard';
 import WorkflowSkeleton from './WorkflowCardSkeleton';
-import { getWorkflowsByBusinessProcess, getBusinessProcesses } from './service/workflow.service';
+import { getBusinessProcesses, getWorkflowsByBusinessProcess } from '../service/workflow.service';
+
 
 const EmptyStateWrapper = ({ config }) => (
   <div className="flex justify-center">
