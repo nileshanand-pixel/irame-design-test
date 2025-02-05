@@ -1,4 +1,3 @@
-// src/AppRoutes.js
 import { Navigate, Route, Routes } from 'react-router-dom';
 import SignInSignUp from '@/components/features/login/page';
 import NewChat from '@/components/features/new-chat/page';
@@ -14,6 +13,10 @@ import DataSource from '@/components/features/configuration/datasource/page';
 import ReportsInDatasource from '@/components/features/reports/datasource_reports/Page';
 import ReportFolders from '@/components/features/reports/Page';
 import TermsModal from '@/components/TermsModal';
+import BusinessProcessPage from '@/components/features/business-process/page';
+import WorkflowPage from '@/components/features/business-process/workflow/page';
+import SingleBusinessProcessPage from '@/components/features/business-process/single-business-process/SingleBusinessProcess';
+
 
 const AppRoutes = () => {
 	return (
@@ -93,6 +96,31 @@ const AppRoutes = () => {
 									element={
 										<ProtectedRoute
 											element={<ReportFolders />}
+										/>
+									}
+								/>
+								{/* New Business Process Routes */}
+								<Route
+									path="business-process"
+									element={
+										<ProtectedRoute
+											element={<BusinessProcessPage />}
+										/>
+									}
+								/>
+								<Route
+									path="business-process/:businessProcessId"
+									element={
+										<ProtectedRoute
+											element={<SingleBusinessProcessPage />}
+										/>
+									}
+								/>
+								<Route
+									path="business-process/:businessProcessId/workflows/:workflowId"
+									element={
+										<ProtectedRoute
+											element={<WorkflowPage />}
 										/>
 									}
 								/>

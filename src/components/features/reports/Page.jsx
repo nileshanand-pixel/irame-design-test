@@ -63,7 +63,7 @@ const ReportFolders = () => {
 	};
 
 	return (
-		<div className="w-full h-full ">
+		<div className="w-full h-full">
 			<div className="w-full flex justify-between mt-2 ">
 				<h2 className="text-2xl font-semibold text-primary80 ">Reports</h2>
 				<div className="flex items-center gap-4">
@@ -102,7 +102,7 @@ const ReportFolders = () => {
 			) : datasources.length === 0 ? (
 				<EmptyState config={emptyStateConfig} />
 			) : filteredList.length > 0 ? (
-				<div className="w-full mt-6 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+				<div className="w-full overflow-y-auto h-[90%] mt-6 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 					{filteredList.map((item) => (
 						<DataSourceCard key={item.datasource_id} data={item} />
 					))}
