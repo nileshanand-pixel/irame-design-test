@@ -90,8 +90,8 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 									type="radio"
 									name="data-source"
 									className="h-4 w-4 text-primary border-gray-300"
-									checked={selectedDataSourceId === item.id}
-									onChange={() => setSelectedDataSourceId(item.id)}
+									checked={selectedDataSourceId === item.datasource_id}
+									onChange={() => setSelectedDataSourceId(item.datasource_id)}
 								/>
 							</label>
 						))
@@ -124,7 +124,7 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 						className="w-1/2"
 						onClick={() => {
 							const selectedDataSource = (dataSources || []).find(
-								(item) => item.id === selectedDataSourceId,
+								(item) => item.datasource_id === selectedDataSourceId,
 							);
 							if (selectedDataSource) {
 								onContinue(selectedDataSource);

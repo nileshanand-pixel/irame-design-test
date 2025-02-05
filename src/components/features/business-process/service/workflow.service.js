@@ -10,7 +10,7 @@ export const getBusinessProcesses = async (token) => {
 	return response.data;
 };
 export const getWorkflowsByBusinessProcess = async (token, businessProcessId) => {
-	const response = await axiosClientV1.get(`/workflow-checks/business-process/${businessProcessId}`, data, {
+	const response = await axiosClientV1.get(`/workflow-checks/business-process/${businessProcessId}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -29,10 +29,29 @@ export const getWorkflowDetails = async (token, workflowCheckId) => {
 };
 
 export const initiateWorkflowCheck = async (token, workflowCheckId,  data) => {
-	const response = await axiosClientV1.post(`/workflow-checks/${workflowCheckId}`, {
+	const response = await axiosClientV1.post(`/workflow-checks/${workflowCheckId}/initiate`, data, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
 	});
 	return response.data;
 };
+
+export const getWorkflowRunDetails = async (token,workflowCheckId,  workflowRunId) => {
+	const response = await axiosClientV1.get(`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+}
+
+
+export const getWorkflowRuns = async (token, workflowCheckId,) => {
+	const response = await axiosClientV1.get(`/workflow-checks/${workflowCheckId}/runs`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+}
