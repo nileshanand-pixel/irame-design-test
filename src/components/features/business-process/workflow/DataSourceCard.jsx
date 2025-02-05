@@ -23,7 +23,7 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
   const [validationStatus, setValidationStatus] = useState(runId ? 'IN_QUEUE' : 'idle');
   const [validationResult, setValidationResult] = useState(null);
   const [resolutionFile, setResolutionFile] = useState(null);
-  const [isResolutionOpen, setIsResolutionOpen] = useState(false);
+  const [isResolutionOpen, setIsResolutionOpen] = useState(true);
   const [currentValidationText, setCurrentValidationText] = useState('');
   const [activeTab, setActiveTab] = useState(null);
 
