@@ -22,8 +22,7 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
   const [selectedDatasourceId, setselectedDatasourceId] = useState(null);
   const [validationStatus, setValidationStatus] = useState(runId ? 'IN_QUEUE' : 'idle');
   const [validationResult, setValidationResult] = useState(null);
-  const [resolutionFile, setResolutionFile] = useState(null);
-  const [isResolutionOpen, setIsResolutionOpen] = useState(true);
+  const [isResolutionOpen, setIsResolutionOpen] = useState(false);
   const [currentValidationText, setCurrentValidationText] = useState('');
   const [activeTab, setActiveTab] = useState(null);
 
@@ -40,10 +39,13 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
       setCurrentValidationText(runDetails?.data?.status_text || '');
       setselectedDatasourceId(runDetails?.datasource_id);
       const newStatus = runDetails.status;
+
+      
       if (['IN_QUEUE', 'VALIDATING'].includes(newStatus)) {
         setValidationStatus('validating');
       } else if (newStatus === 'NEED_CLARIFICATION') {
         setValidationStatus('NEED_CLARIFICATION');
+        setIsResolutionOpen(true);
       }
     }
   }, [runDetails]);
@@ -71,15 +73,15 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
     if (data?.datasource_id) {
       initiateWorkflowCheckMutation.mutateAsync({
         workflowId,
-        payload: { datasource_id: data.datasource_id,
-          variables: 
-         Object.fromEntries(
-          Object.entries(variables).map(([key, value]) => [
-            key,
-            { ...value, value: value.default_value }
-          ])
-        )
-         },
+        payload: { 
+          datasource_id: data.datasource_id,
+          variables: Object.fromEntries(
+            Object.entries(variables).map(([key, value]) => [
+              key,
+              { ...value, value: value.default_value }
+            ])
+          )
+        },
       });
     }
   };
@@ -121,9 +123,8 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
         </div>
   
         {activeTab && (
-          <div className="mt-4 rounded-xl  h-fit p-4 w-full">
-            {/* <h4 className="text-base font-semibold text-primary80 mb-2">{activeTab}</h4> */}
-            <ul className=" flex items-center rounded-full gap-2 text-sm text-black/80">
+          <div className="mt-4 rounded-xl h-fit p-4 w-full">
+            <ul className="flex items-center rounded-full gap-2 text-sm text-black/80">
               {dataPoints
                 .find((file) => file.file_name === activeTab)
                 ?.headers.map((header) => (
@@ -137,20 +138,14 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
       </div>
     );
   };
-  
 
-  const handleErrorClick = (file) => {
-    setResolutionFile(file);
-    setIsResolutionOpen(true);
-  };
-
-  const handleResolutionComplete = ({ fileName, mappings }) => {
+  const handleResolutionComplete = (resolutionData) => {
     setValidationResult((prev) => ({
       ...prev,
-      files: prev.files.map((f) =>
-        f.fileName === fileName ? { ...f, status: 'resolved', mappings } : f
-      ),
+      status: 'resolved',
+      ...resolutionData
     }));
+    setValidationStatus('validating');
   };
 
   return (
@@ -165,7 +160,7 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              {validationResult && validationStatus !== 'NEED_CLARIFICATION' && (
+              {validationResult && (
                 <Button
                   variant="outline"
                   className="rounded-lg font-medium"
@@ -173,6 +168,15 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
                   disabled={validationStatus === 'validating'}
                 >
                   <RefreshCw className="w-4 h-4 mr-2" /> Re-validate
+                </Button>
+              )}
+              {validationStatus === 'NEED_CLARIFICATION' && (
+                <Button
+                  variant="outline"
+                  className="rounded-lg font-medium"
+                  onClick={() => setIsResolutionOpen(true)}
+                >
+                  Validation Error 
                 </Button>
               )}
               <Button
@@ -187,11 +191,9 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-
           {validationStatus === 'validating' && <QueueStatus text={currentValidationText} />}
           <VariablesSection variables={variables} />
           {renderRecommendations()}
-
         </CardContent>
       </Card>
 
@@ -204,8 +206,8 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
         open={isResolutionOpen}
         onOpenChange={setIsResolutionOpen}
         workflowRunDetails={runDetails}
+        dataPoints={dataPoints}
         onResolutionComplete={handleResolutionComplete}
-        dataPoints = {dataPoints}
       />
     </>
   );

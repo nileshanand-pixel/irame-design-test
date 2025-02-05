@@ -163,6 +163,7 @@ export const ErrorResolutionModal = ({
 	onOpenChange,
 	workflowRunDetails,
 	dataPoints,
+  onResolutionComplete,
 }) => {
 	const [missingFields, setMissingFields] = useState([]);
 	const [mappings, setMappings] = useState({});
@@ -182,7 +183,6 @@ export const ErrorResolutionModal = ({
 			file_name: 'file2',
 			headers: [{ name: 'header3' }, { name: 'header4' }],
 		},
-
 	];
 
 	const dataMappings =
