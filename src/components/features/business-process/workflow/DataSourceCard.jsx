@@ -71,7 +71,15 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
     if (data?.datasource_id) {
       initiateWorkflowCheckMutation.mutateAsync({
         workflowId,
-        payload: { datasource_id: data.datasource_id },
+        payload: { datasource_id: data.datasource_id,
+          variables: 
+         Object.fromEntries(
+          Object.entries(variables).map(([key, value]) => [
+            key,
+            { ...value, value: value.default_value }
+          ])
+        )
+         },
       });
     }
   };
@@ -179,10 +187,11 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {renderRecommendations()}
 
           {validationStatus === 'validating' && <QueueStatus text={currentValidationText} />}
           <VariablesSection variables={variables} />
+          {renderRecommendations()}
+
         </CardContent>
       </Card>
 
@@ -194,8 +203,9 @@ const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dat
       <ErrorResolutionModal
         open={isResolutionOpen}
         onOpenChange={setIsResolutionOpen}
-        file={resolutionFile}
+        workflowRunDetails={runDetails}
         onResolutionComplete={handleResolutionComplete}
+        dataPoints = {dataPoints}
       />
     </>
   );

@@ -4,7 +4,6 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { getWorkflowRuns } from '../service/workflow.service';
 import { getToken } from '@/lib/utils';
 
-// Helper for mapping statuses to CSS classes
 const getStatusStyles = (status) => {
 	switch (status) {
 		case 'IN_QUEUE':
@@ -47,7 +46,7 @@ const SessionHistoryPanel = ({ onClose }) => {
 		queryKey: ['workflow-runs', workflowId],
 		queryFn: () => getWorkflowRuns(getToken(), workflowId),
 		enabled: Boolean(workflowId),
-		refetchInterval: 10000,
+		refetchInterval: 60000,
 	});
 
 	const handleRowClick = (externalId, linkActive, sessionUrl) => {

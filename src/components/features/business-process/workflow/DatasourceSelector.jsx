@@ -97,8 +97,9 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 						))
 					)}
 				</div>
-
-				<DividerWithText className="-my-2" text="Or" />
+				
+				{/* Upload removed for some time */}
+				{/* <DividerWithText className="-my-2" text="Or" />
 
 				<Button
 					variant="outline"
@@ -109,7 +110,7 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 						Upload
 					</span>
 					<span>Upload Data Source</span>
-				</Button>
+				</Button> */}
 
 				<div className="flex justify-between gap-3 pt-2">
 					<Button
@@ -121,7 +122,7 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 					</Button>
 					<Button
 						disabled={!selectedDataSourceId}
-						className="w-1/2"
+						className="w-1/2  hover:bg-purple-100 hover:text-white hover:opacity-80"
 						onClick={() => {
 							const selectedDataSource = (dataSources || []).find(
 								(item) => item.datasource_id === selectedDataSourceId,

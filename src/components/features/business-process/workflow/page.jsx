@@ -102,7 +102,7 @@ export default function WorkflowPage() {
                   variables={workflowDetails?.data?.variables}
                   workflowId={workflowId}
                   runId={runId}
-                  dataPoints={workflowDetails.data?.data_points}
+                  dataPoints={workflowDetails?.data?.data_points}
                 />
 
                 <StepsList steps={steps} disabled />

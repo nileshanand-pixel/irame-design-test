@@ -1,229 +1,366 @@
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import {
-	DropdownMenu,
-	DropdownMenuTrigger,
-	DropdownMenuContent,
-	DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
-import { cn, getFileIcon } from '@/lib/utils';
-import DividerWithText from '@/components/elements/DividerWithText';
-import { Label } from '@/components/ui/label';
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
-const gradientStyle = {
-	background: `
-linear-gradient(180deg, rgba(106, 18, 205, 0.02) 0%, rgba(106, 18, 205, 0.04) 100%)`,
+/* ------------------ ComboBoxOnFire ------------------ */
+const ComboBoxOnFire = ({
+  options = [],
+  placeholder = "Select an option...",
+  onSelection,
+}) => {
+  const [query, setQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Filter the groups/headers by query
+  const filteredOptions = query
+    ? options
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) =>
+            item.label.toLowerCase().includes(query.toLowerCase())
+          ),
+        }))
+        .filter((group) => group.items.length > 0)
+    : options;
+
+  const handleSelect = (item, groupLabel) => {
+    // Pass selected data up to parent
+    onSelection?.({
+      label: item.label,
+      description: item.description,
+      fileName: groupLabel,
+    });
+    setIsOpen(false);
+    setQuery(item.label); // display selected label
+  };
+
+  return (
+    <div className="relative w-full max-w-md">
+      {/* Input Field */}
+      <div className="relative">
+        <input
+          type="text"
+          className="w-full border border-gray-300 rounded-md pl-3 pr-10 py-2"
+          placeholder={placeholder}
+          value={query}
+          onFocus={() => setIsOpen(true)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setIsOpen(true);
+          }}
+          // Use onBlur with a small timeout so onClick in dropdown can register
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+        />
+        <button
+          type="button"
+          className="absolute inset-y-0 right-0 flex items-center pr-2"
+          onMouseDown={(e) => {
+            // prevent losing focus from input
+            e.preventDefault();
+            e.stopPropagation();
+            setIsOpen((prev) => !prev);
+          }}
+        >
+          <svg
+            className="h-5 w-5 text-gray-400"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="absolute z-10 mt-1 w-full max-h-60 overflow-auto bg-white border border-gray-300 rounded shadow">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((group) => (
+              <div key={group.group} className="border-b last:border-b-0">
+                <div className="bg-gray-100 px-2 py-1 text-sm font-semibold">
+                  {group.group}
+                </div>
+                {group.items.map((item) => (
+                  <div
+                    key={item.value}
+                    className="cursor-pointer px-4 py-2 hover:bg-indigo-500 hover:text-white"
+                    onMouseDown={() => handleSelect(item, group.group)}
+                  >
+                    {item.label}
+                  </div>
+                ))}
+              </div>
+            ))
+          ) : (
+            <div className="px-3 py-2 text-gray-500">No results found.</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
+/* ------------------ AddFieldModal ------------------ */
+const AddFieldModal = ({ isOpen, onClose, dataPoints, onSelect }) => {
+  // Build group-based comboBox options from dataPoints
+  const comboBoxOptions = (dataPoints || []).map((file) => ({
+    group: file.file_name,
+    items: file.headers.map((header) => ({
+      value: header.name,
+      label: header.name,
+      description: header.description,
+    })),
+  }));
+
+  const handleSelection = (selected) => {
+    // selected = { label, description, fileName }
+    onSelect(selected);
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-fit w-full min-h-98 p-4">
+        <h3 className="text-lg  font-semibold mb-2">Select Column</h3>
+        <ComboBoxOnFire
+          options={comboBoxOptions}
+          placeholder="Search or select a column"
+          onSelection={handleSelection}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+/* ------------------ ErrorResolutionModal ------------------ */
 export const ErrorResolutionModal = ({
-	open,
-	onOpenChange,
-	file,
-	onResolutionComplete,
+  open,
+  onOpenChange,
+  workflowRunDetails,
+  dataPoints,
 }) => {
-	const [mappings, setMappings] = useState({});
-	const [clarification, setClarification] = useState('');
-	const [hasChanges, setHasChanges] = useState(false);
+  const [missingFields, setMissingFields] = useState([]);
+  const [mappings, setMappings] = useState({});
+  const [clarificationAnswers, setClarificationAnswers] = useState({});
+  const [hasChanges, setHasChanges] = useState(false);
 
-	// Mock columns data
-	const availableColumns = [
-		'Name',
-		'Address',
-		'Phone',
-		'Company',
-		'JobTitle',
-		...Array.from(
-			{ length: 43 },
-			(_, i) => `Column_${(i + 1).toString().padStart(2, '0')}`,
-		),
-	];
+  // Track which row index is currently opening the "Add Field" modal
+  const [activeFieldIndex, setActiveFieldIndex] = useState(null);
 
-	const missingFields = file?.missingFields || ['Email', 'Name', 'Job', 'City'];
+  // Mock data (for brevity)
+  const mockDataMappings = [
+    {
+      file_name: "file1",
+      headers: [
+        { name: "header1", column_name: "col1" },
+        { name: "header2" },
+      ],
+    },
+    {
+      file_name: "file2",
+      headers: [{ name: "header3" }, { name: "header4" }],
+    },
+  ];
 
-	useEffect(() => {
-		const initialMappings = {};
-		missingFields.forEach((_, index) => {
-			initialMappings[index] = '';
-		});
-		setMappings(initialMappings);
-		setClarification('');
-		setHasChanges(false);
-	}, [file]);
+  const dataMappings =
+    workflowRunDetails?.data?.data_mapping?.length > 0
+      ? workflowRunDetails.data.data_mapping
+      : mockDataMappings;
 
-	const handleMappingChange = (fieldIndex, selectedColumn) => {
-		setMappings((prev) => ({
-			...prev,
-			[fieldIndex]: selectedColumn,
-		}));
-		setHasChanges(true);
-	};
+  // Extract missing fields
+  useEffect(() => {
+    const missing = dataMappings.flatMap((file) =>
+      file.headers
+        ?.filter((header) => !header.column_name)
+        .map((header) => header.name) || []
+    );
+    setMissingFields(missing);
+  }, [workflowRunDetails]);
 
-	const handleClarificationChange = (e) => {
-		setClarification(e.target.value);
-		setHasChanges(true);
-	};
+  // Mock clarifications
+  const mockClarifications = [
+    {
+      type: "TEXT_CLARIFICATION",
+      description: "Missing column details required.",
+    },
+    {
+      type: "TEXT_CLARIFICATION",
+      description: "Explain why this column is missing.",
+    },
+  ];
 
-	const handleContinue = () => {
-		onResolutionComplete({
-			fileName: file.fileName,
-			mappings,
-			clarification,
-		});
-		onOpenChange(false);
-	};
+  const textClarifications =
+    workflowRunDetails?.clarification?.filter(
+      (c) => c.type === "TEXT_CLARIFICATION"
+    ) || mockClarifications;
 
-	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-2xl rounded-lg p-4 text-primary80 animate-in zoom-in-95">
-				<DialogHeader>
-					<div className="flex gap-4 items-center">
-						<img
-							src="https://d2vkmtgu2mxkyq.cloudfront.net/file_validation_error_modal_header.svg"
-							alt="icon"
-						/>
-						<div className="flex flex-col">
-							<h2 className="text-lg font-semibold text-black/90">
-								Validation Errors
-							</h2>
-							<p className="text-sm text-black/60">
-								Missing columns error report
-							</p>
-						</div>
-					</div>
-				</DialogHeader>
+  // Reset mappings/clarifications whenever the modal opens
+  useEffect(() => {
+    setMappings(Object.fromEntries(missingFields.map((_, i) => [i, {}])));
+    setClarificationAnswers({});
+    setHasChanges(false);
+    setActiveFieldIndex(null);
+  }, [missingFields, workflowRunDetails]);
 
-				<div className="flex mx-2 flex-col space-y-2 gap-4">
-					<div
-						className="p-2 border-[1.5px] border-purple-1 rounded-lg hover:bg-gray-50 flex justify-between items-center"
-						style={gradientStyle}
-					>
-						<div className="flex gap-2 items-center">
-							<img
-								src={getFileIcon(file?.fileName)}
-								alt="file-icon"
-								className="size-6"
-							/>
-							<h3 className="font-medium">{file?.fileName}</h3>
-						</div>
-						<div>{availableColumns.length} Columns</div>
-					</div>
-					<div className="text-state-error gap-2 items-center font-semibold flex w-fit bg-stateBg-inProgress px-3 py-1 rounded-md text-sm">
-						<span className="material-symbols-outlined">error</span>
-						Required Field not found: {file?.missingFields?.length || 0}
-					</div>
-				</div>
+  const handleClarificationChange = (e, index) => {
+    setClarificationAnswers((prev) => ({ ...prev, [index]: e.target.value }));
+    setHasChanges(true);
+  };
 
-				{/* Scrollable Table Section */}
-				<div className="border-2 mx-2 rounded-lg overflow-hidden">
-					<div className="sticky top-0 grid grid-cols-12 bg-gray-100 text-black font-semibold text-sm border-b-2 z-10">
-						<div className="col-span-2 flex items-center py-4 px-3 border-r-2">
-							S. No.
-						</div>
-						<div className="col-span-4 flex py-4 px-3 items-center border-r-2 whitespace-nowrap">
-							Required Field (not found)
-						</div>
-						<div className="col-span-6 flex py-4 px-3 items-center">
-							Add Field
-						</div>
-					</div>
+  const handleAddFieldSelection = (selection) => {
+    // selection = { label, description, fileName }
+    if (activeFieldIndex === null) return;
 
-					<div className="max-h-52 overflow-y-auto">
-						{file?.missingFields?.map((field, index) => (
-							<div
-								key={index}
-								className={`grid grid-cols-12 ${index === file?.missingFields?.length - 1 ? '' : 'border-b-2'}`}
-							>
-								<div className="col-span-2 hover:bg-gray-100 flex items-center py-1 px-3 border-r-2">
-									{index + 1}
-								</div>
-								<div className="col-span-4 flex hover:bg-gray-100 items-center py-1 px-3 border-r-2 font-medium">
-									{field}
-								</div>
-								<div className="col-span-6 flex items-center py-1 px-3">
-									<DropdownMenu>
-										<DropdownMenuTrigger asChild>
-											<Button
-												variant="outline"
-												className={cn(
-													'w-full justify-between border-none hover:bg-transparent hover:text-black/50 cursor-pointer outline-none',
-													mappings[index]
-														? 'text-black/80'
-														: 'text-purple-100',
-												)}
-											>
-												{mappings[index] || '+ Add Field'}
-											</Button>
-										</DropdownMenuTrigger>
-										<DropdownMenuContent className="max-h-60 w-64 overflow-y-auto p-0">
-											{availableColumns.map((column) => (
-												<DropdownMenuItem
-													key={column}
-													onSelect={() =>
-														handleMappingChange(
-															index,
-															column,
-														)
-													}
-													className={` ${mappings[index] === column && 'bg-purple-4'} text-primary80 px-4 py-2 flex justify-between items-center`}
-												>
-													<span>{column}</span>
-													{mappings[index] === column && (
-														<span className="material-symbols-outlined text-purple-100">
-															check
-														</span>
-													)}
-												</DropdownMenuItem>
-											))}
-										</DropdownMenuContent>
-									</DropdownMenu>
-								</div>
-							</div>
-						))}
-					</div>
-				</div>
+    setMappings((prev) => ({
+      ...prev,
+      [activeFieldIndex]: {
+        column_name: selection.label,
+        file_name: selection.fileName,
+        description: selection.description,
+      },
+    }));
+    setHasChanges(true);
+    setActiveFieldIndex(null);
+  };
 
-				<DividerWithText className="-my-2" text="Or" />
+  const handleContinue = () => {
+    // Possibly handle "mappings" or "clarificationAnswers" here
+    onOpenChange(false);
+  };
 
-				{/* Scrollable Textarea */}
-				<div className="mx-2 flex flex-col">
-					<Label
-						htmlFor="clarification_text"
-						className="block font-medium text-lg mb-1"
-					>
-						Write Clarification
-					</Label>
-					<textarea
-						id="clarification_text"
-						value={clarification}
-						onChange={handleClarificationChange}
-						className="w-full px-3 py-2 border text-black/60 rounded-md bg-purple-4/8 focus:outline-none 
-                     resize-none max-h-48 overflow-y-auto h-32 min-h-[8rem]"
-						placeholder="Enter your clarification..."
-					/>
-				</div>
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl rounded-lg p-4 text-primary80 animate-in zoom-in-95">
+        <DialogHeader>
+          <div className="flex gap-4 items-center">
+            <img
+              src="https://d2vkmtgu2mxkyq.cloudfront.net/file_validation_error_modal_header.svg"
+              alt="icon"
+            />
+            <div className="flex flex-col">
+              <h2 className="text-lg font-semibold text-black/90">
+                Validation Errors
+              </h2>
+              <p className="text-sm text-black/60">
+                Missing columns error report
+              </p>
+            </div>
+          </div>
+        </DialogHeader>
 
-				{/* Footer Buttons */}
-				<div className="flex justify-between gap-3 pt-4">
-					<Button
-						className="w-1/2"
-						variant="outline"
-						onClick={() => onOpenChange(false)}
-					>
-						Cancel
-					</Button>
-					<Button
-						onClick={handleContinue}
-						disabled={!hasChanges}
-						className={cn(
-							'w-1/2',
-							!hasChanges && 'opacity-50 cursor-not-allowed',
-						)}
-					>
-						Continue
-					</Button>
-				</div>
-			</DialogContent>
-		</Dialog>
-	);
+        <div className="max-h-[500px] overflow-y-auto">
+          <h3 className="mx-2 text-lg mb-1 font-semibold">Missing Columns</h3>
+          <Separator className="mx-2" />
+
+          <div className="flex mx-2 my-4 flex-col space-y-2">
+            <div className="text-state-error flex items-center font-semibold bg-stateBg-inProgress px-3 py-1 rounded-md text-sm">
+              <span className="material-symbols-outlined mr-2">error</span>
+              Required Field not found: {missingFields.length}
+            </div>
+          </div>
+
+          <div className="border-2 mx-2 rounded-lg overflow-hidden">
+            <div className="sticky top-0 grid grid-cols-12 bg-gray-100 text-black font-semibold text-sm border-b-2">
+              <div className="col-span-2 py-4 px-3 border-r-2">S. No.</div>
+              <div className="col-span-4 py-4 px-3 border-r-2">
+                Required Field
+              </div>
+              <div className="col-span-6 py-4 px-3">Add Field</div>
+            </div>
+
+            <div className="max-h-52 min-h-32 overflow-y-auto">
+              {missingFields.map((field, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-12 border-b-2"
+                >
+                  <div className="col-span-2 py-1 px-3 border-r-2">
+                    {index + 1}
+                  </div>
+                  <div className="col-span-4 py-1 px-3 border-r-2 font-medium">
+                    {field}
+                  </div>
+                  <div className="col-span-6 py-1 px-3">
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-between border-none hover:bg-transparent hover:text-black/50 cursor-pointer",
+                        mappings[index]?.column_name
+                          ? "text-black/80"
+                          : "text-purple-100"
+                      )}
+                      onClick={() => setActiveFieldIndex(index)}
+                    >
+                      {mappings[index]?.column_name
+                        ? mappings[index].column_name
+                        : "+ Add Field"}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {textClarifications.length > 0 && (
+            <div className="mx-2 mt-6">
+              <h3 className="text-lg mx-2 font-semibold">Clarification</h3>
+              <Separator className="mx-2" />
+              <div className="mx-2 mt-4">
+                {textClarifications.map((item, index) => (
+                  <div key={index} className="mb-4">
+                    <Label
+                      htmlFor={`clarification_${index}`}
+                      className="block text-black/80 font-medium text-lg mb-1"
+                    >
+                      {item.description}
+                    </Label>
+                    <textarea
+                      id={`clarification_${index}`}
+                      value={clarificationAnswers[index] || ""}
+                      onChange={(e) => handleClarificationChange(e, index)}
+                      className="w-full px-3 py-2 border text-black/60 rounded-md bg-purple-4/8 focus:outline-none resize-none h-32 min-h-[8rem]"
+                      placeholder="Enter your answer..."
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex mx-2 justify-between gap-3 pt-4">
+          <Button
+            className="w-1/2"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleContinue}
+            disabled={!hasChanges}
+            className={cn(
+              "w-1/2",
+              !hasChanges && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            Continue
+          </Button>
+        </div>
+      </DialogContent>
+
+      {/* The small AddFieldModal for the ComboBox */}
+      <AddFieldModal
+        isOpen={activeFieldIndex !== null}
+        onClose={() => setActiveFieldIndex(null)}
+        dataPoints={dataPoints}
+        onSelect={handleAddFieldSelection}
+      />
+    </Dialog>
+  );
 };
