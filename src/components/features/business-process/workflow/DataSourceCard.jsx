@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { DataSourceSelector } from './DataSourceSelector';
 import { RefreshCw } from 'lucide-react';
 import QueueStatus from '../../new-chat/QueueStatus';
 import { ErrorResolutionModal } from './ErrorResolutionModal';
@@ -12,6 +11,7 @@ import { getToken } from '@/lib/utils';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { DataSourceSelector } from './DatasourceSelector';
 
 const DataSourceCard = ({ onValidationSuccess, variables, workflowId, runId, dataPoints }) => {
   const navigate = useNavigate();
