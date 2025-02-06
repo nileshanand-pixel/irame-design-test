@@ -39,7 +39,7 @@ const ComboBoxOnFire = ({
 	};
 
 	return (
-		<div className="relative w-full max-w-md bg-white">
+		<div className="relative w-full max-w-md  bg-white">
 			{/* Input Field */}
 			<div className="relative">
 				<input
@@ -84,7 +84,7 @@ const ComboBoxOnFire = ({
 
 			{/* Dropdown */}
 			{isOpen && (
-				<div className="mt-1 w-full overflow-auto bg-white border transition-all ease-in border-gray-300 rounded shadow-lg">
+				<div className="mt-1 w-full h-60 overflow-y-auto bg-white border transition-all ease-in border-gray-300 rounded shadow-lg">
 					{filteredOptions.length > 0 ? (
 						filteredOptions.map((group) => (
 							<div
@@ -97,7 +97,7 @@ const ComboBoxOnFire = ({
 								{group.items.map((item) => (
 									<div
 										key={item.value}
-										className="cursor-pointer px-8 py-2 hover:bg-purple-4 "
+										className="cursor-pointer px-8 py-2 hover:bg-purple-4"
 										onMouseDown={() =>
 											handleSelect(item, group.group)
 										}
@@ -119,14 +119,14 @@ const ComboBoxOnFire = ({
 };
 
 /* ------------------ AddFieldModal ------------------ */
-const AddFieldModal = ({ isOpen, onClose, dataPoints, onSelect }) => {
-	// Build group-based comboBox options from dataPoints
-	const comboBoxOptions = (dataPoints || []).map((file) => ({
-		group: file.file_name,
-		items: file.headers.map((header) => ({
-			value: header.name,
-			label: header.name,
-			description: header.description,
+const AddFieldModal = ({ isOpen, onClose, files = [], onSelect }) => {
+	// Build group-based comboBox options from dataSourceDetails files
+	const comboBoxOptions = files.map((file) => ({
+		group: file.filename,
+		items: (file.columns || []).map((col) => ({
+			value: col.name,
+			label: col.name,
+			description: col.description,
 		})),
 	}));
 
@@ -139,13 +139,10 @@ const AddFieldModal = ({ isOpen, onClose, dataPoints, onSelect }) => {
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="max-w-[500px] items-start w-full p-4 overflow-y-auto">
-				{' '}
 				<DialogHeader>
 					<h3 className="text-lg font-semibold mb-2">Select Column</h3>
 				</DialogHeader>
-				<div className="mx-auto w-[98%] ">
-					{' '}
-					{/* Added wrapper div */}
+				<div className="mx-auto w-[98%]">
 					<ComboBoxOnFire
 						options={comboBoxOptions}
 						placeholder="Search or select a column"
@@ -162,8 +159,8 @@ export const ErrorResolutionModal = ({
 	open,
 	onOpenChange,
 	workflowRunDetails,
-	dataPoints,
-  onResolutionComplete,
+	onResolutionComplete,
+	dataSourceDetails,
 }) => {
 	const [missingFields, setMissingFields] = useState([]);
 	const [mappings, setMappings] = useState({});
@@ -250,6 +247,8 @@ export const ErrorResolutionModal = ({
 	const handleContinue = () => {
 		// Possibly handle "mappings" or "clarificationAnswers" here
 		onOpenChange(false);
+		// onResolutionComplete could be called here if needed to finalize
+		// onResolutionComplete?.(mappings, clarificationAnswers);
 	};
 
 	return (
@@ -308,7 +307,7 @@ export const ErrorResolutionModal = ({
 										{index + 1}
 									</div>
 									<div className="col-span-4 py-1 px-3 border-r-2 font-medium">
-										{field}
+										{capitalize(field)}
 									</div>
 									<div className="col-span-6 py-1 px-3">
 										<Button
@@ -324,7 +323,7 @@ export const ErrorResolutionModal = ({
 											}
 										>
 											{mappings[index]?.column_name
-												? mappings[index].column_name
+												? capitalize(mappings[index].column_name)
 												: '+ Add Field'}
 										</Button>
 									</div>
@@ -389,7 +388,7 @@ export const ErrorResolutionModal = ({
 			<AddFieldModal
 				isOpen={activeFieldIndex !== null}
 				onClose={() => setActiveFieldIndex(null)}
-				dataPoints={dataPoints}
+				files={dataSourceDetails?.processed_files?.files || []}
 				onSelect={handleAddFieldSelection}
 			/>
 		</Dialog>
