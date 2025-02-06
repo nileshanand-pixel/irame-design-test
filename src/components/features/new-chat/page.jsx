@@ -275,8 +275,8 @@ const NewChat = () => {
 	return (
 		<>
 			{
-				<div className="flex justify-center h-md:mt-20">
-					<div className="flex flex-col items-center w-[51.875rem] relative">
+				<div className="flex justify-center pt-20">
+					<div className="flex flex-col w-[51.875rem] relative">
 						<div className="align-left w-full">
 							<h1
 								className="text-5xl leading-[60px] font-semibold align-left"
