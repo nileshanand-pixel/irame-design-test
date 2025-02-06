@@ -55,3 +55,22 @@ export const getWorkflowRuns = async (token, workflowCheckId,) => {
 	});
 	return response.data;
 }
+
+
+export const clarifyWorkFlowRun = async (token,workflowCheckId,  workflowRunId, data) => {
+	const response = await axiosClientV1.post(`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}/clarify`, data, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+}
+
+export const RunWorkFlowRun = async (token, workflowCheckId,  workflowRunId) => {
+	const response = await axiosClientV1.post(`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}/run `, null, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+}
