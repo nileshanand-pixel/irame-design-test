@@ -220,3 +220,5 @@ const SelectPrompt = ({
 };
 
 export default SelectPrompt;
+
+// 							<div className={` ${runWorkFlowMutation.isPending ? 'overflow-y-hidden': 'overflow-y-auto'} h-full bg-white relative p-4 flex flex-col min-h-full`}>
