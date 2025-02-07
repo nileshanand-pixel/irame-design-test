@@ -1,4 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import capitalize from 'lodash.capitalize';
+import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
 import {
 	Card,
@@ -7,29 +12,31 @@ import {
 	CardDescription,
 	CardContent,
 } from '@/components/ui/card';
-import { ChevronRight, RefreshCw } from 'lucide-react';
+import { ChevronRight, RefreshCw, AlertCircle } from 'lucide-react';
 import QueueStatus from '../../new-chat/QueueStatus';
 import { ErrorResolutionModal } from './ErrorResolutionModal';
 import VariablesSection from './VariablesSection';
+import { DataSourceSelector } from './DatasourceSelector';
+import Tooltip from '../../reports/components/Tooltip';
+
 import {
 	clarifyWorkFlowRun,
 	getWorkflowRunDetails,
 	initiateWorkflowCheck,
-	RunWorkFlowRun,
 } from '../service/workflow.service';
-import { getFileIcon, getToken } from '@/lib/utils';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { DataSourceSelector } from './DatasourceSelector';
-import capitalize from 'lodash.capitalize';
 import { getDataSourceById } from '../../configuration/service/configuration.service';
-import Tooltip from '../../reports/components/Tooltip';
+
+import { getFileIcon, getToken } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
+
+const gradientStyle = {
+	background: `
+linear-gradient(180deg, rgba(106, 18, 205, 0.02) 0%, rgba(106, 18, 205, 0.08) 100%)`,
+};
 
 const DataSourceCard = ({
 	onValidationSuccess,
-	variables: initialVariables = {}, // rename for clarity
+	variables: initialVariables = {},
 	workflowId,
 	runId,
 	dataPoints,
@@ -39,67 +46,32 @@ const DataSourceCard = ({
 	const { businessProcessId } = useParams();
 	const location = useLocation();
 
-	// --------------------------
-	// CLARIFICATIONS / MAPPINGS
-	// --------------------------
+	// -------------------------- State --------------------------
 	const [userClarifications, setUserClarifications] = useState({
 		text: '',
 		data_mapping: [],
 	});
-
-	/**
-	 * We'll store the "variables" in local state so we can let the user edit them
-	 * in the UI. Then we can put them into userClarifications.variables
-	 * whenever we do an action (like re-validate).
-	 */
 	const [variablesState, setVariablesState] = useState(() => {
-		// Transform incoming `initialVariables` (if needed) or store them as-is
-		// Assuming shape is:
-		//   initialVariables = {
-		//     v1: { name: "v1", description: "v1 desc", type: "int", default_value: 1 },
-		//     ...
-		//   }
 		const transformed = {};
 		Object.entries(initialVariables).forEach(([key, val]) => {
-			transformed[key] = {
-				...val,
-				// We'll store `value` from `default_value` or fallback
-				value: val.default_value ?? '',
-			};
+			transformed[key] = { ...val, value: val.default_value ?? '' };
 		});
 		return transformed;
 	});
+	const [fileSizes, setFileSizes] = useState({});
 
-	const handleVariableChange = (varKey, newVal) => {
-		setVariablesState((prev) => ({
-			...prev,
-			[varKey]: {
-				...prev[varKey],
-				value: newVal,
-			},
-		}));
-	};
-
-	// --------------------------
-	// UI State
-	// --------------------------
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [selectedDatasourceId, setselectedDatasourceId] = useState(null);
+	const [selectedDatasourceId, setSelectedDatasourceId] = useState(null);
 	const [validationStatus, setValidationStatus] = useState(
 		runId ? 'IN_QUEUE' : 'idle',
 	);
 	const [validationResult, setValidationResult] = useState(null);
-
-	// 6.5 For revalidate button once changes are made in error modal
-	//     We'll show "Re-validate" if `shouldShowRevalidate` is true
 	const [shouldShowRevalidate, setShouldShowRevalidate] = useState(false);
-
-	// The "Validation Error" modal
 	const [isResolutionOpen, setIsResolutionOpen] = useState(false);
-
 	const [currentValidationText, setCurrentValidationText] = useState('');
 	const [activeTab, setActiveTab] = useState(null);
 
+	// -------------------------- Queries --------------------------
 	const { data: runDetails, isLoading: isRunLoading } = useQuery({
 		queryKey: ['workflow-run-details', runId],
 		queryFn: () => getWorkflowRunDetails(getToken(), workflowId, runId),
@@ -108,43 +80,13 @@ const DataSourceCard = ({
 			runId && validationStatus !== 'NEED_CLARIFICATION' ? 5000 : false,
 	});
 
-	useEffect(() => {
-		if (runDetails) {
-			setValidationResult(runDetails.validationResult);
-			setCurrentValidationText(runDetails?.data?.status_text || '');
-			setselectedDatasourceId(runDetails?.datasource_id);
-			const newStatus = runDetails?.status;
+	const datasourceQuery = useQuery({
+		queryKey: ['get-datasource-by-id', runDetails?.datasource_id],
+		queryFn: () => getDataSourceById(getToken(), runDetails?.datasource_id),
+		enabled: !!runDetails?.datasource_id,
+	});
 
-			if (['IN_QUEUE', 'VALIDATING'].includes(newStatus)) {
-				setValidationStatus('validating');
-			} else if (newStatus === 'NEED_CLARIFICATION') {
-				setValidationStatus('NEED_CLARIFICATION');
-				// Automatically open the error resolution modal if there's a validation error
-				setIsResolutionOpen(true);
-			} else {
-				setValidationStatus('idle');
-				onValidationSuccess(true);
-			}
-		}
-	}, [runDetails]);
-
-	useEffect(() => {
-		if (dataPoints && dataPoints.length > 0) {
-			const firstValidFile = dataPoints.find(
-				(file) => file.file_name,
-			)?.file_name;
-			setActiveTab(
-				firstValidFile ||
-					(dataPoints.some((file) => !file.file_name)
-						? 'additional-columns'
-						: null),
-			);
-		}
-	}, [dataPoints]);
-
-	// --------------------------
-	// QUERIES / MUTATIONS
-	// --------------------------
+	// -------------------------- Mutations --------------------------
 	const initiateWorkflowCheckMutation = useMutation({
 		mutationFn: ({ workflowId, payload }) =>
 			initiateWorkflowCheck(getToken(), workflowId, payload),
@@ -157,73 +99,108 @@ const DataSourceCard = ({
 			}
 		},
 		onError: (err) => {
-			console.error('Workflow initiation failed!', err);
-			toast.error(`Something went wrong: ${err.message}`);
+			toast.error(`Workflow initiation failed: ${err.message}`);
+			console.error('Workflow initiation error:', err);
 		},
-	});
-
-	const datasourceQuery = useQuery({
-		queryKey: ['get-datasource-by-id', runDetails?.datasource_id],
-		queryFn: () => getDataSourceById(getToken(), runDetails?.datasource_id),
-		enabled: !!runDetails?.datasource_id,
 	});
 
 	const clarifyWorkFlowMutation = useMutation({
 		mutationFn: ({ workflowId, workflowRunId, payload }) =>
 			clarifyWorkFlowRun(getToken(), workflowId, workflowRunId, payload),
-		onSuccess: (data) => {
+		onSuccess: () => {
 			toast.success('Workflow clarification sent successfully!');
-			queryClient.invalidateQueries(['workflow-run-details', runId], {
-				refetchActive: true,
-				refetchInactive: true,
-			});
+			queryClient.invalidateQueries(['workflow-run-details', runId]);
 			setShouldShowRevalidate(false);
 		},
 		onError: (err) => {
-			console.error('Workflow clarification sending failed!', err);
-			toast.error(`Something went wrong: ${err.message}`);
+			toast.error(`Clarification failed: ${err.message}`);
+			console.error('Clarification error:', err);
 		},
 	});
 
-	const runWorkFlowMutation = useMutation({
-		mutationFn: ({ workflowId, workflowRunId }) =>
-			RunWorkFlowRun(getToken(), workflowId, workflowRunId),
-		onSuccess: (data) => {
-			toast.success('Workflow run request sent successfully!');
-			const sessionUrl = `${window.location.origin}/app/new-chat/session/?sessionId=${runDetails.session_id}`;
-			navigate(sessionUrl);
-		},
-		onError: (err) => {
-			console.error('Workflow run request failed!', err);
-			toast.error(`Something went wrong: ${err.message}`);
-		},
-	});
+	// -------------------------- Effects --------------------------
+	useEffect(() => {
+		if (runDetails) {
+			setValidationResult(runDetails.validationResult);
+			setCurrentValidationText(runDetails?.data?.status_text || '');
+			setSelectedDatasourceId(runDetails?.datasource_id);
 
-	// --------------------------
-	// HANDLERS
-	// --------------------------
+			const newStatus = runDetails?.status;
+			if (['IN_QUEUE', 'VALIDATING'].includes(newStatus)) {
+				setValidationStatus('validating');
+			} else if (newStatus === 'NEED_CLARIFICATION') {
+				setValidationStatus('NEED_CLARIFICATION');
+				setIsResolutionOpen(true);
+			} else {
+				setValidationStatus('idle');
+				onValidationSuccess(true);
+			}
+		}
+	}, [runDetails]);
+
+	useEffect(() => {
+		if (dataPoints?.length) {
+			const firstValidFile = dataPoints.find(
+				(file) => file.file_name,
+			)?.file_name;
+			setActiveTab(
+				firstValidFile ||
+					(dataPoints.some((file) => !file.file_name)
+						? 'additional-columns'
+						: null),
+			);
+		}
+	}, [dataPoints]);
+
+	useEffect(() => {
+		const fetchFileSizes = async () => {
+			if (datasourceQuery.data?.processed_files?.files) {
+				const sizes = {};
+				await Promise.all(
+					datasourceQuery.data.processed_files.files.map(async (file) => {
+						try {
+							const response = await fetch(file.url, {
+								method: 'HEAD',
+							});
+							const size = response.headers.get('Content-Length');
+							sizes[file.id] = parseInt(size, 10) || 0;
+						} catch (error) {
+							console.error('Error fetching file size:', error);
+							sizes[file.id] = 0;
+						}
+					}),
+				);
+				setFileSizes(sizes);
+			}
+		};
+
+		fetchFileSizes();
+	}, [datasourceQuery.data?.processed_files?.files]);
+
+	// -------------------------- Handlers --------------------------
+	const handleVariableChange = (varKey, newVal) => {
+		setVariablesState((prev) => ({
+			...prev,
+			[varKey]: { ...prev[varKey], value: newVal },
+		}));
+	};
+
 	const handleContinue = (data) => {
 		setValidationStatus('validating');
-
-		// On "Connect Data Source" => Start workflow
 		if (data?.datasource_id) {
-			// Merge variablesState into userClarifications.variables
-			const mergedVariables = {};
-			Object.keys(variablesState).forEach((k) => {
-				mergedVariables[k] = {
-					...variablesState[k],
-					// name, description, type, ...
-					// but importantly, 'value': variablesState[k].value
-				};
-			});
+			const mergedVariables = Object.keys(variablesState).reduce(
+				(acc, key) => ({
+					...acc,
+					[key]: variablesState[key],
+				}),
+				{},
+			);
 
-			initiateWorkflowCheckMutation.mutateAsync({
+			initiateWorkflowCheckMutation.mutate({
 				workflowId,
 				payload: {
 					datasource_id: data.datasource_id,
 					variables: mergedVariables,
-					// If you also want your clarifications or data mapping to be sent,
-					// you can attach them here:
 					user_clarifications: userClarifications,
 				},
 			});
@@ -233,13 +210,8 @@ const DataSourceCard = ({
 	const handleOpenModal = () => {
 		if (validationStatus === 'validating') return;
 		if (validationResult || selectedDatasourceId) {
-			if (
-				!window.confirm(
-					'Your progress will be lost. Do you want to continue?',
-				)
-			)
-				return;
-			setselectedDatasourceId(null);
+			if (!window.confirm('Your progress will be lost. Continue?')) return;
+			setSelectedDatasourceId(null);
 			setValidationResult(null);
 			setValidationStatus('idle');
 		}
@@ -250,10 +222,45 @@ const DataSourceCard = ({
 		setActiveTab(fileName === activeTab ? null : fileName);
 	};
 
-	const renderRecommendations = () => {
-		if (!dataPoints || dataPoints.length === 0) return null;
+	const handleResolutionComplete = ({ textClarification, dataMapping }) => {
+		setUserClarifications((prev) => ({
+			...prev,
+			text: textClarification,
+			data_mapping: dataMapping,
+		}));
+		setShouldShowRevalidate(true);
+		setIsResolutionOpen(false);
+	};
 
-		// Separate data points with and without file_name
+	const handleRevalidate = () => {
+		setValidationStatus('validating');
+		const mergedVariables = Object.keys(variablesState).reduce(
+			(acc, key) => ({
+				...acc,
+				[key]: variablesState[key],
+			}),
+			{},
+		);
+
+		clarifyWorkFlowMutation.mutate({
+			workflowId,
+			workflowRunId: runId,
+			payload: { ...userClarifications, variables: mergedVariables },
+		});
+	};
+
+	const formatFileSize = (sizeInBytes) => {
+		if (sizeInBytes < 1024) return `${sizeInBytes} B`;
+		if (sizeInBytes < 1048576) return `${(sizeInBytes / 1024).toFixed(1)} KB`;
+		if (sizeInBytes < 1073741824)
+			return `${(sizeInBytes / 1048576).toFixed(1)} MB`;
+		return `${(sizeInBytes / 1073741824).toFixed(1)} GB`;
+	};
+
+	// -------------------------- Render Helpers --------------------------
+	const renderRecommendations = () => {
+		if (!dataPoints?.length) return null;
+
 		const additionalColumns = dataPoints.filter((file) => !file.file_name);
 		const validDataPoints = dataPoints.filter((file) => file.file_name);
 
@@ -261,7 +268,6 @@ const DataSourceCard = ({
 			<div className="mb-6">
 				<h3 className="text-lg font-medium mb-4">Recommendations</h3>
 				<div className="w-full overflow-x-auto flex gap-2">
-					{/* Render tabs for valid file names */}
 					{validDataPoints.map((file) => (
 						<Button
 							key={file.file_name}
@@ -283,12 +289,10 @@ const DataSourceCard = ({
 						</Button>
 					))}
 
-					{/* Render tab for additional columns if they exist */}
 					{additionalColumns.length > 0 && (
 						<Button
-							key="additional-columns"
 							variant="outline"
-							className={`flex  gap-2 items-center font-medium border-2 rounded-lg px-4 py-2 cursor-pointer min-w-fit max-w-[19.25rem] ${
+							className={`flex gap-2 items-center font-medium border-2 rounded-lg px-4 py-2 cursor-pointer min-w-fit max-w-[19.25rem] ${
 								activeTab === 'additional-columns'
 									? 'text-purple-100 border-purple-40 tabActiveBg'
 									: 'text-black/60 border-black/10'
@@ -306,7 +310,6 @@ const DataSourceCard = ({
 					)}
 				</div>
 
-				{/* Render headers for active tab */}
 				{activeTab && (
 					<div className="mt-4 rounded-xl h-fit pb-4 w-full">
 						<ul className="flex flex-wrap items-center rounded-full gap-2 text-sm text-black/80">
@@ -336,56 +339,59 @@ const DataSourceCard = ({
 		);
 	};
 
-	/**
-	 * Called by the child when user clicks "Continue" in the ErrorResolutionModal.
-	 * We'll receive a combined string for clarifications + an updated data_mapping array.
-	 */
-	const handleResolutionComplete = ({ textClarification, dataMapping }) => {
-		// Merge new clarifications into our userClarifications
-		setUserClarifications((prev) => ({
-			...prev,
-			text: textClarification, // single combined string
-			data_mapping: dataMapping, // array of file-level mappings
-		}));
+	const renderFilesSection = (files, fileSizes) => {
+		if (!files?.length) return null;
 
-		// Show the Re-validate button once user has updated something
-		setShouldShowRevalidate(true);
-
-		// If you want to immediately re-validate or do anything else, do it here
-		// e.g. setValidationStatus('validating');
-
-		// Close the modal
-		setIsResolutionOpen(false);
-	};
-
-	// "Re-validate" handler if you want to let user confirm again after changes
-	const handleRevalidate = () => {
-		setValidationStatus('validating');
-
-		// Merge the variablesState to userClarifications.variables
-		const mergedVariables = {};
-		Object.keys(variablesState).forEach((k) => {
-			mergedVariables[k] = { ...variablesState[k] };
-		});
-
-		// Re-initiate the check, now with the updated user clarifications
-		clarifyWorkFlowMutation.mutateAsync({
-			workflowId,
-			workflowRunId: runId,
-			payload: { ...userClarifications, variables: mergedVariables },
-		});
+		return (
+			<div className="mt-6 border-b pb-6">
+				<h3 className="text-lg font-medium mb-4">Files</h3>
+				{files.length === 0 ? (
+					<div className="text-center text-gray-500 py-4">
+						No processed files present yet.
+					</div>
+				) : (
+					files.map((file) => (
+						<div
+							key={file.id}
+							style={gradientStyle}
+							className="px-4 py-2.5 rounded-lg mt-2"
+						>
+							<div className="flex justify-between items-center">
+								<div className="flex gap-2 items-center">
+									<img
+										src={getFileIcon(file.filename)}
+										alt="file-icon"
+										className="size-6"
+									/>
+									<span className="font-normal text-purple-100">
+										{file.filename}
+										{fileSizes[file.id] && (
+											<span className="ml-2 text-primary60">
+												({formatFileSize(fileSizes[file.id])}
+												)
+											</span>
+										)}
+									</span>
+								</div>
+							</div>
+						</div>
+					))
+				)}
+			</div>
+		);
 	};
 
 	return (
 		<>
 			{isRunning && (
-				<div className="absolute inset-0  bg-white/80  z-50 flex pt-80 justify-center rounded-xl">
+				<div className="absolute inset-0 bg-white/80 z-50 flex pt-80 justify-center rounded-xl">
 					<div className="flex flex-col items-center gap-2 text-primary60">
 						<RefreshCw className="w-8 h-8 animate-spin" />
 						<span className="font-medium">Running workflow...</span>
 					</div>
 				</div>
 			)}
+
 			<Card className="mb-8 text-primary80 border border-black/10 rounded-xl shadow-none">
 				<CardHeader>
 					<div className="flex justify-between border-b pb-3">
@@ -397,11 +403,8 @@ const DataSourceCard = ({
 								Securely connect to a datasource
 							</CardDescription>
 						</div>
+
 						<div className="flex gap-2">
-							{/* 
-                6.5 Show Re-validate if the user has made changes in the error modal
-                OR if we otherwise want to let them re-validate. 
-              */}
 							{shouldShowRevalidate && (
 								<Button
 									variant="outline"
@@ -409,7 +412,7 @@ const DataSourceCard = ({
 									onClick={handleRevalidate}
 									disabled={validationStatus === 'validating'}
 								>
-									<RefreshCw className="w-4 h-4 mr-2" />{' '}
+									<RefreshCw className="w-4 h-4 mr-2" />
 									Re-validate
 								</Button>
 							)}
@@ -417,7 +420,7 @@ const DataSourceCard = ({
 							{validationStatus === 'NEED_CLARIFICATION' && (
 								<Button
 									variant="outline"
-									className="text-state-error hover:bg-state-inProgress/10 hover:text-state-error/0.6 flex items-center font-semibold bg-stateBg-inProgress px-2 py-1 rounded-xl text-sm border-none"
+									className="text-state-error hover:bg-state-inProgress/5 hover:text-state-error/80 flex items-center font-semibold bg-stateBg-inProgress px-2 py-1 rounded-xl text-sm border-none"
 									onClick={() => setIsResolutionOpen(true)}
 								>
 									<span className="material-symbols-outlined mr-2">
@@ -428,22 +431,8 @@ const DataSourceCard = ({
 								</Button>
 							)}
 
-							{/* 
-                6. Also add a "Resolve Validation Error Manually" button
-                if you want it always shown, or show it conditionally.
-              */}
-							{/* {validationStatus !== 'NEED_CLARIFICATION' && (
-								<Button
-									variant="outline"
-									className="rounded-lg font-medium"
-									onClick={() => setIsResolutionOpen(true)}
-								>
-									Resolve Validation Error Manually
-								</Button>
-							)} */}
-							{!(
-								validationStatus === 'validating' ||
-								validationStatus === 'NEED_CLARIFICATION'
+							{!['validating', 'NEED_CLARIFICATION'].includes(
+								validationStatus,
 							) && (
 								<Button
 									variant="outline"
@@ -459,12 +448,15 @@ const DataSourceCard = ({
 						</div>
 					</div>
 				</CardHeader>
+
 				<CardContent className="space-y-6">
 					{validationStatus === 'validating' && (
 						<QueueStatus text={currentValidationText} />
 					)}
-
-					{/* 7. Manage Variables as text inputs */}
+					{renderFilesSection(
+						datasourceQuery.data?.processed_files?.files,
+						fileSizes,
+					)}
 					<VariablesSection
 						variables={variablesState}
 						onVariablesChange={handleVariableChange}
@@ -474,14 +466,12 @@ const DataSourceCard = ({
 				</CardContent>
 			</Card>
 
-			{/* DataSource Selector (modal) */}
 			<DataSourceSelector
 				open={isModalOpen}
 				onOpenChange={setIsModalOpen}
 				onContinue={handleContinue}
 			/>
 
-			{/* Error Resolution Modal (child) */}
 			<ErrorResolutionModal
 				open={isResolutionOpen}
 				onOpenChange={setIsResolutionOpen}

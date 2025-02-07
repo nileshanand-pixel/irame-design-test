@@ -8,6 +8,7 @@ import { cn, getToken } from '@/lib/utils';
 import DividerWithText from '@/components/elements/DividerWithText';
 import PropTypes from 'prop-types';
 import { getDataSources } from '../../configuration/service/configuration.service';
+import Spinner from '@/components/elements/loading/Spinner';
 
 export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 	const [searchQuery, setSearchQuery] = useState('');
@@ -24,9 +25,18 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 		queryFn: fetchDataSources,
 	});
 
-	const filteredData = (dataSources || []).filter((item) =>
-		item.name.toLowerCase().startsWith(searchQuery.toLowerCase()),
-	);
+	const filteredData = (dataSources || [])
+		// Exclude data sources with PDF files
+		.filter((item) => {
+			const hasPDF = item.processed_files?.files?.some(
+				(file) => file.type === 'pdf',
+			);
+			return !hasPDF;
+		})
+		// Apply search filter
+		.filter((item) =>
+			item.name.toLowerCase().startsWith(searchQuery.toLowerCase()),
+		);
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,42 +85,57 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 							No such data source found
 						</div>
 					) : (
-						filteredData.map((item) => (
-							<label
-								key={item.id}
-								className="flex items-center justify-between gap-6 p-3 rounded-md hover:bg-accent cursor-pointer border-b"
-							>
-								<div className="flex text-primary80 items-center justify-between gap-2">
-									<span className="material-symbols-outlined text-2xl">
-										database
-									</span>
-									<span className="font-medium">{item.name}</span>
-								</div>
-								<input
-									type="radio"
-									name="data-source"
-									className="h-4 w-4 text-primary border-gray-300"
-									checked={selectedDataSourceId === item.datasource_id}
-									onChange={() => setSelectedDataSourceId(item.datasource_id)}
-								/>
-							</label>
-						))
+						filteredData.map((item) => {
+							const isProcessing =
+								!item.processed_files?.files ||
+								item.processed_files.files.length === 0;
+
+							return (
+								<label
+									key={item.datasource_id}
+									className={`flex items-center justify-between gap-6 p-3 rounded-md ${
+										isProcessing
+											? 'cursor-not-allowed'
+											: 'cursor-pointer hover:bg-accent'
+									} border-b`}
+								>
+									<div className="flex text-primary80 items-center justify-between gap-2">
+										<span className="material-symbols-outlined text-2xl">
+											database
+										</span>
+										<span className="font-medium">
+											{item.name}
+										</span>
+									</div>
+									{isProcessing ? (
+										<div className="flex items-center gap-2">
+											<Spinner className="w-4 h-4" />
+											<span className="text-state-error">
+												Processing
+											</span>
+										</div>
+									) : (
+										<input
+											type="radio"
+											name="data-source"
+											className="h-4 w-4 text-primary border-gray-300"
+											checked={
+												selectedDataSourceId ===
+												item.datasource_id
+											}
+											onChange={() =>
+												setSelectedDataSourceId(
+													item.datasource_id,
+												)
+											}
+											disabled={isProcessing}
+										/>
+									)}
+								</label>
+							);
+						})
 					)}
 				</div>
-				
-				{/* Upload removed for some time */}
-				{/* <DividerWithText className="-my-2" text="Or" />
-
-				<Button
-					variant="outline"
-					onClick={() => alert('implement upload')}
-					className="text-sm text-purple-100 hover:text-purple-80 font-medium border-purple-100 border  hover:bg-gray-100 flex items-center"
-				>
-					<span className="material-symbols-outlined text-xl rounded-md p-1">
-						Upload
-					</span>
-					<span>Upload Data Source</span>
-				</Button> */}
 
 				<div className="flex justify-between gap-3 pt-2">
 					<Button
@@ -124,8 +149,12 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 						disabled={!selectedDataSourceId}
 						className="w-1/2  hover:bg-purple-100 hover:text-white hover:opacity-80"
 						onClick={() => {
-							const selectedDataSource = (dataSources || []).find(
-								(item) => item.datasource_id === selectedDataSourceId,
+							const selectedDataSource = (
+								dataSources || []
+							).find(
+								(item) =>
+									item.datasource_id ===
+									selectedDataSourceId,
 							);
 							if (selectedDataSource) {
 								onContinue(selectedDataSource);

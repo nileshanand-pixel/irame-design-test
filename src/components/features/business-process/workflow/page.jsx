@@ -16,7 +16,7 @@ import {
 import Breadcrumb from './BreadCrumb';
 import WorkflowDetails from './WorkflowDetails';
 import DataSourceCard from './DataSourceCard';
-import StepsList from './StepsList';
+import WorkflowPlan from './WorkflowPlan';
 
 export default function WorkflowPage() {
 	const { businessProcessId, workflowId } = useParams();
@@ -58,6 +58,7 @@ export default function WorkflowPage() {
 		[businessProcesses, businessProcessId],
 	);
 
+
 	const breadcrumbItems = useMemo(
 		() => [
 			{ label: 'Business Process', path: '/app/business-process' },
@@ -70,14 +71,10 @@ export default function WorkflowPage() {
 		[businessProcess, businessProcessId, workflowDetails],
 	);
 
-	const steps = useMemo(
-		() =>
-			workflowDetails?.data?.plan
-				?.split('\n')
-				.filter((text) => text.trim())
-				.map((text, index) => ({ id: index + 1, text })) || [],
-		[workflowDetails],
-	);
+	const plan = useMemo(
+		() => workflowDetails?.data?.plan || '',
+		[workflowDetails]
+	  );
 
 	if (isWorkflowLoading || isBusinessLoading) {
 		return <WorkflowPageSkeleton />;
@@ -116,7 +113,8 @@ export default function WorkflowPage() {
 								isRunning={runWorkFlowMutation.isPending}
 							/>
 
-							<StepsList steps={steps} disabled />
+							<WorkflowPlan plan={plan} disabled />
+
 
 							<div className="mt-auto sticky bottom-12 left-0 flex justify-center py-4">
 								<Button

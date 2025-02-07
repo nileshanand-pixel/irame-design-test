@@ -8,7 +8,7 @@ const Breadcrumb = ({ items, navigate }) => (
           {item.path ? (
             <h1
               onClick={() => navigate(item.path)}
-              className="text-2xl font-semibold cursor-pointer"
+              className="text-2xl font-medium cursor-pointer"
             >
               {item.label}
             </h1>
