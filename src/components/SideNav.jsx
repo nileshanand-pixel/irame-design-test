@@ -65,7 +65,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				{
 					link: '/app/business-process',
 					text: 'Business Process',
-					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/gear.svg',
+					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/sidenav_workflow_icon.svg ',
 				},
 				{
 					link: '/app/dashboard',
@@ -288,6 +288,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			if(pathname.includes('configuration'))setActiveTab('/app/configuration')
 			if(pathname.includes('reports'))setActiveTab('/app/reports/datasources')
 			if(pathname.includes('business-process'))setActiveTab('/app/business-process')
+			if(pathname.includes('dashboard'))setActiveTab('/app/dashboard')
+
 		}
 	}, [pathname]);
 

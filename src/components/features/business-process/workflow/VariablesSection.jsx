@@ -1,37 +1,36 @@
-// WorkflowPage.jsx
 import React from 'react';
+import Tooltip from '../../reports/components/Tooltip';
+import capitalize from 'lodash.capitalize';
 
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-
-
-const VariablesSection = ({ variables }) => {
-  if (!variables || Object.keys(variables).length === 0) return null;
+const VariablesSection = ({ variables, onVariablesChange }) => {
+  // variables shape: { v1: {name, description, type, value}, v2: {...}, ... }
+  const hasVariables = Object.keys(variables).length > 0;
 
   return (
-    <div>
-      <h4 className="text-lg font-semibold text-primary80 mb-2">Variables</h4>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {Object.entries(variables).map(([key, variable]) => {
-          if (!['int', 'string'].includes(variable.type)) return null;
-          
-          return (
-            <div key={key} className="flex flex-col">
-              <Label className="block text-sm text-primary60 font-medium mb-1">
-                {variable.name}
-              </Label>
-              <Input
+    <div className='border-b pb-6'>
+      <h3 className="text-lg font-medium">Variables</h3>
+      <div className="flex flex-wrap gap-4 space-y-3 mt-4 mx-2">
+        {hasVariables ? (
+          Object.entries(variables).map(([varKey, variable]) => (
+            <div key={varKey} className="flex flex-col gap-2">
+              <label className="font-medium w-fit">
+                <Tooltip content={variable.description || 'No Description'}>
+                  {capitalize(variable.name)}
+                </Tooltip>
+              </label>
+              <input
                 type="text"
-                defaultValue={variable.default_value}
-                className="w-full p-3 border rounded-md bg-white focus:outline-none"
-                placeholder={`Enter ${variable.type}`}
+                value={variable.value ?? ''}
+                onChange={(e) => onVariablesChange(varKey, e.target.value)}
+                className="border p-2 rounded-md w-[200px]"
               />
-              <p className="text-sm text-muted-foreground mt-1">
-                {variable.description}
-              </p>
             </div>
-          );
-        })}
+          ))
+        ) : (
+          <div className="flex items-center justify-center h-32 text-gray-500">
+            No variables available
+          </div>
+        )}
       </div>
     </div>
   );
