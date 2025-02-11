@@ -28,6 +28,7 @@ import { getDataSourceById } from '../../configuration/service/configuration.ser
 
 import { getFileIcon, getToken } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
+import WorkFlowDataSourceCardSkeleton from './WorkFlowDataSourceCardSkeleton';
 
 const gradientStyle = {
 	background: `
@@ -75,7 +76,7 @@ const DataSourceCard = ({
 	const { data: runDetails, isLoading: isRunLoading } = useQuery({
 		queryKey: ['workflow-run-details', runId],
 		queryFn: () => getWorkflowRunDetails(getToken(), workflowId, runId),
-		enabled: Boolean(runId) && validationStatus !== 'NEED_CLARIFICATION',
+		enabled: Boolean(runId),
 		refetchInterval:
 			runId && validationStatus !== 'NEED_CLARIFICATION' ? 5000 : false,
 	});
@@ -101,6 +102,7 @@ const DataSourceCard = ({
 		onError: (err) => {
 			toast.error(`Workflow initiation failed: ${err.message}`);
 			console.error('Workflow initiation error:', err);
+			setValidationStatus('idle');
 		},
 	});
 
@@ -115,6 +117,7 @@ const DataSourceCard = ({
 		onError: (err) => {
 			toast.error(`Clarification failed: ${err.message}`);
 			console.error('Clarification error:', err);
+			setValidationStatus('NEED_CLARIFICATION');
 		},
 	});
 
@@ -187,26 +190,35 @@ const DataSourceCard = ({
 
 	const handleContinue = (data) => {
 		setValidationStatus('validating');
+
+		//prepare api payload
+		const mergedVariables = Object.keys(variablesState).reduce(
+			(acc, key) => ({
+				...acc,
+				[key]: variablesState[key],
+			}),
+			{},
+		);
+
+		let payload = {
+			variables: mergedVariables,
+		};
 		if (data?.datasource_id) {
-			const mergedVariables = Object.keys(variablesState).reduce(
-				(acc, key) => ({
-					...acc,
-					[key]: variablesState[key],
-				}),
-				{},
-			);
+			payload.datasource_id = data.datasource_id;
 
 			initiateWorkflowCheckMutation.mutate({
 				workflowId,
-				payload: {
-					datasource_id: data.datasource_id,
-					variables: mergedVariables,
-					user_clarifications: userClarifications,
-				},
+				payload,
+			});
+		} else if (data?.datasource_payload) {
+			payload.datasource_payload = data.datasource_payload;
+
+			initiateWorkflowCheckMutation.mutate({
+				workflowId,
+				payload,
 			});
 		}
 	};
-
 	const handleOpenModal = () => {
 		if (validationStatus === 'validating') return;
 		if (validationResult || selectedDatasourceId) {
@@ -342,6 +354,28 @@ const DataSourceCard = ({
 	const renderFilesSection = (files, fileSizes) => {
 		if (!files?.length) return null;
 
+		if (datasourceQuery.isLoading) {
+			return (
+				<div className="mt-6 border-b pb-6">
+					<h3 className="text-lg font-medium mb-4">Files</h3>
+					{[1, 2, 3].map((i) => (
+						<div
+							key={i}
+							className="px-4 py-2.5 rounded-lg mt-2 bg-gray-100 animate-pulse"
+							style={gradientStyle}
+						>
+							<div className="flex justify-between items-center">
+								<div className="flex gap-2 items-center">
+									<Skeleton className="w-6 h-6 bg-gray-200 rounded" />
+									<Skeleton className="h-4 w-48 bg-gray-200" />
+								</div>
+							</div>
+						</div>
+					))}
+				</div>
+			);
+		}
+
 		return (
 			<div className="mt-6 border-b pb-6">
 				<h3 className="text-lg font-medium mb-4">Files</h3>
@@ -392,93 +426,103 @@ const DataSourceCard = ({
 				</div>
 			)}
 
-			<Card className="mb-8 text-primary80 border border-black/10 rounded-xl shadow-none">
-				<CardHeader>
-					<div className="flex justify-between border-b pb-3">
-						<div>
-							<CardTitle className="text-lg font-semibold">
-								Data Source
-							</CardTitle>
-							<CardDescription className="text-sm text-primary60">
-								Securely connect to a datasource
-							</CardDescription>
-						</div>
+			{isRunLoading ? (
+				<WorkFlowDataSourceCardSkeleton />
+			) : (
+				<>
+					<Card className="mb-8 text-primary80 border border-black/10 rounded-xl shadow-none">
+						<CardHeader>
+							<div className="flex justify-between border-b pb-3">
+								<div>
+									<CardTitle className="text-lg font-semibold">
+										Data Source
+									</CardTitle>
+									<CardDescription className="text-sm text-primary60">
+										Securely connect to a datasource
+									</CardDescription>
+								</div>
 
-						<div className="flex gap-2">
-							{shouldShowRevalidate && (
-								<Button
-									variant="outline"
-									className="rounded-lg font-medium"
-									onClick={handleRevalidate}
-									disabled={validationStatus === 'validating'}
-								>
-									<RefreshCw className="w-4 h-4 mr-2" />
-									Re-validate
-								</Button>
+								<div className="flex gap-2">
+									{shouldShowRevalidate && (
+										<Button
+											variant="outline"
+											className="rounded-lg font-medium"
+											onClick={handleRevalidate}
+											disabled={
+												validationStatus === 'validating'
+											}
+										>
+											<RefreshCw className="w-4 h-4 mr-2" />
+											Re-validate
+										</Button>
+									)}
+
+									{validationStatus === 'NEED_CLARIFICATION' && (
+										<Button
+											variant="outline"
+											className="text-state-error hover:bg-state-inProgress/5 hover:text-state-error/80 flex items-center font-semibold bg-stateBg-inProgress px-2 py-1 rounded-xl text-sm border-none"
+											onClick={() => setIsResolutionOpen(true)}
+										>
+											<span className="material-symbols-outlined mr-2">
+												error
+											</span>
+											Validation error
+											<ChevronRight className="mr-0" />
+										</Button>
+									)}
+
+									{!['validating', 'NEED_CLARIFICATION'].includes(
+										validationStatus,
+									) && (
+										<Button
+											variant="outline"
+											className="rounded-lg bg-purple-8 font-medium border-none hover:bg-purple-4"
+											onClick={handleOpenModal}
+											disabled={
+												validationStatus === 'validating'
+											}
+										>
+											{selectedDatasourceId
+												? 'Try another data source'
+												: 'Connect Data Source'}
+										</Button>
+									)}
+								</div>
+							</div>
+						</CardHeader>
+
+						<CardContent className="space-y-6">
+							{validationStatus === 'validating' && (
+								<QueueStatus text={currentValidationText} />
 							)}
-
-							{validationStatus === 'NEED_CLARIFICATION' && (
-								<Button
-									variant="outline"
-									className="text-state-error hover:bg-state-inProgress/5 hover:text-state-error/80 flex items-center font-semibold bg-stateBg-inProgress px-2 py-1 rounded-xl text-sm border-none"
-									onClick={() => setIsResolutionOpen(true)}
-								>
-									<span className="material-symbols-outlined mr-2">
-										error
-									</span>
-									Validation error
-									<ChevronRight className="mr-0" />
-								</Button>
+							{renderFilesSection(
+								datasourceQuery.data?.processed_files?.files,
+								fileSizes,
 							)}
+							<VariablesSection
+								variables={variablesState}
+								onVariablesChange={handleVariableChange}
+							/>
 
-							{!['validating', 'NEED_CLARIFICATION'].includes(
-								validationStatus,
-							) && (
-								<Button
-									variant="outline"
-									className="rounded-lg bg-purple-8 font-medium border-none hover:bg-purple-4"
-									onClick={handleOpenModal}
-									disabled={validationStatus === 'validating'}
-								>
-									{selectedDatasourceId
-										? 'Try another data source'
-										: 'Connect Data Source'}
-								</Button>
-							)}
-						</div>
-					</div>
-				</CardHeader>
+							{renderRecommendations()}
+						</CardContent>
+					</Card>
 
-				<CardContent className="space-y-6">
-					{validationStatus === 'validating' && (
-						<QueueStatus text={currentValidationText} />
-					)}
-					{renderFilesSection(
-						datasourceQuery.data?.processed_files?.files,
-						fileSizes,
-					)}
-					<VariablesSection
-						variables={variablesState}
-						onVariablesChange={handleVariableChange}
+					<DataSourceSelector
+						open={isModalOpen}
+						onOpenChange={setIsModalOpen}
+						onContinue={handleContinue}
 					/>
 
-					{renderRecommendations()}
-				</CardContent>
-			</Card>
-
-			<DataSourceSelector
-				open={isModalOpen}
-				onOpenChange={setIsModalOpen}
-				onContinue={handleContinue}
-			/>
-
-			<ErrorResolutionModal
-				open={isResolutionOpen}
-				onOpenChange={setIsResolutionOpen}
-				workflowRunDetails={runDetails}
-				dataSourceDetails={datasourceQuery?.data}
-				onResolutionComplete={handleResolutionComplete}
-			/>
+					<ErrorResolutionModal
+						open={isResolutionOpen}
+						onOpenChange={setIsResolutionOpen}
+						workflowRunDetails={runDetails}
+						dataSourceDetails={datasourceQuery?.data}
+						onResolutionComplete={handleResolutionComplete}
+					/>
+				</>
+			)}
 		</>
 	);
 };

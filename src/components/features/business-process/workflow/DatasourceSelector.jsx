@@ -9,10 +9,14 @@ import DividerWithText from '@/components/elements/DividerWithText';
 import PropTypes from 'prop-types';
 import { getDataSources } from '../../configuration/service/configuration.service';
 import Spinner from '@/components/elements/loading/Spinner';
+import UploadDataSourceModal from './UploadDataSourceModal';
+import { set } from 'react-hook-form';
 
 export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedDataSourceId, setSelectedDataSourceId] = useState(null);
+	const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+	const [datasourceUploadData, setDatasourceUploadData] = useState(null);
 
 	const fetchDataSources = async () => {
 		const token = getToken();
@@ -39,134 +43,159 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 		);
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-lg rounded-lg p-4 text-primary80">
-				<DialogHeader className="">
-					<div className="flex gap-4 items-center">
-						<img
-							src="https://d2vkmtgu2mxkyq.cloudfront.net/datasource_modal_header_icon.svg"
-							alt="icon"
-						/>
-						<div className="flex flex-col">
-							<h2 className="text-lg font-semibold text-black/90">
-								Choose Data Source
-							</h2>
-							<p className="text-sm text-black/60">
-								You can always change it later from the data source
-								page
-							</p>
-						</div>
-					</div>
-				</DialogHeader>
-
-				<div className="flex w-full items-center bg-white border rounded-lg h-11 pl-4 pr-6 transition-width duration-300">
-					<i className="bi-search text-primary40 me-2"></i>
-					<Input
-						placeholder="Search"
-						className={cn(
-							'border-none rounded-sm px-0 text-black font-medium bg-white',
-						)}
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-					/>
-				</div>
-
-				{/* Data List Area */}
-				<div className="max-h-96 overflow-y-auto border-2 rounded-lg">
-					{isFetchingData ? (
-						Array.from({ length: 5 }).map((_, i) => (
-							<div key={i} className="flex items-center gap-4 p-3">
-								<Skeleton className="h-5 w-5 rounded-full" />
-								<Skeleton className="h-4 w-32" />
+		<>
+			<Dialog open={open} onOpenChange={onOpenChange}>
+				<DialogContent className="max-w-lg rounded-lg p-4 text-primary80">
+					<DialogHeader className="">
+						<div className="flex gap-4 items-center">
+							<img
+								src="https://d2vkmtgu2mxkyq.cloudfront.net/datasource_modal_header_icon.svg"
+								alt="icon"
+							/>
+							<div className="flex flex-col">
+								<h2 className="text-lg font-semibold text-black/90">
+									Choose Data Source
+								</h2>
+								<p className="text-sm text-black/60">
+									You can always change it later from the data
+									source page
+								</p>
 							</div>
-						))
-					) : filteredData.length === 0 ? (
-						<div className="h-32 flex items-center justify-center text-muted-foreground">
-							No such data source found
 						</div>
-					) : (
-						filteredData.map((item) => {
-							const isProcessing =
-								!item.processed_files?.files ||
-								item.processed_files.files.length === 0;
+					</DialogHeader>
 
-							return (
-								<label
-									key={item.datasource_id}
-									className={`flex items-center justify-between gap-6 p-3 rounded-md ${
-										isProcessing
-											? 'cursor-not-allowed'
-											: 'cursor-pointer hover:bg-accent'
-									} border-b`}
-								>
-									<div className="flex text-primary80 items-center justify-between gap-2">
-										<span className="material-symbols-outlined text-2xl">
-											database
-										</span>
-										<span className="font-medium">
-											{item.name}
-										</span>
-									</div>
-									{isProcessing ? (
-										<div className="flex items-center gap-2">
-											<Spinner className="w-4 h-4" />
-											<span className="text-state-error">
-												Processing
+					<div className="flex w-full items-center bg-white border rounded-lg h-11 pl-4 pr-6 transition-width duration-300">
+						<i className="bi-search text-primary40 me-2"></i>
+						<Input
+							placeholder="Search"
+							className={cn(
+								'border-none rounded-sm px-0 text-black font-medium bg-white',
+							)}
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+						/>
+					</div>
+
+					{/* Data List Area */}
+					<div className="max-h-96 overflow-y-auto border-2 rounded-lg">
+						{isFetchingData ? (
+							Array.from({ length: 5 }).map((_, i) => (
+								<div key={i} className="flex items-center gap-4 p-3">
+									<Skeleton className="h-5 w-5 rounded-full" />
+									<Skeleton className="h-4 w-32" />
+								</div>
+							))
+						) : filteredData.length === 0 ? (
+							<div className="h-32 flex items-center justify-center text-muted-foreground">
+								No such data source found
+							</div>
+						) : (
+							filteredData.map((item) => {
+								const isProcessing =
+									!item.processed_files?.files ||
+									item.processed_files.files.length === 0;
+
+								return (
+									<label
+										key={item.datasource_id}
+										className={`flex items-center justify-between gap-6 p-3 rounded-md ${
+											isProcessing
+												? 'cursor-not-allowed'
+												: 'cursor-pointer hover:bg-accent'
+										} border-b`}
+									>
+										<div className="flex text-primary80 items-center justify-between gap-2">
+											<span className="material-symbols-outlined text-2xl">
+												database
+											</span>
+											<span className="font-medium">
+												{item.name}
 											</span>
 										</div>
-									) : (
-										<input
-											type="radio"
-											name="data-source"
-											className="h-4 w-4 text-primary border-gray-300"
-											checked={
-												selectedDataSourceId ===
-												item.datasource_id
-											}
-											onChange={() =>
-												setSelectedDataSourceId(
-													item.datasource_id,
-												)
-											}
-											disabled={isProcessing}
-										/>
-									)}
-								</label>
-							);
-						})
-					)}
-				</div>
+										{isProcessing ? (
+											<div className="flex items-center gap-2">
+												<Spinner className="w-4 h-4" />
+												<span className="text-state-error">
+													Processing
+												</span>
+											</div>
+										) : (
+											<input
+												type="radio"
+												name="data-source"
+												className="h-4 w-4 text-primary border-gray-300"
+												checked={
+													selectedDataSourceId ===
+													item.datasource_id
+												}
+												onChange={() =>
+													setSelectedDataSourceId(
+														item.datasource_id,
+													)
+												}
+												disabled={isProcessing}
+											/>
+										)}
+									</label>
+								);
+							})
+						)}
+					</div>
 
-				<div className="flex justify-between gap-3 pt-2">
+					{/* Upload removed for some time */}
+					<DividerWithText className="-my-2" text="Or" />
+
 					<Button
-						className="w-1/2"
 						variant="outline"
-						onClick={() => onOpenChange(false)}
+						onClick={() => setIsUploadModalOpen(true)}
+						className="text-sm text-purple-100 hover:text-purple-80 font-medium border-purple-100 border  hover:bg-gray-100 flex items-center"
 					>
-						Cancel
+						<span className="material-symbols-outlined text-xl rounded-md p-1">
+							Upload
+						</span>
+						<span>Upload Data Source</span>
 					</Button>
-					<Button
-						disabled={!selectedDataSourceId}
-						className="w-1/2  hover:bg-purple-100 hover:text-white hover:opacity-80"
-						onClick={() => {
-							const selectedDataSource = (
-								dataSources || []
-							).find(
-								(item) =>
-									item.datasource_id ===
-									selectedDataSourceId,
-							);
-							if (selectedDataSource) {
-								onContinue(selectedDataSource);
-							}
-							onOpenChange(false);
-						}}
-					>
-						Continue
-					</Button>
-				</div>
-			</DialogContent>
-		</Dialog>
+
+					<div className="flex justify-between gap-3 pt-2">
+						<Button
+							className="w-1/2"
+							variant="outline"
+							onClick={() => onOpenChange(false)}
+						>
+							Cancel
+						</Button>
+						<Button
+							disabled={!selectedDataSourceId && !datasourceUploadData}
+							className="w-1/2  hover:bg-purple-100 hover:text-white hover:opacity-80"
+							onClick={() => {
+								const selectedDataSource = (dataSources || []).find(
+									(item) =>
+										item.datasource_id === selectedDataSourceId,
+								);
+								if (selectedDataSource) {
+									onContinue(selectedDataSource);
+								} else if (datasourceUploadData) {
+									onContinue(datasourceUploadData);
+								}
+								onOpenChange(false);
+							}}
+						>
+							Continue
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
+
+			{isUploadModalOpen && (
+				<UploadDataSourceModal
+					open={isUploadModalOpen}
+					onOpenChange={setIsUploadModalOpen}
+					onSaveDataSource={(payload) => {
+						setDatasourceUploadData(payload);
+					}}
+				/>
+			)}
+		</>
 	);
 }
 

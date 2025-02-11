@@ -27,7 +27,7 @@ const VariablesSection = ({ variables, onVariablesChange }) => {
             </div>
           ))
         ) : (
-          <div className="flex items-center justify-center h-32 text-gray-500">
+          <div className="flex text-center w-full justify-center h-8 ">
             No variables available
           </div>
         )}

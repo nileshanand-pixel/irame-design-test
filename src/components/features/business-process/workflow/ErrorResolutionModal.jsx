@@ -5,30 +5,10 @@ import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import capitalize from 'lodash.capitalize';
+import { text } from 'd3';
 
 // Constants
 const COMBO_BOX_PLACEHOLDER = 'Select an option...';
-const MOCK_DATA_MAPPINGS = [
-	{
-		file_name: 'file1',
-		headers: [{ name: 'header1', type: "string", description: "header1 description", column_name: 'col1' }, { name: 'header2', type: "string", description: "header2 description" }],
-	},
-	{
-		file_name: 'file2',
-		headers: [{ name: 'header3', type: "string", description: "header3 description" }, { name: 'header4', type: "string", description: "header4 description" }],
-	},
-];
-
-const MOCK_CLARIFICATIONS = [
-	{
-		type: 'TEXT_CLARIFICATION',
-		description: 'Missing column details required.',
-	},
-	{
-		type: 'TEXT_CLARIFICATION',
-		description: 'Explain why this column is missing.',
-	},
-];
 
 /* ------------------ ComboBoxOnFire ------------------ */
 const ComboBoxOnFire = ({
@@ -214,17 +194,17 @@ export const ErrorResolutionModal = ({
 			Array.isArray(workflowRunDetails?.data?.data_mapping) &&
 			workflowRunDetails.data.data_mapping.length > 0
 				? workflowRunDetails.data.data_mapping
-				: MOCK_DATA_MAPPINGS,
+				: [],
 		[workflowRunDetails],
 	);
 
 	const textClarifications = useMemo(
 		() =>
-			Array.isArray(workflowRunDetails?.clarification)
-				? workflowRunDetails.clarification.filter(
+			Array.isArray(workflowRunDetails?.data?.clarification)
+				? workflowRunDetails.data.clarification.filter(
 						(c) => c.type === 'TEXT_CLARIFICATION',
 					)
-				: MOCK_CLARIFICATIONS,
+				: [],
 		[workflowRunDetails],
 	);
 
@@ -317,17 +297,22 @@ export const ErrorResolutionModal = ({
 				<ModalHeader />
 
 				<div className="max-h-[500px] overflow-y-auto">
-					<MissingColumnsSection
-						missingFields={missingFields}
-						mappings={mappings}
-						setActiveFieldIndex={setActiveFieldIndex}
-					/>
+					{missingFields && missingFields.length > 0 && (
+						<MissingColumnsSection
+							missingFields={missingFields}
+							mappings={mappings}
+							setActiveFieldIndex={setActiveFieldIndex}
+						/>
+					)}
 
-					<ClarificationSection
-						textClarifications={textClarifications}
-						clarificationAnswers={clarificationAnswers}
-						handleClarificationChange={handleClarificationChange}
-					/>
+					{textClarifications && textClarifications.length > 0 && (
+						<ClarificationSection
+							textClarifications={textClarifications}
+							clarificationAnswers={clarificationAnswers}
+							handleClarificationChange={handleClarificationChange}
+							missingFields={missingFields}
+						/>
+					)}
 				</div>
 
 				<ModalFooter
@@ -364,47 +349,70 @@ const ModalHeader = () => (
 	</DialogHeader>
 );
 
-const MissingColumnsSection = ({ missingFields, mappings, setActiveFieldIndex }) => (
-	<>
-		<h3 className="mx-2 text-lg mb-1 font-semibold">Missing Columns</h3>
-		<Separator className="mx-2" />
+const MissingColumnsSection = ({ missingFields, mappings, setActiveFieldIndex }) => {
+	const hasMissingFields = missingFields && missingFields.length > 0;
 
-		<div className="flex mx-2 my-4 flex-col space-y-2">
-			<div className="text-state-error flex items-center font-semibold bg-stateBg-inProgress px-3 py-1 rounded-md text-sm">
-				<span className="material-symbols-outlined mr-2">error</span>
-				Required Field not found: {missingFields.length}
-			</div>
-		</div>
+	return (
+		<>
+			<h3 className="mx-2 text-lg mb-1 font-semibold">Missing Columns</h3>
+			<Separator className="mx-2" />
 
-		<div className="border-2 mx-2 rounded-lg overflow-hidden">
-			<div className="sticky top-0 grid grid-cols-12 bg-gray-100 text-black font-semibold text-sm border-b-2">
-				<div className="col-span-2 py-4 px-3 border-r-2">S. No.</div>
-				<div className="col-span-4 py-4 px-3 border-r-2">Required Field</div>
-				<div className="col-span-6 py-4 px-3">Add Field</div>
-			</div>
-
-			<div className="max-h-52 min-h-32 overflow-y-auto">
-				{missingFields.map((mf, index) => (
-					<div key={index} className="grid grid-cols-12 border-b-2">
-						<div className="col-span-2 py-1 px-3 border-r-2">
-							{index + 1}
-						</div>
-						<div className="col-span-4 py-1 px-3 border-r-2 font-medium">
-							{capitalize(mf.header_name)}
-						</div>
-						<div className="col-span-6 py-1 px-3">
-							<FieldButton
-								index={index}
-								mappings={mappings}
-								onClick={() => setActiveFieldIndex(index)}
-							/>
+			{hasMissingFields ? (
+				<>
+					<div className="flex mx-2 my-4 flex-col space-y-2">
+						<div className="text-state-error flex items-center font-semibold bg-stateBg-inProgress px-3 py-1 rounded-md text-sm">
+							<span className="material-symbols-outlined mr-2">
+								error
+							</span>
+							Required Field not found: {missingFields.length}
 						</div>
 					</div>
-				))}
-			</div>
-		</div>
-	</>
-);
+
+					<div className="border-2 mx-2 rounded-lg overflow-hidden">
+						<div className="sticky top-0 grid grid-cols-12 bg-gray-100 text-black font-semibold text-sm border-b-2">
+							<div className="col-span-2 py-4 px-3 border-r-2">
+								S. No.
+							</div>
+							<div className="col-span-4 py-4 px-3 border-r-2">
+								Required Field
+							</div>
+							<div className="col-span-6 py-4 px-3">Add Field</div>
+						</div>
+
+						<div className="max-h-52 min-h-32 overflow-y-auto">
+							{missingFields.map((mf, index) => (
+								<div
+									key={index}
+									className="grid grid-cols-12 border-b-2"
+								>
+									<div className="col-span-2 py-1 px-3 border-r-2">
+										{index + 1}
+									</div>
+									<div className="col-span-4 py-1 px-3 border-r-2 font-medium">
+										{capitalize(mf.header_name)}
+									</div>
+									<div className="col-span-6 py-1 px-3">
+										<FieldButton
+											index={index}
+											mappings={mappings}
+											onClick={() =>
+												setActiveFieldIndex(index)
+											}
+										/>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				</>
+			) : (
+				<div className="flex justify-center items-center h-32">
+					No missing column found.
+				</div>
+			)}
+		</>
+	);
+};
 
 const FieldButton = ({ index, mappings, onClick }) => (
 	<Button
@@ -425,11 +433,24 @@ const ClarificationSection = ({
 	textClarifications,
 	clarificationAnswers,
 	handleClarificationChange,
+	missingFields
 }) => {
-	if (textClarifications.length === 0) return null;
+	const hasClarifications = textClarifications && textClarifications.length > 0;
+
+	if (!hasClarifications) {
+		return (
+			<div className="mx-2 mt-6">
+				<h3 className="text-lg mx-2 font-semibold">Clarification</h3>
+				<Separator className="mx-2" />
+				<div className="flex justify-center items-center h-32">
+					No clarifications required.
+				</div>
+			</div>
+		);
+	}
 
 	return (
-		<div className="mx-2 mt-6">
+		<div className={`mx-2 ${missingFields?.length > 0 && 'mt-6'}`}>
 			<h3 className="text-lg mx-2 font-semibold">Clarification</h3>
 			<Separator className="mx-2" />
 			<div className="mx-2 mt-4">

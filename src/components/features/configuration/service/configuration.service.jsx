@@ -16,43 +16,41 @@ export const getPresignedUrl = async (fileName, authToken) => {
 	return response.data;
 };
 
-export const uploadFile = async (file, setProgress, authToken) => {
-	try {
-		const { presigned_url, url } = await getPresignedUrl(
-			file?.name?.replace(/\s/g, '_'),
-			authToken,
-		);
+export const uploadFile = async (file, setProgress, authToken, cancelToken=null) => {
+    try {
+        const { presigned_url, url } = await getPresignedUrl(
+            file?.name?.replace(/\s/g, '_'),
+            authToken,
+        );
 
-		await axiosClientV1.put(presigned_url, file, {
-			headers: {
-				'Content-Type': file.type,
-			},
-			onUploadProgress: (progressEvent) => {
-				const uploadProgress = Math.round(
-					(progressEvent.loaded / progressEvent.total) * 100,
-				);
-				//Handle cancelled files progress
-				setProgress((prevProgress) => {
-					// Check if the file name is present in the previous state
-					if (prevProgress[file.name] !== undefined) {
-						return {
-							...prevProgress,
-							[file.name]: uploadProgress,
-						};
-					}
+        await axiosClientV1.put(presigned_url, file, {
+            headers: {
+              'Content-Type': file.type,
+            },
+            onUploadProgress: (progressEvent) => {
+              const uploadProgress = Math.round(
+                (progressEvent.loaded / progressEvent.total) * 100,
+              );
+              setProgress((prevProgress) => {
+                if (prevProgress[file.name] !== undefined) {
+                  return {
+                    ...prevProgress,
+                    [file.name]: uploadProgress,
+                  };
+                }
+                return { ...prevProgress };
+              });
+            },
+            cancelToken,
+        });
 
-					// Return the previous state if the file name is not present
-					return { ...prevProgress };
-				});
-			},
-		});
-
-		return { name: file.name, url, presigned_url };
-	} catch (error) {
-		console.error(`Error uploading file ${file.name}`, error);
-		throw error;
-	}
+        return { name: file.name, url, presigned_url };
+    } catch (error) {
+      console.error(`Error uploading file ${file.name}`, error);
+      throw error;
+    }
 };
+
 
 export const getDataSources = async (authToken) => {
 	const response = await axiosClientV1.get(`/datasources`, {
