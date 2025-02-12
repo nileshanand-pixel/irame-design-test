@@ -45,7 +45,6 @@ const DataSourceCard = ({
 }) => {
 	const navigate = useNavigate();
 	const { businessProcessId } = useParams();
-	const location = useLocation();
 
 	// -------------------------- State --------------------------
 	const [userClarifications, setUserClarifications] = useState({
@@ -93,6 +92,7 @@ const DataSourceCard = ({
 			initiateWorkflowCheck(getToken(), workflowId, payload),
 		onSuccess: (data) => {
 			toast.success('Workflow initiated successfully');
+			queryClient.invalidateQueries(['workflow-runs', workflowId]);
 			if (data?.external_id) {
 				navigate(
 					`/app/business-process/${businessProcessId}/workflows/${workflowId}?run_id=${data.external_id}`,

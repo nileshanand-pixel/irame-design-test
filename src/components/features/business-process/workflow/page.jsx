@@ -11,12 +11,14 @@ import { WorkflowPageSkeleton } from './WorkflowPageSkeleton';
 import {
 	getBusinessProcesses,
 	getWorkflowDetails,
+	getWorkflowRunDetails,
 	RunWorkFlowRun,
 } from '../service/workflow.service';
 import Breadcrumb from './BreadCrumb';
 import WorkflowDetails from './WorkflowDetails';
 import DataSourceCard from './DataSourceCard';
 import WorkflowPlan from './WorkflowPlan';
+import { queryClient } from '@/lib/react-query';
 
 export default function WorkflowPage() {
 	const { businessProcessId, workflowId } = useParams();
@@ -40,7 +42,11 @@ export default function WorkflowPage() {
 
 	const runWorkFlowMutation = useMutation({
 		mutationFn: () => RunWorkFlowRun(getToken(), workflowId, runId),
-		onSuccess: (data) => {
+		onSuccess: async() => {
+			toast.success('Workflow run successful');
+			queryClient.invalidateQueries(['workflow-runs', workflowId]);
+			queryClient.invalidateQueries(['workflow-run-details', runId]);
+			const data = await getWorkflowRunDetails(getToken(), workflowId, runId);
 			navigate(`/app/new-chat/session/?sessionId=${data.session_id}`);
 		},
 		onError: (err) => {
