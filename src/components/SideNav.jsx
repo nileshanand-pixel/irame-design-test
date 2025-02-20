@@ -45,7 +45,9 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const fetchUserSession = async () => {
 		try {
 			const data = await getUserSession(getToken());
-			dispatch(updateAuthStoreProp([{key: 'userId', value: data?.[0]?.user_id}]))
+			dispatch(
+				updateAuthStoreProp([{ key: 'userId', value: data?.[0]?.user_id }]),
+			);
 			return data;
 		} catch (error) {
 			console.error('Error fetching user session:', error);
@@ -81,7 +83,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					link: '/app/configuration',
 					text: 'Configuration',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/gear.svg',
-				}
+				},
 			],
 		},
 	];
@@ -158,7 +160,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					return session;
 				}
 			});
-			if (!confirm("Are you sure you want to delete this session?")) return;
+			if (!confirm('Are you sure you want to delete this session?')) return;
 			await deleteSession(sessionId, getToken());
 			dispatch(
 				updateUtilProp([{ key: 'sessionHistory', value: updatedList }]),
@@ -213,6 +215,10 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			showSpinner = session?.status !== 'done';
 		}
 
+		const sessionIconUrl = session?.metadata?.workflow_run_id
+			? 'https://d2vkmtgu2mxkyq.cloudfront.net/sidenav_workflow_icon.svg'
+			: 'https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg';
+
 		return (
 			<div
 				className={cn(
@@ -236,11 +242,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					{showSpinner ? (
 						<GradientSpinner tailwindBg="bg-[#E6D7F7]" width="15" />
 					) : (
-						<img
-							src="https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg"
-							alt="ask-ira"
-							className="size-5"
-						/>
+						<img src={sessionIconUrl} alt="ask-ira" className={`${sessionIconUrl ? 'size-7': 'size-5'}`} />
 					)}
 					{isEditing === session.session_id ? (
 						<InputText
@@ -285,11 +287,13 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			setActiveTab('');
 		} else {
 			setActiveTab(pathname);
-			if(pathname.includes('configuration'))setActiveTab('/app/configuration')
-			if(pathname.includes('reports'))setActiveTab('/app/reports/datasources')
-			if(pathname.includes('business-process'))setActiveTab('/app/business-process')
-			if(pathname.includes('dashboard'))setActiveTab('/app/dashboard')
-
+			if (pathname.includes('configuration'))
+				setActiveTab('/app/configuration');
+			if (pathname.includes('reports'))
+				setActiveTab('/app/reports/datasources');
+			if (pathname.includes('business-process'))
+				setActiveTab('/app/business-process');
+			if (pathname.includes('dashboard')) setActiveTab('/app/dashboard');
 		}
 	}, [pathname]);
 
@@ -438,4 +442,3 @@ SideNav.propTypes = {
 };
 
 export default SideNav;
-
