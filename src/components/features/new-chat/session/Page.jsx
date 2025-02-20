@@ -486,7 +486,7 @@ const Workzone = () => {
 						<QueryDisplay
 							mode={query?.type}
 							bulkPrompt={query?.metadata?.queries}
-							workflowTitle = {query?.metadata?.saved_query_reference?.title}
+							workflowTitle = {query?.metadata?.saved_query_reference?.title || query?.metadata?.workflow_reference?.name}
 							prompt={query?.question}
 						/>
 					</div>		

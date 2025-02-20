@@ -28,7 +28,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace, canEdi
 			[WorkspaceEnum.Planner]: () => (
 				<PlannerComponent
 					data={answerResp?.answer?.[WorkspaceEnum.Planner]}
-					canEdit={canEdit}
+					canEdit={ canEdit && answerResp?.type !== 'workflow'}
 					workspaceHasChanges={workspaceHasChanges}
 					setWorkspaceHasChanges={setWorkspaceHasChanges}
 				/>
@@ -81,7 +81,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace, canEdi
 		));
 	};
 
-	const showRegenerateAction = !editDisabled && workspaceHasChanges
+	const showRegenerateAction = !editDisabled && workspaceHasChanges && answerResp?.type !== 'workflow';
 
 	return (
 		<div className="rounded-2xl my-6 w-[100%] h-full overflow-hidden relative">

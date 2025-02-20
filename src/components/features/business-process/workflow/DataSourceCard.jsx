@@ -48,7 +48,7 @@ const DataSourceCard = ({
 
 	// -------------------------- State --------------------------
 	const [userClarifications, setUserClarifications] = useState({
-		text: '',
+		text_clarification: '',
 		data_mapping: [],
 	});
 	const [variablesState, setVariablesState] = useState(() => {
@@ -237,7 +237,7 @@ const DataSourceCard = ({
 	const handleResolutionComplete = ({ textClarification, dataMapping }) => {
 		setUserClarifications((prev) => ({
 			...prev,
-			text: textClarification,
+			text_clarification: textClarification,
 			data_mapping: dataMapping,
 		}));
 		setShouldShowRevalidate(true);

@@ -5,7 +5,6 @@ import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import capitalize from 'lodash.capitalize';
-import { text } from 'd3';
 
 // Constants
 const COMBO_BOX_PLACEHOLDER = 'Select an option...';
@@ -253,9 +252,13 @@ export const ErrorResolutionModal = ({
 	};
 
 	const handleContinue = () => {
-		const textClarification = textClarifications
-			.map((_, idx) => `<slice> ${clarificationAnswers[idx] || ''} <slice>`)
-			.join('');
+		const textClarificationResponses = textClarifications.map((clarification, idx) => ({
+			response: clarificationAnswers[idx] || '',
+			ira_clarification: {
+			  description: clarification.description,
+			  metadata: clarification.metadata || {},
+			}
+		  }));
 
 		const finalDataMapping = dataMappings.map((file) => {
 			const updatedHeaders = (file.headers || []).map((header) => {
@@ -285,7 +288,7 @@ export const ErrorResolutionModal = ({
 		});
 
 		onResolutionComplete?.({
-			textClarification,
+			textClarification: textClarificationResponses,
 			dataMapping: finalDataMapping,
 		});
 		onOpenChange(false);
