@@ -53,9 +53,10 @@ const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) =>
 
 	useEffect(() => {
 		const fetchData = async () => {
-			if (data?.csv_url) {
+			let url = data?.sample_url || data?.csv_url;
+			if (url) {
 				try {
-					const csvData = await d3.csv(data.csv_url);
+					const csvData = await d3.csv(url);
 					setLoadedData(csvData);
 
 					setColumns(generateColumns(Object.keys(csvData[0])));
