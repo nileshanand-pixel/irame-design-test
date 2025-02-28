@@ -65,9 +65,10 @@ const GraphComponent = ({
 
 	useEffect(() => {
 		if (tableData && tableData.csv_url) {
+			let url = tableData?.sample_url || tableData?.csv_url;
 			const fetchData = async () => {
 				try {
-					const csvData = await d3.csv(tableData.csv_url);
+					const csvData = await d3.csv(url);
 					setLoadedData(csvData);
 					setColumns(generateColumns(Object.keys(csvData[0])));
 				} catch (error) {
