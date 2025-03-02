@@ -19,6 +19,14 @@ import { useQuery } from '@tanstack/react-query';
 import { intent } from './configuration.content';
 import BackdropLoader from '@/components/elements/loading/BackDropLoader';
 import { Textarea } from '@/components/ui/textarea';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import capitalize from 'lodash.capitalize';
+import dayjs from 'dayjs';
 
 const Configuration = () => {
 	const [files, setFiles] = useState([]);
@@ -441,7 +449,7 @@ const Configuration = () => {
 					))}
 			</div>
 			{/* Right Section Manage Data Source */}
-			<div className="border rounded-3xl py-4 px-6 col-span-12 shadow-1xl max-h-[86vh] min-h-fit">
+			<div className="border rounded-3xl py-4 px-6 col-span-12 shadow-1xl max-h-[84vh] mb-4 overflow-y-auto">
 				<div className="flex justify-between mb-4">
 					<div>
 						<h3 className="text-primary80 font-semibold text-xl">
@@ -477,36 +485,34 @@ const Configuration = () => {
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>
 					)}
-					<div className="grid  sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+					<div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{filteredList.length ? (
 							filteredList.map((source) => (
 								<div
-									className="flex justify-between items-center bg-[#6A12CD0A] p-4 rounded-xl gap-4"
+									className="flex justify-between items-center bg-purple-4 p-4 rounded-lg gap-4"
 									key={source.datasource_id}
 								>
 									<p
-										className="text-[#26064ACC]/80 font-medium max-w-[200px] truncate flex cursor-pointer items-center"
+										className="text-primary80 font-medium w-3/4 flex cursor-pointer items-center"
 										onClick={() => startChatting(source)}
 									>
 										<img
 											src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
 											alt="database"
-											className="mr-2 size-5"
+											className="mr-2 size-6 text-primary40"
 										/>
-										{source.name}
+										<div className="flex flex-col">
+											<p className='text-base max-w-[250px] truncate text-ellipsis'>{capitalize(source.name)}</p>
+											<span className='text-primary40 text-xs'>
+												{dayjs(source.created_at).format(
+													'MMM D, YYYY',
+												)}
+											</span>
+										</div>
 									</p>
-									<div className="flex gap-2 items-center">
-										<i
-											className="bi-trash text-primary80 text-xl font-bold cursor-pointer hover:bg-purple-8 rounded-md p-1"
-											onClick={(e) =>
-												handleDeleteDataSource(
-													e,
-													source.datasource_id,
-												)
-											}
-										></i>
+									<div className="flex gap-1 items-center">
 										<span
-											className="material-symbols-outlined text-xl text-primary60 cursor-pointer hover:bg-purple-4 rounded-md p-1"
+											className="material-symbols-outlined text-xl text-primary40 cursor-pointer hover:bg-purple-4 rounded-md p-1"
 											onClick={() => {
 												navigate(
 													`datasource?id=${source.datasource_id}`,
@@ -515,6 +521,25 @@ const Configuration = () => {
 										>
 											edit
 										</span>
+										<DropdownMenu>
+											<DropdownMenuTrigger>
+												<i className="bi-three-dots-vertical text-primary40 text-xl font-bold cursor-pointer hover:bg-purple-4 rounded-md p-1"></i>
+											</DropdownMenuTrigger>
+											<DropdownMenuContent align="start">
+												<DropdownMenuItem
+													className="text-primary80 font-medium hover:!bg-purple-4"
+													onClick={(e) =>
+														handleDeleteDataSource(
+															e,
+															source.datasource_id,
+														)
+													}
+												>
+													<i className="bi-trash me-2 text-primary80 font-medium"></i>
+													Delete
+												</DropdownMenuItem>
+											</DropdownMenuContent>
+										</DropdownMenu>
 									</div>
 								</div>
 							))

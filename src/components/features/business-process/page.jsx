@@ -76,7 +76,7 @@ const BusinessProcessPage = () => {
 				<h1 className="text-2xl font-semibold text-primary80">
 					Business Process
 				</h1>
-				<p className="text-primary40">
+				<p className="text-primary40 text-sm">
 					Manage, view and edit your workflows
 				</p>
 			</header>
@@ -101,7 +101,7 @@ const BusinessProcessPage = () => {
 					) : processes.length === 0 ? (
 						<EmptyStateWrapper config={emptyStateConfig} />
 					) : filteredProcesses.length > 0 ? (
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 							{filteredProcesses.map((process) => (
 								<BusinessProcessCard
 									key={process.external_id}

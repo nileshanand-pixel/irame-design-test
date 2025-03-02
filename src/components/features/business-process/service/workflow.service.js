@@ -19,6 +19,15 @@ export const getWorkflowsByBusinessProcess = async (token, businessProcessId) =>
 };
 
 
+export const getRecentWorkflowsRunsHomePage = async (token,) => {
+	const response = await axiosClientV1.get(`/business-processes/home-page`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+};
+
 export const getWorkflowDetails = async (token, workflowCheckId) => {
 	const response = await axiosClientV1.get(`/workflow-checks/${workflowCheckId}`, {
 		headers: {

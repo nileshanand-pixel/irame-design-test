@@ -52,8 +52,18 @@ export const uploadFile = async (file, setProgress, authToken, cancelToken=null)
 };
 
 
-export const getDataSources = async (authToken) => {
+export const getDataSources = async (authToken, options) => {
 	const response = await axiosClientV1.get(`/datasources`, {
+		headers: {
+			Authorization: `Bearer ${authToken}`,
+		},
+	});
+
+	return response.data?.datasource_list;
+};
+
+export const getDataSourcesWithLimit = async (authToken, limit) => {
+	const response = await axiosClientV1.get(`/datasources?limit=${limit}`, {
 		headers: {
 			Authorization: `Bearer ${authToken}`,
 		},
@@ -112,3 +122,5 @@ export const updateDataSource = async (id, data, authToken) => {
 
 	return response.data;
 };
+
+

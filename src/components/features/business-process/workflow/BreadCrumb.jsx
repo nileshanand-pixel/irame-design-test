@@ -13,7 +13,7 @@ const Breadcrumb = ({ items, navigate }) => (
               {item.label}
             </h1>
           ) : (
-            <span>{item.label}</span>
+            <span className='text-sm'>{item.label}</span>
           )}
           {index < items.length - 1 && <span>/</span>}
         </React.Fragment>

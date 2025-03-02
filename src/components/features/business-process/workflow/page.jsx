@@ -124,7 +124,7 @@ export default function WorkflowPage() {
 
 							<div className="mt-auto sticky bottom-12 left-0 flex justify-center py-4">
 								<Button
-									className="rounded-lg hover:bg-purple-100 h-12 py-1 hover:text-white hover:opacity-80 w-3/4"
+									className="rounded-lg hover:bg-purple-100 h-12 py-1 px-4 hover:text-white hover:opacity-80 w-[95%]"
 									onClick={() => runWorkFlowMutation.mutate()}
 									disabled={
 										!isValidationSuccessful ||

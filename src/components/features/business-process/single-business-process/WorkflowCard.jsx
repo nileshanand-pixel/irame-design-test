@@ -8,48 +8,47 @@ const WorkflowCard = ({ workflow }) => {
 	const isActive = workflow.status === 'ACTIVE';
 	const { businessProcessId } = useParams();
 	const cardClass = isActive
-		? 'bg-purple-4 text-primary80'
+		? 'bg-purple-2 text-primary80'
 		: 'bg-misc-black4 text-black/80';
 	const badgeClass = isActive
-		? 'bg-primary8 text-primary60'
+		? 'bg-primary4 text-primary60'
 		: 'bg-misc-black4 text-black60';
-	const navigate = useNavigate(); // Initialize useNavigate
+	const navigate = useNavigate();
 
-	// Handle card click
 	const handleCardClick = (externalId) => {
 		navigate(
 			`/app/business-process/${businessProcessId}/workflows/${externalId}`,
-		); // Navigate to the new route
+		); 
 	};
 
 	return (
 		<Card
-			className={`mb-4 ${cardClass} border-none hover:shadow-lg transition-shadow duration-200 cursor-pointer`}
-			onClick={() => handleCardClick(workflow.external_id)} // Add onClick handler
+			className={`mb-4 ${cardClass}  hover:bg-[#F9F6FD]/80 border-primary16/0 hover:border-primary16 border-[1.5px] cursor-pointer`}
+			onClick={() => handleCardClick(workflow.external_id)} 
 		>
 			<CardContent className="p-4">
 				<div className="flex items-start gap-4">
 					<span className="material-symbols-outlined text-3xl">
 						splitscreen_add
 					</span>
-					<div className="flex flex-col">
-						<p className="text-lg font-semibold">
+					<div className="flex flex-col gap-1">
+						<p className="text-base font-medium">
 							{capitalize(workflow.name)}
 						</p>
-						<p className="mb-3">{capitalize(workflow.description)}</p>
+						<p className="mb-1 text-sm">{capitalize(workflow.description)}</p>
 						<div className="flex gap-2">
 							{workflow.tags.map((tag, index) => (
 								<Badge
 									key={index}
 									variant="outline"
-									className={`px-2 py-1 font-medium ${badgeClass} border-none`}
+									className={`px-2 py-[2px] text-xs font-medium ${badgeClass} border-none`}
 								>
 									{capitalize(tag)}
 								</Badge>
 							))}
 							<Badge
 								variant="outline"
-								className={`flex justify-center items-center font-medium ${badgeClass}`}
+								className={`flex justify-center text-xs items-center border-none font-medium ${badgeClass}`}
 							>
 								{capitalize(workflow.status.toLowerCase())}
 								<span className="material-symbols-outlined text-base">

@@ -161,8 +161,8 @@ const ResponseCard = ({
 				!doingScience &&
 				!isGraphLoading && (
 					<div className="mx-12">
-						<div className="mt-2 border-t border-purple-10"></div>
-						<div className="!mt-8 flex gap-4 overflow-x-auto">
+						<div className="mt-2 mb-2 font-semibold text-xl text-primary80 pb-4 border-b border-primary10 ">Related Questions</div>
+						<div className=" flex flex-col gap-2 mx-auto">
 							{answerResp?.answer?.follow_up?.tool_data?.questions &&
 								Array.isArray(
 									answerResp?.answer?.follow_up?.tool_data

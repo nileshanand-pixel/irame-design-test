@@ -123,7 +123,7 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 											<input
 												type="radio"
 												name="data-source"
-												className="h-4 w-4 text-primary border-gray-300"
+												className="h-4 w-4 accent-purple-100 border-gray-300"
 												checked={
 													selectedDataSourceId ===
 													item.datasource_id

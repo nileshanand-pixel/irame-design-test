@@ -1,59 +1,52 @@
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
 import PropTypes from 'prop-types';
 import { welcomeTypography } from './config';
-import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
-import xlsIcon from '@/assets/icons/ms_excel.svg';
-import csvIcon from '@/assets/icons/csv_icon.svg';
-import pdfIcon from '@/assets/icons/pdf_icon.svg';
+import { useQuery } from '@tanstack/react-query';
+import capitalize from 'lodash.capitalize';
+import { getDataSourcesWithLimit } from '../configuration/service/configuration.service';
+import { getToken } from '@/lib/utils';
+import DividerWithText from '@/components/elements/DividerWithText';
+import { useDispatch } from 'react-redux';
+import { updateUtilProp } from '@/redux/reducer/utilReducer';
 
-const UploadInput = ({ onFileUpload, files, setFiles, progress, setOpen }) => {
+const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 	const navigate = useNavigate();
-	const [showFormats, setShowFormats] = useState(false);
+	const dispatch = useDispatch();
+	useEffect(() => {}, [progress]);
 
-	useEffect(() => {
-	}, [progress]);
-
-	const { getRootProps, getInputProps, isDragActive } = useDropzone({
-		accept: 'application/pdf, text/csv',
-		// onDrop: (acceptedFiles) => {
-		// 	setFiles((prevFiles) => {
-		// 		if (!Array.isArray(prevFiles)) {
-		// 			prevFiles = [];
-		// 		}
-		// 		return [...prevFiles, ...acceptedFiles];
-		// 	});
-		// 	onFileUpload(acceptedFiles); // Pass uploaded files to parent component if needed
-		// },
-	});
-	const handleRemoveFile = (e, file, idx) => {
-		e.preventDefault();
-		e.stopPropagation();
-		let tempArr = [...files];
-		tempArr.splice(idx, 1);
-		setFiles(tempArr);
+	const fetchDataSources = async () => {
+		const token = getToken();
+		const data = await getDataSourcesWithLimit(token, 3);
+		return Array.isArray(data) ? data : [];
 	};
+
+	const { data: filteredList = [], isLoading: isFetchingData } = useQuery({
+		queryKey: ['data-sources', 3],
+		queryFn: fetchDataSources,
+	});
+
+	const handleDataSourceClick = (data) => {
+		if (!data?.datasource_id) return;
+		dispatch(
+					updateUtilProp([
+						{
+							key: 'selectedDataSource',
+							value: { id: data.datasource_id, name: data.name },
+						},
+					]),
+				);
+		navigate(`/app/new-chat/?step=3&dataSourceId=${data?.datasource_id}`);
+		handleNextStep(2);
+		handleNextStep(3);
+	};
+
 	const handleSelectFromLibrary = (e) => {
 		e.stopPropagation();
 		setOpen(true);
 	};
-	const showSupportedFormats = (e) => {
-		e.stopPropagation();
-		setShowFormats(!showFormats);
-	};
-	const formatFileSize = (size) => {
-		if (size < 1024) {
-			return size + ' B';
-		} else if (size < 1024 * 1024) {
-			return (size / 1024).toFixed(2) + ' KB';
-		} else if (size < 1024 * 1024 * 1024) {
-			return (size / (1024 * 1024)).toFixed(2) + ' MB';
-		} else {
-			return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
-		}
-	};
+
 	const handleConnectDataSource = (e) => {
 		e.stopPropagation();
 		navigate('/app/configuration');
@@ -61,118 +54,76 @@ const UploadInput = ({ onFileUpload, files, setFiles, progress, setOpen }) => {
 
 	return (
 		<div
-			className={`border border-dashed border-purple-24 bg-purple-2 py-6 rounded-2xl flex justify-center ${
-				isDragActive ? 'border-primary80' : ''
-			}`}
-			// {...getRootProps()}
+			className={`border flex flex-col border-dashed border-purple-24 bg-purple-2 py-6 rounded-2xl justify-center 
+			`}
 		>
-			<div className="flex flex-col">
-				{/* <input {...getInputProps()} /> */}
-				{isDragActive ? (
-					<p className="text-primary80 flex flex-col gap-1 text-center min-w-[29.5rem] min-h-[22.5rem]">
-						Drop the files here...
-					</p>
-				) : (
-					<>
-						<div className="flex flex-col gap-1 text-center min-w-[29.5rem]">
-							<h2 className="text-4xl font-semibold text-primary80">
-								{welcomeTypography?.subHeading1}
-							</h2>
-							{/* <p className="text-sm font-medium text-primary80">
-								{welcomeTypography.subHeading2}
-							</p> */}
-							{/* <div className="relative w-full py-6">
-								<p className="or-tagline px-[5px] text-xs text-purple-20">
-									OR
-								</p>
-							</div> */}
-							<div className="flex gap-2 justify-center w-full z-10 mt-10">
-								<Button
-									variant="secondary"
-									className="w-full bg-purple-8 hover:bg-purple-16 text-purple-100 font-medium"
-									onClick={(e) => handleConnectDataSource(e)}
-								>
-									{welcomeTypography?.btn1Text}
-								</Button>
-								<Button
-									variant="outline"
-									className="w-full hover:bg-purple-8 border-purple-8 text-purple-100 font-medium hover:text-purple-100"
-									onClick={(e) => handleSelectFromLibrary(e)}
-								>
-									{welcomeTypography?.btn2Text}
-								</Button>
-							</div>
+			<div className="flex flex-col w-full justify-center items-center gap-1 text-center ">
+				<h2 className="text-4xl font-semibold text-primary80">
+					{welcomeTypography?.subHeading1}
+				</h2>
+				<div className="flex gap-2 justify-center w-3/5 z-10 mt-10">
+					<Button
+						variant="secondary"
+						className="w-full bg-purple-8 hover:bg-purple-16 text-purple-100 font-medium"
+						onClick={(e) => handleConnectDataSource(e)}
+					>
+						{welcomeTypography?.btn1Text}
+					</Button>
+					<Button
+						variant="outline"
+						className="w-full hover:bg-purple-8 border-purple-8 text-purple-100 font-medium hover:text-purple-100"
+						onClick={(e) => handleSelectFromLibrary(e)}
+					>
+						{welcomeTypography?.btn2Text}
+					</Button>
+				</div>
+			</div>
+			<DividerWithText
+				text="OR"
+				className="!w-3/5 mx-auto mt-6 mb-4 text-primary2"
+			/>
+			<div className="flex flex-col w-full gap-2 px-4">
+				<p className="text-sm text-primary80 font-medium">
+					Recent Data Source
+				</p>
+				<div className="grid sm:grid-cols-1 text-primary80  w-full md:grid-cols-2 lg:grid-cols-3 gap-6">
+					{filteredList.length ? (
+						filteredList.map((source) => (
 							<div
-								className="flex cursor-pointer items-center justify-center mt-6 gap-2"
-								onClick={(e) => {
-									showSupportedFormats(e);
-								}}
+								className="flex justify-between items-center bg-purple-4 p-4 rounded-lg gap-4 cursor-pointer hover:bg-purple-8 transition-colors"
+								key={source.datasource_id}
+								onClick={() =>
+									handleDataSourceClick(source)
+								}
 							>
-								<p className="text-sm font-medium leading-4 text-primary100 flex items-center">
+								<div className="flex items-center">
 									<img
-										src="https://d2vkmtgu2mxkyq.cloudfront.net/folder.svg"
-										className="me-1 size-6"
+										src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
+										alt="database"
+										className="mr-2 size-6 text-primary40"
 									/>
-									{welcomeTypography?.fileStructure}
-									{showFormats ? (
-										<i className="bi-chevron-up ms-2"></i>
-									) : (
-										<i className={`bi-chevron-down ms-2 `}></i>
-									)}
-								</p>
-							</div>
-							{showFormats ? (
-								<div className="flex justify-center space-x-2 mt-2 w-full transition ease-in">
-									<img
-										src={csvIcon}
-										alt="pdf"
-										className="w-6 h-6"
-									/>
-									<img
-										src={xlsIcon}
-										alt="csv"
-										className="w-6 h-6"
-									/>
-									<img
-										src={pdfIcon}
-										alt="pdf"
-										className="w-6 h-6"
-									/>
+									<div className="flex flex-col items-start">
+										<p className="text-base max-w-[200px] truncate text-ellipsis">
+											{capitalize(source.name)}
+										</p>
+										<span className="text-primary40 text-xs">
+											{new Date(
+												source.created_at,
+											).toLocaleDateString('en-US', {
+												year: 'numeric',
+												month: 'short',
+												day: 'numeric',
+											})}
+										</span>
+									</div>
 								</div>
-							) : null}
-						</div>
-					</>
-				)}
-				<div
-					className="w-full flex mt-6 gap-3 flex-col "
-					onClick={(e) => e.stopPropagation()}
-				>
-					{files?.map((file, idx) => (
-						<div
-							className="px-4 py-2.5 z-10 bg-purple-4 rounded "
-							key={file.name}
-						>
-							<div className="flex justify-between">
-								<p className="text-sm text-purple-100 flex">
-									{file.name}&nbsp;
-									<p className="text-sm font-medium text-primary80">{`(${formatFileSize(
-										file?.size,
-									)})`}</p>
-								</p>
-								<span
-									onClick={(e) => handleRemoveFile(e, file, idx)}
-									className="flex items-center gap-4 text-sm font-medium cursor-pointer"
-								>
-									{progress < 100 ? <p>uploading...</p> : null}x
-								</span>
 							</div>
-							{progress <= 99.99 ? (
-								<div className="mt-4">
-									<Progress value={progress} className="h-2" />
-								</div>
-							) : null}
-						</div>
-					))}
+						))
+					) : (
+						<p className="text-primary40 text-sm">
+							{isFetchingData ? 'Loading...' : 'No data sources found'}
+						</p>
+					)}
 				</div>
 			</div>
 		</div>

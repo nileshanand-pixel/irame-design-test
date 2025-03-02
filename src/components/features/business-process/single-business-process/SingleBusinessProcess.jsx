@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn, getToken } from '@/lib/utils';
 import EmptyState from '@/components/elements/EmptyState';
@@ -127,9 +126,9 @@ const SingleBusinessProcessPage = () => {
               ) : (
                 <>
                   <h3 className="text-xl font-semibold">
-                    {businessProcess?.name || 'Unnamed Process'}
+                    Workflows
                   </h3>
-                  <p className="text-primary40">
+                  <p className="text-primary40 text-sm">
                     Manage, view and edit your workflows
                   </p>
                 </>
