@@ -79,7 +79,7 @@ const FollowUpQuestions = ({
 					src={`https://d2vkmtgu2mxkyq.cloudfront.net/followup_questions.svg`}
 					className="size-12"
 				/>
-				<div className=" flex-1 text-base font-medium line-clamp-2 pr-4">
+				<div className=" flex-1 text-base font-medium  pr-4">
 					{question}
 				</div>
 
