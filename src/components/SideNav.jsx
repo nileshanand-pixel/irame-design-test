@@ -27,6 +27,7 @@ import GradientSpinner from './elements/loading/GradientSpinner';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 import { getRecentWorkflowsRunsHomePage } from './features/business-process/service/workflow.service';
 import capitalize from 'lodash.capitalize';
+import { resetAllStores } from '@/redux/GlobalStore';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -328,7 +329,14 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				onClick={() => {
 					
 					if (shouldOpenSession) {
-						navigate(`/app/new-chat/session?sessionId=${workflow.session_id}`);
+						resetAllStores()
+						dispatch(
+							updateChatStoreProp([
+								{ key: 'refreshChat', value: true },
+								{ key: 'resetIra', value: !chatStoreReducer?.resetIra },
+							]),
+						);
+						navigate(`/app/new-chat/session/?sessionId=${workflow.session_id}`);
 					} else {
 						navigate(`/app/business-process/${workflow.business_process_id}/workflows/${workflow.workflow_check_id}?run_id=${workflow.external_id}`);
 					}
@@ -389,7 +397,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		})),
 		...businessProcesses.map((bp) => {
 			const workflowDates = bp.workflows.map((w) =>
-				new Date(w.created_at).getTime(),
+				new Date(w?.updated_at || w.created_at).getTime(),
 			);
 			const latestDate =
 				workflowDates.length > 0 ? Math.max(...workflowDates) : null;
