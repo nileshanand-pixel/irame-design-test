@@ -67,37 +67,30 @@
 		--ring: 0 0% 83.1%;
 	}
 
-		/*scroll-bar-styles-START*/
+	/* ===== Scrollbar CSS ===== */
+	/* Firefox */
+	* {
+		scrollbar-width: auto;
+		scrollbar-color: rgb(152, 151, 151) rgb(208, 202, 202);
+	}
 
-	/* WebKit scrollbar styles (Chrome, Safari) */
-	::-webkit-scrollbar {
+	/* Chrome, Edge, and Safari */
+	*::-webkit-scrollbar {
 		width: 4px;
-		height: 4px;
 	}
 
-	/* Track */
-	::-webkit-scrollbar-track {
-		background: transparent;
-	}
-
-	/* Handle */
-	::-webkit-scrollbar-thumb {
-		background: rgb(152, 151, 151);
+	*::-webkit-scrollbar-track {
+		background: #ffffff;
 		border-radius: 4px;
 	}
 
-	/* Handle on hover */
-	::-webkit-scrollbar-thumb:hover {
-		background: transparent;
+	*::-webkit-scrollbar-thumb {
+		background-color: rgb(152, 151, 151);
+		;
+		border-radius: 4px;
+		border: 3px solid #ffffff;
 	}
 
-	/* Firefox scrollbar styles */
-	/* * {
-		scrollbar-width: thin;
-		scrollbar-color: transparent transparent;
-	} */
-
-	/*scroll-bar-styles-END*/
 
 	html,
 	body {
