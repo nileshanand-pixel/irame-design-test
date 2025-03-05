@@ -301,7 +301,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 						<Input
 							type="text"
 							onFocus={() => utilReducer?.isSideNavOpen && dispatch(updateUtilProp([{key: 'isSideNavOpen', value: false}]))}
-							className="outline-none rounded-none bg-transparent border-none px-2 py-1 flex-1"
+							className="outline-none  text-xs xl:text-sm 2xl-text-base rounded-none bg-transparent border-none px-2 py-1 flex-1"
 							value={query.text}
 							onChange={(e) =>
 								handleQueryChange(query.id, e.target.value)
@@ -333,7 +333,7 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 		<Input
 			placeholder={CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER}
 			onFocus={() => utilReducer?.isSideNavOpen && dispatch(updateUtilProp([{key: 'isSideNavOpen', value: false}]))}
-			className="border-0 outline-none rounded-none bg-transparent w-full mr-2"
+			className="border-0 text-xs xl:text-sm 2xl-text-base outline-none rounded-none bg-transparent w-full mr-2"
 			value={prompt}
 			onChange={handlePromptChange}
 			onKeyDown={handleSingleKeyDown}

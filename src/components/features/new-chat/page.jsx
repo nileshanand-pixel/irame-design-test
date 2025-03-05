@@ -275,20 +275,20 @@ const NewChat = () => {
 	return (
 		<>
 			{
-				<div className="flex justify-center pt-20">
+				<div className="flex justify-center pt-5 xl:pt-10">
 					<div className="flex flex-col w-[51.875rem] relative">
 						<div className="align-left w-full">
 							<h1
-								className="text-5xl leading-[60px] font-semibold align-left"
+								className="text-2xl lg:text-3xl leading-[24px] lg:leading-[36px] font-semibold align-left"
 								style={gradientText}
 							>{`${welcomeTypography?.headingLine1} ${value?.userName}`}</h1>
-							<h2 className="text-5xl leading-[60px] font-semibold text-primary20">
+							<h2 className="text-2xl lg:text-3xl leading-[24px] lg:leading-[36px] font-semibold text-primary20">
 								{completedSteps.includes(2) ||
 								completedSteps.includes(3)
 									? welcomeTypography?.headingLine2_2
 									: welcomeTypography?.headingLine2}
 							</h2>
-							<ul className="relative mt-6 mb-3 inline-flex gap-2">
+							<ul className="relative mt-2 xl:mt-4 mb-3 inline-flex gap-2">
 								{[1, 2, 3]?.map((items, indx) => {
 									return (
 										<>
@@ -305,7 +305,7 @@ const NewChat = () => {
 								})}
 							</ul>
 						</div>
-						<div className="mt-[1rem] h-sm:mt-[2.5rem] overflow-scroll w-full">
+						<div className="mt-[1rem]  overflow-scroll w-full">
 							{renderComponent()}
 						</div>
 						{completedSteps.includes(2) || completedSteps.includes(3) ? (

@@ -67,6 +67,38 @@
 		--ring: 0 0% 83.1%;
 	}
 
+		/*scroll-bar-styles-START*/
+
+	/* WebKit scrollbar styles (Chrome, Safari) */
+	::-webkit-scrollbar {
+		width: 4px;
+		height: 4px;
+	}
+
+	/* Track */
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	/* Handle */
+	::-webkit-scrollbar-thumb {
+		background: rgb(152, 151, 151);
+		border-radius: 4px;
+	}
+
+	/* Handle on hover */
+	::-webkit-scrollbar-thumb:hover {
+		background: transparent;
+	}
+
+	/* Firefox scrollbar styles */
+	/* * {
+		scrollbar-width: thin;
+		scrollbar-color: transparent transparent;
+	} */
+
+	/*scroll-bar-styles-END*/
+
 	html,
 	body {
 		font-family: 'Inter', sans-serif !important;

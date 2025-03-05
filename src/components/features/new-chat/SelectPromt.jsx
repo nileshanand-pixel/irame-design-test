@@ -128,7 +128,7 @@ const SelectPrompt = ({
 
 	return (
 		<div className="">
-			<div className="mt-8">
+			<div className="mt-2 xl:mt-4">
 				<div className="w-full overflow-x-scroll flex gap-4">
 						{data?.suggestion?.length > 0 ? (
 							<ScrollList>
@@ -139,7 +139,7 @@ const SelectPrompt = ({
 										suggestion?.type === activeTab
 											? ' text-purple-100 border-purple-40 tabActiveBg'
 											: 'text-black/60 border-black/10'
-									} text-sm font-medium border rounded-3xl px-3 py-2 cursor-pointer min-w-fit max-w-[19.25rem]`}
+									}  text-xs 2xl:text-sm font-medium border rounded-3xl px-3 py-2 cursor-pointer min-w-fit max-w-[19.25rem]`}
 									onClick={() => handleActiveTab(suggestion?.type)}
 								>
 									<div className="min-w-fit">
@@ -160,7 +160,7 @@ const SelectPrompt = ({
 						)}
 				</div>
 				{activeTab ? (
-					<div className="w-full overflow-x-scroll flex gap-4 mt-8">
+					<div className="w-full overflow-x-scroll flex gap-4 mt-3 xl:mt-4">
 						{data?.suggestion?.length > 0
 							? data.suggestion
 									.find(
@@ -169,11 +169,11 @@ const SelectPrompt = ({
 									)
 									.questions.map((question, index) => (
 										<div
-											className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] min-h-[12.5rem] max-h-[21.75rem] p-4 hover:bg-purple-8 mb-3"
+											className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] min-h-[8rem] xl:min-h-[10rem] max-h-[21.75rem] p-4 hover:bg-purple-8 mb-3"
 											key={`${index}_question`}
 										>
 											<div
-												className="overflow-y-auto text-base font-medium text-primary80"
+												className="overflow-y-auto text-sm font-medium text-primary80"
 												onClick={() =>
 													handlePrompt(question)
 												}
