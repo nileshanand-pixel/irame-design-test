@@ -147,7 +147,7 @@ const GraphComponent = ({
 								))}
 							</ScrollList>
 
-							<div className="rounded-3xl border w-full overflow-x-auto border-primary4 bg-purple-4 p-4 mt-2">
+							<div className="rounded-3xl border w-full overflow-x-scroll border-primary4 bg-purple-4 p-4 mt-2">
 								{supportedGraphsData?.map(
 									(graph) =>
 										activeGraphTab === graph.id && (
@@ -162,7 +162,7 @@ const GraphComponent = ({
 						</>
 					)}
 					{activeTab === 'Tabular View' && (
-						<div className="rounded-3xl border w-full overflow-x-auto border-primary4 bg-purple-4 p-4 mt-2">
+						<div className="rounded-3xl border w-full overflow-x-scroll border-primary4 bg-purple-4 p-4 mt-2">
 							<div className="bg-white rounded-3xl py-2">
 								<TableComponent
 									data={loadedData}

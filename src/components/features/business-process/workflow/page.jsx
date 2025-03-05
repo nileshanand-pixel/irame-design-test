@@ -86,7 +86,7 @@ export default function WorkflowPage() {
 		return <WorkflowPageSkeleton />;
 	}
 
-	const mainContentClasses = `h-[calc(100vh-64px)] overflow-x-auto ${
+	const mainContentClasses = `h-[calc(100vh-64px)] overflow-x-scroll ${
 		sidebarOpen ? 'md:w-full' : 'w-full lg:w-3/5 md:mx-auto'
 	} transition-all duration-300`;
 

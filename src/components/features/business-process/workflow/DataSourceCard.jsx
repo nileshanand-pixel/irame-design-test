@@ -279,7 +279,7 @@ const DataSourceCard = ({
 		return (
 			<div className="mb-6">
 				<h3 className="text-lg font-medium mb-4">Recommendations</h3>
-				<div className="w-full overflow-x-auto flex gap-2">
+				<div className="w-full overflow-x-scroll flex gap-2">
 					{validDataPoints.map((file) => (
 						<Button
 							key={file.file_name}

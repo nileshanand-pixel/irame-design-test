@@ -309,7 +309,7 @@ const NewChat = () => {
 							{renderComponent()}
 						</div>
 						{completedSteps.includes(2) || completedSteps.includes(3) ? (
-							<div className="fixed bottom-1 flex flex-col items-center justify-center !w-[51.875rem] max-h-[30rem] overflow-x-auto z-20">
+							<div className="fixed bottom-1 flex flex-col items-center justify-center !w-[51.875rem] max-h-[30rem] overflow-x-scroll z-20">
 								<InputArea
 									config={config}
 									onAppendQuery={handleCreateSession}

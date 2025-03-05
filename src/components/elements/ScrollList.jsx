@@ -55,7 +55,7 @@ const ScrollList = ({ children }) => {
 				</div>
 			)}
 			<ul
-				className="flex overflow-x-auto gap-2 items-center"
+				className="flex overflow-x-scroll gap-2 items-center"
 				ref={containerRef}
 			>
 				{children}

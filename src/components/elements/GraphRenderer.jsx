@@ -223,7 +223,7 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 	}, [loadedData, graph, identifierKey, handle.active]);
 
 	return (
-		<div className="bg-white rounded-3xl p-2 overflow-x-auto">
+		<div className="bg-white rounded-3xl p-2 overflow-x-scroll">
 			{isGraphLoading ? (
 				<div className="darkSoul-glowing-button2 mb-10">
 					<button className="darkSoul-button2" type="button">

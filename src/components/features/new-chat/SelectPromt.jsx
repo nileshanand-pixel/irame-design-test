@@ -129,7 +129,7 @@ const SelectPrompt = ({
 	return (
 		<div className="">
 			<div className="mt-8">
-				<div className="w-full overflow-x-auto flex gap-4">
+				<div className="w-full overflow-x-scroll flex gap-4">
 						{data?.suggestion?.length > 0 ? (
 							<ScrollList>
 								{data?.suggestion?.map((suggestion, index) => (
@@ -160,7 +160,7 @@ const SelectPrompt = ({
 						)}
 				</div>
 				{activeTab ? (
-					<div className="w-full overflow-x-auto flex gap-4 mt-8">
+					<div className="w-full overflow-x-scroll flex gap-4 mt-8">
 						{data?.suggestion?.length > 0
 							? data.suggestion
 									.find(
