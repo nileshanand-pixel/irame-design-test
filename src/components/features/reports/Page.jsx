@@ -96,13 +96,13 @@ const ReportFolders = () => {
 			</div>
 
 			{datasourcesQuery.isLoading? (
-				<div className=" w-full grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-6">
+				<div className=" w-full grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-6 pb-6">
 					{Array.from({length: 16}).map((_, i) => (<DataSourceCardSkeleton key={i}/>))}
 				</div>
 			) : datasources.length === 0 ? (
 				<EmptyState config={emptyStateConfig} />
 			) : filteredList.length > 0 ? (
-				<div className="w-full overflow-y-auto h-[90%] mt-6 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+				<div className="w-full max-h-[80vh] overflow-y-auto mt-6 pr-4 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
 					{filteredList.map((item) => (
 						<DataSourceCard key={item.datasource_id} data={item} />
 					))}

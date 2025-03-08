@@ -58,7 +58,7 @@ const PlannerComponent = ({ data, canEdit, workspaceHasChanges, setWorkspaceHasC
 	};
 
 	return (
-		<div className="my-4 col-span-4 max-h-[80%] overflow-y-auto space-y-4">
+		<div className="my-4 w-full pr-4 max-h-[80%] overflow-y-auto space-y-4">
 			{segments.length > 0 ? (
 				segments.map((segment, index) => (
 					<div

@@ -148,7 +148,7 @@ const ReportCard = ({ report }) => {
 				</p>
 				{report?.datasource_name && (
 					<div title={report?.datasource_name} className="mt-4 text-gray-400 text-sm">
-						<p className="text-primary80 font-medium max-w-[180px] truncate flex items-center">
+						<p className="text-primary80 font-medium max-w-[180px] lg:max-w-52 truncate flex items-center">
 							<img
 								src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
 								alt="database"

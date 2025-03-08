@@ -321,7 +321,7 @@ const Configuration = () => {
 						<BackdropLoader />
 					</div>
 				)}
-				<div className="flex justify-between items-center">
+				<div className="flex sm:flex-row flex-col gap-4 justify-between sm:items-center">
 					<div>
 						<h3 className="text-primary80 font-semibold text-xl">
 							Connect New Dataset
@@ -449,8 +449,8 @@ const Configuration = () => {
 					))}
 			</div>
 			{/* Right Section Manage Data Source */}
-			<div className="border rounded-3xl py-4 px-6 col-span-12 shadow-1xl max-h-[84vh] mb-4 overflow-y-auto">
-				<div className="flex justify-between mb-4">
+			<div className="border rounded-3xl py-4 px-6 col-span-12 shadow-1xl max-h-[84vh] mb-4 overflow-y-hidden">
+				<div className="flex sm:flex-row flex-col gap-4 justify-between sm:items-center mb-4 pb-4">
 					<div>
 						<h3 className="text-primary80 font-semibold text-xl">
 							Choose from Existing Dataset
@@ -463,7 +463,7 @@ const Configuration = () => {
 					<div
 						className={cn(
 							'flex items-center border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300',
-							{ 'w-[300px]': isFocused, 'w-[180px]': !isFocused },
+							{ 'sm:w-[300px] w-4/5 ': isFocused, 'w-4/5 sm:w-[180px]': !isFocused },
 						)}
 					>
 						<i className="bi-search text-primary40 me-2"></i>
@@ -479,13 +479,13 @@ const Configuration = () => {
 						/>
 					</div>
 				</div>
-				<div className="mt-4 space-y-2 max-h-[90%] overflow-y-auto">
+				<div className="mt-4 space-y-2 max-h-[90%] pb-6 mb-6 overflow-y-auto">
 					{isFetchingData && (
 						<div className="flex items-center justify-center w-full">
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>
 					)}
-					<div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					<div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-3">
 						{filteredList.length ? (
 							filteredList.map((source) => (
 								<div
@@ -502,7 +502,7 @@ const Configuration = () => {
 											className="mr-2 size-6 text-primary40"
 										/>
 										<div className="flex flex-col">
-											<p className='text-base max-w-[250px] truncate text-ellipsis'>{capitalize(source.name)}</p>
+											<p className='text-base max-w-36 truncate text-ellipsis'>{capitalize(source.name)}</p>
 											<span className='text-primary40 text-xs'>
 												{dayjs(source.created_at).format(
 													'MMM D, YYYY',

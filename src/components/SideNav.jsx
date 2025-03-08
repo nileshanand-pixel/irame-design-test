@@ -432,7 +432,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		<div
 			className={`fixed flex flex-col gap-4 ${
 				isSideNavOpen ? 'w-[250px] min-w-[250px]' : 'w-[72px] min-w-[72px]'
-			} border-r h-screen p-4 bg-purple-8`}
+			} border-r h-screen py-4 pl-4 mr-4 bg-purple-8`}
 		>
 			<div className="grow">
 				<img

@@ -60,7 +60,7 @@ const Layout = ({ children }) => {
 					className={cn(
 						'pt-0 flex bg-gray-300 justify-center h-[calc(100vh-64px)] w-full',
 						pathname.includes('/dashboard')
-							? 'bg-gray-muted min-h-[92vh] overflow-y-auto'
+							? 'bg-gray-muted'
 							: 'bg-white',
 							pathname.includes('workflows') ? 'px-0' : 'px-8'
 					)}

@@ -305,7 +305,7 @@ const NewChat = () => {
 								})}
 							</ul>
 						</div>
-						<div className="mt-[1rem]  overflow-scroll w-full">
+						<div className="mt-[1rem]  overflow-auto w-full">
 							{renderComponent()}
 						</div>
 						{completedSteps.includes(2) || completedSteps.includes(3) ? (

@@ -8,10 +8,10 @@ const DataSourceCard = ({data}) => {
 			<img
 				src="https://d2vkmtgu2mxkyq.cloudfront.net/folder_image_icon.png"
 				alt="folder icon"
-				className="mr-2 w-16"
+				className="mr-2 w-[3.81rem]"
 			/>
 			<div className='flex flex-col gap-2 mr-4'>
-				<span className='text-base font-semibold truncate md:max-w-40 xl:max-w-52 xl:pr-8 text-primary80'>{data?.datasource_name}</span>
+				<span className='text-sm font-semibold truncate w-40 md:max-w-40 xl:max-w-52 xl:pr-8 text-primary80'>{data?.datasource_name}</span>
 				<div className='px-2 py-0.5 w-fit rounded-2xl text-secondary-textPurple bg-secondary-lightPurple'>{data?.report_count || 0} Reports</div>
 			</div>
 		</div>

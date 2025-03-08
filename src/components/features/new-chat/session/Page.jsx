@@ -691,16 +691,16 @@ const Workzone = () => {
 	};
 
 	return (
-		<div className="grid grid-cols-12 gap-4 min-h-[90vh] max-h-[90vh] w-full">
+		<div className="grid grid-cols-12 gap-4 min-h-[90vh] max-h-[90vh] overflow-y-hidden w-full">
 			<div
 				className={cn(
-					'border rounded-2xl pt-8 px-4 shadow-1xl relative h-full flex-col',
+					'border rounded-2xl pt-8 pl-4 mr-4 shadow-1xl relative h-full flex-col',
 					showWorkSpace() ? 'col-span-12 lg:col-span-8' : 'col-span-12 lg:mx-[128px]',
 				)}
 			>
 				<div
 					ref={scrollRef}
-					className="mb-[4vh] h-[68vh] h-sm:h-[72vh] h-md:h-[76vh] h-lg:h-[76vh] h-xl:h-[78vh] overflow-y-auto w-full"
+					className="mb-[4vh] h-[68vh] h-sm:h-[72vh] h-md:h-[76vh] h-lg:h-[76vh] h-xl:h-[78vh] pr-4 overflow-y-auto w-full"
 				>
 					{renderConversation()}
 				</div>

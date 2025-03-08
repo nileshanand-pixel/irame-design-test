@@ -119,13 +119,13 @@ const ReportsInDatasource = () => {
 			</div>
 
 			{reportsQuery.isLoading ? (
-				<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
+				<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6 pb-6">
 					{Array.from({length: 16}).map((i) => (<ReportCardSkeleton key={i}/>))}
 				</div>
 			) : reports.length === 0 ? (
 				<EmptyState config={emptyStateConfig} />
 			) : filteredList.length > 0 ? (
-				<div className="w-full mt-6 bg-white grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4  gap-6">
+				<div className="w-full mt-6 bg-white grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 pb-6  gap-6">
 					{filteredList.map((item) => (
 						<ReportCard key={item.report_id} report={item} />
 					))}
