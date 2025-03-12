@@ -28,6 +28,8 @@ import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 import { getRecentWorkflowsRunsHomePage } from './features/business-process/service/workflow.service';
 import capitalize from 'lodash.capitalize';
 import { resetAllStores } from '@/redux/GlobalStore';
+import { Hint } from './Hint';
+import Tag from './elements/Tag';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -75,16 +77,19 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					link: '/app/business-process',
 					text: 'Business Process',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/workflow_icon.svg',
+					beta: true,
+					showHint: true
 				},
 				{
 					link: '/app/dashboard',
 					text: 'Dashboard',
-					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/dashboard_columns.svg',
+					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/dashboard_columns.svg', 
 				},
 				{
 					link: '/app/reports/datasources',
 					text: 'Reports',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/report-icon.svg',
+					beta: true
 				},
 				{
 					link: '/app/configuration',
@@ -315,8 +320,9 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		const isActive =
 			chatStoreReducer?.activeChatSession?.id === workflow.session_id;
 		const showSpinner = workflow.status !== 'COMPLETED';
-		const shouldOpenSession = ['RUNNING', 'COMPLETED', 'FAILED'].includes(workflow.status);
-
+		const shouldOpenSession = ['RUNNING', 'COMPLETED', 'FAILED'].includes(
+			workflow.status,
+		);
 
 		return (
 			<div
@@ -327,18 +333,24 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				)}
 				key={workflow.external_id}
 				onClick={() => {
-					
 					if (shouldOpenSession) {
-						resetAllStores()
+						resetAllStores();
 						dispatch(
 							updateChatStoreProp([
 								{ key: 'refreshChat', value: true },
-								{ key: 'resetIra', value: !chatStoreReducer?.resetIra },
+								{
+									key: 'resetIra',
+									value: !chatStoreReducer?.resetIra,
+								},
 							]),
 						);
-						navigate(`/app/new-chat/session/?sessionId=${workflow.session_id}`);
+						navigate(
+							`/app/new-chat/session/?sessionId=${workflow.session_id}`,
+						);
 					} else {
-						navigate(`/app/business-process/${workflow.business_process_id}/workflows/${workflow.workflow_check_id}?run_id=${workflow.external_id}`);
+						navigate(
+							`/app/business-process/${workflow.business_process_id}/workflows/${workflow.workflow_check_id}?run_id=${workflow.external_id}`,
+						);
 					}
 				}}
 			>
@@ -430,161 +442,153 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	return (
 		<div
-			className={`fixed flex flex-col gap-4 ${
-				isSideNavOpen ? 'w-[250px] min-w-[250px]' : 'w-[72px] min-w-[72px]'
-			} border-r h-screen py-4 pl-4 mr-4 bg-purple-8`}
+			className={`fixed flex flex-col h-screen ${
+				isSideNavOpen ? 'w-[270px] min-w-[270px]' : 'w-[72px] min-w-[72px]'
+			} border-r bg-purple-8`}
 		>
-			<div className="grow">
+			{/* SideNav Expand Collapse | Hamburger */}
+			<div className="flex-none m-4">
 				<img
 					src="https://d2vkmtgu2mxkyq.cloudfront.net/hamburger_menu.svg"
-					alt="ask-ira"
+					alt="menu"
 					className="size-10 cursor-pointer hover:bg-purple-4 rounded-full p-2"
 					onClick={toggleSideNav}
 				/>
-				<div>
-					<Link
-						to={'/app/new-chat'}
-						onClick={askIra}
-						className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
-							isSideNavOpen
-								? 'rounded-[200px] px-5 py-3'
-								: 'rounded-full px-2 mx-auto py-2'
-						} mt-10 mb-8 bg-purple-4`}
-					>
-						<img
-							src="https://d2vkmtgu2mxkyq.cloudfront.net/plus.svg"
-							alt="ask-ira"
-							className="size-6"
-						/>
-						{isSideNavOpen ? <p>Ask IRA</p> : null}
-					</Link>
-					<div style={{ overflow: 'visible' }}>
-						{bottomMenuList?.map((menu, key) => (
-							<div key={key} className="space-y-2">
-								{menu?.items?.map((option, optionKey) => {
-									const isActive = activeTab === option.link;
-									return (
-										<Link
-											to={option.link}
-											key={optionKey}
-											onClick={() => setActiveTab(option.link)}
-											className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-2 rounded-md hover:bg-purple-4 border-l-4 ${
-												isActive
-													? ' border-purple-100 bg-purple-4 font-semibold text-purple-100 '
-													: ' border-transparent'
-											}`}
-										>
-											<img
-												src={option.icon}
-												className={`${isActive ? 'text-purple-100' : ''} size-[22px]`}
-												style={{ strokeWidth: '2' }}
-											/>
-											{isSideNavOpen ? (
-												<p>{option.text}</p>
-											) : null}
-										</Link>
-									);
-								})}
+			</div>
+
+			{/* Ask IRA Button */}
+			<div className="flex-none mt-6 mb-6 mx-4">
+				<Hint label="Ask Ira" side="right" align="start" show={!isSideNavOpen}>
+				<Link
+					to={'/app/new-chat'}
+					onClick={askIra}
+					className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
+						isSideNavOpen
+							? 'rounded-[200px] px-5 py-3'
+							: 'rounded-full px-2 mx-auto py-2'
+					} bg-purple-4`}
+				>
+					<img
+						src="https://d2vkmtgu2mxkyq.cloudfront.net/plus.svg"
+						alt="ask-ira"
+						className="size-6"
+					/>
+					{isSideNavOpen && <p>Ask IRA</p>}
+				</Link>
+				</Hint>
+			</div>
+
+			{/* Main Navigation Menu */}
+			<div className="flex-none m-4">
+				{bottomMenuList?.map((menu, key) => (
+					<div key={key} className="space-y-2">
+						{menu?.items?.map((option, optionKey) => {
+							const isActive = activeTab === option.link;
+							return (
+								<Hint label={option.text} side="right" align="start" show={!isSideNavOpen}>
+									<Link
+									to={option.link}
+									key={optionKey}
+									onClick={() => setActiveTab(option.link)}
+									className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-2 rounded-md hover:bg-purple-4 border-l-4 ${
+										isActive
+											? ' border-purple-100 bg-purple-4 font-semibold text-purple-100 '
+											: ' border-transparent'
+									}`}
+								>
+									<img
+										src={option.icon}
+										className={`${isActive ? 'text-purple-100' : ''} size-[22px]`}
+										style={{ strokeWidth: '2' }}
+									/>
+									{isSideNavOpen && <p className='truncate'>{option.text}</p>}
+									{isSideNavOpen && option.beta && <Tag className="shrink-0 drop-shadow-md" textClassName="text-xs" text="Beta"/>}
+								</Link>
+								</Hint>
+							);
+						})}
+					</div>
+				))}
+			</div>
+
+			{/* Scrollable History Section */}
+			<div className="flex-1 overflow-y-auto mt-4 pr-1 ml-4">
+				{isSideNavOpen && (
+					<div className="pr-2 space-y-4 pb-4">
+						{isLoading || isBusinessLoading ? (
+							<div className="w-full h-full flex items-center justify-center">
+								<Spinner />
 							</div>
-						))}
-					</div>
-					<div className="flex flex-col gap-4 cursor-pointer text-primary80 font-medium py-3 rounded-md text-center h-full">
-						{isSideNavOpen ? (
+						) : (
 							<>
-								<div className="max-h-[32rem] overflow-y-auto space-y-3.5 mt-2">
-									{isLoading || isBusinessLoading ? (
-										<div className="w-full h-[20rem] flex items-center justify-center">
-											<Spinner />
-										</div>
-									) : (
-										<div className="space-y-4">
-											{groupedItems.today.length > 0 && (
-												<div>
-													<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
-														Today
-													</h3>
-													<div className="space-y-1">
-														{groupedItems.today.map(
-															(item) =>
-																item.type ===
-																'session'
-																	? renderSession(
-																			item.data,
-																		)
-																	: renderBusinessProcess(
-																			item.data,
-																		),
-														)}
-													</div>
-												</div>
-											)}
-											{groupedItems.yesterday.length > 0 && (
-												<div>
-													<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
-														Yesterday
-													</h3>
-													<div className="space-y-1">
-														{groupedItems.yesterday.map(
-															(item) =>
-																item.type ===
-																'session'
-																	? renderSession(
-																			item.data,
-																		)
-																	: renderBusinessProcess(
-																			item.data,
-																		),
-														)}
-													</div>
-												</div>
-											)}
-											{groupedItems.last7Days.length > 0 && (
-												<div>
-													<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
-														Last 7 Days
-													</h3>
-													<div className="space-y-1">
-														{groupedItems.last7Days.map(
-															(item) =>
-																item.type ===
-																'session'
-																	? renderSession(
-																			item.data,
-																		)
-																	: renderBusinessProcess(
-																			item.data,
-																		),
-														)}
-													</div>
-												</div>
-											)}
-											{groupedItems.earlier.length > 0 && (
-												<div>
-													<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
-														Earlier
-													</h3>
-													<div className="space-y-1">
-														{groupedItems.earlier.map(
-															(item) =>
-																item.type ===
-																'session'
-																	? renderSession(
-																			item.data,
-																		)
-																	: renderBusinessProcess(
-																			item.data,
-																		),
-														)}
-													</div>
-												</div>
+								{groupedItems.today.length > 0 && (
+									<div>
+										<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
+											Today
+										</h3>
+										<div className="space-y-1">
+											{groupedItems.today.map((item) =>
+												item.type === 'session'
+													? renderSession(item.data)
+													: renderBusinessProcess(
+															item.data,
+														),
 											)}
 										</div>
-									)}
-								</div>
+									</div>
+								)}
+								{groupedItems.yesterday.length > 0 && (
+									<div>
+										<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
+											Yesterday
+										</h3>
+										<div className="space-y-1">
+											{groupedItems.yesterday.map((item) =>
+												item.type === 'session'
+													? renderSession(item.data)
+													: renderBusinessProcess(
+															item.data,
+														),
+											)}
+										</div>
+									</div>
+								)}
+								{groupedItems.last7Days.length > 0 && (
+									<div>
+										<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
+											Last 7 Days
+										</h3>
+										<div className="space-y-1">
+											{groupedItems.last7Days.map((item) =>
+												item.type === 'session'
+													? renderSession(item.data)
+													: renderBusinessProcess(
+															item.data,
+														),
+											)}
+										</div>
+									</div>
+								)}
+								{groupedItems.earlier.length > 0 && (
+									<div>
+										<h3 className="text-primary40 text-xs font-medium text-left mb-2 px-3">
+											Earlier
+										</h3>
+										<div className="space-y-1">
+											{groupedItems.earlier.map((item) =>
+												item.type === 'session'
+													? renderSession(item.data)
+													: renderBusinessProcess(
+															item.data,
+														),
+											)}
+										</div>
+									</div>
+								)}
 							</>
-						) : null}
+						)}
 					</div>
-				</div>
+				)}
 			</div>
 		</div>
 	);

@@ -71,8 +71,8 @@ const BusinessProcessPage = () => {
 	};
 
 	return (
-		<div className="h-full w-full">
-			<header className="max-w-full mb-6">
+		<div className="h-full w-full flex flex-col px-8">
+			<header className="max-w-full flex-none mb-6">
 				<h1 className="text-2xl font-semibold text-primary80">
 					Business Process
 				</h1>
@@ -81,7 +81,7 @@ const BusinessProcessPage = () => {
 				</p>
 			</header>
 
-			<section className="max-w-full border-2 mb-2 border-primary8 bg-misc-offWhite shadow-1xl rounded-3xl">
+			<section className="max-w-full flex-1 border-2 mb-4 border-primary8 bg-misc-offWhite shadow-1xl rounded-3xl">
 				<div className="p-4 mt-2 flex flex-col sm:flex-row justify-between gap-4">
 					<SearchBar
 						value={search}

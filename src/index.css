@@ -68,8 +68,8 @@
 	}
 
 	*::-webkit-scrollbar {
-		height: 8px;
-		width: 8px;
+		height: 0px;
+		width: 0px;
 	}
 
 	*::-webkit-scrollbar-track {
@@ -85,7 +85,7 @@
 	*::-webkit-scrollbar-thumb {
 		border-radius: 5px;
 		background-color: #989797;
-		width: 10px;
+		width: 0px;
 	}
 
 	*::-webkit-scrollbar-thumb:hover {

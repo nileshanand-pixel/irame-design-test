@@ -99,12 +99,12 @@ const SingleBusinessProcessPage = () => {
   };
 
   return (
-    <div className="h-full w-full text-primary80">
-      <header className="max-w-full mb-6">
+    <div className="h-full flex flex-col w-full text-primary80 px-8">
+      <header className="max-w-full flex-none mb-2">
         <div className="flex items-center gap-2 mb-4">
           <h1
             onClick={() => navigate('/app/business-process')}
-            className="text-2xl font-semibold cursor-pointer"
+            className="text-2xl truncate font-semibold cursor-pointer"
           >
             Business Process
           </h1>
@@ -112,13 +112,13 @@ const SingleBusinessProcessPage = () => {
           {isBusinessLoading ? (
             <BreadcrumbSkeleton />
           ) : (
-            <span>{businessProcess?.name || 'Unnamed Process'}</span>
+            <span className='truncate'>{businessProcess?.name || 'Unnamed Process'}</span>
           )}
         </div>
       </header>
 
-      <section className="max-w-full p-2 border-2 border-primary8 shadow-1xl bg-white rounded-3xl">
-        <div className="w-full px-4 py-4">
+      <section className="max-w-full flex flex-col flex-1 py-2 pl-2 mr-2 mb-4 border-2 border-primary8 shadow-1xl bg-white rounded-3xl overflow-y-hidden">
+        <div className="w-full flex-none px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
               {isBusinessLoading ? (
@@ -151,7 +151,7 @@ const SingleBusinessProcessPage = () => {
           </div>
         </div>
 
-        <div className="px-4 py-2 mb-4 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-270px)]">
+        <div className="px-4 py-2 mb-4 flex-1 flex flex-col gap-4 overflow-y-auto">
           {isWorkflowsLoading ? (
             <>
               <WorkflowSkeleton />

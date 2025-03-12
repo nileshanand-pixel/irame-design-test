@@ -88,7 +88,11 @@ export default function WorkflowPage() {
 
 	const mainContentClasses = `h-[calc(100vh-64px)] overflow-x-scroll ${
 		sidebarOpen ? 'md:w-full' : 'w-full lg:w-3/5 md:mx-auto'
-	} transition-all duration-300`;
+	} transition-all duration-300 ${
+		runWorkFlowMutation.isPending
+			? 'overflow-y-hidden'
+			: 'overflow-y-auto'
+	}`;
 
 	return (
 		<div className="h-full w-full overflow-hidden text-primary80">
@@ -101,7 +105,7 @@ export default function WorkflowPage() {
 							className={`h-full bg-white relative p-4 flex flex-col min-h-full ${
 								runWorkFlowMutation.isPending
 									? 'overflow-y-hidden'
-									: 'overflow-y-auto'
+									: 'overflow-auto'
 							}`}
 						>
 							<WorkflowDetails

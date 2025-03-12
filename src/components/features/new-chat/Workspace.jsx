@@ -84,7 +84,7 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace, canEdi
 	const showRegenerateAction = !editDisabled && workspaceHasChanges && answerResp?.type !== 'workflow';
 
 	return (
-		<div className="rounded-2xl my-6 w-full h-full overflow-hidden relative">
+		<div className="rounded-2xl my-6 flex-1 w-full h-full overflow-hidden relative">
 			<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">
 				{renderTabs()}
 			</ul>

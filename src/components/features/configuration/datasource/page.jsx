@@ -162,7 +162,7 @@ const DataSource = () => {
 	
 
 	return (
-		<div className="w-full relative h-[85vh] sm:h-[80vh] grid grid-cols-1 pt-8">
+		<div className="w-full px-8 relative h-full grid grid-cols-1 pt-2">
 
 			{(editMutation.isPending || deleteMutation.isPending) && <BackdropLoader/>}
 			<div className="text-primary80 gap-2">
@@ -181,7 +181,7 @@ const DataSource = () => {
 			{datasourceQuery.isLoading || !form ? (
 				<DataSourceSkeleton color="#E0E0E0" />
 			) : (
-				<div className="border rounded-3xl mt-6 py-6 px-6 col-span-12 shadow-1xl h-[80vh]">
+				<div className="border rounded-3xl  py-6 px-6 col-span-12 shadow-1xl h-[80vh]">
 					{/* Header */}
 					<div className="flex justify-between w-full">
 						<div className="flex items-center text-[#26064ACC]">
@@ -215,7 +215,7 @@ const DataSource = () => {
 					</div>
 
 					{/* Tabs */}
-					<div className="mt-6">
+					<div className="mt-2">
 						<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">
 							{tabs.map((tab) => (
 								<li

@@ -74,7 +74,7 @@ const Dashboard = () => {
 	};
 
 	return (
-		<div className="w-full h-full ">
+		<div className="w-full ml-8 h-full flex flex-col overflow-hidden">
 			<div className="w-full flex justify-between mt-2 ">
 				<h2 className="text-2xl font-semibold text-primary80 ">Dashboard</h2>
 				<div className="flex items-center gap-4">
@@ -105,37 +105,40 @@ const Dashboard = () => {
 					</Button>
 				</div>
 			</div>
-
-			{userDashboardQuery.isLoading ? (
-				<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
-					<div className="flex items-center space-x-4">
-						<Skeleton className="h-12 w-16 rounded-xl bg-purple-4" />
-						<div className="space-y-2">
-							<Skeleton className="h-4 w-[250px] bg-purple-4" />
-							<Skeleton className="h-4 w-[200px] bg-purple-4" />
+			<div className="mt-6 pr-8 flex-1 overflow-y-auto">
+				{userDashboardQuery.isLoading ? (
+					<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
+						<div className="flex items-center space-x-4">
+							<Skeleton className="h-12 w-16 rounded-xl bg-purple-4" />
+							<div className="space-y-2">
+								<Skeleton className="h-4 w-[250px] bg-purple-4" />
+								<Skeleton className="h-4 w-[200px] bg-purple-4" />
+							</div>
 						</div>
 					</div>
-				</div>
-			) : dashboard.length === 0 ? (
-				<EmptyState config={emptyStateConfig} />
-			) : filteredList.length > 0 ? (
-				<div className="w-full mt-6 bg-white border border-primary10 rounded-s-xl rounded-e-xl">
-					{filteredList.map((item, idx) => (
-						<DashboardCard
-							key={idx}
-							data={item}
-							refetch={refetch}
-							setRefetch={setRefetch}
-						/>
-					))}
-				</div>
-			) : (
-				<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
-					<p className="text-sm text-primary60 font-medium">
-						{search ? 'No such dashboard found' : 'No dashboards found'}
-					</p>
-				</div>
-			)}
+				) : dashboard.length === 0 ? (
+					<EmptyState config={emptyStateConfig} />
+				) : filteredList.length > 0 ? (
+					<div className="w-full mt-2 bg-white border border-primary10 rounded-s-xl rounded-e-xl mb-6">
+						{filteredList.map((item, idx) => (
+							<DashboardCard
+								key={idx}
+								data={item}
+								refetch={refetch}
+								setRefetch={setRefetch}
+							/>
+						))}
+					</div>
+				) : (
+					<div className="w-full mt-6 p-6  bg-white border border-primary1 rounded-s-xl rounded-e-xl">
+						<p className="text-sm text-primary60 font-medium">
+							{search
+								? 'No such dashboard found'
+								: 'No dashboards found'}
+						</p>
+					</div>
+				)}
+			</div>
 
 			{showCreateDashboard && (
 				<CreateDashboardDialog

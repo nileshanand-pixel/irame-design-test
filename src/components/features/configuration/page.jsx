@@ -308,116 +308,121 @@ const Configuration = () => {
 	};
 
 	return (
-		<div className="flex flex-col gap-4 pt-6 w-full h-full">
+		<div className="flex flex-col gap-4  w-full h-full">
 			{/* Upload Section */}
-			<div className="text-primary80 gap-2">
-				<span className="text-2xl font-semibold">Configuration</span>
-				<span className="text-sm font-medium">/ Connect New Dataset</span>
-			</div>
-			<div className="border rounded-3xl py-4 px-6 col-span-12 shadow-1xl h-fit">
-				{isLoading && (
-					<div>
-						{' '}
-						<BackdropLoader />
-					</div>
-				)}
-				<div className="flex sm:flex-row flex-col gap-4 justify-between sm:items-center">
-					<div>
-						<h3 className="text-primary80 font-semibold text-xl">
-							Connect New Dataset
-						</h3>
-						<p className="text-primary40 text-sm">
-							Securely upload your dataset
-						</p>
-					</div>
-
-					{renderUploadButtons()}
+			<div className="px-8 flex-none mt-2">
+				<div className="text-primary80 gap-2">
+					<span className="text-2xl font-semibold">Configuration</span>
+					<span className="text-sm font-medium">
+						/ Connect New Dataset
+					</span>
 				</div>
-
-				{showForm && (
-					<div className="mt-4 space-y-6 mb-10">
-						<InputText
-							placeholder="Enter name here"
-							label="Data Set Name"
-							value={datasourceName}
-							setValue={(e) => setDatasourceName(e)}
-							error={!!formErrors.datasourceName}
-							errorText={formErrors.datasourceName}
-							labelClassName="text-sm font-medium text-primary40"
-						/>
-
-						<div className="flex flex-col">
-							<label className="text-sm font-medium text-primary40 mb-2">
-								What do you want to do with this Data Set
-							</label>
-							<Textarea
-								placeholder="Add Description here"
-								className=" border rounded-md !focus:outline-none text-black/60 text-sm font-normal resize-none"
-								value={description}
-								onChange={(e) => setDescription(e.target.value)}
-							/>
-							{formErrors.description && (
-								<p className="text-red-500 text-xs mt-1">
-									{formErrors.description}
-								</p>
-							)}
+				<div className="border rounded-3xl py-4 px-6 mt-6  col-span-12 shadow-1xl h-fit">
+					{isLoading && (
+						<div>
+							{' '}
+							<BackdropLoader />
+						</div>
+					)}
+					<div className="flex sm:flex-row flex-col gap-4 justify-between sm:items-center">
+						<div>
+							<h3 className="text-primary80 font-semibold text-xl">
+								Connect New Dataset
+							</h3>
+							<p className="text-primary40 text-sm">
+								Securely upload your dataset
+							</p>
 						</div>
 
-						<div>
-							<p className="text-sm font-medium text-primary40 mb-3">
-								Choose Analysis Type
-							</p>
-							<div className="flex flex-wrap gap-2">
-								{Array.isArray(intent) &&
-									intent.map((useCase, index) => (
-										<span
-											key={useCase.value}
-											onClick={() =>
-												handleSelectUseCase(useCase.value)
-											}
-											className={`text-sm font-normal text-black/60 px-3 py-1.5 border border-black/10 rounded-[30px] cursor-pointer hover:bg-purple-8 hover:text-purple-100 ${
-												dataSourceIntent.includes(
-													useCase.value,
-												)
-													? 'bg-purple-8 text-purple-100 border-[1.2px] border-primary'
-													: ''
-											}`}
-										>
-											{useCase?.label}
-										</span>
-									))}
+						{renderUploadButtons()}
+					</div>
+
+					{showForm && (
+						<div className="mt-4 space-y-6 mb-10">
+							<InputText
+								placeholder="Enter name here"
+								label="Data Set Name"
+								value={datasourceName}
+								setValue={(e) => setDatasourceName(e)}
+								error={!!formErrors.datasourceName}
+								errorText={formErrors.datasourceName}
+								labelClassName="text-sm font-medium text-primary40"
+							/>
+
+							<div className="flex flex-col">
+								<label className="text-sm font-medium text-primary40 mb-2">
+									What do you want to do with this Data Set
+								</label>
+								<Textarea
+									placeholder="Add Description here"
+									className=" border rounded-md !focus:outline-none text-black/60 text-sm font-normal resize-none"
+									value={description}
+									onChange={(e) => setDescription(e.target.value)}
+								/>
+								{formErrors.description && (
+									<p className="text-red-500 text-xs mt-1">
+										{formErrors.description}
+									</p>
+								)}
+							</div>
+
+							<div>
+								<p className="text-sm font-medium text-primary40 mb-3">
+									Choose Analysis Type
+								</p>
+								<div className="flex flex-wrap gap-2">
+									{Array.isArray(intent) &&
+										intent.map((useCase, index) => (
+											<span
+												key={useCase.value}
+												onClick={() =>
+													handleSelectUseCase(
+														useCase.value,
+													)
+												}
+												className={`text-sm font-normal text-black/60 px-3 py-1.5 border border-black/10 rounded-[30px] cursor-pointer hover:bg-purple-8 hover:text-purple-100 ${
+													dataSourceIntent.includes(
+														useCase.value,
+													)
+														? 'bg-purple-8 text-purple-100 border-[1.2px] border-primary'
+														: ''
+												}`}
+											>
+												{useCase?.label}
+											</span>
+										))}
+								</div>
 							</div>
 						</div>
-					</div>
-				)}
-				{/* Render Files and their progress */}
-				{Array.isArray(files) &&
-					files?.map((file, idx) => (
-						<div
-							className="px-4 py-2.5 z-10 bg-purple-4 rounded-lg mt-2"
-							key={file.name}
-						>
-							<div className="flex justify-between">
-								<div className="flex gap-2 items-center">
-									<img
-										src={getFileIcon(file?.name)}
-										alt="file-icon"
-										className="size-6"
-									/>
-									<div className="text-sm text-purple-100 flex">
-										{file.name || file.file_name}&nbsp;
-										{file.size ? (
-											<p className="text-sm font-medium text-primary80">{`(${formatFileSize(
-												file?.size,
-											)})`}</p>
-										) : null}
+					)}
+					{/* Render Files and their progress */}
+					{Array.isArray(files) &&
+						files?.map((file, idx) => (
+							<div
+								className="px-4 py-2.5 z-10 bg-purple-4 rounded-lg mt-2"
+								key={file.name}
+							>
+								<div className="flex justify-between">
+									<div className="flex gap-2 items-center">
+										<img
+											src={getFileIcon(file?.name)}
+											alt="file-icon"
+											className="size-6"
+										/>
+										<div className="text-sm text-purple-100 flex">
+											{file.name || file.file_name}&nbsp;
+											{file.size ? (
+												<p className="text-sm font-medium text-primary80">{`(${formatFileSize(
+													file?.size,
+												)})`}</p>
+											) : null}
+										</div>
 									</div>
-								</div>
-								<div className="flex items-center text-sm font-medium">
-									{progress[file.name] < 100 ? (
-										<p className="mr-4">uploading...</p>
-									) : null}
-									{/* <div
+									<div className="flex items-center text-sm font-medium">
+										{progress[file.name] < 100 ? (
+											<p className="mr-4">uploading...</p>
+										) : null}
+										{/* <div
 										onClick={() =>
 											window.open(file.file_url, '_blank')
 										}
@@ -425,32 +430,36 @@ const Configuration = () => {
 									>
 										<i className="bi-download text-lg text-primary80  font-semibold cursor-pointer "></i>
 									</div> */}
-									{file.url && (
+										{file.url && (
+											<div
+												onClick={(e) =>
+													handleRemoveFile(e, file, idx)
+												}
+												className="text-md px-2 py-1 rounded-md bg-purple-8  hover:bg-purple-8 ml-2"
+											>
+												<i className="bi-x text-xl text-primary80  font-semibold cursor-pointer"></i>
+											</div>
+										)}
+									</div>
+								</div>
+								{progress[file.name] <= 99 ? (
+									<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
 										<div
-											onClick={(e) =>
-												handleRemoveFile(e, file, idx)
-											}
-											className="text-md px-2 py-1 rounded-md bg-purple-8  hover:bg-purple-8 ml-2"
-										>
-											<i className="bi-x text-xl text-primary80  font-semibold cursor-pointer"></i>
-										</div>
-									)}
-								</div>
+											className="h-full bg-purple-100"
+											style={{
+												width: `${progress[file.name]}%`,
+											}}
+										></div>
+									</div>
+								) : null}
 							</div>
-							{progress[file.name] <= 99 ? (
-								<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
-									<div
-										className="h-full bg-purple-100"
-										style={{ width: `${progress[file.name]}%` }}
-									></div>
-								</div>
-							) : null}
-						</div>
-					))}
+						))}
+				</div>
 			</div>
+
 			{/* Right Section Manage Data Source */}
-			<div className="border rounded-3xl py-4 px-6 col-span-12 shadow-1xl max-h-[84vh] mb-4 overflow-y-hidden">
-				<div className="flex sm:flex-row flex-col gap-4 justify-between sm:items-center mb-4 pb-4">
+			<div className="border flex flex-col rounded-3xl py-4 mx-8  col-span-12 shadow-1xl flex-1 mb-4 overflow-y-hidden">
+				<div className="flex flex-none px-8 sm:flex-row flex-col gap-4 justify-between sm:items-center mb-4 pb-4">
 					<div>
 						<h3 className="text-primary80 font-semibold text-xl">
 							Choose from Existing Dataset
@@ -463,7 +472,10 @@ const Configuration = () => {
 					<div
 						className={cn(
 							'flex items-center border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300',
-							{ 'sm:w-[300px] w-4/5 ': isFocused, 'w-4/5 sm:w-[180px]': !isFocused },
+							{
+								'sm:w-[300px] w-4/5 ': isFocused,
+								'w-4/5 sm:w-[180px]': !isFocused,
+							},
 						)}
 					>
 						<i className="bi-search text-primary40 me-2"></i>
@@ -479,13 +491,13 @@ const Configuration = () => {
 						/>
 					</div>
 				</div>
-				<div className="mt-4 space-y-2 max-h-[90%] pb-6 mb-6 overflow-y-auto">
+				<div className="px-8 flex-1 space-y-2  overflow-y-auto">
 					{isFetchingData && (
 						<div className="flex items-center justify-center w-full">
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>
 					)}
-					<div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pr-3">
+					<div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{filteredList.length ? (
 							filteredList.map((source) => (
 								<div
@@ -502,8 +514,10 @@ const Configuration = () => {
 											className="mr-2 size-6 text-primary40"
 										/>
 										<div className="flex flex-col">
-											<p className='text-base max-w-36 truncate text-ellipsis'>{capitalize(source.name)}</p>
-											<span className='text-primary40 text-xs'>
+											<p className="text-base max-w-36 truncate text-ellipsis">
+												{capitalize(source.name)}
+											</p>
+											<span className="text-primary40 text-xs">
 												{dayjs(source.created_at).format(
 													'MMM D, YYYY',
 												)}

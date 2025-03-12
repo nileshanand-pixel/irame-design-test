@@ -129,7 +129,7 @@ const SelectPrompt = ({
 	return (
 		<div className="">
 			<div className="mt-2 xl:mt-4">
-				<div className="w-full overflow-x-scroll flex gap-4">
+				<div className="w-full flex gap-4">
 						{data?.suggestion?.length > 0 ? (
 							<ScrollList>
 								{data?.suggestion?.map((suggestion, index) => (

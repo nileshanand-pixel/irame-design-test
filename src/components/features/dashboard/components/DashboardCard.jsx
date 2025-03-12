@@ -81,7 +81,7 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 			}
 		>
 			<div className="flex gap-6">
-				<div className="bg-purple-4 w-[100px] h-16 rounded-xl flex items-center justify-center pt-1.5">
+				<div className="bg-purple-4 w-[100px]  rounded-xl flex items-center justify-center pt-1.5">
 					<img src={graphPlaceholder} alt="graph-placeholder" />
 				</div>
 				<div className="flex flex-col">

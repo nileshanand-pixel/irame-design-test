@@ -475,7 +475,7 @@ const Workzone = () => {
 			return (
 				<div key={query.id} className="my-2 w-full">
 					<div
-						className={`ml-10 flex ${query?.type === 'single' && 'items-center'} gap-2.5 flex-row-reverse`}
+						className={`ml-10 flex gap-2.5 flex-row-reverse`}
 					>
 						<Avatar className="size-9">
 							<AvatarImage src={value?.avatar} />
@@ -691,7 +691,7 @@ const Workzone = () => {
 	};
 
 	return (
-		<div className="grid grid-cols-12 gap-4 min-h-[90vh] max-h-[90vh] overflow-y-hidden w-full">
+		<div className="grid grid-cols-12 gap-4 px-8 min-h-[90vh] max-h-[90vh] overflow-y-hidden w-full">
 			<div
 				className={cn(
 					'border rounded-2xl pt-8 pl-4 mr-4 shadow-1xl relative h-full flex-col',

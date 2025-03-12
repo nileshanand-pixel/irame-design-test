@@ -101,7 +101,7 @@ const DashboardDetailsPage = () => {
 		};
 	}, [query, dashboardDetailsQuery.data]);
 	return (
-		<div className="w-full h-full" ref={elementRef}>
+		<div className="w-full h-full px-8 " ref={elementRef}>
 			<div className="w-full flex flex-col justify-between mt-2 ">
 				<div className="w-fit flex items-end gap-2 relative">
 					<h2
