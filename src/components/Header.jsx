@@ -26,7 +26,7 @@ const Header = () => {
 		return (
 			<Avatar>
 				<AvatarImage src={value?.avatar} />
-				<AvatarFallback>{getInitials(value?.userName)}</AvatarFallback>
+				<AvatarFallback>{getInitials(value?.user_name)}</AvatarFallback>
 			</Avatar>
 		);
 	};
@@ -34,7 +34,7 @@ const Header = () => {
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				if (value.userName && value.email && value.userId) return;
+				if (value.user_name && value.email && value.user_id) return;
 				const userData = getUserDetailsFromToken();
 
 				// Update local state with user details

@@ -1,4 +1,6 @@
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
+import { EVENTS_ENUM } from '@/config/analytics-events';
+import { trackEvent } from '@/lib/mixpanel';
 import React, { forwardRef } from 'react';
 
 // Action components
@@ -24,7 +26,8 @@ const CreateDashboard = forwardRef(({ onClick}, ref) => (
 	<ActionButton
 		icon="dashboard"
 		title="Create a Dashboard"
-		onClick={() => onClick('createDashboard')}
+		onClick={() => {
+			onClick('createDashboard')}}
 		ref={ref}
 	/>
 ));

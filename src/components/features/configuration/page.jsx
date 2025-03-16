@@ -27,6 +27,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import capitalize from 'lodash.capitalize';
 import dayjs from 'dayjs';
+import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const Configuration = () => {
 	const [files, setFiles] = useState([]);
@@ -125,6 +127,11 @@ const Configuration = () => {
 			setFiles([]);
 			toast.error('Error uploading files');
 			console.error('Error uploading files', error);
+			trackEvent(EVENTS_ENUM.DATASOURCE_CREATION_FAILED, EVENTS_REGISTRY.DATASOURCE_CREATION_FAILED, () => ({
+				uploaded: false,
+				file_upload_status: false,
+				error: getErrorAnalyticsProps(error)
+			}))
 		}
 	};
 	const createDataSource = async () => {
@@ -154,9 +161,15 @@ const Configuration = () => {
 			startChatting(response);
 			setProgress({});
 			setIsLoading(false);
+			trackEvent(EVENTS_ENUM.DATASOURCE_CREATED_SUCCESSFULLY, EVENTS_REGISTRY.DATASOURCE_CREATED_SUCCESSFULLY, () => ({datasource_id: response.datasource_id}))
 		} catch (error) {
 			toast.error('Error creating data source');
 			setIsLoading(false);
+			trackEvent(EVENTS_ENUM.DATASOURCE_CREATION_FAILED, EVENTS_REGISTRY.DATASOURCE_CREATION_FAILED, () => ({
+				uploaded: true,
+				file_upload_status: true,
+				error: getErrorAnalyticsProps(error)
+			}))
 		}
 	};
 	const handleDeleteDataSource = async (e, dataSourceId) => {
@@ -194,6 +207,7 @@ const Configuration = () => {
 	});
 
 	const handleSelectUseCase = (value) => {
+		trackEvent(EVENTS_ENUM.DATASOURCE_INTENT_SELECTED, EVENTS_REGISTRY.DATASOURCE_INTENT_SELECTED)
 		if (dataSourceIntent.includes(value)) {
 			setDataSourceIntent((prev) => prev.filter((item) => item !== value));
 		} else {
@@ -267,6 +281,7 @@ const Configuration = () => {
 						e.preventDefault();
 						if (!isAllFilesUploaded() || isLoading) return;
 						inputRef.current.click();
+						trackEvent(EVENTS_ENUM.UPLOAD_DATASOURCE_CLICKED, EVENTS_REGISTRY.UPLOAD_DATASOURCE_CLICKED)
 					}}
 				>
 					<label

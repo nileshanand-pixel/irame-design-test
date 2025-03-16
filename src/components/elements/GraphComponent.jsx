@@ -7,6 +7,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import GraphRenderer from './GraphRenderer';
 import ScrollList from './ScrollList';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 
 const supportedChartTypes = [
@@ -123,7 +125,12 @@ const GraphComponent = ({
 								className={`!pb-0 ${
 									activeTab === item ? 'active-tab' : 'default-tab'
 								}`}
-								onClick={() => setActiveTab(item)}
+								onClick={() => {
+									trackEvent(EVENTS_ENUM.GRAPH_TAB_CLICKED, EVENTS_REGISTRY.GRAPH_TAB_CLICKED, () => ({
+										total_graph_generated: graphList.length || 0
+									}))
+									setActiveTab(item)
+								}}
 							>
 								{item}
 							</li>
@@ -132,7 +139,7 @@ const GraphComponent = ({
 					{activeTab === 'Graphical View' && (
 						<>
 							<ScrollList>
-								{supportedGraphsData?.map((graph) => (
+								{supportedGraphsData?.map((graph, index) => (
 									<li
 										key={graph.id}
 										className={`${
@@ -140,7 +147,13 @@ const GraphComponent = ({
 												? 'text-purple-100 border-purple-40 tabActiveBg'
 												: 'text-black/60 border-black/10'
 										} text-sm font-medium border rounded-3xl px-3 h-full py-2 my-3 cursor-pointer min-w-fit whitespace-nowrap`}
-										onClick={() => setActiveGraphTab(graph.id)}
+										onClick={() => {
+											setActiveGraphTab(graph.id);
+											trackEvent(EVENTS_ENUM.GRAPH_VIEW_CHANGED, EVENTS_REGISTRY.GRAPH_VIEW_CHANGED, () => ({
+												graph_viewed_number: index,
+												graph_id: graph.id
+											}))
+										}}
 									>
 										{graph.title}
 									</li>

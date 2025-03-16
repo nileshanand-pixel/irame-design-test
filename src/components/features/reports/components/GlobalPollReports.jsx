@@ -39,6 +39,11 @@ const GlobalPollReports = () => {
 								<Button
 									onClick={() => {
 										navigate('/app/reports/');
+										trackEvent(EVENTS_ENUM.VIEW_RE, EVENTS_REGISTRY.VIEW_DASHBOARD_CLICKED, (() => ({
+											report_id: currentReport?.report_id,
+											name: currentReport?.name,
+											from: 'snack-bar'
+										})))
 									}}
 									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 								>

@@ -4,18 +4,34 @@ import { Button } from '@/components/ui/button';
 import { EditContext } from './components/WorkspaceEditProvider';
 import { useSelector } from 'react-redux';
 import { Skeleton } from '@/components/ui/skeleton';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { useRouter } from '@/hooks/useRouter';
 
-const PlannerComponent = ({ data, canEdit, workspaceHasChanges, setWorkspaceHasChanges }) => {
-	const { segments, setSegments, changeSets,  setChangesets, editDisabled} = useContext(EditContext);
-	const [isEditing, setIsEditing] = useState(false); 
+const plannerTitles = [
+	'Question Interpretation',
+	'Data Availability',
+	'Data Processing Steps',
+];
+
+const PlannerComponent = ({
+	data,
+	canEdit,
+	workspaceHasChanges,
+	setWorkspaceHasChanges,
+}) => {
+	const { query } = useRouter();
+	const { segments, setSegments, changeSets, setChangesets, editDisabled } =
+		useContext(EditContext);
+	const [isEditing, setIsEditing] = useState(false);
 	const [editIndex, setEditIndex] = useState(null);
 	const [editContent, setEditContent] = useState('');
 	const [enableSaveButton, setEnableSaveButton] = useState(false);
 	const editRef = useRef(null);
-	const chatStoreReducer = useSelector(state => state.chatStoreReducer);
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
 	const setInitialSegments = () => {
-		if(!data?.tool_data?.text)return;
+		if (!data?.tool_data?.text) return;
 		const rawSegments = data.tool_data.text
 			.replace(/\\n/g, '\n')
 			.split('<slice/>');
@@ -26,11 +42,11 @@ const PlannerComponent = ({ data, canEdit, workspaceHasChanges, setWorkspaceHasC
 
 	// Initialize segments from data
 	useEffect(() => {
-		if (!workspaceHasChanges)setInitialSegments()
+		if (!workspaceHasChanges) setInitialSegments();
 	}, [data]);
 
 	useEffect(() => {
-		if(workspaceHasChanges)return;
+		if (workspaceHasChanges) return;
 		setInitialSegments();
 	}, [chatStoreReducer?.activeQueryId]);
 
@@ -38,7 +54,23 @@ const PlannerComponent = ({ data, canEdit, workspaceHasChanges, setWorkspaceHasC
 		setIsEditing(true);
 		setEditIndex(index);
 		setEditContent(segments[index]);
-		setChangesets({...changeSets, planner: true});
+		setChangesets({ ...changeSets, planner: true });
+		let editedTitle = '';
+		for (const title of plannerTitles) {
+			if (segments[index].includes(title)) {
+				editedTitle = title;
+				break;
+			}
+		}
+		trackEvent(
+			EVENTS_ENUM.EDIT_WORKSPACE_CLICKED,
+			EVENTS_REGISTRY.EDIT_WORKSPACE_CLICKED,
+			() => ({
+				session_id: query?.sessionId,
+				query_id: chatStoreReducer?.activeQueryId,
+				[editedTitle]: true,
+			}),
+		);
 	};
 
 	const handleSave = () => {
@@ -49,12 +81,23 @@ const PlannerComponent = ({ data, canEdit, workspaceHasChanges, setWorkspaceHasC
 		setIsEditing(false);
 		setEditIndex(null);
 		setEditContent('');
+		trackEvent(
+			EVENTS_ENUM.WORKSPACE_EDIT_SAVE_CLICKED,
+			EVENTS_REGISTRY.WORKSPACE_EDIT_SAVE_CLICKED,
+			() => ({
+				changedSegment: editRef.current.innerHTML,
+			}),
+		);
 	};
 
 	const handleCancel = () => {
 		setIsEditing(false);
 		setEditIndex(null);
 		setEditContent('');
+		trackEvent(
+			EVENTS_ENUM.WORKSPACE_EDIT_CANCEL_CLICKED,
+			EVENTS_REGISTRY.WORKSPACE_EDIT_CANCEL_CLICKED,
+		);
 	};
 
 	return (
@@ -101,7 +144,11 @@ const PlannerComponent = ({ data, canEdit, workspaceHasChanges, setWorkspaceHasC
 										variant="outline"
 										className="text-sm mt-2 font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
 										onClick={() => handleEdit(index)}
-										disabled={isEditing && editIndex !== index && editDisabled}
+										disabled={
+											isEditing &&
+											editIndex !== index &&
+											editDisabled
+										}
 									>
 										Edit
 									</Button>

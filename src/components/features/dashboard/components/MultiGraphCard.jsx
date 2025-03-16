@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import GraphRenderer from '@/components/elements/GraphRenderer';
 import ScrollList from '@/components/elements/ScrollList';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const MultiGraphCard = ({ data, isGraphLoading }) => {
 	const graphList = data?.content?.graph?.graphs || [];
@@ -46,7 +48,20 @@ const MultiGraphCard = ({ data, isGraphLoading }) => {
 										? 'text-purple-100 border-purple-40 tabActiveBg'
 										: 'text-black/60 border-black/10'
 								} text-sm font-medium border rounded-3xl px-3 h-full py-2 my-3 cursor-pointer min-w-fit whitespace-nowrap`}
-								onClick={() => setActiveGraphTab(graph.id)}
+								onClick={() => {
+									trackEvent(
+										EVENTS_ENUM.DASHBOARD_CONTENT_GRAPH_ITEM_CLICKED,
+										EVENTS_REGISTRY.DASHBOARD_CONTENT_GRAPH_ITEM_CLICKED,
+										() => ({
+											dashboard_id: data?.dashboard_id,
+											query_id: data?.query_id,
+											dashboard_content_id: item?.dashboard_content_id,
+											graphId: graph.id,
+											graphTitle: graph.title
+										}),
+									);
+									setActiveGraphTab(graph.id)
+								}}
 							>
 								{graph.title}
 							</li>

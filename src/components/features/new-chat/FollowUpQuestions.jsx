@@ -6,6 +6,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { Button } from '@/components/ui/button';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM } from '@/config/analytics-events';
 
 const FollowUpQuestions = ({
 	question,
@@ -59,6 +61,14 @@ const FollowUpQuestions = ({
 						{ key: 'activeQueryId', value: res?.query_id },
 					]),
 				);
+				trackEvent(EVENTS_ENUM.FOLLOW_UP_QUERY_INITIATED, EVENTS_REGISTRY.FOLLOW_UP_QUERY_INITIATED, (() => ({
+					child_no: parseInt(answerResp.child_no) + 1,
+					datasource_id: answerResp?.datasource_id,
+					parent_query_id: answerResp?.query_id,
+					query: question,
+					session_id: answerResp?.session_id,
+					query_id: res.query_id
+				})))
 			});
 
 			setResponseTimeElapsed(0);

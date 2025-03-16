@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/react-query';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM } from '@/config/analytics-events';
 
 const DashboardCard = ({ data, refetch, setRefetch }) => {
 	const [isEditing, setIsEditing] = useState(false);
@@ -72,12 +74,20 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 		<div
 			key={data.dashboard_id}
 			className="p-6 flex justify-between w-full gap-6 border-b last:border-none border-primary10 cursor-pointer hover:bg-purple-2"
-			onClick={() =>
-				isEditing
-					? null
-					: navigate(
-							`/app/dashboard/content?id=${data?.dashboard_id}&name=${data?.title}`,
-						)
+			onClick={isEditing? null : () => {
+				trackEvent(
+					EVENTS_ENUM.DASHBOARD_CLICKED,
+					EVENTS_REGISTRY.DASHBOARD_CLICKED,
+					() => ({
+						dashboard_id: data.dashboard_id,
+						from: 'dashboard-page',
+						name: data?.title,
+					}),
+				);
+				navigate(
+					`/app/dashboard/content?id=${data?.dashboard_id}&name=${data?.title}`,
+				)
+			} 
 			}
 		>
 			<div className="flex gap-6">

@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 
 const initialState = {
-    userId: '',
+    user_id: '',
 };
 
 const AuthStoreSlice = createSlice({

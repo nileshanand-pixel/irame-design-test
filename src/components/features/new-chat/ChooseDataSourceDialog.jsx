@@ -20,6 +20,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { queryClient } from '@/lib/react-query';
 import { useQuery } from '@tanstack/react-query';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const ChooseDataSourceDialog = ({
 	open,
@@ -38,6 +40,9 @@ const ChooseDataSourceDialog = ({
 
 	const handleSelect = () => {
 		if (!selectedDataSource) return;
+		trackEvent(EVENTS_ENUM.CHAT_SESSION_STARTED, EVENTS_REGISTRY.CHAT_SESSION_STARTED, () => ({
+			datasource_id: selectedDataSource
+		}))
 		navigate(`/app/new-chat/?step=3&dataSourceId=${selectedDataSource}`);
 		handleNextStep(3);
 		setOpen(false);

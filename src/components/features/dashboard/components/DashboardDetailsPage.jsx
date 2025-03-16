@@ -8,6 +8,8 @@ import TooltipWrapper from '@/components/elements/TooltipWrapper';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/react-query';
 import MultiGraphCard from './MultiGraphCard';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const DashboardDetailsPage = () => {
 	const [dashboard, setDashboard] = useState([]);
@@ -27,6 +29,15 @@ const DashboardDetailsPage = () => {
 	});
 	const handleItemClick = (item) => {
 		scrollToElement();
+		trackEvent(
+			EVENTS_ENUM.DASHBOARD_ITEM_CLICKED,
+			EVENTS_REGISTRY.DASHBOARD_ITEM_CLICKED,
+			() => ({
+				dashboard_id: query.id,
+				query_id: item?.query_id,
+				dashboard_content_id: item?.dashboard_content_id
+			}),
+		);
 		setSelectedItem(item);
 	};
 

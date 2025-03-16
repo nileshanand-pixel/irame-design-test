@@ -10,6 +10,8 @@ import { useRouter } from '@/hooks/useRouter';
 import CreateDashboardDialog from './components/CreateDashboardDialog';
 import { toast } from 'sonner';
 import EmptyState from '@/components/elements/EmptyState';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { trackEvent } from '@/lib/mixpanel';
 
 const Dashboard = () => {
 	const [dashboard, setDashboard] = useState([]);
@@ -40,6 +42,15 @@ const Dashboard = () => {
 				setIsLoading(false);
 				setShowCreateDashboard(false);
 				toast.success('Dashboard created successfully');
+				trackEvent(
+					EVENTS_ENUM.DASHBOARD_CREATED,
+					EVENTS_REGISTRY.DASHBOAR_CREATED,
+					() => ({
+						dashboard_id: resp.dashboard_id,
+						title: dashboardName,
+						from: 'dashboard-page'
+					}),
+				);
 				navigate(`/app/new-chat`);
 			}
 		} catch (error) {
@@ -50,6 +61,15 @@ const Dashboard = () => {
 	};
 
 	const filteredList = useMemo(() => {
+		if(search){
+			trackEvent(
+				EVENTS_ENUM.DASHBOARD_SEARCHED,
+				EVENTS_REGISTRY.DASHBOARD_SEARCHED,
+				() => ({
+					searchKey: search
+				}),
+			);
+		}
 		return dashboard.filter((item) =>
 			item?.title?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
 		);

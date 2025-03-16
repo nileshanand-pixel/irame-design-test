@@ -30,9 +30,9 @@ export const getToken = () => {
 	return token ? token : tokenCookie;
 };
 
-export const getInitials = (userName) => {
-	if (!userName) return;
-	const words = userName.split(' ');
+export const getInitials = (user_name) => {
+	if (!user_name) return;
+	const words = user_name.split(' ');
 
 	const initials = words.map((word) => word.charAt(0).toUpperCase());
 

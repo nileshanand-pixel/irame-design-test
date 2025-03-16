@@ -1,9 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from 'react';
-import {
-	createQuerySession,
-	fetchSuggestions,
-} from './service/new-chat.service';
+import { createQuerySession, fetchSuggestions } from './service/new-chat.service';
 import { useRouter } from '@/hooks/useRouter';
 import { tokenCookie, getToken } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,10 +10,10 @@ import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { queryClient } from '@/lib/react-query';
 import ScrollList from '@/components/elements/ScrollList';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
-const SelectPrompt = ({
-	setPrompt,
-}) => {
+const SelectPrompt = ({ setPrompt }) => {
 	const [activeTab, setActiveTab] = useState('');
 	const [data, setData] = useState([]);
 	const { query, navigate } = useRouter();
@@ -26,11 +23,19 @@ const SelectPrompt = ({
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
 	const handleActiveTab = (selectedTab) => {
+		trackEvent(
+			EVENTS_ENUM.L1_CATEGORY_CLICKED,
+			EVENTS_REGISTRY.L1_CATEGORY_CLICKED,
+		);
 		setActiveTab(selectedTab);
 	};
 
 	const handlePrompt = (question) => {
 		try {
+			trackEvent(
+				EVENTS_ENUM.L2_CATEGORY_CLICKED,
+				EVENTS_REGISTRY.L2_CATEGORY_CLICKED,
+			);
 			navigate(`/app/new-chat/session`);
 			dispatch(
 				updateChatStoreProp([
@@ -38,45 +43,48 @@ const SelectPrompt = ({
 					{ key: 'refreshChat', value: !chatStoreReducer?.refreshChat },
 				]),
 			);
-			if(utilReducer.isSideNavOpen)dispatch(updateUtilProp([{key: 'isSideNavOpen', value: false}]))
+			if (utilReducer.isSideNavOpen)
+				dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]));
 			const payload = {
 				datasource_id: query.dataSourceId,
 				query: question,
 				type: 'single',
-			}
-			createQuerySession(payload, getToken()).then(
-				(res) => {
-					dispatch(
-						updateChatStoreProp([
-							{
-								key: 'initialQuery',
-								value: { id: res?.query_id || '', question },
-							},
-							{
-								key: 'queries',
-								value: [
-									{
-										id: res?.query_id || '',
-										question: res?.query || question,
-									},
-								],
-							},
-							{
-								key: 'activeChatSession',
-								value: {
-									id: res?.session_id,
-									title: res?.query || '',
+			};
+			createQuerySession(payload, getToken()).then((res) => {
+				dispatch(
+					updateChatStoreProp([
+						{
+							key: 'initialQuery',
+							value: { id: res?.query_id || '', question },
+						},
+						{
+							key: 'queries',
+							value: [
+								{
+									id: res?.query_id || '',
+									question: res?.query || question,
 								},
+							],
+						},
+						{
+							key: 'activeChatSession',
+							value: {
+								id: res?.session_id,
+								title: res?.query || '',
 							},
-							{ key: 'activeQueryId', value: res?.query_id },
-						]),
-					),
-						queryClient.invalidateQueries(['chat-history'], {
-							refetchActive: true,
-							refetchInactive: true,
-						});
-				},
-			);
+						},
+						{ key: 'activeQueryId', value: res?.query_id },
+					]),
+				),
+					queryClient.invalidateQueries(['chat-history'], {
+						refetchActive: true,
+						refetchInactive: true,
+					});
+					trackEvent(EVENTS_ENUM.QUERY_INITIATED, EVENTS_REGISTRY.QUERY_INITIATED, (() => ({
+						query_id: res?.query_id,
+						datasource_id: query.dataSourceId
+					})))
+			});
 		} catch (error) {
 			console.log(error);
 		}
@@ -107,6 +115,14 @@ const SelectPrompt = ({
 						updateUtilProp([{ key: 'suggestionData', value: resp }]),
 					);
 					if (resp.status === 200 || resp.suggestion.length) {
+						trackEvent(
+																			EVENTS_ENUM.DATASOURCE_PROCESSED_SUCCESSFULLY,
+																			EVENTS_REGISTRY.DATASOURCE_PROCESSED_SUCCESSFULLY,
+																			() => ({
+																				datasource_id: query.datasource_id,
+																				from: 'chat-page'
+																			}),
+																		);
 						clearInterval(intervalId); // Stop polling
 					}
 				}
@@ -147,17 +163,17 @@ const SelectPrompt = ({
 									</div>
 								</li>
 							))}
-							</ScrollList>
-						) : (
-							<div className="flex space-x-2">
-								{[...Array(4)].map((_, index) => (
-									<Skeleton
-										key={index}
-										className="h-8 w-[150px] bg-purple-4 rounded-2xl"
-									/>
-								))}
-							</div>
-						)}
+						</ScrollList>
+					) : (
+						<div className="flex space-x-2">
+							{[...Array(4)].map((_, index) => (
+								<Skeleton
+									key={index}
+									className="h-8 w-[150px] bg-purple-4 rounded-2xl"
+								/>
+							))}
+						</div>
+					)}
 				</div>
 				{activeTab ? (
 					<div className="w-full overflow-x-scroll flex gap-4 mt-3 xl:mt-4">

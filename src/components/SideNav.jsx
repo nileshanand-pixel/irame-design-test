@@ -30,6 +30,8 @@ import capitalize from 'lodash.capitalize';
 import { resetAllStores } from '@/redux/GlobalStore';
 import { Hint } from './Hint';
 import Tag from './elements/Tag';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { trackEvent } from '@/lib/mixpanel';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -49,7 +51,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		try {
 			const data = await getUserSession(getToken());
 			dispatch(
-				updateAuthStoreProp([{ key: 'userId', value: data?.[0]?.user_id }]),
+				updateAuthStoreProp([{ key: 'user_id', value: data?.[0]?.user_id }]),
 			);
 			return data;
 		} catch (error) {
@@ -78,23 +80,38 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					text: 'Business Process',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/workflow_icon.svg',
 					beta: true,
-					showHint: true
+					showHint: true,
 				},
 				{
 					link: '/app/dashboard',
 					text: 'Dashboard',
-					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/dashboard_columns.svg', 
+					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/dashboard_columns.svg',
+					trackingCall: () =>
+						trackEvent(
+							EVENTS_ENUM.SIDENAV_DASHBOARD_CLICKED,
+							EVENTS_REGISTRY.SIDENAV_DASHBOARD_CLICKED,
+						),
 				},
 				{
 					link: '/app/reports/datasources',
 					text: 'Reports',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/report-icon.svg',
-					beta: true
+					beta: true,
+					trackingCall: () =>
+						trackEvent(
+							EVENTS_ENUM.SIDENAV_REPORT_CLICKED,
+							EVENTS_REGISTRY.SIDENAV_REPORT_CLICKED,
+						),
 				},
 				{
 					link: '/app/configuration',
 					text: 'Configuration',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/database.svg',
+					trackingCall: () =>
+						trackEvent(
+							EVENTS_ENUM.CONFIGURATION_TAB_CLICKED,
+							EVENTS_REGISTRY.CONFIGURATION_TAB_CLICKED,
+						),
 				},
 			],
 		},
@@ -135,6 +152,16 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				{ key: 'resetIra', value: !chatStoreReducer?.resetIra },
 			]),
 		);
+
+		trackEvent(
+			EVENTS_ENUM.CHAT_HISTORY_SESSION_CLICKED,
+			EVENTS_REGISTRY.CHAT_HISTORY_SESSION_CLICKED,
+			() => ({
+				title: session.title,
+				session_id: session.session_id,
+			}),
+		);
+
 		const datasourceId = session?.datasource_id;
 		const datasourceName = getChatHistoryDataSourceName(datasourceId);
 		dispatch(
@@ -458,23 +485,28 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 			{/* Ask IRA Button */}
 			<div className="flex-none mt-6 mb-6 mx-4">
-				<Hint label="Ask Ira" side="right" align="start" show={!isSideNavOpen}>
-				<Link
-					to={'/app/new-chat'}
-					onClick={askIra}
-					className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
-						isSideNavOpen
-							? 'rounded-[200px] px-5 py-3'
-							: 'rounded-full px-2 mx-auto py-2'
-					} bg-purple-4`}
+				<Hint
+					label="Ask Ira"
+					side="right"
+					align="start"
+					show={!isSideNavOpen}
 				>
-					<img
-						src="https://d2vkmtgu2mxkyq.cloudfront.net/plus.svg"
-						alt="ask-ira"
-						className="size-6"
-					/>
-					{isSideNavOpen && <p>Ask IRA</p>}
-				</Link>
+					<Link
+						to={'/app/new-chat'}
+						onClick={askIra}
+						className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
+							isSideNavOpen
+								? 'rounded-[200px] px-5 py-3'
+								: 'rounded-full px-2 mx-auto py-2'
+						} bg-purple-4`}
+					>
+						<img
+							src="https://d2vkmtgu2mxkyq.cloudfront.net/plus.svg"
+							alt="ask-ira"
+							className="size-6"
+						/>
+						{isSideNavOpen && <p>Ask IRA</p>}
+					</Link>
 				</Hint>
 			</div>
 
@@ -485,25 +517,41 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						{menu?.items?.map((option, optionKey) => {
 							const isActive = activeTab === option.link;
 							return (
-								<Hint label={option.text} side="right" align="start" show={!isSideNavOpen}>
-									<Link
-									to={option.link}
-									key={optionKey}
-									onClick={() => setActiveTab(option.link)}
-									className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-2 rounded-md hover:bg-purple-4 border-l-4 ${
-										isActive
-											? ' border-purple-100 bg-purple-4 font-semibold text-purple-100 '
-											: ' border-transparent'
-									}`}
+								<Hint
+									label={option.text}
+									side="right"
+									align="start"
+									show={!isSideNavOpen}
 								>
-									<img
-										src={option.icon}
-										className={`${isActive ? 'text-purple-100' : ''} size-[22px]`}
-										style={{ strokeWidth: '2' }}
-									/>
-									{isSideNavOpen && <p className='truncate'>{option.text}</p>}
-									{isSideNavOpen && option.beta && <Tag className="shrink-0 drop-shadow-md" textClassName="text-xs" text="Beta"/>}
-								</Link>
+									<Link
+										to={option.link}
+										key={optionKey}
+										onClick={() => {
+											setActiveTab(option.link);
+											option.trackingCall();
+										}}
+										className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-2 rounded-md hover:bg-purple-4 border-l-4 ${
+											isActive
+												? ' border-purple-100 bg-purple-4 font-semibold text-purple-100 '
+												: ' border-transparent'
+										}`}
+									>
+										<img
+											src={option.icon}
+											className={`${isActive ? 'text-purple-100' : ''} size-[22px]`}
+											style={{ strokeWidth: '2' }}
+										/>
+										{isSideNavOpen && (
+											<p className="truncate">{option.text}</p>
+										)}
+										{isSideNavOpen && option.beta && (
+											<Tag
+												className="shrink-0 drop-shadow-md"
+												textClassName="text-xs"
+												text="Beta"
+											/>
+										)}
+									</Link>
 								</Hint>
 							);
 						})}

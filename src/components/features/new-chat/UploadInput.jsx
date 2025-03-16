@@ -10,6 +10,8 @@ import { getToken } from '@/lib/utils';
 import DividerWithText from '@/components/elements/DividerWithText';
 import { useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 	const navigate = useNavigate();
@@ -49,6 +51,7 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 
 	const handleConnectDataSource = (e) => {
 		e.stopPropagation();
+		trackEvent(EVENTS_ENUM.CONNECT_DATA_SOURCE_CLICKED, EVENTS_REGISTRY.CONNECT_DATA_SOURCE_CLICKED)
 		navigate('/app/configuration');
 	};
 
@@ -72,7 +75,10 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 					<Button
 						variant="outline"
 						className="w-full hover:bg-purple-8 border-purple-8 text-purple-100 font-medium hover:text-purple-100"
-						onClick={(e) => handleSelectFromLibrary(e)}
+						onClick={(e) => {
+										trackEvent(EVENTS_ENUM.SELECT_FROM_LIBRARY_CLICKED, EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CLICKED)
+										handleSelectFromLibrary(e)
+									}}
 					>
 						{welcomeTypography?.btn2Text}
 					</Button>

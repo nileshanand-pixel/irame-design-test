@@ -2,9 +2,9 @@ import { useState } from 'react';
 
 const initialValue = {
 	userDetails: {
-		userName: '',
+		user_name: '',
 		email: '',
-		userId: '',
+		user_id: '',
 		token: '',
 		avatar: '',
 	},

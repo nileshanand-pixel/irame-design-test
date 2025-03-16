@@ -46,6 +46,7 @@
 		"lodash.isequal": "^4.5.0",
 		"lottie-web": "^5.12.2",
 		"lucide-react": "^0.358.0",
+		"mixpanel-browser": "^2.61.0",
 		"next-themes": "^0.3.0",
 		"papaparse": "^5.4.1",
 		"prop-types": "^15.8.1",

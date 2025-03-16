@@ -5,11 +5,13 @@ import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useRouter } from '@/hooks/useRouter';
-import { cn } from '@/lib/utils';
+import { cn, getToken } from '@/lib/utils';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import GlobalPollReports from './features/reports/components/GlobalPollReports';
 import { pdfjs } from 'react-pdf';
 import useBreakpoint from '@/hooks/useBreakpoint';
+import { useQuery } from '@tanstack/react-query';
+import { authUserDetails } from './features/login/service/auth.service';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -21,6 +23,22 @@ const Layout = ({ children }) => {
 	const breakPoint = useBreakpoint()
 	const dispatch = useDispatch();
 	const { pathname } = useRouter();
+
+	const userFetcher = () => {
+		let resp = null;
+		authUserDetails(getToken()).then((res) => {
+			localStorage.setItem('auth-user-data', JSON.stringify(res));
+			resp = res;
+		})
+		return resp;
+	}
+
+	const {data: currentUser} = useQuery({
+		queryKey: ['auth-user-details', getToken()],
+		queryFn: userFetcher,
+		enabled: !!getToken(),
+		
+	})
 
 	const toggleSideNav = () => {
 		dispatch(
