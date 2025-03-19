@@ -11,7 +11,6 @@ import EmptyState from '@/components/elements/EmptyState';
 import { getDataSourceById } from '../../configuration/service/configuration.service';
 import { Skeleton } from '@/components/ui/skeleton';
 
-
 const ReportsInDatasource = () => {
 	const { query, navigate } = useRouter();
 	const [reports, setReports] = useState([]);
@@ -22,28 +21,28 @@ const ReportsInDatasource = () => {
 		queryKey: ['get-reports-by-datasource', query.datasourceId],
 		queryFn: () => getDatasourceReports(getToken(), query.datasourceId),
 		refetchInterval: 10000,
-		enabled: !!(query.datasourceId && query.datasourceId !== 'shared')
+		enabled: !!(query.datasourceId && query.datasourceId !== 'shared'),
 	});
 
 	const sharedReportsQuery = useQuery({
 		queryKey: ['get-shared-reports', getToken()],
 		queryFn: () => getSharedReports(getToken()),
 		refetchInterval: 600000,
-		enabled: !!(query.datasourceId && query.datasourceId === 'shared')
+		enabled: !!(query.datasourceId && query.datasourceId === 'shared'),
 	});
 
 	const datasourceQuery = useQuery({
 		queryKey: ['get-datasource', query.datasourceId],
 		queryFn: () => getDataSourceById(getToken(), query.datasourceId),
 		refetchInterval: 10000,
-		enabled: !!(query.datasourceId && query.datasourceId !== 'shared')
+		enabled: !!(query.datasourceId && query.datasourceId !== 'shared'),
 	});
 
 	const filteredList = useMemo(() => {
-		return reports.filter(
-			(item) =>
-				item?.name?.toLowerCase()?.startsWith(search?.trim()?.toLowerCase()),
+		const d = reports.filter((item) =>
+			item?.name?.toLowerCase()?.startsWith(search?.trim()?.toLowerCase()),
 		);
+		return [...d, ...d, ...d, ...d, ...d];
 	}, [search, reports]);
 
 	useEffect(() => {
@@ -56,7 +55,7 @@ const ReportsInDatasource = () => {
 		if (query.datasourceId === 'shared' && sharedReportsQuery?.data?.reports) {
 			setReports(sharedReportsQuery?.data?.reports || []);
 		}
-	}, [sharedReportsQuery.data])
+	}, [sharedReportsQuery.data]);
 
 	const emptyStateConfig = {
 		image: 'https://d2vkmtgu2mxkyq.cloudfront.net/empty-state.svg',
@@ -69,26 +68,32 @@ const ReportsInDatasource = () => {
 	};
 
 	return (
-		<div className="w-full h-full ">
-			<div className="w-full flex justify-between mt-2 ">
-			<div className=" flex items-end text-primary80 gap-2">
-				<div
-					className="text-2xl font-semibold cursor-pointer"
-					onClick={() => {
-						navigate('/app/reports/datasources')
-						queryClient
-					}}
-				>
-					Reports /
+		<div className="flex flex-col w-full h-full ">
+			<div className="w-full px-8 flex flex-none justify-between mt-2 ">
+				<div className=" flex items-end text-primary80 gap-2">
+					<div
+						className="text-2xl font-semibold cursor-pointer"
+						onClick={() => {
+							navigate('/app/reports/datasources');
+							queryClient;
+						}}
+					>
+						Reports /
+					</div>
+					{datasourceQuery.isLoading && (
+						<Skeleton className="w-20 h-6 bg-purple-8" />
+					)}
+					{datasourceQuery?.data?.name && (
+						<div className="pb-1 text-sm font-medium align-bottom">
+							{datasourceQuery?.data?.name}
+						</div>
+					)}
+					{query.datasourceId === 'shared' && (
+						<div className="pb-1 text-sm font-medium align-bottom">
+							Shared
+						</div>
+					)}
 				</div>
-				{datasourceQuery.isLoading && <Skeleton className='w-20 h-6 bg-purple-8'/>} 
-				{datasourceQuery?.data?.name && <div className="pb-1 text-sm font-medium align-bottom">
-					{datasourceQuery?.data?.name}
-				</div>}
-				{query.datasourceId === 'shared' && <div className="pb-1 text-sm font-medium align-bottom">
-					Shared
-				</div>}
-			</div>
 				<div className="flex items-center gap-4">
 					<div
 						className={cn(
@@ -118,28 +123,31 @@ const ReportsInDatasource = () => {
 				</div>
 			</div>
 
-			{reportsQuery.isLoading ? (
-				<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6">
-					{Array.from({length: 16}).map((i) => (<ReportCardSkeleton key={i}/>))}
-				</div>
-			) : reports.length === 0 ? (
-				<EmptyState config={emptyStateConfig} />
-			) : filteredList.length > 0 ? (
-				<div className="w-full mt-6 bg-white grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-					{filteredList.map((item) => (
-						<ReportCard key={item.report_id} report={item} />
-					))}
-				</div>
-			) : (
-				<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
-					<p className="text-sm text-primary60 font-medium">
-						No such Report found
-					</p>
-				</div>
-			)}
+			<div className="flex-1 px-8 overflow-y-auto">
+				{reportsQuery.isLoading ? (
+					<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6 pb-6">
+						{Array.from({ length: 16 }).map((i) => (
+							<ReportCardSkeleton key={i} />
+						))}
+					</div>
+				) : reports.length === 0 ? (
+					<EmptyState config={emptyStateConfig} />
+				) : filteredList.length > 0 ? (
+					<div className="w-full mt-6 bg-white grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 pb-6  gap-6">
+						{filteredList.map((item) => (
+							<ReportCard key={item.report_id} report={item} />
+						))}
+					</div>
+				) : (
+					<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
+						<p className="text-sm text-primary60 font-medium">
+							No such Report found
+						</p>
+					</div>
+				)}
+			</div>
 		</div>
 	);
-
 };
 
 export default ReportsInDatasource;

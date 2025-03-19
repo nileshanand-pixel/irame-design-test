@@ -11,7 +11,7 @@ const QueryDisplay = ({ bulkPrompt = [], mode, prompt, workflowTitle }) => {
 	}
 	if (mode === 'single' && prompt) {
 		return (
-			<p className="max-w-[90%] ms-2 bg-purple-4 text-primary80 font-medium px-4 py-2 rounded-tl-[80px] rounded-tr-[6px] rounded-br-[80px] rounded-bl-[80px] min-h-6">
+			<p className="max-w-[90%] ms-2 bg-purple-4 text-primary80 font-medium px-4 py-4 rounded-tl-[40px] rounded-tr-[6px] rounded-br-[40px] rounded-bl-[40px] min-h-6">
 				{prompt}
 			</p>
 		);
@@ -30,7 +30,7 @@ const QueryDisplay = ({ bulkPrompt = [], mode, prompt, workflowTitle }) => {
 	};
 
 	return (
-		<div className="space-y-4 bg-[#6A12CD0A] px-2 py-4 rounded-lg min-w-[60%] max-w-[80%]">
+		<div className="space-y-4 bg-[#6A12CD0A] px-2 py-4 rounded-sm min-w-[60%] max-w-[80%]">
 			{bulkPrompt?.map((query, index) => (
 				<>
 					{mode === 'workflow' && index === 0 && (

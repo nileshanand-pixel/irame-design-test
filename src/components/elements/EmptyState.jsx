@@ -1,13 +1,12 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useRouter } from '@/hooks/useRouter';
 
-const EmptyState = ({ config }) => {
+const EmptyState = ({ config, className }) => {
 	const { image, actionText, reactionText, ctaText, ctaClickHandler, ctaDisabled, comingSoonText } = config;
 
 
 	return (
-		<div className="flex flex-col items-center justify-center h-[85vh] p-4">
+		<div className={`flex flex-col items-center justify-center h-[85vh] p-4 ${className}`}>
 			<div className="text-center">
 				{image && (
 					<div className="mb-8">

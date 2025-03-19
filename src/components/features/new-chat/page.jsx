@@ -6,10 +6,7 @@ import SelectPrompt from './SelectPromt';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
 import { getToken } from '@/lib/utils';
-import {
-	createQuerySession,
-	getUserSession,
-} from './service/new-chat.service';
+import { createQuerySession, getUserSession } from './service/new-chat.service';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { getDataSources } from '../configuration/service/configuration.service';
@@ -17,6 +14,8 @@ import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 import InputArea from './InputArea';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -105,35 +104,40 @@ const NewChat = () => {
 		}
 	};
 
-
-	const handleCreateSession = (prompt, queries, savedQueryReference, mode="single") => {
+	const handleCreateSession = (
+		prompt,
+		queries,
+		savedQueryReference,
+		mode = 'single',
+	) => {
 		try {
 			if (mode === 'single' && (!prompt || !prompt?.trim())) return;
 			let metadata;
-			if(queries && queries?.length > 0){
+			if (queries && queries?.length > 0) {
 				metadata = {
-					queries: queries.filter((query) => query?.text?.length > 0).map((item)=> ({query: item?.text})),
-					saved_query_reference: savedQueryReference
-				}	
+					queries: queries
+						.filter((query) => query?.text?.length > 0)
+						.map((item) => ({ query: item?.text })),
+					saved_query_reference: savedQueryReference,
+				};
 			}
 			const payload = {
 				datasource_id: query.dataSourceId,
-				type: mode
-			}
+				type: mode,
+			};
 
-			if(mode ==='single' && prompt)payload.query = prompt;
-			if(mode!=='single' && metadata)payload.metadata = metadata;
+			if (mode === 'single' && prompt) payload.query = prompt;
+			if (mode !== 'single' && metadata) payload.metadata = metadata;
 
 			navigate(`/app/new-chat/session`);
 			dispatch(
 				updateChatStoreProp([
 					{ key: 'queries', value: [{ id: '', question: prompt }] },
 					{ key: 'refreshChat', value: !chatStoreReducer?.refreshChat },
-
 				]),
 			);
-			createQuerySession(payload, getToken()).then(
-				(res) => {
+			createQuerySession(payload, getToken())
+				.then((res) => {
 					dispatch(
 						updateChatStoreProp([
 							{
@@ -143,7 +147,7 @@ const NewChat = () => {
 										id: res?.query_id || '',
 										question: res?.query || prompt,
 										metadata: res?.query?.metadata,
-										type: res?.type
+										type: res?.type,
 									},
 								],
 							},
@@ -152,17 +156,25 @@ const NewChat = () => {
 								value: {
 									id: res?.session_id,
 									title: res?.query || '',
-									mode: res?.type
+									mode: res?.type,
 								},
 							},
 							{ key: 'activeQueryId', value: res?.query_id },
 						]),
 					);
-				},
-			).catch((error) => {
-				navigate('/app/new-chat');
-				toast.error('Error Creating Session, Please Try Again');
-			})
+					trackEvent(
+						EVENTS_ENUM.QUERY_INITIATED,
+						EVENTS_REGISTRY.QUERY_INITIATED,
+						() => ({
+							query_id: res?.query_id,
+							datasource_id: query.dataSourceId,
+						}),
+					);
+				})
+				.catch((error) => {
+					navigate('/app/new-chat');
+					toast.error('Error Creating Session, Please Try Again');
+				});
 		} catch (error) {
 			console.log(error);
 		}
@@ -173,10 +185,10 @@ const NewChat = () => {
 			// if (utilReducer?.sessionHistory?.length > 0) return;
 			getUserSession(getToken()).then((res) => {
 				dispatch(updateUtilProp([{ key: 'sessionHistory', value: res }]));
-				if (!authStoreReducer?.userId)
+				if (!authStoreReducer?.user_id)
 					dispatch(
 						updateAuthStoreProp([
-							{ key: 'userId', value: res?.[0]?.user_id },
+							{ key: 'user_id', value: res?.[0]?.user_id },
 						]),
 					);
 			});
@@ -198,11 +210,11 @@ const NewChat = () => {
 	});
 
 	const getChatHistoryDataSourceName = (dataSourceId) => {
-		const datasets = dataSources || utilReducer?.dataSources
+		const datasets = dataSources || utilReducer?.dataSources;
 		const dataSource = datasets?.find(
 			(source) => source.datasource_id === dataSourceId,
 		);
-		return {id: dataSourceId, name: dataSource?.name}
+		return { id: dataSourceId, name: dataSource?.name };
 	};
 
 	const config = {
@@ -214,6 +226,10 @@ const NewChat = () => {
 	};
 
 	useEffect(() => {
+		trackEvent(
+			EVENTS_ENUM.LANDING_PAGE_LOADED,
+			EVENTS_REGISTRY.LANDING_PAGE_LOADED,
+		);
 		fetchUserSession();
 	}, []);
 
@@ -254,7 +270,10 @@ const NewChat = () => {
 		if (!utilReducer?.selectedDataSource && dataSource?.name) {
 			dispatch(
 				updateUtilProp([
-					{ key: 'selectedDataSource', value: {id: query.dataSourceId, value: dataSource?.name} },
+					{
+						key: 'selectedDataSource',
+						value: { id: query.dataSourceId, value: dataSource?.name },
+					},
 				]),
 			);
 		} else {
@@ -275,20 +294,20 @@ const NewChat = () => {
 	return (
 		<>
 			{
-				<div className="flex justify-center h-md:mt-20">
-					<div className="flex flex-col items-center w-[51.875rem] relative">
+				<div className="flex justify-center pt-5 xl:pt-10">
+					<div className="flex flex-col w-[51.875rem] relative">
 						<div className="align-left w-full">
 							<h1
-								className="text-5xl leading-[60px] font-semibold align-left"
+								className="text-2xl lg:text-3xl leading-[24px] lg:leading-[36px] font-semibold align-left"
 								style={gradientText}
-							>{`${welcomeTypography?.headingLine1} ${value?.userName}`}</h1>
+							>{`${welcomeTypography?.headingLine1} ${value?.user_name}`}</h1>
 							<h2 className="text-5xl leading-[60px] font-semibold text-primary20">
 								{completedSteps.includes(2) ||
 								completedSteps.includes(3)
 									? welcomeTypography?.headingLine2_2
 									: welcomeTypography?.headingLine2}
 							</h2>
-							<ul className="relative mt-6 mb-3 inline-flex gap-2">
+							<ul className="relative mt-2 xl:mt-4 mb-3 inline-flex gap-2">
 								{[1, 2, 3]?.map((items, indx) => {
 									return (
 										<>
@@ -305,11 +324,11 @@ const NewChat = () => {
 								})}
 							</ul>
 						</div>
-						<div className="mt-[1rem] h-sm:mt-[2.5rem] overflow-scroll w-full">
+						<div className="mt-[1rem]  overflow-auto w-full">
 							{renderComponent()}
 						</div>
 						{completedSteps.includes(2) || completedSteps.includes(3) ? (
-							<div className="fixed bottom-1 flex flex-col items-center justify-center !w-[51.875rem] max-h-[30rem] overflow-x-auto z-20">
+							<div className="fixed bottom-1 flex flex-col items-center justify-center !w-[51.875rem] max-h-[30rem] overflow-x-scroll z-20">
 								<InputArea
 									config={config}
 									onAppendQuery={handleCreateSession}

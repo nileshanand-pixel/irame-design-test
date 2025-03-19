@@ -6,6 +6,8 @@ import { authAxiosClient } from '@/lib/axios';
 import axiosClientV1 from '@/lib/axios';
 import { resetCookies } from '@/lib/cookies';
 import { resetAllStores } from '@/redux/GlobalStore';
+import { trackEvent, untrackUser } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 export const logout = async () => {
 	window.location.href = `${serviceUrlMap.AUTH_SERVICE}/logout?client_id=${COGNITO_CLIENT_ID}&logout_uri=${window.location.origin}`;
@@ -15,7 +17,10 @@ export const logout = async () => {
 
 export const fullLogout = async () => {
 	await revokeToken();
+	trackEvent(EVENTS_ENUM.SUCCESSFUL_LOGOUT, EVENTS_REGISTRY.SUCCESSFUL_LOGOUT)
+	untrackUser();
 	window.location.href = `${serviceUrlMap.AUTH_SERVICE}/logout?client_id=${COGNITO_CLIENT_ID}&logout_uri=${window.location.origin}`;
+	localStorage.removeItem('auth-user-data')
 	resetCookies();
 	resetAllStores();
 }
@@ -53,3 +58,15 @@ export const revokeToken = async() => {
 	}
 	
 }
+export const authUserDetails = async (token) => {
+	const response = await axiosClientV1.get(
+		`/users/details`,
+		{
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		},
+	);
+
+	return response.data;
+};

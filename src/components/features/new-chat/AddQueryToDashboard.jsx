@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { EVENTS_ENUM } from '@/config/analytics-events';
 
 const AddQueryToDashboard = ({ open, setDashboard }) => {
 	const [dashboards, setDashboards] = useState([]);
@@ -50,6 +51,11 @@ const AddQueryToDashboard = ({ open, setDashboard }) => {
 								navigate(
 									`/app/dashboard/content?id=${res?.dashboard_id}&name=${selectedDashboard?.title}`,
 								);
+								trackEvent(EVENTS_ENUM.VIEW_DASHBOARD_CLICKED, EVENTS_REGISTRY.VIEW_DASHBOARD_CLICKED, (() => ({
+									dashboard_id: res?.dashboard_id,
+									title: selectedDashboard?.title,
+									from: 'snack-bar'
+								})))
 							}}
 							className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 						>

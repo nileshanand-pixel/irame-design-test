@@ -67,6 +67,37 @@
 		--ring: 0 0% 83.1%;
 	}
 
+	*::-webkit-scrollbar {
+		height: 0px;
+		width: 0px;
+	}
+
+	*::-webkit-scrollbar-track {
+		border-radius: 5px;
+		background-color: #DFE9EB;
+	}
+
+	*::-webkit-scrollbar-track:hover {
+		background-color: #B8C0C2;
+	}
+
+
+	*::-webkit-scrollbar-thumb {
+		border-radius: 5px;
+		background-color: #989797;
+		width: 0px;
+	}
+
+	*::-webkit-scrollbar-thumb:hover {
+		background-color: #676666;
+	}
+
+
+
+
+
+
+
 	html,
 	body {
 		font-family: 'Inter', sans-serif !important;
@@ -82,39 +113,6 @@
 		@apply bg-background text-foreground;
 	}
 
-	/*scroll-bar-styles-START*/
-
-	/* WebKit scrollbar styles (Chrome, Safari) */
-	::-webkit-scrollbar {
-		width: 4px;
-		height: 4px;
-	}
-
-	/* Track */
-	::-webkit-scrollbar-track {
-		background: transparent;
-	}
-
-	/* Handle */
-	::-webkit-scrollbar-thumb {
-		background: transparent;
-		border-radius: 4px;
-	}
-
-	/* Handle on hover */
-	::-webkit-scrollbar-thumb:hover {
-		background: transparent;
-	}
-
-	/* Firefox scrollbar styles */
-	* {
-		scrollbar-width: thin;
-		/* "auto" or "thin" */
-		scrollbar-color: transparent transparent;
-		/* scroll thumb and track */
-	}
-
-	/*scroll-bar-styles-END*/
 
 	.or-tagline {
 		@apply relative bg-transparent text-center z-[1];
@@ -296,7 +294,6 @@
 		-webkit-box-orient: vertical;
 		overflow: hidden;
 		-webkit-line-clamp: 3;
-		/* Number of lines to show */
 	}
 
 	.spinner {

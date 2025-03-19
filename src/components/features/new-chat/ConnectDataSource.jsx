@@ -22,6 +22,7 @@ const ConnectDataSource = ({
 				setFiles={setFiles}
 				progress={progress}
 				setOpen={setOpen}
+				handleNextStep={handleNextStep}
 			/>
 			<div className="flex justify-between">
 				{files.length > 0 && progress === 100.0 ? (

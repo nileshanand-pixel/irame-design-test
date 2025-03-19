@@ -1,38 +1,48 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import CHAT_CONSTANTS from '@/constants/chat.constant';
-import MoreActionsModal from './MoreActionsModal';
-import { chatCommandInitiator, getToken } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
-import { Button } from '@/components/ui/button';
-import SaveEditTemplateModal from '../reports/components/SaveEditTemplateModal';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { deleteTemplate, getTemplates } from './service/new-chat.service';
+import CHAT_CONSTANTS from '@/constants/chat.constant';
+import { chatCommandInitiator, getToken } from '@/lib/utils';
+import MoreActionsModal from './MoreActionsModal';
+import SaveEditTemplateModal from '../reports/components/SaveEditTemplateModal';
 
-const InputArea = ({ config, onAppendQuery, disabled=false}) => {
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+
+const autoResize = (e, prompt, maxHeight = 160) => {
+	if(!prompt)return
+	e.target.style.height = 'auto';
+	const newHeight = e.target.scrollHeight;
+	const clampedHeight = newHeight > maxHeight ? maxHeight : newHeight;
+	e.target.style.height = `${clampedHeight}px`;
+};
+
+const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	const [prompt, setPrompt] = useState('');
 	const [showModal, setShowModal] = useState(false);
 	const [mode, setMode] = useState('single');
 	const [queries, setQueries] = useState([{ id: 1, text: '' }]);
-	const [savedQueryReference, setSavedQueryReference] = useState({id: '', title: ''})
-	const [showSaveEditTemplateModal, setShowSaveEditTemplateModal] = useState(false);
+	const [savedQueryReference, setSavedQueryReference] = useState({
+		id: '',
+		title: '',
+	});
+	const [showSaveEditTemplateModal, setShowSaveEditTemplateModal] =
+		useState(false);
 	const [editTemplateData, setEditTemplateData] = useState({
-		name: "",
-		id: "",
+		name: '',
+		id: '',
 		isEditing: false,
 	});
 	const [secondaryModalData, setSecondaryModalData] = useState({
 		isVisible: false,
-		id: "",
+		id: '',
 	});
-	const utilReducer = useSelector((state) => state.utilReducer);
-	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
-	const dispatch = useDispatch();
 
-	const inputRefs = useRef([]);
-	const simpleInputRef = useRef(null);
-	const firstActionRef = useRef(null);
+	const utilReducer = useSelector((state) => state.utilReducer);
+	const dispatch = useDispatch();
 
 	const getTemplatesQuery = useQuery({
 		queryKey: ['saved-queries'],
@@ -41,43 +51,46 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	});
 
 	const deleteTemplateMutation = useMutation({
-        mutationFn: async (templateId) => {
-            await deleteTemplate(templateId, getToken());
-        },
-        onSuccess: () => {
+		mutationFn: async (templateId) => {
+			await deleteTemplate(templateId, getToken());
+		},
+		onSuccess: () => {
 			getTemplatesQuery?.refetch();
 			toast.success('Template deleted Successfully');
-            handleCloseSaveEditTemplateModal();
+			handleCloseSaveEditTemplateModal();
 		},
 		onError: (err) => {
 			console.log('Error deleting Template', err);
 			toast.error('Something went wrong while deleting template');
 		},
-    });
+	});
 
-	// Effect to manage inputRefs cleanup and focus
+	const inputRefs = useRef([]);
+	const simpleInputRef = useRef(null);
+	const firstActionRef = useRef(null);
+
 	useEffect(() => {
 		inputRefs.current = inputRefs.current.slice(0, queries.length);
 	}, [queries]);
 
 	const resetSecondaryModalData = () => {
 		setSecondaryModalData({
-			id: "",
+			id: '',
 			isVisible: false,
 		});
 	};
 
 	const resetQueries = () => {
 		setQueries([{ id: 1, text: '' }]);
-	}
+	};
 
 	const resetEditTemplateData = () => {
 		setEditTemplateData({
-			id: "",
+			id: '',
 			isEditing: false,
-			name: ""
-		})
-	}
+			name: '',
+		});
+	};
 
 	const handlePromptChange = (e) => {
 		const value = e.target.value;
@@ -101,14 +114,14 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 			case 'workflowQuery':
 				setMode('workflow');
 				break;
-			case "savedQueries": 
+			case 'savedQueries':
 				setSecondaryModalData((prev) => {
 					return {
 						...prev,
-						id: "savedQueries-secondaryModal",
-						isVisible: !prev.isVisible
-					}
-				})
+						id: 'savedQueries-secondaryModal',
+						isVisible: !prev.isVisible,
+					};
+				});
 				return;
 			default:
 				break;
@@ -117,7 +130,6 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 		resetSecondaryModalData();
 	};
 
-	// Handle the input change for queries in bulk/workflow mode
 	const handleQueryChange = (id, newText) => {
 		const updatedQueries = queries.map((query) =>
 			query.id === id ? { ...query, text: newText } : query,
@@ -125,11 +137,11 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 		setQueries(updatedQueries);
 	};
 
-	const handleSingleKeyDown = (e) => {
-		if (e.key === 'Enter') {
-			if(showModal) {
-				if(firstActionRef && firstActionRef?.current && firstActionRef?.current?.click) {
-					firstActionRef?.current?.click();
+	const handleSingleKeyDown = (event) => {
+		if (event.keyCode == 13 && !event.shiftKey) {
+			if (showModal) {
+				if (firstActionRef?.current?.click) {
+					firstActionRef.current.click();
 				}
 			} else {
 				handleSend();
@@ -141,37 +153,36 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 		const currentQueryIndex = queries.findIndex((query) => query.id === id);
 		const currentQuery = queries[currentQueryIndex];
 
-		if (e.key === 'Enter') {
+		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
-			
-			if (currentQuery.text.trim() === '') { 
+
+			if (currentQuery.text.trim() === '') {
 				return;
 			}
 
-			const newQuery = { id: currentQuery?.id + 1, text: '' };
+			const newQuery = { id: currentQuery.id + 1, text: '' };
 
 			setQueries((prev) => {
 				const newQueries = [];
-
-				prev?.forEach((query, index) => {
-					if(index < currentQueryIndex) {
-						newQueries.push({...query});
-					} else if(index === currentQueryIndex) {
-						newQueries.push({...query});
+				prev.forEach((q, index) => {
+					if (index < currentQueryIndex) {
+						newQueries.push({ ...q });
+					} else if (index === currentQueryIndex) {
+						newQueries.push({ ...q });
 						newQueries.push(newQuery);
 					} else {
-						newQueries.push({...query, id: query?.id + 1})
+						newQueries.push({ ...q, id: q.id + 1 });
 					}
-				})
-
+				});
 				return [...newQueries];
-			})
+			});
 
 			setTimeout(() => {
 				inputRefs.current[currentQueryIndex + 1].focus();
-			}, 0)
+			}, 0);
 		}
 
+		// Backspace/Delete on empty to remove current text area
 		if (
 			(e.key === 'Backspace' || e.key === 'Delete') &&
 			currentQuery.text.trim() === ''
@@ -189,7 +200,6 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 				setMode('single');
 				setPrompt('');
 				setTimeout(() => {
-					// Focus the single input when switching back to single mode
 					if (simpleInputRef.current) {
 						simpleInputRef.current.focus();
 					}
@@ -198,84 +208,90 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 		}
 	};
 
-	const handleSend=async()=>{
+	const handleSend = async () => {
 		await onAppendQuery(prompt, queries, savedQueryReference, mode);
-		setPrompt('');
-		setQueries([{ id: 1, text: '' }]);
-		setMode("single");
-	}
+	setPrompt(null); // Force unmount & remount
+	setTimeout(() => setPrompt(''), 0); // Restore after re-render
+	setQueries([{ id: 1, text: '' }]);
+	setMode('single');
+	};
 
-	const handleSaveTemplateClick = () => {	
+	const handleSaveTemplateClick = () => {
 		setShowSaveEditTemplateModal(true);
-	}
+	};
 
 	const handleDeleteTemplate = (templateId) => {
-		if(confirm("Are you sure that you want to delete this template?")) {
-			deleteTemplateMutation?.mutate(templateId);
+		if (confirm('Are you sure that you want to delete this template?')) {
+			deleteTemplateMutation.mutate(templateId);
 		}
-	}
+	};
 
 	const handleEditTemplate = (templateId) => {
-		const queriesToEditData = getTemplatesQuery?.data?.saved_queries?.filter((data) => {
-			if(data?.external_id === templateId) {
-				return true;
-			}
-			return false;
-		})?.[0];
+		const queriesToEditData = getTemplatesQuery?.data?.saved_queries?.filter(
+			(data) => {
+				if (data?.external_id === templateId) {
+					return true;
+				}
+				return false;
+			},
+		)?.[0];
 
 		const queriesToEdit = queriesToEditData?.data?.queries;
 
-		if(queriesToEdit) {
-			setQueries(queriesToEdit?.map((data, index) => {
-				return {
-					text: data?.text,
-					id: index + 1
-				};
-			}));
+		if (queriesToEdit) {
+			setQueries(
+				queriesToEdit.map((data, index) => {
+					return {
+						text: data?.text,
+						id: index + 1,
+					};
+				}),
+			);
 			setEditTemplateData((prev) => {
 				return {
 					...prev,
 					isEditing: true,
 					name: queriesToEditData?.name,
 					id: queriesToEditData?.external_id,
-				}
+				};
 			});
 			setShowSaveEditTemplateModal(true);
 			setMode(queriesToEditData?.type);
 		}
-	} 
+	};
 
 	const handleCloseSaveEditTemplateModal = () => {
-		if(editTemplateData?.isEditing) {
+		if (editTemplateData?.isEditing) {
 			resetEditTemplateData();
 			resetQueries();
-			setMode("single");
+			setMode('single');
 		}
-
 		setShowSaveEditTemplateModal(false);
-	}
+	};
 
 	const handleTemplateSelect = (templateId) => {
 		getTemplatesQuery?.data?.saved_queries?.forEach((data) => {
-			if(data?.external_id === templateId) {
-				setSavedQueryReference({id: templateId, title: data.name})
+			if (data?.external_id === templateId) {
+				setSavedQueryReference({ id: templateId, title: data.name });
 				setMode(data?.type);
-				setQueries(data?.data?.queries?.map((query, queryIndex) => {
-					return {
-						text: query?.text,
-						id: queryIndex + 1,
-					};
-				}));
+				setQueries(
+					data?.data?.queries?.map((query, queryIndex) => {
+						return {
+							text: query?.text,
+							id: queryIndex + 1,
+						};
+					}),
+				);
 				setSecondaryModalData((prev) => {
 					return {
 						...prev,
 						isVisible: false,
-					}
+					};
 				});
 				setShowModal(false);
 			}
 		});
-	}
+	};
 
 	const renderBulkMode = (label) => (
 		<div className="w-[90%] flex flex-col gap-2 pr-2">
@@ -291,22 +307,32 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 					mode={mode}
 				/>
 			)}
-			<div className="flex flex-col gap-2 rounded-lg max-h-40 w-full overflow-y-scroll">
+			<div className="flex flex-col gap-2 rounded-lg max-h-48 w-full overflow-y-auto">
 				{queries.map((query, index) => (
 					<div
 						key={query.id}
-						className="flex items-center p-1 bg-[#6A12CD0A] gap-1"
+						className="flex items-start p-1 bg-[#6A12CD0A] gap-1"
 					>
-						<label className="text-gray-500">{`${label} ${index < 9 ? '0' : ''}${index + 1}:`}</label>
-						<Input
-							type="text"
-							onFocus={() => utilReducer?.isSideNavOpen && dispatch(updateUtilProp([{key: 'isSideNavOpen', value: false}]))}
-							className="outline-none rounded-none bg-transparent border-none px-2 py-1 flex-1"
+						<label className="text-gray-500 mr-1">
+							{`${label} ${index < 9 ? '0' : ''}${index + 1}:`}
+						</label>
+						<Textarea
+							rows={1}
+							onFocus={() =>
+								utilReducer?.isSideNavOpen &&
+								dispatch(
+									updateUtilProp([
+										{ key: 'isSideNavOpen', value: false },
+									]),
+								)
+							}
+							className="outline-none text-xs xl:text-sm 2xl:text-base rounded-xl bg-transparent border-none px-2 py-1 flex-1 resize-none overflow-y-auto max-h-32"
 							value={query.text}
 							onChange={(e) =>
 								handleQueryChange(query.id, e.target.value)
 							}
 							onKeyDown={(e) => handleBulkKeyDown(e, query.id)}
+							onInput={(e) => autoResize(e, prompt, 128)}
 							placeholder={`Enter your ${label.toLowerCase()} here...`}
 							ref={(el) => (inputRefs.current[index] = el)}
 							autoFocus={index === queries.length - 1}
@@ -330,12 +356,17 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 	);
 
 	const renderSimpleMode = () => (
-		<Input
+		<Textarea
+			rows={1}
 			placeholder={CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER}
-			onFocus={() => utilReducer?.isSideNavOpen && dispatch(updateUtilProp([{key: 'isSideNavOpen', value: false}]))}
-			className="border-0 outline-none rounded-none bg-transparent w-full mr-2"
-			value={prompt}
+			onFocus={() =>
+				utilReducer?.isSideNavOpen &&
+				dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]))
+			}
+			className="border-0 text-xs xl:text-sm 2xl:text-base outline-none rounded-xl bg-transparent w-full mr-2 resize-none overflow-y-auto max-h-32"
+			value={prompt || ''}
 			onChange={handlePromptChange}
+			onInput={(e) => autoResize(e, prompt, prompt ? 300: 50 )}
 			onKeyDown={handleSingleKeyDown}
 			disabled={disabled}
 			ref={simpleInputRef}
@@ -354,25 +385,13 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 		}
 	};
 
-	const inputBorder = () => {
-		switch (mode) {
-			case 'bulk':
-			case 'workflow':
-				return 'rounded-lg';
-			case 'single':
-				return 'rounded-[100px]';
-			default:
-				return 'rounded-[100px]';
-		}
-	};
-
 	return (
-		<div className="relative w-full">
+		<div className="relative w-full z-50">
 			{showModal && (
-				<MoreActionsModal 
-					config={config} 
-					onSelect={handleActionSelect} 
-					ref={firstActionRef} 
+				<MoreActionsModal
+					config={config}
+					onSelect={handleActionSelect}
+					ref={firstActionRef}
 					templatesData={getTemplatesQuery?.data || []}
 					showSecondaryModal={secondaryModalData?.isVisible}
 					secondaryModalId={secondaryModalData?.id}
@@ -381,22 +400,21 @@ const InputArea = ({ config, onAppendQuery, disabled=false}) => {
 					handleTemplateSelect={handleTemplateSelect}
 				/>
 			)}
-			<div
-				className={`w-full ${inputBorder()} flex justify-between bg-purple-4 px-3 py-2 mb-2`}
-			>
+			<div className="w-full rounded-xl flex justify-between bg-purple-4 px-3 py-2 mb-2">
 				{renderInputArea()}
 				{!disabled ? (
 					<div
-						className={`flex ${mode === 'single' && 'items-center'} gap-2 pr-3 cursor-pointer`}
+						className={`flex items-end gap-2  cursor-pointer`}
 						onClick={handleSend}
 					>
 						<img
-							src={`https://d2vkmtgu2mxkyq.cloudfront.net/send.svg`}
+							src="https://d2vkmtgu2mxkyq.cloudfront.net/send.svg"
+							alt="Send"
 							className="size-6"
 						/>
 					</div>
 				) : (
-					<div className="flex gap-2 items-center pr-3 cursor-not-allowed">
+					<div className="flex gap-2 items-end  cursor-not-allowed">
 						<i className="bi bi-arrow-repeat animate-spin text-purple-40 text-xl"></i>
 					</div>
 				)}

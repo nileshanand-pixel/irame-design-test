@@ -8,6 +8,8 @@ import DOMPurify from 'dompurify';
 import TableResponse from '@/components/elements/TableResponse';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useDispatch, useSelector } from 'react-redux';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const ResponseCard = ({
 	answerResp,
@@ -121,6 +123,11 @@ const ResponseCard = ({
 											...prevState,
 											showAdd: true,
 										}));
+										trackEvent(EVENTS_ENUM.ADD_TO_DASHBOARD_CLICKED, EVENTS_REGISTRY.ADD_TO_DASHBOARD_CLICKED, () => ({
+											query_id: answerResp.query_id,
+											session_id: answerResp.session_id,
+											child_query_number: answerResp.child_no
+										}))
 									}}
 								>
 									+ Add to Dashboard
@@ -141,11 +148,17 @@ const ResponseCard = ({
 									variant="outline"
 									className="text-muted-foreground cursor-pointer"
 									onClick={() =>
+									{
+										trackEvent(EVENTS_ENUM.DOWNLOAD_CSV, EVENTS_REGISTRY.DOWNLOAD_CSV, () => ({
+											query_id: answerResp.query_id,
+											child_query_number: answerResp.child_no
+										}))
 										window.open(
 											dataFrameItem[1]?.tool_data
 												?.csv_url,
 											'_blank',
 										)
+									}
 									}
 								>
 									<i className="bi-download mr-2"></i>
@@ -161,8 +174,8 @@ const ResponseCard = ({
 				!doingScience &&
 				!isGraphLoading && (
 					<div className="mx-12">
-						<div className="mt-2 border-t border-purple-10"></div>
-						<div className="!mt-8 flex gap-4 overflow-x-auto">
+						<div className="mt-2 mb-2 font-semibold text-xl text-primary80 pb-4 border-b border-primary10 ">Related Questions</div>
+						<div className=" flex flex-col gap-2 mx-auto">
 							{answerResp?.answer?.follow_up?.tool_data?.questions &&
 								Array.isArray(
 									answerResp?.answer?.follow_up?.tool_data

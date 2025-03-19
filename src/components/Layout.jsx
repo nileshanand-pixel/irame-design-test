@@ -1,14 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Header from './Header';
 import SideNav from './SideNav';
 import PropTypes from 'prop-types';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useRouter } from '@/hooks/useRouter';
-import { cn } from '@/lib/utils';
+import { cn, getToken } from '@/lib/utils';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import GlobalPollReports from './features/reports/components/GlobalPollReports';
 import { pdfjs } from 'react-pdf';
+import useBreakpoint from '@/hooks/useBreakpoint';
+import { useQuery } from '@tanstack/react-query';
+import { authUserDetails } from './features/login/service/auth.service';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -17,8 +20,25 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 const Layout = ({ children }) => {
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const breakPoint = useBreakpoint()
 	const dispatch = useDispatch();
 	const { pathname } = useRouter();
+
+	const userFetcher = () => {
+		let resp = null;
+		authUserDetails(getToken()).then((res) => {
+			localStorage.setItem('auth-user-data', JSON.stringify(res));
+			resp = res;
+		})
+		return resp;
+	}
+
+	const {data: currentUser} = useQuery({
+		queryKey: ['auth-user-details', getToken()],
+		queryFn: userFetcher,
+		enabled: !!getToken(),
+		
+	})
 
 	const toggleSideNav = () => {
 		dispatch(
@@ -27,6 +47,15 @@ const Layout = ({ children }) => {
 			]),
 		);
 	};
+	
+	useEffect(() => {
+		if (['xs', 'sm', 'md'].includes(breakPoint) && utilReducer.isSideNavOpen) {
+			toggleSideNav();
+		}
+	}, [breakPoint, utilReducer?.isSideNavOpen]);
+	
+
+
 
 	useMemo(() => {
 		if (!pathname.includes('/app/new-chat')) {
@@ -45,23 +74,23 @@ const Layout = ({ children }) => {
 	}, [pathname]);
 
 	return (
-		<div className={`flex items-start justify-between`}>
+		<div className={`flex items-start h-screen justify-between`}>
 			<SideNav
 				toggleSideNav={toggleSideNav}
 				isSideNavOpen={utilReducer?.isSideNavOpen}
 			/>
 			<main
 				className={`grid w-full ${
-					utilReducer?.isSideNavOpen ? 'pl-[250px]' : 'pl-[72px]'
+					utilReducer?.isSideNavOpen ? 'pl-[270px]' : 'pl-[72px]'
 				} `}
 			>
 				<Header />
 				<div
 					className={cn(
-						'px-8 pt-0 flex items-center justify-center h-full w-full',
+						'pt-0 px-0 flex bg-gray-300 justify-center h-[calc(100vh-64px)] w-full',
 						pathname.includes('/dashboard')
-							? 'bg-gray-muted min-h-[92vh] overflow-y-auto'
-							: 'bg-white',
+							? 'bg-gray-muted'
+							: 'bg-white'
 					)}
 				>
 					{children}

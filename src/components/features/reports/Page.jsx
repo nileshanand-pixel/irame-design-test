@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn, getToken } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { getDatasources, getReports, getSharedReports } from './service/reports.service';
+import { getDatasources, getSharedReports } from './service/reports.service';
 import EmptyState from '@/components/elements/EmptyState';
 import DataSourceCard from './components/DataSourceCard';
 import DataSourceCardSkeleton from './components/DatasourceCardSkeleton';
@@ -26,18 +26,17 @@ const ReportFolders = () => {
 	});
 
 	const filteredList = useMemo(() => {
-		return datasources.filter(
-			(item) =>
-				item?.datasource_name
-					?.toLowerCase()
-					?.startsWith(search?.trim()?.toLowerCase()),
+		return datasources.filter((item) =>
+			item?.datasource_name
+				?.toLowerCase()
+				?.startsWith(search?.trim()?.toLowerCase()),
 		);
 	}, [search, datasources]);
 
 	useEffect(() => {
 		if (datasourcesQuery.data) {
 			let updatedDatasources = datasourcesQuery.data.datasources || [];
-			
+
 			const sharedReports = sharedReportsQuery.data?.reports || [];
 			if (sharedReports.length > 0) {
 				const sharedDatasource = {
@@ -63,8 +62,8 @@ const ReportFolders = () => {
 	};
 
 	return (
-		<div className="w-full h-full ">
-			<div className="w-full flex justify-between mt-2 ">
+		<div className="w-full ml-8  h-full flex flex-col overflow-hidden">
+			<div className="flex-none w-full flex pr-8 justify-between mt-2 ">
 				<h2 className="text-2xl font-semibold text-primary80 ">Reports</h2>
 				<div className="flex items-center gap-4">
 					<div
@@ -95,25 +94,29 @@ const ReportFolders = () => {
 				</div>
 			</div>
 
-			{datasourcesQuery.isLoading? (
-				<div className=" w-full grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-6">
-					{Array.from({length: 16}).map((_, i) => (<DataSourceCardSkeleton key={i}/>))}
-				</div>
-			) : datasources.length === 0 ? (
-				<EmptyState config={emptyStateConfig} />
-			) : filteredList.length > 0 ? (
-				<div className="w-full mt-6 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-					{filteredList.map((item) => (
-						<DataSourceCard key={item.datasource_id} data={item} />
-					))}
-				</div>
-			) : (
-				<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
-					<p className="text-sm text-primary60 font-medium">
-						No such Datasource found
-					</p>
-				</div>
-			)}
+			<div className="mt-6 pr-8 flex-1 overflow-y-auto">
+				{datasourcesQuery.isLoading ? (
+					<div className=" w-full grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-2 pb-6">
+						{Array.from({ length: 16 }).map((_, i) => (
+							<DataSourceCardSkeleton key={i} />
+						))}
+					</div>
+				) : datasources.length === 0 ? (
+					<EmptyState config={emptyStateConfig} />
+				) : filteredList.length > 0 ? (
+					<div className="w-full overflow-y-auto mt-2 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
+						{filteredList.map((item) => (
+							<DataSourceCard key={item.datasource_id} data={item} />
+						))}
+					</div>
+				) : (
+					<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
+						<p className="text-sm text-primary60 font-medium">
+							No such Datasource found
+						</p>
+					</div>
+				)}
+			</div>
 		</div>
 	);
 };

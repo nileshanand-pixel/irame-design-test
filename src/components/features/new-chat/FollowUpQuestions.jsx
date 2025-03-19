@@ -5,6 +5,9 @@ import { getToken } from '@/lib/utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { Button } from '@/components/ui/button';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM } from '@/config/analytics-events';
 
 const FollowUpQuestions = ({
 	question,
@@ -25,12 +28,13 @@ const FollowUpQuestions = ({
 				...chatStoreReducer?.queries,
 				{ id: '', question: question, parentQueryId: answerResp?.query_id },
 			];
-			if(utilReducer.isSideNavOpen)dispatch(
-				updateChatStoreProp([{ key: 'queries', value: tempCurrentQueries }]),
-			);
-			dispatch(
-				updateUtilProp([{ key: 'isSideNavOpen', value: false }]),
-			);
+			if (utilReducer.isSideNavOpen)
+				dispatch(
+					updateChatStoreProp([
+						{ key: 'queries', value: tempCurrentQueries },
+					]),
+				);
+			dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]));
 			createQuery(
 				{
 					child_no: parseInt(answerResp.child_no) + 1,
@@ -57,6 +61,14 @@ const FollowUpQuestions = ({
 						{ key: 'activeQueryId', value: res?.query_id },
 					]),
 				);
+				trackEvent(EVENTS_ENUM.FOLLOW_UP_QUERY_INITIATED, EVENTS_REGISTRY.FOLLOW_UP_QUERY_INITIATED, (() => ({
+					child_no: parseInt(answerResp.child_no) + 1,
+					datasource_id: answerResp?.datasource_id,
+					parent_query_id: answerResp?.query_id,
+					query: question,
+					session_id: answerResp?.session_id,
+					query_id: res.query_id
+				})))
 			});
 
 			setResponseTimeElapsed(0);
@@ -69,18 +81,29 @@ const FollowUpQuestions = ({
 			console.log(error);
 		}
 	};
+
 	return (
-		<div
-			className="relative bg-purple-4 rounded-xl min-w-[12.5rem] max-w-[12.5rem] h-[12rem] p-4 hover:bg-purple-8"
-			key={`${index}_question`}
-		>
-			<div
-				className="overflow-y-auto text-base font-medium text-primary80"
-				onClick={() => handlePrompt()}
-			>
-				<p className="flex items-center gap-2 hover:cursor-pointer hover:text-purple-80 !line-clamp-6">
+		<div onClick={handlePrompt} className="relative text-primary80 bg-white  border-b py-4 border-gray-200 cursor-pointer  w-full ">
+			<div className="flex items-center justify-between gap-4">
+				<img
+					src={`https://d2vkmtgu2mxkyq.cloudfront.net/followup_questions.svg`}
+					className="size-12"
+				/>
+				<div className=" flex-1 text-base font-medium  pr-4">
 					{question}
-				</p>
+				</div>
+
+				<Button
+					onClick={(e) => {
+						e.stopPropagation();
+						handlePrompt();
+					}}
+					variant="outline"
+					className="flex-shrink-0 p-2 outline-none border-none hover:bg-gray-100 rounded-full transition-colors"
+					aria-label="Send question"
+				>
+					<span class="material-symbols-outlined">send</span>
+				</Button>
 			</div>
 		</div>
 	);

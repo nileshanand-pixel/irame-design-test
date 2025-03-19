@@ -7,7 +7,6 @@ import { CheckIcon, XCircle, ChevronDown, XIcon, WandSparkles } from 'lucide-rea
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
 	Command,

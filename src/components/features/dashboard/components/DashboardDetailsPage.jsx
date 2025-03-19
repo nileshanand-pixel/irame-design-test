@@ -8,6 +8,8 @@ import TooltipWrapper from '@/components/elements/TooltipWrapper';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/react-query';
 import MultiGraphCard from './MultiGraphCard';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const DashboardDetailsPage = () => {
 	const [dashboard, setDashboard] = useState([]);
@@ -27,6 +29,15 @@ const DashboardDetailsPage = () => {
 	});
 	const handleItemClick = (item) => {
 		scrollToElement();
+		trackEvent(
+			EVENTS_ENUM.DASHBOARD_ITEM_CLICKED,
+			EVENTS_REGISTRY.DASHBOARD_ITEM_CLICKED,
+			() => ({
+				dashboard_id: query.id,
+				query_id: item?.query_id,
+				dashboard_content_id: item?.dashboard_content_id
+			}),
+		);
 		setSelectedItem(item);
 	};
 
@@ -101,7 +112,7 @@ const DashboardDetailsPage = () => {
 		};
 	}, [query, dashboardDetailsQuery.data]);
 	return (
-		<div className="w-full h-full" ref={elementRef}>
+		<div className="w-full h-full px-8 " ref={elementRef}>
 			<div className="w-full flex flex-col justify-between mt-2 ">
 				<div className="w-fit flex items-end gap-2 relative">
 					<h2
@@ -153,16 +164,21 @@ const DashboardDetailsPage = () => {
 								</div>
 								<div className="mt-8 pb-8 h-[90%] overflow-y-auto">
 									<div className="flex items-center justify-between">
-										{selectedItem?.content?.graph?.title && 
-										<TooltipWrapper
-											tooltip={
-												selectedItem?.content?.graph?.title
-											}
-										>
-											<p className="text-lg font-semibold text-primary80 max-w-[10rem] truncate">
-												{selectedItem?.content?.graph?.title}
-											</p>
-										</TooltipWrapper>}
+										{selectedItem?.content?.graph?.title && (
+											<TooltipWrapper
+												tooltip={
+													selectedItem?.content?.graph
+														?.title
+												}
+											>
+												<p className="text-lg font-semibold text-primary80 max-w-[10rem] truncate">
+													{
+														selectedItem?.content?.graph
+															?.title
+													}
+												</p>
+											</TooltipWrapper>
+										)}
 
 										{selectedItem?.content?.table?.csv_url && (
 											<Button
@@ -181,15 +197,22 @@ const DashboardDetailsPage = () => {
 											</Button>
 										)}
 
-										<Button
-											variant="secondary"
-											className="w-fit rounded-lg bg-purple-8 hover:bg-purple-16 text-purple-100 font-medium"
-										>
-											<span className="material-icons-outlined me-2">
-												auto_awesome
-											</span>
-											IRA
-										</Button>
+										{selectedItem?.content?.session_id && (
+											<Button
+												variant="secondary"
+												className="w-fit rounded-lg bg-purple-8  text-purple-100 font-medium"
+												onClick={() =>
+													navigate(
+														`/app/new-chat/session?sessionId=${selectedItem?.content?.session_id}`,
+													)
+												}
+											>
+												<span className="material-icons-outlined me-2">
+													auto_awesome
+												</span>
+												IRA
+											</Button>
+										)}
 									</div>
 									<div className="border border-purple-10 rounded-2xl py-3 px-4 my-4">
 										<p className="text-primary80 text-lg leading-6 font-semibold">

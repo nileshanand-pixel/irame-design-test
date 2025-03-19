@@ -24,8 +24,8 @@ export const setupAuthCookies = (cookiesData) => {
 	if (refresh_token) Cookies.set('refresh_token', refresh_token, { expires: 7 });
 };
 
-export const getUserDetailsFromToken = () => {
-	const idToken = Cookies.get('id_token');
+export const getUserDetailsFromToken = (token) => {
+	const idToken = Cookies.get('id_token') || token;
 
 	if (!idToken) {
 		return null;
@@ -35,10 +35,9 @@ export const getUserDetailsFromToken = () => {
 		const decodedToken = jwtDecode(idToken);
 
 		const userDetails = {
-			userName: capitalizeFirstLetterFullText(decodedToken?.name) || '',
+			user_name: capitalizeFirstLetterFullText(decodedToken?.name) || '',
 			email: decodedToken.email || '',
-			userId: decodedToken['sub'] || '',
-			avatar: '',
+			user_id: decodedToken['sub'] || '',
 		};
 
 		return userDetails;

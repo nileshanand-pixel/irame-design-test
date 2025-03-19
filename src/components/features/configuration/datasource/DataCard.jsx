@@ -238,7 +238,7 @@ const DataCard = ({ data, form, setForm }) => {
 						<AccordionContent>
 							<FullScreen handle={handle}>
 								<div
-									className={`overflow-x-auto mt-4 w-full ${handle.active ? 'p-4 overflow-y-auto h-screen' : 'h-full'}`}
+									className={`overflow-x-scroll mt-4 w-full ${handle.active ? 'p-4 overflow-y-auto h-screen' : 'h-full'}`}
 									style={{
 										backgroundColor: 'white',
 									}}

@@ -79,7 +79,9 @@ const ReportCard = ({ report }) => {
 	};
 
 	return (
-		<div className="rounded-lg p-4 w-full text-[#26064ACC]">
+		<div
+			className={`rounded-lg hover:border p-4 ${report?.datasource_name ? 'min-h-[330px]' : 'min-h-[300px]'} w-full h-full bg-purple-4 hover:bg-purple-8 text-[#26064ACC]`}
+		>
 			<div
 				className="relative pb-[56.25%] overflow-hidden rounded-lg"
 				onMouseEnter={() => setIsHovered(true)}
@@ -89,7 +91,7 @@ const ReportCard = ({ report }) => {
 			</div>
 			<div className="mt-4">
 				<div className="flex justify-between items-center">
-					<h3 className="text-lg font-semibold">
+					<h3 className="text-lg font-semibold line-clamp-1">
 						{report?.name || 'EDA Report'}
 					</h3>
 					<DropdownMenu>
@@ -114,7 +116,7 @@ const ReportCard = ({ report }) => {
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
-				<div className="flex flex-wrap items-center gap-2 mt-2">
+				<div className="flex flex-wrap  items-center gap-2 mt-2">
 					<span
 						className={`px-2 py-1 text-xs rounded bg-[#6A12CD0A] text-[#26064ACC] text-nowrap`}
 					>
@@ -141,12 +143,12 @@ const ReportCard = ({ report }) => {
 						</Tooltip>
 					)}
 				</div>
-				<p className="text-sm text-gray-500 mt-2 truncate-2">
+				<p className="text-sm text-gray-500 mt-2 truncate line-clamp-2">
 					{report.data.summary}
 				</p>
 				{report?.datasource_name && (
-					<div className="mt-4 text-gray-400 text-sm">
-						<p className="text-primary80 font-medium max-w-[180px] truncate flex items-center">
+					<div title={report?.datasource_name} className="mt-4 text-gray-400 text-sm">
+						<p className="text-primary80 font-medium max-w-[180px] lg:max-w-52 truncate flex items-center">
 							<img
 								src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
 								alt="database"

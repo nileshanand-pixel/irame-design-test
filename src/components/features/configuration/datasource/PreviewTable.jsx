@@ -99,7 +99,7 @@ const PreviewTable = ({ data, form, setForm, width = '200px' }) => {
   };
 
   return (
-    <div className="w-full max-h-full overflow-x-auto h-full text-primary80">
+    <div className="w-full max-h-full overflow-x-scroll h-full text-primary80">
       {loading ? (
         <TableLoader showHeader={false} rowsCount={12}  colsCount={Math.min(columns?.length || 10, 10)}/> // Render loader while loading
       ) : (

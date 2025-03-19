@@ -18,6 +18,8 @@ import { toast } from 'sonner';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import AccessSkeletonList from './AccessSkeleton';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) => {
 	const [invitedEmails, setInvitedEmails] = useState([]);
@@ -106,12 +108,12 @@ const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) 
 	);
 
 	const handleSave = useCallback(() => {
-		let currentUserId = authStoreReducer?.userId;
-		if(!currentUserId){
-			currentUserId = utilReducer?.sessionHistory?.[0]?.user_id;
+		let currentuser_id = authStoreReducer?.user_id;
+		if(!currentuser_id){
+			currentuser_id = utilReducer?.sessionHistory?.[0]?.user_id;
 		}
-		if(!authStoreReducer?.userId)dispatch(updateAuthStoreProp([{key: 'userId', value: currentUserId}]))
-		if(reportReducer?.selectedReport?.user_id !== currentUserId){
+		if(!authStoreReducer?.user_id)dispatch(updateAuthStoreProp([{key: 'user_id', value: currentuser_id}]))
+		if(reportReducer?.selectedReport?.user_id !== currentuser_id){
 			toast.error('You are not authorized for this operation!');
 			setInvitedEmails([]);
 			return;
@@ -120,6 +122,7 @@ const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) 
 			reportId: reportReducer?.selectedReport?.report_id,
 			accesses: invitedEmails,
 		});
+		trackEvent(EVENTS_ENUM.REPORT_SHARED, EVENTS_REGISTRY.REPORT_SHARED);
 	}, [invitedEmails, reportReducer?.selectedReport?.report_id, shareMutation]);
 
 	const isValidEmail = (email) => {

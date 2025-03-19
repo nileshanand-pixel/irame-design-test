@@ -26,7 +26,7 @@ const Header = () => {
 		return (
 			<Avatar>
 				<AvatarImage src={value?.avatar} />
-				<AvatarFallback>{getInitials(value?.userName)}</AvatarFallback>
+				<AvatarFallback>{getInitials(value?.user_name)}</AvatarFallback>
 			</Avatar>
 		);
 	};
@@ -34,7 +34,7 @@ const Header = () => {
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				if (value.userName && value.email && value.userId) return;
+				if (value.user_name && value.email && value.user_id) return;
 				const userData = getUserDetailsFromToken();
 
 				// Update local state with user details
@@ -74,7 +74,7 @@ const Header = () => {
 	return (
 		<header
 			className={cn(
-				'flex justify-between px-5 py-4 text-lg text-primary100',
+				'flex justify-between items-center h-[64px] px-5 text-lg text-primary100',
 				pathname.includes('/dashboard') ? 'bg-gray-muted' : 'bg-white',
 			)}
 		>
