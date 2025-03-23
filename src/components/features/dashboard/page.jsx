@@ -44,7 +44,7 @@ const Dashboard = () => {
 				toast.success('Dashboard created successfully');
 				trackEvent(
 					EVENTS_ENUM.DASHBOARD_CREATED,
-					EVENTS_REGISTRY.DASHBOAR_CREATED,
+					EVENTS_REGISTRY.DASHBOARD_CREATED,
 					() => ({
 						dashboard_id: resp.dashboard_id,
 						title: dashboardName,
