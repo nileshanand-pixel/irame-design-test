@@ -341,6 +341,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 
 	const handleEnhancePrompt = () => {
 		if (disablePromptEnhancer) return;
+		setPrompt('Enhancing prompt...')
 		enhancePromptMutation.mutate(prompt);
 	};
 
@@ -456,7 +457,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 				{!disabled ? (
 					<div className="flex justify-between">
 						<div className="flex px-2 items-center">
-							{enhancePromptMutation.isLoading || true ? (
+							{enhancePromptMutation.isPending ? (
 								<div className="text-xs flex gap-1 items-center text-purple-80">
 									<CircularLoader size="sm" />
 									Enhancing Prompt
@@ -472,7 +473,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 												disablePromptEnhancer &&
 												'cursor-not-allowed opacity-40'
 											}`}
-											disabled={false}
+											disabled={disablePromptEnhancer}
 										>
 											<img
 												src="https://d2vkmtgu2mxkyq.cloudfront.net/generate_ai.svg"
@@ -487,39 +488,26 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 							{!disablePromptEnhancer && <PromptingRole />}
 						</div>
 
-						<div className="flex gap-4 items-center justify-between">
-							{mode === 'single' && prompt?.trim()?.length > 0 && (
-								<span className="text-muted-foreground text-xs ">
-									Use Control + Enter to send{' '}
-								</span>
-							)}
-							<div
-								className={`flex items-end gap-2 ${
-									(enhancePromptMutation.isLoading &&
-										mode === 'single') ||
-									disabled
-										? 'cursor-not-allowed opacity-50'
-										: 'cursor-pointer'
-								}`}
-								onClick={() => {
-									if (
-										!disabled &&
-										!(
-											enhancePromptMutation.isLoading &&
-											mode === 'single'
-										)
-									) {
-										handleSend();
-									}
-								}}
-							>
-								<img
-									src="https://d2vkmtgu2mxkyq.cloudfront.net/send.svg"
-									alt="Send"
-									className="size-6"
-								/>
+						{!enhancePromptMutation.isPending && !disablePromptEnhancer && (
+							<div className="flex gap-4 items-center justify-between">
+								{mode === 'single' && prompt?.trim()?.length > 0 && (
+									<span className="text-muted-foreground text-xs ">
+										Use Control + Enter to send{' '}
+									</span>
+								)}
+								<div
+									className="flex items-end gap-2 cursor-pointer"
+									
+									onClick={handleSend}
+								>
+									<img
+										src="https://d2vkmtgu2mxkyq.cloudfront.net/send.svg"
+										alt="Send"
+										className="size-6"
+									/>
+								</div>
 							</div>
-						</div>
+						)}
 					</div>
 				) : (
 					<div className="flex gap-2 items-end ml-auto  cursor-not-allowed">
