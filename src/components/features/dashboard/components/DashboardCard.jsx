@@ -12,7 +12,7 @@ import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/react-query';
 import { trackEvent } from '@/lib/mixpanel';
-import { EVENTS_ENUM } from '@/config/analytics-events';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const DashboardCard = ({ data, refetch, setRefetch }) => {
 	const [isEditing, setIsEditing] = useState(false);
