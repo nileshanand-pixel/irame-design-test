@@ -1,5 +1,7 @@
 import axiosClientV1 from '@/lib/axios';
 import { toast } from 'sonner';
+import axios from 'axios';
+import FormData from 'form-data';
 
 export const fetchSuggestions = async (dataSourceId, token) => {
 	const response = await axiosClientV1.get(
@@ -76,7 +78,6 @@ export const deleteSession = async (sessionId, token) => {
 	}
 };
 
-// DONE
 export const getQueriesOfSession = async (sessionId, token) => {
 	try {
 		const response = await axiosClientV1.get(`/queries/session/${sessionId}`, {
@@ -111,21 +112,17 @@ export const getTemplate = async (templateId, token) => {
 
 export const saveTemplate = async (data, token) => {
 	try {
-		const response = await axiosClientV1.post(
-			`/saved-queries`,
-			data,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
+		const response = await axiosClientV1.post(`/saved-queries`, data, {
+			headers: {
+				Authorization: `Bearer ${token}`,
 			},
-		);
+		});
 		return response.data;
-	} catch(error) {
+	} catch (error) {
 		toast.error('Failed to save template');
 		throw error;
 	}
-}
+};
 
 export const getTemplates = async (token) => {
 	try {
@@ -173,3 +170,26 @@ export const deleteTemplate = async (templateId, token) => {
 	}
 };
 
+export const enhancePrompt = async (userInput, mode="analyst") => {
+	try {
+		const data = new FormData();
+		data.append('user_input', userInput);
+		data.append('base_instruction', promptMap[mode]);
+
+		const config = {
+			method: 'post',
+			maxBodyLength: Infinity,
+			url: 'https://task.irame.ai/enhance-query',
+			headers: {
+				...data.getHeaders(),
+			},
+			data: data,
+		};
+
+		const response = await axios.request(config);
+		return response.data;
+	} catch (error) {
+		toast.error('Failed to enhance query');
+		throw error;
+	}
+};
