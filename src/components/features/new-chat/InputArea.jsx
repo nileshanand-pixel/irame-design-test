@@ -16,6 +16,7 @@ import SaveEditTemplateModal from '../reports/components/SaveEditTemplateModal';
 import { Textarea } from '@/components/ui/textarea';
 import { Hint } from '@/components/Hint';
 import PromptingRole from './components/PromptingRole';
+import CircularLoader from '@/components/elements/loading/CircularLoader';
 
 const autoResize = (e, prompt, maxHeight = 150) => {
 	if (!prompt) return;
@@ -45,14 +46,14 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 		isVisible: false,
 		id: '',
 	});
+	const [showStream, setShowStream] = useState(false);
 
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const dispatch = useDispatch();
 
 	const disablePromptEnhancer = useMemo(() => {
-		return prompt?.trim().split(/\s+/).length <= 3;
-	}, [prompt]);
-	
+		return prompt?.trim().split(/\s+/).length <= 3 || showStream;
+	}, [prompt, showStream]);
 
 	const getTemplatesQuery = useQuery({
 		queryKey: ['saved-queries'],
@@ -80,12 +81,25 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 			return await enhancePrompt(prompt, mode);
 		},
 		onSuccess: (data) => {
-			// TODO: implement later
+			const newPrompt = data || '';
+			setPrompt('');
+			setShowStream(true);
+
+			let i = 0;
+			const intervalId = setInterval(() => {
+				setPrompt((prevPrompt) => prevPrompt + (newPrompt[i] ?? ''));
+				i++;
+				if (i >= newPrompt.length) {
+					setShowStream(false);
+					clearInterval(intervalId);
+				}
+			}, 20);
 		},
 		onError: (err) => {
 			toast.error(
 				'Something went wrong while enhancing prompt. please try again',
 			);
+			console.log(err);
 		},
 	});
 
@@ -119,6 +133,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	const handlePromptChange = (e) => {
 		const value = e.target.value;
 		setPrompt(value);
+
 		if (!value) {
 			setShowModal(false);
 			resetSecondaryModalData();
@@ -162,15 +177,19 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	};
 
 	const handleSingleKeyDown = (event) => {
-		if (event.keyCode == 13 && !event.shiftKey) {
+		if (enhancePromptMutation.isLoading) {
+			return;
+		}
+
+		if (event.keyCode === 13 && !event.shiftKey && !event.ctrlKey) {
 			if (showModal) {
 				if (firstActionRef?.current?.click) {
 					firstActionRef.current.click();
 				}
-			} else if(event.ctrlKey && event.keyCode === 13){
-				e.preventDefault();
-				handleSend();
 			}
+		} else if (event.ctrlKey && event.keyCode === 13) {
+			event.preventDefault();
+			handleSend();
 		}
 	};
 
@@ -233,6 +252,9 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	};
 
 	const handleSend = async () => {
+		if (enhancePromptMutation.isLoading && mode === 'single') {
+			return;
+		}
 		await onAppendQuery(prompt, queries, savedQueryReference, mode);
 		setPrompt(null); // Force unmount & remount
 		setTimeout(() => setPrompt(''), 0); // Restore after re-render
@@ -315,6 +337,11 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 				setShowModal(false);
 			}
 		});
+	};
+
+	const handleEnhancePrompt = () => {
+		if (disablePromptEnhancer) return;
+		enhancePromptMutation.mutate(prompt);
 	};
 
 	const renderBulkMode = (label) => (
@@ -429,22 +456,37 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 				{!disabled ? (
 					<div className="flex justify-between">
 						<div className="flex px-2 items-center">
-							<Hint label="Enhance Prompt">
-								<Button
-									disabled={disablePromptEnhancer}
-									onClick={() => {}}
-									variant="transparent"
-									size="iconSm"
-								>
-									<img
-										src="https://d2vkmtgu2mxkyq.cloudfront.net/generate_ai.svg"
-										className="size-6"
-										style={{ strokeWidth: '2' }}
-									/>
-								</Button>
-							</Hint>
-							{!disablePromptEnhancer && <PromptingRole/>}
+							{enhancePromptMutation.isLoading || true ? (
+								<div className="text-xs flex gap-1 items-center text-purple-80">
+									<CircularLoader size="sm" />
+									Enhancing Prompt
+								</div>
+							) : (
+								<>
+									<Hint label="Enhance Prompt">
+										<Button
+											onClick={handleEnhancePrompt}
+											variant="transparent"
+											size="iconSm"
+											className={`${
+												disablePromptEnhancer &&
+												'cursor-not-allowed opacity-40'
+											}`}
+											disabled={false}
+										>
+											<img
+												src="https://d2vkmtgu2mxkyq.cloudfront.net/generate_ai.svg"
+												className="size-6"
+												style={{ strokeWidth: '2' }}
+												alt="enhance icon"
+											/>
+										</Button>
+									</Hint>
+								</>
+							)}
+							{!disablePromptEnhancer && <PromptingRole />}
 						</div>
+
 						<div className="flex gap-4 items-center justify-between">
 							{mode === 'single' && prompt?.trim()?.length > 0 && (
 								<span className="text-muted-foreground text-xs ">
@@ -452,8 +494,24 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 								</span>
 							)}
 							<div
-								className={`flex items-end gap-2  cursor-pointer`}
-								onClick={handleSend}
+								className={`flex items-end gap-2 ${
+									(enhancePromptMutation.isLoading &&
+										mode === 'single') ||
+									disabled
+										? 'cursor-not-allowed opacity-50'
+										: 'cursor-pointer'
+								}`}
+								onClick={() => {
+									if (
+										!disabled &&
+										!(
+											enhancePromptMutation.isLoading &&
+											mode === 'single'
+										)
+									) {
+										handleSend();
+									}
+								}}
 							>
 								<img
 									src="https://d2vkmtgu2mxkyq.cloudfront.net/send.svg"
@@ -464,7 +522,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 						</div>
 					</div>
 				) : (
-					<div className="flex gap-2 items-end  cursor-not-allowed">
+					<div className="flex gap-2 items-end ml-auto  cursor-not-allowed">
 						<i className="bi bi-arrow-repeat animate-spin text-purple-40 text-xl"></i>
 					</div>
 				)}

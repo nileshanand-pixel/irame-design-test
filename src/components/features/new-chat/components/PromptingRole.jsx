@@ -17,7 +17,7 @@ function PromptingRole() {
 	const [hoveredRole, setHoveredRole] = useState(null);
 
 	useEffect(() => {
-		const storedRole = localStorage.getItem('selectedRole');
+		const storedRole = localStorage.getItem('prompt-role');
 		if (storedRole && rolesConfig[storedRole]?.enabled) {
 			setSelectedRole(storedRole);
 		}
@@ -25,7 +25,7 @@ function PromptingRole() {
 
 	const handleSelect = (role) => {
 		setSelectedRole(role);
-		localStorage.setItem('selectedRole', role);
+		localStorage.setItem('prompt-role', role);
 	};
 
 	const shownDescription =
