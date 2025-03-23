@@ -31,7 +31,7 @@ function PromptingRole() {
 	const shownDescription =
 		hoveredRole && rolesConfig[hoveredRole]?.enabled
 			? rolesConfig[hoveredRole].description
-			: rolesConfig[selectedRole]?.description || 'Choose any role to enhance your prompt';
+			: rolesConfig[selectedRole]?.description || 'Choose a role to enhance your prompt';
 
 	return (
 		<DropdownMenu>

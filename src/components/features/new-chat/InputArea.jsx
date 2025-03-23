@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
@@ -14,12 +14,10 @@ import MoreActionsModal from './MoreActionsModal';
 import SaveEditTemplateModal from '../reports/components/SaveEditTemplateModal';
 
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { SettingsIcon } from 'lucide-react';
 import { Hint } from '@/components/Hint';
 import PromptingRole from './components/PromptingRole';
 
-const autoResize = (e, prompt, maxHeight = 160) => {
+const autoResize = (e, prompt, maxHeight = 150) => {
 	if (!prompt) return;
 	e.target.style.height = 'auto';
 	const newHeight = e.target.scrollHeight;
@@ -50,6 +48,11 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const dispatch = useDispatch();
+
+	const disablePromptEnhancer = useMemo(() => {
+		return prompt?.trim().split(/\s+/).length <= 3;
+	}, [prompt]);
+	
 
 	const getTemplatesQuery = useQuery({
 		queryKey: ['saved-queries'],
@@ -164,7 +167,8 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 				if (firstActionRef?.current?.click) {
 					firstActionRef.current.click();
 				}
-			} else {
+			} else if(event.ctrlKey && event.keyCode === 13){
+				e.preventDefault();
 				handleSend();
 			}
 		}
@@ -383,7 +387,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 				utilReducer?.isSideNavOpen &&
 				dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]))
 			}
-			className="border-0 text-xs xl:text-sm 2xl:text-base outline-none rounded-xl bg-transparent w-full mr-2 resize-none overflow-y-auto max-h-32"
+			className="border-0 text-xs xl:text-sm 2xl:text-base outline-none rounded-xl bg-transparent w-full pr-6 resize-none overflow-y-auto show-scrollbar max-h-32"
 			value={prompt || ''}
 			onChange={handlePromptChange}
 			onInput={(e) => autoResize(e, prompt, prompt ? 300 : 50)}
@@ -427,7 +431,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 						<div className="flex px-2 items-center">
 							<Hint label="Enhance Prompt">
 								<Button
-									disabled={false}
+									disabled={disablePromptEnhancer}
 									onClick={() => {}}
 									variant="transparent"
 									size="iconSm"
@@ -439,7 +443,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 									/>
 								</Button>
 							</Hint>
-							<PromptingRole />
+							{!disablePromptEnhancer && <PromptingRole/>}
 						</div>
 						<div className="flex gap-4 items-center justify-between">
 							{mode === 'single' && prompt?.trim()?.length > 0 && (
