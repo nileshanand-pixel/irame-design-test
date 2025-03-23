@@ -3,7 +3,11 @@ import { Button } from '@/components/ui/button';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { deleteTemplate, getTemplates } from './service/new-chat.service';
+import {
+	deleteTemplate,
+	enhancePrompt,
+	getTemplates,
+} from './service/new-chat.service';
 import CHAT_CONSTANTS from '@/constants/chat.constant';
 import { chatCommandInitiator, getToken } from '@/lib/utils';
 import MoreActionsModal from './MoreActionsModal';
@@ -11,9 +15,12 @@ import SaveEditTemplateModal from '../reports/components/SaveEditTemplateModal';
 
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { SettingsIcon } from 'lucide-react';
+import { Hint } from '@/components/Hint';
+import PromptingRole from './components/PromptingRole';
 
 const autoResize = (e, prompt, maxHeight = 160) => {
-	if(!prompt)return
+	if (!prompt) return;
 	e.target.style.height = 'auto';
 	const newHeight = e.target.scrollHeight;
 	const clampedHeight = newHeight > maxHeight ? maxHeight : newHeight;
@@ -62,6 +69,20 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 		onError: (err) => {
 			console.log('Error deleting Template', err);
 			toast.error('Something went wrong while deleting template');
+		},
+	});
+
+	const enhancePromptMutation = useMutation({
+		mutationFn: async (prompt, mode) => {
+			return await enhancePrompt(prompt, mode);
+		},
+		onSuccess: (data) => {
+			// TODO: implement later
+		},
+		onError: (err) => {
+			toast.error(
+				'Something went wrong while enhancing prompt. please try again',
+			);
 		},
 	});
 
@@ -182,7 +203,6 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 			}, 0);
 		}
 
-		// Backspace/Delete on empty to remove current text area
 		if (
 			(e.key === 'Backspace' || e.key === 'Delete') &&
 			currentQuery.text.trim() === ''
@@ -210,10 +230,10 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 
 	const handleSend = async () => {
 		await onAppendQuery(prompt, queries, savedQueryReference, mode);
-	setPrompt(null); // Force unmount & remount
-	setTimeout(() => setPrompt(''), 0); // Restore after re-render
-	setQueries([{ id: 1, text: '' }]);
-	setMode('single');
+		setPrompt(null); // Force unmount & remount
+		setTimeout(() => setPrompt(''), 0); // Restore after re-render
+		setQueries([{ id: 1, text: '' }]);
+		setMode('single');
 	};
 
 	const handleSaveTemplateClick = () => {
@@ -366,7 +386,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 			className="border-0 text-xs xl:text-sm 2xl:text-base outline-none rounded-xl bg-transparent w-full mr-2 resize-none overflow-y-auto max-h-32"
 			value={prompt || ''}
 			onChange={handlePromptChange}
-			onInput={(e) => autoResize(e, prompt, prompt ? 300: 50 )}
+			onInput={(e) => autoResize(e, prompt, prompt ? 300 : 50)}
 			onKeyDown={handleSingleKeyDown}
 			disabled={disabled}
 			ref={simpleInputRef}
@@ -400,18 +420,44 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 					handleTemplateSelect={handleTemplateSelect}
 				/>
 			)}
-			<div className="w-full rounded-xl flex justify-between bg-purple-4 px-3 py-2 mb-2">
+			<div className="w-full rounded-xl flex flex-col justify-between bg-purple-4 px-3 py-2 mb-2">
 				{renderInputArea()}
 				{!disabled ? (
-					<div
-						className={`flex items-end gap-2  cursor-pointer`}
-						onClick={handleSend}
-					>
-						<img
-							src="https://d2vkmtgu2mxkyq.cloudfront.net/send.svg"
-							alt="Send"
-							className="size-6"
-						/>
+					<div className="flex justify-between">
+						<div className="flex px-2 items-center">
+							<Hint label="Enhance Prompt">
+								<Button
+									disabled={false}
+									onClick={() => {}}
+									variant="transparent"
+									size="iconSm"
+								>
+									<img
+										src="https://d2vkmtgu2mxkyq.cloudfront.net/generate_ai.svg"
+										className="size-6"
+										style={{ strokeWidth: '2' }}
+									/>
+								</Button>
+							</Hint>
+							<PromptingRole />
+						</div>
+						<div className="flex gap-4 items-center justify-between">
+							{mode === 'single' && prompt?.trim()?.length > 0 && (
+								<span className="text-muted-foreground text-xs ">
+									Use Control + Enter to send{' '}
+								</span>
+							)}
+							<div
+								className={`flex items-end gap-2  cursor-pointer`}
+								onClick={handleSend}
+							>
+								<img
+									src="https://d2vkmtgu2mxkyq.cloudfront.net/send.svg"
+									alt="Send"
+									className="size-6"
+								/>
+							</div>
+						</div>
 					</div>
 				) : (
 					<div className="flex gap-2 items-end  cursor-not-allowed">
