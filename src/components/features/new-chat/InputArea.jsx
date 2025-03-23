@@ -88,6 +88,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 			let i = 0;
 			const intervalId = setInterval(() => {
 				setPrompt((prevPrompt) => prevPrompt + (newPrompt[i] ?? ''));
+				simpleInputRef.current.scrollTop = simpleInputRef.current.scrollHeight
 				i++;
 				if (i >= newPrompt.length) {
 					setShowStream(false);
@@ -488,7 +489,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 							{!disablePromptEnhancer && <PromptingRole />}
 						</div>
 
-						{!enhancePromptMutation.isPending && !disablePromptEnhancer && (
+						{(!enhancePromptMutation.isPending && !showStream) && (
 							<div className="flex gap-4 items-center justify-between">
 								{mode === 'single' && prompt?.trim()?.length > 0 && (
 									<span className="text-muted-foreground text-xs ">
