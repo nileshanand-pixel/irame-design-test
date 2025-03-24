@@ -16,6 +16,7 @@ import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 import InputArea from './InputArea';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { toast } from 'sonner';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
