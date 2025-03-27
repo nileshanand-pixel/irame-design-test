@@ -40,6 +40,7 @@ export const trackEvent = (
 };
 
 export const trackUser = (userDetails) => {
+	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 	mixpanel.identify(userDetails.user_id);
 	mixpanel.people.set({
 		$name: userDetails.user_name,
@@ -48,6 +49,7 @@ export const trackUser = (userDetails) => {
 }
 
 export const untrackUser = () => {
+	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 	mixpanel.reset();
 }
 
