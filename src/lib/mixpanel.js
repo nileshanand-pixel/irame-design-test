@@ -8,7 +8,7 @@ const tokens = {
 };
 
 export const initAnalytics = () => {
-	if (import.meta.VITE_MIXPANEL_DISABLED === 'true') return;
+	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 
 	mixpanel.init(tokens[env], {
 		debug: env === 'local',
@@ -21,7 +21,7 @@ export const trackEvent = (
 	properties,
 	propertiesMapper = (params) => ({})
 ) => {
-	if (import.meta.VITE_MIXPANEL_DISABLED === 'true') return;
+	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 
 	const { parameters, ...rest } = properties || {};
 
