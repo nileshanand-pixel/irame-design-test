@@ -63,6 +63,7 @@ const Configuration = () => {
 			delete tempProgress[file.name];
 			return tempProgress;
 		});
+		setFormErrors({})
 	};
 
 	const handleFileChange = (e) => {
@@ -127,11 +128,15 @@ const Configuration = () => {
 			setFiles([]);
 			toast.error('Error uploading files');
 			console.error('Error uploading files', error);
-			trackEvent(EVENTS_ENUM.DATASOURCE_CREATION_FAILED, EVENTS_REGISTRY.DATASOURCE_CREATION_FAILED, () => ({
-				uploaded: false,
-				file_upload_status: false,
-				error: getErrorAnalyticsProps(error)
-			}))
+			trackEvent(
+				EVENTS_ENUM.DATASOURCE_CREATION_FAILED,
+				EVENTS_REGISTRY.DATASOURCE_CREATION_FAILED,
+				() => ({
+					uploaded: false,
+					file_upload_status: false,
+					error: getErrorAnalyticsProps(error),
+				}),
+			);
 		}
 	};
 	const createDataSource = async () => {
@@ -161,15 +166,23 @@ const Configuration = () => {
 			startChatting(response);
 			setProgress({});
 			setIsLoading(false);
-			trackEvent(EVENTS_ENUM.DATASOURCE_CREATED_SUCCESSFULLY, EVENTS_REGISTRY.DATASOURCE_CREATED_SUCCESSFULLY, () => ({datasource_id: response.datasource_id}))
+			trackEvent(
+				EVENTS_ENUM.DATASOURCE_CREATED_SUCCESSFULLY,
+				EVENTS_REGISTRY.DATASOURCE_CREATED_SUCCESSFULLY,
+				() => ({ datasource_id: response.datasource_id }),
+			);
 		} catch (error) {
 			toast.error('Error creating data source');
 			setIsLoading(false);
-			trackEvent(EVENTS_ENUM.DATASOURCE_CREATION_FAILED, EVENTS_REGISTRY.DATASOURCE_CREATION_FAILED, () => ({
-				uploaded: true,
-				file_upload_status: true,
-				error: getErrorAnalyticsProps(error)
-			}))
+			trackEvent(
+				EVENTS_ENUM.DATASOURCE_CREATION_FAILED,
+				EVENTS_REGISTRY.DATASOURCE_CREATION_FAILED,
+				() => ({
+					uploaded: true,
+					file_upload_status: true,
+					error: getErrorAnalyticsProps(error),
+				}),
+			);
 		}
 	};
 	const handleDeleteDataSource = async (e, dataSourceId) => {
@@ -207,7 +220,10 @@ const Configuration = () => {
 	});
 
 	const handleSelectUseCase = (value) => {
-		trackEvent(EVENTS_ENUM.DATASOURCE_INTENT_SELECTED, EVENTS_REGISTRY.DATASOURCE_INTENT_SELECTED)
+		trackEvent(
+			EVENTS_ENUM.DATASOURCE_INTENT_SELECTED,
+			EVENTS_REGISTRY.DATASOURCE_INTENT_SELECTED,
+		);
 		if (dataSourceIntent.includes(value)) {
 			setDataSourceIntent((prev) => prev.filter((item) => item !== value));
 		} else {
@@ -261,6 +277,18 @@ const Configuration = () => {
 		setDataSourceIntent(initialIntents);
 	}, []);
 
+	const handleInputClick = (e) => {
+		e.preventDefault();
+		console.log(isAllFilesUploaded(), isLoading);
+		if (!isAllFilesUploaded() || isLoading) return;
+		// console.log(first)
+		inputRef.current.click();
+		trackEvent(
+			EVENTS_ENUM.UPLOAD_DATASOURCE_CLICKED,
+			EVENTS_REGISTRY.UPLOAD_DATASOURCE_CLICKED,
+		);
+	};
+
 	const renderUploadButtons = () => {
 		const zeroFiles = files.length === 0;
 		const uploadButtonObj = {
@@ -277,12 +305,7 @@ const Configuration = () => {
 							? 'cursor-not-allowed opacity-80'
 							: 'cursor-pointer'
 					}`}
-					onClick={(e) => {
-						e.preventDefault();
-						if (!isAllFilesUploaded() || isLoading) return;
-						inputRef.current.click();
-						trackEvent(EVENTS_ENUM.UPLOAD_DATASOURCE_CLICKED, EVENTS_REGISTRY.UPLOAD_DATASOURCE_CLICKED)
-					}}
+					onClick={handleInputClick}
 				>
 					<label
 						htmlFor="file-upload"
@@ -313,6 +336,7 @@ const Configuration = () => {
 					type="file"
 					multiple
 					ref={inputRef}
+					onClick={(e) => e.target.value=null}
 					className="absolute top-0 w-0 -z-1 opacity-0"
 					onChange={(e) => handleFileChange(e)}
 					id="file-upload"
