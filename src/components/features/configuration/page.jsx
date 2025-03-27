@@ -63,7 +63,7 @@ const Configuration = () => {
 			delete tempProgress[file.name];
 			return tempProgress;
 		});
-		setFormErrors({})
+		setFormErrors({});
 	};
 
 	const handleFileChange = (e) => {
@@ -336,7 +336,7 @@ const Configuration = () => {
 					type="file"
 					multiple
 					ref={inputRef}
-					onClick={(e) => e.target.value=null}
+					onClick={(e) => (e.target.value = null)}
 					className="absolute top-0 w-0 -z-1 opacity-0"
 					onChange={(e) => handleFileChange(e)}
 					id="file-upload"
@@ -537,7 +537,7 @@ const Configuration = () => {
 						</div>
 					)}
 					<div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-						{filteredList.length ? (
+						{filteredList.length &&
 							filteredList.map((source) => (
 								<div
 									className="flex justify-between items-center bg-purple-4 p-4 rounded-lg gap-4"
@@ -595,13 +595,17 @@ const Configuration = () => {
 										</DropdownMenu>
 									</div>
 								</div>
-							))
-						) : (
-							<p className="text-primary40 text-sm">
-								No data sources found
-							</p>
-						)}
+							))}
 					</div>
+					{(!filteredList || filteredList.length === 0) && (
+						<p className="text-primary40 flex flex-col  justify-center items-center">
+							<span className="material-symbols-outlined  text-primary10 text-[75px]">
+								database
+							</span>
+
+							<span>No data sources found</span>
+						</p>
+					)}
 				</div>
 			</div>
 		</div>
