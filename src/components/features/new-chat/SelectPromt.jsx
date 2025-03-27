@@ -80,10 +80,14 @@ const SelectPrompt = ({ setPrompt }) => {
 						refetchActive: true,
 						refetchInactive: true,
 					});
-					trackEvent(EVENTS_ENUM.QUERY_INITIATED, EVENTS_REGISTRY.QUERY_INITIATED, (() => ({
+				trackEvent(
+					EVENTS_ENUM.QUERY_INITIATED,
+					EVENTS_REGISTRY.QUERY_INITIATED,
+					() => ({
 						query_id: res?.query_id,
-						datasource_id: query.dataSourceId
-					})))
+						datasource_id: query.dataSourceId,
+					}),
+				);
 			});
 		} catch (error) {
 			console.log(error);
@@ -116,13 +120,13 @@ const SelectPrompt = ({ setPrompt }) => {
 					);
 					if (resp.status === 200 || resp.suggestion.length) {
 						trackEvent(
-																			EVENTS_ENUM.DATASOURCE_PROCESSED_SUCCESSFULLY,
-																			EVENTS_REGISTRY.DATASOURCE_PROCESSED_SUCCESSFULLY,
-																			() => ({
-																				datasource_id: query.datasource_id,
-																				from: 'chat-page'
-																			}),
-																		);
+							EVENTS_ENUM.DATASOURCE_PROCESSED_SUCCESSFULLY,
+							EVENTS_REGISTRY.DATASOURCE_PROCESSED_SUCCESSFULLY,
+							() => ({
+								datasource_id: query.datasource_id,
+								from: 'chat-page',
+							}),
+						);
 						clearInterval(intervalId); // Stop polling
 					}
 				}
@@ -146,9 +150,9 @@ const SelectPrompt = ({ setPrompt }) => {
 		<div className="">
 			<div className="mt-2 xl:mt-4">
 				<div className="w-full flex gap-4">
-						{data?.suggestion?.length > 0 ? (
-							<ScrollList>
-								{data?.suggestion?.map((suggestion, index) => (
+					{data?.suggestion?.length > 0 ? (
+						<ScrollList>
+							{data?.suggestion?.map((suggestion, index) => (
 								<li
 									key={suggestion?.suggestion_id}
 									className={`${
@@ -176,7 +180,7 @@ const SelectPrompt = ({ setPrompt }) => {
 					)}
 				</div>
 				{activeTab ? (
-					<div className="w-full overflow-x-scroll flex gap-4 mt-3 xl:mt-4">
+					<div className="w-full overflow-x-scroll horizontal-scrollbar pb-1 flex gap-4 mt-3 xl:mt-4">
 						{data?.suggestion?.length > 0
 							? data.suggestion
 									.find(
@@ -236,5 +240,3 @@ const SelectPrompt = ({ setPrompt }) => {
 };
 
 export default SelectPrompt;
-
-// 							<div className={` ${runWorkFlowMutation.isPending ? 'overflow-y-hidden': 'overflow-y-auto'} h-full bg-white relative p-4 flex flex-col min-h-full`}>
