@@ -180,50 +180,52 @@ const SelectPrompt = ({ setPrompt }) => {
 					)}
 				</div>
 				{activeTab ? (
-					<div className="w-full overflow-x-scroll horizontal-scrollbar pb-1 flex gap-4 mt-3 xl:mt-4">
-						{data?.suggestion?.length > 0
-							? data.suggestion
-									.find(
-										(suggestion) =>
-											suggestion.type === activeTab,
-									)
-									.questions.map((question, index) => (
-										<div
-											className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] min-h-[8rem] xl:min-h-[10rem] max-h-[21.75rem] p-4 hover:bg-purple-8 mb-3"
-											key={`${index}_question`}
-										>
+					<ScrollList>
+						<div className="w-full overflow-x-scroll horizontal-scrollbar pb-1 flex gap-4 mt-3 xl:mt-4">
+							{data?.suggestion?.length > 0
+								? data.suggestion
+										.find(
+											(suggestion) =>
+												suggestion.type === activeTab,
+										)
+										.questions.map((question, index) => (
 											<div
-												className="overflow-y-auto text-sm font-medium text-primary80"
-												onClick={() =>
-													handlePrompt(question)
-												}
+												className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] min-h-[8rem] xl:min-h-[10rem] max-h-[21.75rem] p-4 hover:bg-purple-8 mb-3"
+												key={`${index}_question`}
 											>
-												<ul className="divide-y-[24px] divide-transparent ">
-													<li className="flex items-center gap-2 hover:cursor-pointer hover:text-purple-80 !line-clamp-5 ">
-														{question}
-													</li>
-												</ul>
+												<div
+													className="overflow-y-auto text-sm font-medium text-primary80"
+													onClick={() =>
+														handlePrompt(question)
+													}
+												>
+													<ul className="divide-y-[24px] divide-transparent ">
+														<li className="flex items-center gap-2 hover:cursor-pointer hover:text-purple-80 !line-clamp-5 ">
+															{question}
+														</li>
+													</ul>
+												</div>
+												<div
+													className="absolute bottom-4 right-4 text-right mt-6 cursor-pointer"
+													onClick={() => {
+														setPrompt(question);
+													}}
+												>
+													<img
+														src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
+														alt="edit-prompt"
+														className="bg-white py-1 px-1 rounded-full"
+													/>
+												</div>
 											</div>
-											<div
-												className="absolute bottom-4 right-4 text-right mt-6 cursor-pointer"
-												onClick={() => {
-													setPrompt(question);
-												}}
-											>
-												<img
-													src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
-													alt="edit-prompt"
-													className="bg-white py-1 px-1 rounded-full"
-												/>
-											</div>
+										))
+								: [...Array(5)].map((_, index) => (
+										<div className="flex space-x-2" key={index}>
+											<Skeleton className="h-[125px] w-[250px] rounded-xl bg-purple-4" />
 										</div>
-									))
-							: [...Array(5)].map((_, index) => (
-									<div className="flex space-x-2" key={index}>
-										<Skeleton className="h-[125px] w-[250px] rounded-xl bg-purple-4" />
-									</div>
-								))}
-					</div>
+									))}
+						</div>
+					</ScrollList>
 				) : (
 					<div className="flex space-x-2 mt-4">
 						{[...Array(4)].map((_, index) => (
