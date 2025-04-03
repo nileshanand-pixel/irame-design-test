@@ -176,7 +176,7 @@ export const enhancePrompt = async (userInput, mode="analyst") => {
 		const data = new FormData();
 		data.append('user_input', userInput);
 		const userMode = localStorage.getItem('prompt-role');
-		data.append('base_instruction', userMode || promptMap[mode]);
+		data.append('base_instruction', promptMap[userMode] || promptMap[mode]);
 
 		const config = {
 			method: 'post',
