@@ -111,7 +111,7 @@ const PreviewTable = ({ data, form, setForm, width = '200px' }) => {
                   key={index}
                   className={`text-left text-sm text-primary80 font-semibold px-4 border border-gray-300 !w-[${width}]`}
                 >
-                  {column.name}
+                  <span className='truncate'>{column.name}</span>
                 </TableHead>
               ))}
             </TableRow>
@@ -132,7 +132,7 @@ const PreviewTable = ({ data, form, setForm, width = '200px' }) => {
                     />
                   ) : (
                     <div>
-                      {column.description}
+                      <span className='truncate'>{column.description}</span>
                     </div>
                   )}
                 </TableHead>
@@ -147,7 +147,7 @@ const PreviewTable = ({ data, form, setForm, width = '200px' }) => {
                     key={colIndex}
                     className="px-4 py-2 border border-gray-300"
                   >
-                    {row[column.name]}
+                    <span className='truncate'>{row[column.name]}</span>
                   </TableCell>
                 ))}
               </TableRow>

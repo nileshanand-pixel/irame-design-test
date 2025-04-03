@@ -443,6 +443,11 @@
 		transform: rotate(330deg);
 	}
 
+	.horizontal-scrollbar {
+		scrollbar-width: thin;
+		scrollbar-color:  #0000000A #0000000A;
+	}
+
 	@-webkit-keyframes spinner-fade {
 		0% {
 			background-color: rgba(38, 6, 74, 1);

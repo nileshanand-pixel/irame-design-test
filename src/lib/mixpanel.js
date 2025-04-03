@@ -8,7 +8,7 @@ const tokens = {
 };
 
 export const initAnalytics = () => {
-	if (import.meta.VITE_MIXPANEL_DISABLED === 'true') return;
+	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 
 	mixpanel.init(tokens[env], {
 		debug: env === 'local',
@@ -21,7 +21,7 @@ export const trackEvent = (
 	properties,
 	propertiesMapper = (params) => ({})
 ) => {
-	if (import.meta.VITE_MIXPANEL_DISABLED === 'true') return;
+	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 
 	const { parameters, ...rest } = properties || {};
 
@@ -30,8 +30,8 @@ export const trackEvent = (
 	const authUserDetails = JSON.parse(localStorage.getItem("auth-user-data"))
 
 	const finalProperties = {
-		...rest,
-		...mappedProperties,
+		...rest, //properties except parameters
+		...mappedProperties, // build event custom parameters
 		env,
 		...(!!authUserDetails && authUserDetails)
 	};
@@ -40,6 +40,7 @@ export const trackEvent = (
 };
 
 export const trackUser = (userDetails) => {
+	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 	mixpanel.identify(userDetails.user_id);
 	mixpanel.people.set({
 		$name: userDetails.user_name,
@@ -48,6 +49,7 @@ export const trackUser = (userDetails) => {
 }
 
 export const untrackUser = () => {
+	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 	mixpanel.reset();
 }
 

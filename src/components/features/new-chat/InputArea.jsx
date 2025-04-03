@@ -1,19 +1,25 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { deleteTemplate, getTemplates } from './service/new-chat.service';
+import {
+	deleteTemplate,
+	enhancePrompt,
+	getTemplates,
+} from './service/new-chat.service';
 import CHAT_CONSTANTS from '@/constants/chat.constant';
 import { chatCommandInitiator, getToken } from '@/lib/utils';
 import MoreActionsModal from './MoreActionsModal';
 import SaveEditTemplateModal from '../reports/components/SaveEditTemplateModal';
 
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
+import { Hint } from '@/components/Hint';
+import PromptingRole from './components/PromptingRole';
+import CircularLoader from '@/components/elements/loading/CircularLoader';
 
-const autoResize = (e, prompt, maxHeight = 160) => {
-	if(!prompt)return
+const autoResize = (e, prompt, maxHeight = 150) => {
+	if (!prompt) return;
 	e.target.style.height = 'auto';
 	const newHeight = e.target.scrollHeight;
 	const clampedHeight = newHeight > maxHeight ? maxHeight : newHeight;
@@ -40,9 +46,14 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 		isVisible: false,
 		id: '',
 	});
+	const [showStream, setShowStream] = useState(false);
 
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const dispatch = useDispatch();
+
+	const disablePromptEnhancer = useMemo(() => {
+		return prompt?.trim().split(/\s+/).length <= 3 || showStream;
+	}, [prompt, showStream]);
 
 	const getTemplatesQuery = useQuery({
 		queryKey: ['saved-queries'],
@@ -62,6 +73,34 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 		onError: (err) => {
 			console.log('Error deleting Template', err);
 			toast.error('Something went wrong while deleting template');
+		},
+	});
+
+	const enhancePromptMutation = useMutation({
+		mutationFn: async (prompt, mode) => {
+			return await enhancePrompt(prompt, mode);
+		},
+		onSuccess: (data) => {
+			const newPrompt = data || '';
+			setPrompt('');
+			setShowStream(true);
+
+			let i = 0;
+			const intervalId = setInterval(() => {
+				setPrompt((prevPrompt) => prevPrompt + (newPrompt[i] ?? ''));
+				simpleInputRef.current.scrollTop = simpleInputRef.current.scrollHeight
+				i++;
+				if (i >= newPrompt.length) {
+					setShowStream(false);
+					clearInterval(intervalId);
+				}
+			}, 20);
+		},
+		onError: (err) => {
+			toast.error(
+				'Something went wrong while enhancing prompt. please try again',
+			);
+			console.log(err);
 		},
 	});
 
@@ -95,6 +134,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	const handlePromptChange = (e) => {
 		const value = e.target.value;
 		setPrompt(value);
+
 		if (!value) {
 			setShowModal(false);
 			resetSecondaryModalData();
@@ -138,14 +178,19 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	};
 
 	const handleSingleKeyDown = (event) => {
-		if (event.keyCode == 13 && !event.shiftKey) {
+		if (enhancePromptMutation.isLoading) {
+			return;
+		}
+
+		if (event.keyCode === 13 && !event.shiftKey && !event.ctrlKey) {
 			if (showModal) {
 				if (firstActionRef?.current?.click) {
 					firstActionRef.current.click();
 				}
-			} else {
-				handleSend();
 			}
+		} else if (event.ctrlKey && event.keyCode === 13) {
+			event.preventDefault();
+			handleSend();
 		}
 	};
 
@@ -209,11 +254,14 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	};
 
 	const handleSend = async () => {
+		if (enhancePromptMutation.isLoading && mode === 'single') {
+			return;
+		}
 		await onAppendQuery(prompt, queries, savedQueryReference, mode);
-	setPrompt(null); // Force unmount & remount
-	setTimeout(() => setPrompt(''), 0); // Restore after re-render
-	setQueries([{ id: 1, text: '' }]);
-	setMode('single');
+		setPrompt(null); // Force unmount & remount
+		setTimeout(() => setPrompt(''), 0); // Restore after re-render
+		setQueries([{ id: 1, text: '' }]);
+		setMode('single');
 	};
 
 	const handleSaveTemplateClick = () => {
@@ -293,6 +341,12 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 		});
 	};
 
+	const handleEnhancePrompt = () => {
+		if (disablePromptEnhancer) return;
+		setPrompt('Enhancing prompt...')
+		enhancePromptMutation.mutate(prompt);
+	};
+
 	const renderBulkMode = (label) => (
 		<div className="w-[90%] flex flex-col gap-2 pr-2">
 			{showSaveEditTemplateModal && (
@@ -363,10 +417,10 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 				utilReducer?.isSideNavOpen &&
 				dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]))
 			}
-			className="border-0 text-xs xl:text-sm 2xl:text-base outline-none rounded-xl bg-transparent w-full mr-2 resize-none overflow-y-auto max-h-32"
+			className="border-0 text-xs xl:text-sm 2xl:text-base outline-none rounded-xl bg-transparent w-full pr-6 resize-none overflow-y-auto show-scrollbar max-h-32"
 			value={prompt || ''}
 			onChange={handlePromptChange}
-			onInput={(e) => autoResize(e, prompt, prompt ? 300: 50 )}
+			onInput={(e) => autoResize(e, prompt, prompt ? 300 : 50)}
 			onKeyDown={handleSingleKeyDown}
 			disabled={disabled}
 			ref={simpleInputRef}
@@ -400,21 +454,65 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 					handleTemplateSelect={handleTemplateSelect}
 				/>
 			)}
-			<div className="w-full rounded-xl flex justify-between bg-purple-4 px-3 py-2 mb-2">
+			<div className="w-full rounded-xl flex flex-col justify-between bg-purple-4 px-3 py-2 mb-2">
 				{renderInputArea()}
 				{!disabled ? (
-					<div
-						className={`flex items-end gap-2  cursor-pointer`}
-						onClick={handleSend}
-					>
-						<img
-							src="https://d2vkmtgu2mxkyq.cloudfront.net/send.svg"
-							alt="Send"
-							className="size-6"
-						/>
+					<div className="flex justify-between">
+						<div className="flex px-2 items-center">
+							{enhancePromptMutation.isPending ? (
+								<div className="text-xs flex gap-1 items-center text-purple-80">
+									<CircularLoader size="sm" />
+									Enhancing Prompt
+								</div>
+							) : (
+								<>
+									<Hint label="Enhance Prompt">
+										<Button
+											onClick={handleEnhancePrompt}
+											variant="transparent"
+											size="iconSm"
+											className={`${
+												disablePromptEnhancer &&
+												'cursor-not-allowed opacity-40'
+											}`}
+											disabled={disablePromptEnhancer}
+										>
+											<img
+												src="https://d2vkmtgu2mxkyq.cloudfront.net/generate_ai.svg"
+												className="size-6"
+												style={{ strokeWidth: '2' }}
+												alt="enhance icon"
+											/>
+										</Button>
+									</Hint>
+								</>
+							)}
+							{!disablePromptEnhancer && <PromptingRole />}
+						</div>
+
+						{(!enhancePromptMutation.isPending && !showStream) && (
+							<div className="flex gap-4 items-center justify-between">
+								{mode === 'single' && prompt?.trim()?.length > 0 && (
+									<span className="text-muted-foreground font-bold text-xs ">
+										Use Control + Enter to send{' '}
+									</span>
+								)}
+								<div
+									className="flex items-end gap-2 cursor-pointer"
+									
+									onClick={handleSend}
+								>
+									<img
+										src="https://d2vkmtgu2mxkyq.cloudfront.net/send.svg"
+										alt="Send"
+										className="size-6"
+									/>
+								</div>
+							</div>
+						)}
 					</div>
 				) : (
-					<div className="flex gap-2 items-end  cursor-not-allowed">
+					<div className="flex gap-2 items-end ml-auto  cursor-not-allowed">
 						<i className="bi bi-arrow-repeat animate-spin text-purple-40 text-xl"></i>
 					</div>
 				)}
