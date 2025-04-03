@@ -171,5 +171,22 @@ module.exports = {
     		}
     	}
     },
-	plugins: [require('tailwindcss-animate')],
+	plugins: [require('tailwindcss-animate'), 
+		function ({ addUtilities }) {
+			addUtilities({
+			  '.show-scrollbar': {
+				'overflow-y': 'auto', 
+				'scrollbar-width': 'thin',
+				'-ms-overflow-style': 'auto',
+			  },
+			  '.show-scrollbar::-webkit-scrollbar': {
+				width: '6px',
+			  },
+			  '.show-scrollbar::-webkit-scrollbar-thumb': {
+				backgroundColor: '#a0aec0',
+				borderRadius: '6px',
+			  },
+			});
+		  },
+	],
 };

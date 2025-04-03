@@ -30,8 +30,8 @@ export const trackEvent = (
 	const authUserDetails = JSON.parse(localStorage.getItem("auth-user-data"))
 
 	const finalProperties = {
-		...rest,
-		...mappedProperties,
+		...rest, //properties except parameters
+		...mappedProperties, // build event custom parameters
 		env,
 		...(!!authUserDetails && authUserDetails)
 	};
