@@ -181,7 +181,7 @@ const SelectPrompt = ({ setPrompt }) => {
 				</div>
 				{activeTab ? (
 					<ScrollList>
-						<div className="w-full flex gap-4 mt-3 xl:mt-4">
+						<div className="w-full overflow-x-scroll horizontal-scrollbar pb-1 flex gap-4 mt-3 xl:mt-4">
 							{data?.suggestion?.length > 0
 								? data.suggestion
 										.find(
@@ -242,5 +242,3 @@ const SelectPrompt = ({ setPrompt }) => {
 };
 
 export default SelectPrompt;
-
-// 							<div className={` ${runWorkFlowMutation.isPending ? 'overflow-y-hidden': 'overflow-y-auto'} h-full bg-white relative p-4 flex flex-col min-h-full`}>

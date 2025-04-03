@@ -40,20 +40,28 @@ const ChooseDataSourceDialog = ({
 
 	const handleSelect = () => {
 		if (!selectedDataSource) return;
-		trackEvent(EVENTS_ENUM.CHAT_SESSION_STARTED, EVENTS_REGISTRY.CHAT_SESSION_STARTED, () => ({
-			datasource_id: selectedDataSource
-		}))
+		trackEvent(
+			EVENTS_ENUM.CHAT_SESSION_STARTED,
+			EVENTS_REGISTRY.CHAT_SESSION_STARTED,
+			() => ({
+				datasource_id: selectedDataSource,
+			}),
+		);
 		navigate(`/app/new-chat/?step=3&dataSourceId=${selectedDataSource}`);
 		handleNextStep(3);
 		setOpen(false);
 	};
-	const handleSelectedDS = (dataSourceId, dataSourceName) => {
+	const handleSelectedDS = (dataSourceId) => {
 		setSelectedDataSource(dataSourceId);
+		const dsName = data?.find(
+			(item) => item.datasource_id === dataSourceId,
+		)?.name;
+		if (!dsName) return;
 		dispatch(
 			updateUtilProp([
 				{
 					key: 'selectedDataSource',
-					value: { id: dataSourceId, name: dataSourceName },
+					value: { id: dataSourceId, name: dsName },
 				},
 			]),
 		);
@@ -98,22 +106,19 @@ const ChooseDataSourceDialog = ({
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>
 					) : dataSources?.length ? (
-						dataSources?.map((source) => {
-							return (
-								<div
-									className="rounded-xl bg-purple-4 p-4 flex items-center gap-4"
-									key={source.datasource_id}
-								>
-									<RadioGroup
-										className="w-full"
-										onClick={() => {
-											handleSelectedDS(
-												source.datasource_id,
-												source.name,
-											);
-										}}
+						<RadioGroup
+							className="w-full"
+							onValueChange={(value) => {
+								handleSelectedDS(value);
+							}}
+						>
+							{dataSources?.map((source) => {
+								return (
+									<div
+										className="rounded-xl bg-purple-4 p-4 flex items-center gap-4"
+										key={source.datasource_id}
 									>
-										<div className="flex items-center justify-between space-x-2">
+										<div className="flex items-center justify-between w-full space-x-2">
 											<Label
 												htmlFor={source.datasource_id}
 												className="w-full flex items-center text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-7 cursor-pointer"
@@ -126,19 +131,35 @@ const ChooseDataSourceDialog = ({
 												{source.name}
 											</Label>
 											<RadioGroupItem
-												value={selectedDataSource}
 												id={source.datasource_id}
+												value={source.datasource_id}
 											/>
 										</div>
-									</RadioGroup>
-								</div>
-							);
-							// </div>
-						})
+									</div>
+								);
+								// </div>
+							})}
+						</RadioGroup>
 					) : (
-						<p className="text-primary40 text-sm">
-							No data sources found
-						</p>
+						<div className="flex flex-col items-center gap-2 justify-center h-40">
+							<div className="text-primary40 text-sm">
+								No data sources found
+							</div>
+							<Button
+								onClick={() => {
+									setOpen(false);
+									navigate('/app/configuration');
+								}}
+								variant="outline"
+								className="text-xs flex gap-2"
+								size="sm"
+							>
+								<span class="material-symbols-outlined ">
+									database_upload
+								</span>
+								Upload new dataset
+							</Button>
+						</div>
 					)}
 				</div>
 				<DialogFooter className="w-full">
@@ -151,6 +172,7 @@ const ChooseDataSourceDialog = ({
 					</Button>
 					<Button
 						onClick={() => handleSelect()}
+						disabled={dataSourceFetch || !data || !data?.length}
 						className="rounded-lg w-full hover:bg-purple-100 hover:text-white hover:opacity-80"
 					>
 						Continue
