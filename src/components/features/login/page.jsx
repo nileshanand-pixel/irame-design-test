@@ -256,7 +256,7 @@ const SignInSignUp = () => {
 
 						<LoginForm team={team} onContinue={handleContinue} />
 
-						<div className="mt-6">
+						{/* <div className="mt-6">
 							<Button
 								disabled={isLoading}
 								onClick={handleGoogleRedirect}
@@ -270,7 +270,7 @@ const SignInSignUp = () => {
 								/>
 								Continue with Google
 							</Button>
-						</div>
+						</div> */}
 
 						<div className="mt-6">
 							{showTeamInput && (
