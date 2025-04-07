@@ -42,7 +42,7 @@ const ReportsInDatasource = () => {
 		const d = reports.filter((item) =>
 			item?.name?.toLowerCase()?.startsWith(search?.trim()?.toLowerCase()),
 		);
-		return [...d, ...d, ...d, ...d, ...d];
+		return d;
 	}, [search, reports]);
 
 	useEffect(() => {
