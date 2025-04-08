@@ -27,7 +27,7 @@ const WorkflowPlan = ({ plan: initialPlan, disabled }) => {
 			<h2 className="text-base font-medium ml-2 mb-2 text-primary80">
 				Workflow Plan
 			</h2>
-			<div className="rounded-2xl bg-purple-4 px-4 pb-4 pt-2 shadow-sm markdown-content w-full max-w-none">
+			<div className="rounded-2xl bg-purple-4 px-4 pb-4 pt-2 shadow-sm markdown-content w-full">
 				<ReactMarkdown
 					remarkPlugins={[remarkGfm, remarkBreaks]}
 					className="text-sm leading-6 space-y-2"

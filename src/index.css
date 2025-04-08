@@ -482,11 +482,17 @@
 		margin-bottom: 0.25rem;
 	  }
 	  
-	  /* .markdown-content code {
-		background-color: #f9f9f9;
-		padding: 0.2rem 0.4rem;
+	  .markdown-content pre{
+		width: 100%;
+		overflow-x: auto;
+		@apply show-scrollbar
+
+	  }
+	  .markdown-content code {
 		border-radius: 4px;
-	  } */
+		padding: 0.1rem 0.6rem;
+		background-color: rgba(38, 6, 74, 0.08) !important;
+	  }
 	  
 
 	@-webkit-keyframes spinner-fade {

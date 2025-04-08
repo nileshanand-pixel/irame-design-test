@@ -80,7 +80,7 @@ const ReportCard = ({ report }) => {
 
 	return (
 		<div
-			className={`rounded-lg hover:border p-4 ${report?.datasource_name ? 'min-h-[330px]' : 'min-h-[300px]'} w-full h-full bg-purple-4 hover:bg-purple-8 text-[#26064ACC]`}
+			className={`rounded-lg hover:border px-4 pt-4 pb-2 ${report?.datasource_name ? 'min-h-[330px]' : 'min-h-[280px]'} w-full bg-purple-4 hover:bg-purple-8 text-[#26064ACC]`}
 		>
 			<div
 				className="relative pb-[56.25%] overflow-hidden rounded-lg"
@@ -143,7 +143,7 @@ const ReportCard = ({ report }) => {
 						</Tooltip>
 					)}
 				</div>
-				<p className="text-sm text-gray-500 mt-2 truncate line-clamp-2">
+				<p className="text-sm text-gray-500 mt-2 line-clamp-2">
 					{report.data.summary}
 				</p>
 				{report?.datasource_name && (
