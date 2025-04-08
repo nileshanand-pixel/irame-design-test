@@ -99,11 +99,11 @@ const PreviewTable = ({ data, form, setForm, width = '200px' }) => {
   };
 
   return (
-    <div className="w-full max-h-full overflow-x-scroll h-full text-primary80">
+    <div className="w-full max-h-full overflow-x-scroll pb-4 show-scrollbar h-full text-primary80">
       {loading ? (
         <TableLoader showHeader={false} rowsCount={12}  colsCount={Math.min(columns?.length || 10, 10)}/> // Render loader while loading
       ) : (
-        <Table className="w-full border overflow-x-scroll border-gray-300">
+        <Table className="w-full border overflow-x-scroll  border-gray-300">
           <TableHeader className='bg-purple-4 text-primary80'>
             <TableRow>
               {columns.map((column, index) => (

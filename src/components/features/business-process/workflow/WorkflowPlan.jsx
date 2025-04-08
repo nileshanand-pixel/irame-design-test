@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
@@ -17,63 +17,22 @@ const WorkflowPlan = ({ plan: initialPlan, disabled }) => {
 		enabled: !!runId,
 	});
 
-	const processedPlan = useMemo(() => {
-		const basePlan = runDetails?.data?.plan || initialPlan || '';
-		return basePlan
-			.replace(/--/g, '•')
-			.replace(/(\n\s*)-/g, '$1  •')
-			.replace(/^(\s*)(\d+\.)/gm, '$1$2');
-	}, [initialPlan, runDetails]);
+	// Directly use the plan without modifications
+	const plan = runDetails?.data?.plan || initialPlan;
 
-	if (!processedPlan) return null;
+	if (!plan) return null;
 
 	return (
-		<div className="mt-4 mb-8">
-			<h2 className="text-lg font-medium ml-2 mb-2 text-primary80">
+		<div className="mt-4 mb-4">
+			<h2 className="text-base font-medium ml-2 mb-2 text-primary80">
 				Workflow Plan
 			</h2>
-			<div className="rounded-2xl bg-purple-4 px-6 pb-6 pt-2 shadow-sm">
+			<div className="rounded-2xl bg-purple-4 px-4 pb-4 pt-2 shadow-sm markdown-content w-full">
 				<ReactMarkdown
 					remarkPlugins={[remarkGfm, remarkBreaks]}
-					components={{
-						h2: ({ children }) => (
-							<h2 className="text-xl font-semibold mt-6 mb-4 text-primary80">
-								{children}
-							</h2>
-						),
-						ul: ({ children, depth }) => (
-							<ul
-								className={`list-disc pl-8 ${depth > 0 ? 'pl-12' : ''} my-2 space-y-2`}
-							>
-								{children}
-							</ul>
-						),
-						ol: ({ children, depth }) => (
-							<ol
-								className={`list-decimal pl-8 ${depth > 0 ? 'pl-12' : ''} my-2 space-y-2`}
-							>
-								{children}
-							</ol>
-						),
-						li: ({ children }) => (
-							<li className="pl-2 leading-relaxed text-primary60">
-								{children}
-							</li>
-						),
-						p: ({ children }) => (
-							<p className="my-4 leading-relaxed text-primary60">
-								{children}
-							</p>
-						),
-						code: ({ children }) => (
-							<code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">
-								{children}
-							</code>
-						),
-					}}
-					className="space-y-4" // Adds spacing between all elements
+					className="text-sm leading-6 space-y-2"
 				>
-					{processedPlan}
+					{plan}
 				</ReactMarkdown>
 			</div>
 		</div>
