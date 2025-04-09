@@ -87,7 +87,7 @@ const Layout = ({ children }) => {
 				<Header />
 				<div
 					className={cn(
-						'pt-0 px-0 flex bg-gray-300 justify-center h-[calc(100vh-64px)] overflow-hidden w-full',
+						'pt-0 px-0 flex bg-gray-300 justify-center h-[calc(100vh-64px)] overflow-x-hidden w-full',
 						pathname.includes('/dashboard')
 							? 'bg-gray-muted'
 							: 'bg-white'

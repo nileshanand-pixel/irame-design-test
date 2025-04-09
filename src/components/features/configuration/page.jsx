@@ -435,6 +435,7 @@ const Configuration = () => {
 						</div>
 					)}
 					{/* Render Files and their progress */}
+					<div className='max-h-40 overflow-y-auto'>
 					{Array.isArray(files) &&
 						files?.map((file, idx) => (
 							<div
@@ -493,11 +494,12 @@ const Configuration = () => {
 								) : null}
 							</div>
 						))}
+					</div>
 				</div>
 			</div>
 
 			{/* Right Section Manage Data Source */}
-			<div className="border flex flex-col rounded-3xl py-4 mx-8  col-span-12 shadow-1xl flex-1 mb-4 overflow-y-hidden">
+			<div className={cn("border flex flex-col rounded-3xl py-4 mx-8  col-span-12 shadow-1xl flex-1 mb-4 ", !showForm && 'overflow-y-hidden')}>
 				<div className="flex flex-none px-8 sm:flex-row flex-col gap-4 justify-between sm:items-center mb-4 pb-4">
 					<div>
 						<h3 className="text-primary80 font-semibold text-xl">
