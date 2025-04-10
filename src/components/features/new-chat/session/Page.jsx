@@ -546,13 +546,17 @@ const Workzone = () => {
 					]),
 				);
 
-				trackEvent(EVENTS_ENUM.REPLY_QUERY_INITIATED, EVENTS_REGISTRY.REPLY_QUERY_INITIATED, (() => ({
-					query_id: res?.query_id,
-					datasource_id: query.dataSourceId,
-					session_id: res?.session_id,
-					parent_query_id: lastAns?.query_id,
-					child_no: parseInt(lastAns.child_no) + 1,
-				})))
+				trackEvent(
+					EVENTS_ENUM.REPLY_QUERY_INITIATED,
+					EVENTS_REGISTRY.REPLY_QUERY_INITIATED,
+					() => ({
+						query_id: res?.query_id,
+						datasource_id: query.dataSourceId,
+						session_id: res?.session_id,
+						parent_query_id: lastAns?.query_id,
+						child_no: parseInt(lastAns.child_no) + 1,
+					}),
+				);
 
 				queryClient.invalidateQueries(['chat-history'], {
 					refetchActive: true,
@@ -738,9 +742,7 @@ const Workzone = () => {
 			const showWorkspaceToggle = !hasClarification;
 			return (
 				<div key={query.id} className="my-2 w-full">
-					<div
-						className={`ml-10 flex gap-2.5 flex-row-reverse`}
-					>
+					<div className={`ml-10 flex gap-2.5 flex-row-reverse`}>
 						<Avatar className="size-9">
 							<AvatarImage src={value?.avatar} />
 							<AvatarFallback>
@@ -750,7 +752,10 @@ const Workzone = () => {
 						<QueryDisplay
 							mode={query?.type}
 							bulkPrompt={query?.metadata?.queries}
-							workflowTitle = {query?.metadata?.saved_query_reference?.title || query?.metadata?.workflow_reference?.name}
+							workflowTitle={
+								query?.metadata?.saved_query_reference?.title ||
+								query?.metadata?.workflow_reference?.name
+							}
 							prompt={query?.question}
 						/>
 					</div>
@@ -959,28 +964,35 @@ const Workzone = () => {
 	};
 
 	return (
-		<div className="grid grid-cols-12 gap-4 px-8 min-h-[90vh] max-h-[90vh] overflow-y-hidden w-full">
+		<div className="grid grid-cols-12 gap-4 px-8 h-[90vh] overflow-hidden w-full">
+			{/* Main Chat Container */}
 			<div
 				className={cn(
-					'border rounded-2xl pt-8 pl-4 mr-4 shadow-1xl relative h-full flex-col',
-					showWorkSpace() ? 'col-span-12 lg:col-span-8' : 'col-span-12 lg:mx-[128px]',
+					'border rounded-2xl shadow-xl relative h-full',
+					showWorkSpace()
+						? 'col-span-12 lg:col-span-8'
+						: 'col-span-12 lg:mx-[128px]',
 				)}
 			>
-				<div
-					ref={scrollRef}
-					className="mb-[4vh] h-[68vh] h-sm:h-[72vh] h-md:h-[76vh] h-lg:h-[76vh] h-xl:h-[78vh] pr-4 overflow-y-auto w-full"
-				>
-					{renderConversation()}
+				{/* Scrollable Messages Area */}
+				<div className="absolute inset-0 pt-8 pl-4 mb-16 pr-4">
+					<div
+						ref={scrollRef}
+						className="h-full overflow-y-auto pb-[180px] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+					>
+						<div className="space-y-4">{renderConversation()}</div>
+					</div>
 				</div>
 
-				<div className="bg-white flex justify-center mt-4 pt-2">
-					<div className="absolute bottom-4 w-[96%] flex flex-col items-center justify-center z-20 bg-white">
+				{/* Fixed Input Area */}
+				<div className="absolute bottom-0 left-0 right-0 bg-white border-t">
+					<div className="p-4 space-y-2">
 						<InputArea
 							config={config}
 							onAppendQuery={handleAppendQuery}
 							disabled={inputDisabled}
 						/>
-						<p className="text-xs text-primary40 font-normal">
+						<p className="text-xs text-gray-500 text-center">
 							Irame.ai may display inaccurate info, including about
 							people, so double-check its responses.
 						</p>
@@ -988,58 +1000,65 @@ const Workzone = () => {
 				</div>
 			</div>
 
-			{showWorkSpace() ? (
+			{/* Workspace Panel */}
+			{showWorkSpace() && (
 				<WorkspaceEditProvider
 					editDisabled={inputDisabled}
 					regenerator={handleRegenerateResponse}
 				>
-					<div className="border sticky rounded-3xl py-4 w-full px-4 col-span-12 lg:col-span-4 shadow-1xl h-[90vh]">
-						<div className="flex justify-between">
-							<div className="flex items-center gap-1">
+					<div className="border rounded-3xl p-4 col-span-12 lg:col-span-4 shadow-xl h-[90vh] overflow-hidden flex flex-col">
+						<div className="flex justify-between items-center mb-4">
+							<div className="flex items-center gap-2">
 								<img
-									src={`https://d2vkmtgu2mxkyq.cloudfront.net/category.svg`}
-									className="me-1 size-6"
+									src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
+									className="w-6 h-6"
 								/>
-								<h3 className="text-primary80 font-semibold text-xl">
+								<h3 className="text-lg font-semibold text-gray-800">
 									Ira's Workspace
 								</h3>
 							</div>
-							<i
-								className="bi-x text-2xl cursor-pointer"
+							<button
 								onClick={() =>
-									setWorkspace((prevState) => ({
-										...prevState,
+									setWorkspace((prev) => ({
+										...prev,
 										show: false,
 									}))
 								}
-							></i>
+								className="text-gray-500 hover:text-gray-700"
+							>
+								✕
+							</button>
 						</div>
 
-						<Workspace
-							handleTabClick={handleTabClick}
-							workspace={workspace}
-							answerResp={
-								answers.find(
-									(item) =>
-										item?.query_id ===
-										chatStoreReducer?.activeQueryId,
-								) || answers?.[0]
-							}
-							canEdit={answers.every(
-								(item) => item?.status === 'done',
-							)}
-							setWorkspace={setWorkspace}
-						/>
+						<div className="flex-1 overflow-y-auto">
+							<Workspace
+								handleTabClick={handleTabClick}
+								workspace={workspace}
+								answerResp={
+									answers.find(
+										(item) =>
+											item?.query_id ===
+											chatStoreReducer?.activeQueryId,
+									) || answers?.[0]
+								}
+								canEdit={answers.every(
+									(item) => item?.status === 'done',
+								)}
+								setWorkspace={setWorkspace}
+							/>
+						</div>
 					</div>
 				</WorkspaceEditProvider>
-			) : null}
-			{dashboard?.showAdd ? (
+			)}
+
+			{/* Modals (unchanged) */}
+			{dashboard?.showAdd && (
 				<AddQueryToDashboard
 					open={dashboard.showAdd}
 					setDashboard={setDashboard}
 				/>
-			) : null}
-			{dashboard?.showCreate ? (
+			)}
+			{dashboard?.showCreate && (
 				<CreateDashboardDialog
 					open={dashboard.showCreate}
 					setOpen={(val) =>
@@ -1053,8 +1072,7 @@ const Workzone = () => {
 					errors={errors}
 					isLoading={dashboard.isCreating}
 				/>
-			) : null}
-
+			)}
 			{utilReducer.isGenerateReportModalOpen && (
 				<ReportGenerationDialog
 					open={utilReducer.isGenerateReportModalOpen}
