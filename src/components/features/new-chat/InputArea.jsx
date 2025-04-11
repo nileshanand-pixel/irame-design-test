@@ -412,7 +412,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	const renderSimpleMode = () => (
 		<Textarea
 			rows={1}
-			placeholder={CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER}
+			placeholder={!disabled ? CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER: CHAT_CONSTANTS.IRA_GENERATING_RESPONSE}
 			onFocus={() =>
 				utilReducer?.isSideNavOpen &&
 				dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]))
