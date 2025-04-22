@@ -1,12 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Chart from 'chart.js/auto';
 import * as d3 from 'd3';
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import { Button } from '../ui/button';
 import { GraphCategoryFilter } from './GraphCategoryFilter';
+import { debounce } from 'lodash';
+import { cn } from '@/lib/utils';
 
-const GraphRenderer = ({ graph, identifierKey }) => {
+const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 	const chartRef = useRef(null);
+	const containerRef = useRef(null);
+	const resizeObserverRef = useRef(null);
 	const [baseData, setBaseData] = useState([]);
 	const [loadedData, setLoadedData] = useState([]);
 	const [isGraphLoading, setIsGraphLoading] = useState(true);
@@ -18,6 +22,7 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 
 	const handle = useFullScreenHandle();
 
+	// Color array and helper functions remain the same
 	const colors = [
 		'#6A12CD',
 		'#F88907',
@@ -93,10 +98,10 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 				title: {
 					display: true,
 					text: graph.x_axis || 'X Axis',
-					font:{
+					font: {
 						size: '14px',
-						weight: 'bold'
-					}
+						weight: 'bold',
+					},
 				},
 			},
 		};
@@ -119,6 +124,30 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 	const showCategoryFilter =
 		categoryData && categoryData.options.length && !handle.active;
 
+	// Smooth resize handler
+	const handleResize = useCallback(
+		debounce(() => {
+			if (chartRef.current) {
+				chartRef.current.resize();
+			}
+		}, 100),
+		[],
+	);
+
+	useEffect(() => {
+		resizeObserverRef.current = new ResizeObserver(handleResize);
+		if (containerRef.current) {
+			resizeObserverRef.current.observe(containerRef.current);
+		}
+
+		return () => {
+			if (resizeObserverRef.current) {
+				resizeObserverRef.current.disconnect();
+			}
+			handleResize.cancel();
+		};
+	}, []);
+
 	useEffect(() => {
 		const fetchData = async () => {
 			if (graph.type && graph.x_axis && graph.y_axis && graph.csv_url) {
@@ -138,20 +167,22 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 	useEffect(() => {
 		setLoadedData(baseData);
 		if (graph.category_filter) {
-			const isCategoryFilterString =  typeof graph.category_filter === 'string' || graph.category_filter instanceof String;
-			if(!isCategoryFilterString)return;
-			
+			const isCategoryFilterString =
+				typeof graph.category_filter === 'string' ||
+				graph.category_filter instanceof String;
+			if (!isCategoryFilterString) return;
+
 			const categoryFilter = graph?.category_filter?.toLowerCase();
 			const headers = Object.keys(baseData[0] || {});
 			const matchingHeader = headers.find(
-				(header) => header?.toLowerCase() === categoryFilter,
+				(header) => header.toLowerCase() === categoryFilter,
 			);
 
 			if (matchingHeader) {
-				const uniqueValues = Array.from(
-					new Set(baseData?.map((item) => item[matchingHeader])),
-				);
-				const options = uniqueValues?.map((value) => ({
+				const uniqueValues = [
+					...new Set(baseData.map((item) => item[matchingHeader])),
+				];
+				const options = uniqueValues.map((value) => ({
 					value,
 					label: value.charAt(0).toUpperCase() + value.slice(1),
 				}));
@@ -159,14 +190,12 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 				if (options.length > 0) {
 					setCategoryData({
 						label:
-							matchingHeader?.charAt(0)?.toUpperCase() +
-							matchingHeader?.slice(1)?.toLowerCase(),
-						placeholder: `Select ${matchingHeader?.toLowerCase()}`,
+							matchingHeader.charAt(0).toUpperCase() +
+							matchingHeader.slice(1).toLowerCase(),
+						placeholder: `Select ${matchingHeader.toLowerCase()}`,
 						options,
 					});
-
-					const defaultCategoryValue = options[0]?.value;
-					handleCategoryChange(defaultCategoryValue);
+					handleCategoryChange(options[0].value);
 				}
 			}
 		}
@@ -175,14 +204,18 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 	useEffect(() => {
 		if (loadedData.length > 0) {
 			if (chartRef.current) chartRef.current.destroy();
-			const ctx = document.getElementById(`canvas_${identifierKey}_${graph.id}`);
+			const ctx = document.getElementById(
+				`canvas_${identifierKey}_${graph.id}`,
+			);
 			const isPieChart = graph.type.toLowerCase() === 'pie';
 			const tempLoadedData = handle.active
 				? loadedData
-				: loadedData.slice(0, Math.min(21, loadedData.length + 1));
+				: loadedData.slice(0, Math.min(21, loadedData.length));
+
 			const finalDataObj = isPieChart
 				? getCircularChartDatasets(tempLoadedData)
 				: getAxialChartDatasets(tempLoadedData, graph.y_axis);
+
 			chartRef.current = new Chart(ctx, {
 				type: graph.type.toLowerCase(),
 				data: {
@@ -190,17 +223,36 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 					datasets: finalDataObj.data,
 				},
 				options: {
+					responsive: true,
+					responsiveAnimationDuration: 0,
+					transitions: {
+						resize: {
+							animation: {
+								duration: 200,
+								easing: 'easeOutQuart',
+							},
+						},
+					},
 					plugins: {
 						title: {
 							align: handle.active ? 'end' : 'center',
 							display: true,
 							text: graph.title || 'Data plot',
-							font: { size: 14 },
+							font: {
+								size: handle.active ? 14 : 12,
+								weight: 'bold',
+							},
 							position: 'top',
 						},
 						legend: {
 							align: handle.active || isPieChart ? 'end' : 'center',
 							position: 'top',
+							labels: {
+								boxWidth: 12,
+								font: {
+									size: 10,
+								},
+							},
 						},
 						tooltip: {
 							callbacks: {
@@ -211,9 +263,32 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 							},
 						},
 					},
-					animation: handle.active ? true : false,
-					scales: finalDataObj.scales,
-					maintainAspectRatio: handle.active ? false : true,
+					animation: handle.active
+						? {
+								duration: 400,
+								easing: 'easeOutQuart',
+							}
+						: false,
+					scales: {
+						...finalDataObj.scales,
+						y: {
+							beginAtZero: true,
+							ticks: {
+								font: {
+									size: 10,
+								},
+							},
+						},
+						x: {
+							...finalDataObj.scales?.x,
+							ticks: {
+								font: {
+									size: 10,
+								},
+							},
+						},
+					},
+					maintainAspectRatio: false,
 				},
 			});
 		}
@@ -223,7 +298,7 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 	}, [loadedData, graph, identifierKey, handle.active]);
 
 	return (
-		<div className="bg-white rounded-3xl p-2 overflow-x-scroll">
+		<div className="bg-white rounded-xl p-2">
 			{isGraphLoading ? (
 				<div className="darkSoul-glowing-button2 mb-10">
 					<button className="darkSoul-button2" type="button">
@@ -232,7 +307,7 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 					</button>
 				</div>
 			) : (
-				<div className="relative">
+				<div className="relative" ref={containerRef}>
 					<div
 						className={`${showCategoryFilter ? 'block' : 'hidden'} w-full flex justify-between`}
 					>
@@ -255,16 +330,23 @@ const GraphRenderer = ({ graph, identifierKey }) => {
 					</div>
 
 					<FullScreen handle={handle}>
-						<canvas
-							id={`canvas_${identifierKey}_${graph.id}`}
-							width="380"
-							height="250"
-							style={{
-								backgroundColor: 'white',
-								padding: handle.active ? '32px' : '0',
-								borderRadius: '1rem',
-							}}
-						></canvas>
+						<div
+							className={cn(
+								'relative  w-full min-w-[300px] transition-all duration-300 ease-out',
+								!handle.active && aspect,
+								handle.active && 'w-full h-full',
+							)}
+						>
+							<canvas
+								id={`canvas_${identifierKey}_${graph.id}`}
+								style={{
+									backgroundColor: 'white',
+									padding: handle.active ? '32px' : '0',
+									borderRadius: '1rem',
+									transition: 'all 0.05s ease-out',
+								}}
+							></canvas>
+						</div>
 					</FullScreen>
 					{!showCategoryFilter && (
 						<Button

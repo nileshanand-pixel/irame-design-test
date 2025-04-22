@@ -1,3 +1,4 @@
+import SortingFixFeature from '@/lib/react-table';
 import {
 	getCoreRowModel,
 	getFacetedRowModel,
@@ -34,7 +35,7 @@ export const useDataTable = ({
 					},
 					onPaginationChange: setPagination,
 					onSortingChange: setSorting,
-			  }
+				}
 			: {}),
 		enableRowSelection,
 		getCoreRowModel: getCoreRowModel(),
@@ -51,8 +52,9 @@ export const useDataTable = ({
 					initialState: {
 						sorting: defaultSort,
 					},
-			  }
+				}
 			: {}),
+		_features: [SortingFixFeature]
 	};
 
 	if (enableRowSelection) {
