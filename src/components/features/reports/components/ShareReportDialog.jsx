@@ -18,19 +18,34 @@ import { toast } from 'sonner';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import AccessSkeletonList from './AccessSkeleton';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
+import { closeModal } from '@/redux/reducer/modalReducer';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { useReportId } from '../hooks/useReportId';
+import { updateReportStoreProp } from '@/redux/reducer/reportReducer';
 
-const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) => {
-	const [invitedEmails, setInvitedEmails] = useState([]);
-	const [inputValue, setInputValue] = useState('');
+const ShareReportDialog = React.memo(() => {
+	const dispatch = useDispatch();
+	const modalState = useSelector((state) => state.modalReducer);
 	const reportReducer = useSelector((state) => state.reportStoreReducer);
 	const authStoreReducer = useSelector((state) => state.authStoreReducer);
 	const utilReducer = useSelector((state) => state.utilReducer);
-	const dispatch = useDispatch();
 
-	const [currentUser] = useLocalStorage('userDetails'); 
+	const [invitedEmails, setInvitedEmails] = useState([]);
+	const [inputValue, setInputValue] = useState('');
+	const [currentUser] = useLocalStorage('userDetails');
 	const queryClient = useQueryClient();
+
+	const reportIdFromRoute = useReportId();
+	const selectedReport = reportReducer?.selectedReport;
+	const reportId = reportIdFromRoute || selectedReport?.report_id;
+
+	const handleClose = () => {
+		dispatch(closeModal('shareReport'));
+		dispatch(updateReportStoreProp([{ key: 'selectedReport', value: null }]));
+		setInvitedEmails([]);
+		setInputValue('');
+	};
 
 	const shareMutation = useMutation({
 		mutationFn: async (data) => {
@@ -45,28 +60,22 @@ const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) 
 				refetchActive: true,
 				refetchInactive: true,
 			});
+			handleClose();
 		},
 		onError: (err) => {
-			console.log('Error Sharing Report', err);
 			toast.error('Something went wrong while sharing report');
 		},
 	});
 
 	const queryFn = useCallback(() => {
-		if (!reportReducer?.selectedReport?.report_id) return;
-		return getReportAccessDetails(
-			getToken(),
-			reportReducer?.selectedReport?.report_id,
-		);
-	}, [reportReducer?.selectedReport?.report_id]);
+		if (!reportId) return;
+		return getReportAccessDetails(getToken(), reportId);
+	}, [reportId]);
 
 	const reportSharedData = useQuery({
-		queryKey: [
-			'get-report-user-access',
-			reportReducer?.selectedReport?.report_id,
-		],
+		queryKey: ['get-report-user-access', reportId],
 		queryFn,
-		enabled: !!reportReducer?.selectedReport?.report_id,
+		enabled: !!reportId,
 		retry: false,
 		refetchOnWindowFocus: false,
 	});
@@ -109,21 +118,24 @@ const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) 
 
 	const handleSave = useCallback(() => {
 		let currentuser_id = authStoreReducer?.user_id;
-		if(!currentuser_id){
+		if (!currentuser_id) {
 			currentuser_id = utilReducer?.sessionHistory?.[0]?.user_id;
 		}
-		if(!authStoreReducer?.user_id)dispatch(updateAuthStoreProp([{key: 'user_id', value: currentuser_id}]))
-		if(reportReducer?.selectedReport?.user_id !== currentuser_id){
+		if (!authStoreReducer?.user_id)
+			dispatch(
+				updateAuthStoreProp([{ key: 'user_id', value: currentuser_id }]),
+			);
+		if (selectedReport?.user_id !== currentuser_id) {
 			toast.error('You are not authorized for this operation!');
 			setInvitedEmails([]);
 			return;
 		}
 		shareMutation.mutate({
-			reportId: reportReducer?.selectedReport?.report_id,
+			reportId: reportId,
 			accesses: invitedEmails,
 		});
 		trackEvent(EVENTS_ENUM.REPORT_SHARED, EVENTS_REGISTRY.REPORT_SHARED);
-	}, [invitedEmails, reportReducer?.selectedReport?.report_id, shareMutation]);
+	}, [invitedEmails, reportId, shareMutation, selectedReport?.user_id]);
 
 	const isValidEmail = (email) => {
 		return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -203,7 +215,7 @@ const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) 
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={closeModal}>
+		<Dialog open={!!modalState.shareReport} onOpenChange={handleClose}>
 			<DialogContent className="sm:max-w-[500px]">
 				<DialogHeader className="border-b pb-3">
 					<DialogTitle>Share this Report</DialogTitle>
@@ -258,7 +270,7 @@ const ShareReportDialog = React.memo(({ open, setOpen, isLoading, closeModal }) 
 					<Button
 						onClick={handleSave}
 						className="rounded-lg hover:bg-purple-100 w-full hover:text-white hover:opacity-80"
-						disabled={!invitedEmails.length || shareMutation.isPending }
+						disabled={!invitedEmails.length || shareMutation.isPending}
 					>
 						{shareMutation.isPending ? (
 							<i className="bi-arrow-clockwise animate-spin me-2"></i>

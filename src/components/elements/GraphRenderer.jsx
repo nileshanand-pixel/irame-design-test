@@ -5,7 +5,7 @@ import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import { Button } from '../ui/button';
 import { GraphCategoryFilter } from './GraphCategoryFilter';
 import { debounce } from 'lodash';
-import { cn } from '@/lib/utils';
+import { cn, getChartType } from '@/lib/utils';
 
 const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 	const chartRef = useRef(null);
@@ -207,7 +207,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 			const ctx = document.getElementById(
 				`canvas_${identifierKey}_${graph.id}`,
 			);
-			const isPieChart = graph.type.toLowerCase() === 'pie';
+			const isPieChart = graph.type.toLowerCase() === 'pie' || 'doughnut';
 			const tempLoadedData = handle.active
 				? loadedData
 				: loadedData.slice(0, Math.min(21, loadedData.length));
@@ -216,8 +216,10 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 				? getCircularChartDatasets(tempLoadedData)
 				: getAxialChartDatasets(tempLoadedData, graph.y_axis);
 
+			const chartType = getChartType(graph);
+
 			chartRef.current = new Chart(ctx, {
-				type: graph.type.toLowerCase(),
+				type: chartType,
 				data: {
 					labels: finalDataObj.labels,
 					datasets: finalDataObj.data,
@@ -348,6 +350,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 							></canvas>
 						</div>
 					</FullScreen>
+
 					{!showCategoryFilter && (
 						<Button
 							size="icon"

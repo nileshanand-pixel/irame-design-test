@@ -96,7 +96,7 @@ export default function WorkflowPage() {
 
 	return (
 		<div className="h-full w-full overflow-hidden text-primary80">
-			<Breadcrumb items={breadcrumbItems} navigate={navigate} />
+			<Breadcrumb items={breadcrumbItems} />
 
 			<div className={mainContentClasses}>
 				<PanelGroup direction="horizontal" className="w-full h-full">

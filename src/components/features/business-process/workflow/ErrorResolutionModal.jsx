@@ -32,7 +32,6 @@ const ComboBoxOnFire = ({
 	}, [options, query]);
 
 	const handleSelect = (item, group) => {
-		console.log(item, group);
 		onSelection?.({
 			label: item.label,
 			description: item.description,

@@ -4,29 +4,16 @@ import GraphRenderer from '@/components/elements/GraphRenderer';
 import ScrollList from '@/components/elements/ScrollList';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { getSupportedGraphs } from '@/lib/utils';
 
 const MultiGraphCard = ({ data, isGraphLoading }) => {
 	const graphList = data?.content?.graph?.graphs || [];
 
-	const supportedChartTypes = [
-		'bar',
-		'line',
-		'scatter',
-		'bubble',
-		'pie',
-		'doughnut',
-		'polarArea',
-		'radar',
-	];
+	const supportedGraphsData = getSupportedGraphs(graphList);
 
-	const supportedGraphsData = graphList.filter((item) =>
-		supportedChartTypes.includes(item.type.toLowerCase()),
+	const [activeGraphTab, setActiveGraphTab] = useState(
+		supportedGraphsData?.[0]?.id || null,
 	);
-
-	const [activeGraphTab, setActiveGraphTab] = useState(supportedGraphsData?.[0]?.id || null);
-
-
-
 
 	return (
 		<div className="mb-4 w-full h-full">
@@ -55,12 +42,13 @@ const MultiGraphCard = ({ data, isGraphLoading }) => {
 										() => ({
 											dashboard_id: data?.dashboard_id,
 											query_id: data?.query_id,
-											dashboard_content_id: data?.dashboard_content_id,
+											dashboard_content_id:
+												data?.dashboard_content_id,
 											graphId: graph.id,
-											graphTitle: graph.title
+											graphTitle: graph.title,
 										}),
 									);
-									setActiveGraphTab(graph.id)
+									setActiveGraphTab(graph.id);
 								}}
 							>
 								{graph.title}

@@ -9,18 +9,7 @@ import GraphRenderer from './GraphRenderer';
 import ScrollList from './ScrollList';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
-
-
-const supportedChartTypes = [
-	'bar',
-	'line',
-	'scatter',
-	'bubble',
-	'pie',
-	'doughnut',
-	'polarArea',
-	'radar',
-];
+import { getSupportedGraphs } from '@/lib/utils';
 
 const GraphComponent = ({
 	data,
@@ -41,13 +30,10 @@ const GraphComponent = ({
 	const containerRef = useRef(null);
 	const [isOverflowing, setIsOverflowing] = useState(false);
 
-
-
-	const supportedGraphsData = graphList.filter((item) =>
-		supportedChartTypes.includes(item.type.toLowerCase()),
+	const supportedGraphsData = getSupportedGraphs(graphList);
+	const [activeGraphTab, setActiveGraphTab] = useState(
+		supportedGraphsData?.[0]?.id || null,
 	);
-	const [activeGraphTab, setActiveGraphTab] = useState(supportedGraphsData?.[0]?.id || null);
-
 
 	function generateColumns(keys) {
 		return keys?.map((key) => {
@@ -103,10 +89,6 @@ const GraphComponent = ({
 		}
 	}, [chatStoreReducer?.activateGraphOnLast]);
 
-
-
-
-
 	return (
 		<div className="mb-4">
 			{isGraphLoading ? (
@@ -126,10 +108,15 @@ const GraphComponent = ({
 									activeTab === item ? 'active-tab' : 'default-tab'
 								}`}
 								onClick={() => {
-									trackEvent(EVENTS_ENUM.GRAPH_TAB_CLICKED, EVENTS_REGISTRY.GRAPH_TAB_CLICKED, () => ({
-										total_graph_generated: graphList.length || 0
-									}))
-									setActiveTab(item)
+									trackEvent(
+										EVENTS_ENUM.GRAPH_TAB_CLICKED,
+										EVENTS_REGISTRY.GRAPH_TAB_CLICKED,
+										() => ({
+											total_graph_generated:
+												graphList.length || 0,
+										}),
+									);
+									setActiveTab(item);
 								}}
 							>
 								{item}
@@ -149,10 +136,14 @@ const GraphComponent = ({
 										} text-sm font-medium border rounded-3xl px-3 h-full py-2 my-3 cursor-pointer min-w-fit whitespace-nowrap`}
 										onClick={() => {
 											setActiveGraphTab(graph.id);
-											trackEvent(EVENTS_ENUM.GRAPH_VIEW_CHANGED, EVENTS_REGISTRY.GRAPH_VIEW_CHANGED, () => ({
-												graph_viewed_number: index,
-												graph_id: graph.id
-											}))
+											trackEvent(
+												EVENTS_ENUM.GRAPH_VIEW_CHANGED,
+												EVENTS_REGISTRY.GRAPH_VIEW_CHANGED,
+												() => ({
+													graph_viewed_number: index,
+													graph_id: graph.id,
+												}),
+											);
 										}}
 									>
 										{graph.title}
@@ -164,11 +155,13 @@ const GraphComponent = ({
 								{supportedGraphsData?.map(
 									(graph) =>
 										activeGraphTab === graph.id && (
-											<GraphRenderer
-												key={`${queryId}_${graph.id}`}
-												graph={graph}
-												identifierKey={queryId}
-											/>
+											<div className="w-full">
+												<GraphRenderer
+													key={`${queryId}_${graph.id}`}
+													graph={graph}
+													identifierKey={queryId}
+												/>
+											</div>
 										),
 								)}
 							</div>

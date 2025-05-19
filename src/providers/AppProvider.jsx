@@ -23,7 +23,7 @@ function AppProvider({ children }) {
 									toast: 'py-2 px-4 bg-white text-primary100',
 								},
 							}}
-							position = {"bottom-left"}
+							position = {"bottom-right"}
 						/>
 					</ErrorBoundary>
 				</Router>

@@ -26,6 +26,7 @@ import InputArea from '../InputArea';
 import ReportGenerationDialog from './components/ReportGenerationDialog';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
+import AddQueryFlow from '../../reports/components/AddQueryFlow';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');

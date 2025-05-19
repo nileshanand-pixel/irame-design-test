@@ -3,25 +3,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn, getToken } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { getDatasourceReports, getSharedReports } from '../service/reports.service';
+import { getDatasourceReports, getSharedReports, getUserReports } from '../service/reports.service';
 import ReportCardSkeleton from '../components/ReportCardSkeleton';
 import ReportCard from '../components/ReportCard';
 import { useRouter } from '@/hooks/useRouter';
 import EmptyState from '@/components/elements/EmptyState';
 import { getDataSourceById } from '../../configuration/service/configuration.service';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDispatch } from 'react-redux';
+import { openModal } from '@/redux/reducer/modalReducer';
 
 const ReportsInDatasource = () => {
 	const { query, navigate } = useRouter();
 	const [reports, setReports] = useState([]);
 	const [isFocused, setIsFocused] = useState(false);
 	const [search, setSearch] = useState('');
+	const dispatch = useDispatch();
 
 	const reportsQuery = useQuery({
 		queryKey: ['get-reports-by-datasource', query.datasourceId],
 		queryFn: () => getDatasourceReports(getToken(), query.datasourceId),
 		refetchInterval: 10000,
-		enabled: !!(query.datasourceId && query.datasourceId !== 'shared'),
+		enabled: !!(query.datasourceId && query.datasourceId !== 'shared' && query.datasourceId !== 'audit'),
 	});
 
 	const sharedReportsQuery = useQuery({
@@ -31,11 +34,17 @@ const ReportsInDatasource = () => {
 		enabled: !!(query.datasourceId && query.datasourceId === 'shared'),
 	});
 
+	const userAuditReports = useQuery({
+			queryKey: ['user-reports', getToken()],
+			queryFn: () => getUserReports(getToken()),
+			enabled: !!(query.datasourceId && query.datasourceId === 'audit'),
+	})
+
 	const datasourceQuery = useQuery({
 		queryKey: ['get-datasource', query.datasourceId],
 		queryFn: () => getDataSourceById(getToken(), query.datasourceId),
 		refetchInterval: 10000,
-		enabled: !!(query.datasourceId && query.datasourceId !== 'shared'),
+		enabled: !!(query.datasourceId && query.datasourceId !== 'shared' && query.datasourceId !== 'audit'),
 	});
 
 	const filteredList = useMemo(() => {
@@ -57,6 +66,12 @@ const ReportsInDatasource = () => {
 		}
 	}, [sharedReportsQuery.data]);
 
+	useEffect(() => {
+		if (query.datasourceId === 'audit' && userAuditReports?.data?.reports) {
+			setReports(userAuditReports?.data?.reports || []);
+		}
+	}, [userAuditReports.data]);
+
 	const emptyStateConfig = {
 		image: 'https://d2vkmtgu2mxkyq.cloudfront.net/empty-state.svg',
 		actionText: 'Create your first report by adding a new data source,',
@@ -75,7 +90,6 @@ const ReportsInDatasource = () => {
 						className="text-2xl font-semibold cursor-pointer"
 						onClick={() => {
 							navigate('/app/reports/datasources');
-							queryClient;
 						}}
 					>
 						Reports /
@@ -91,6 +105,11 @@ const ReportsInDatasource = () => {
 					{query.datasourceId === 'shared' && (
 						<div className="pb-1 text-sm font-medium align-bottom">
 							Shared
+						</div>
+					)}
+					{query.datasourceId === 'audit' && (
+						<div className="pb-1 text-sm font-medium align-bottom">
+							Audit Reports
 						</div>
 					)}
 				</div>
@@ -116,7 +135,8 @@ const ReportsInDatasource = () => {
 					<Button
 						variant="secondary"
 						className="w-fit rounded-lg bg-purple-8 hover:bg-purple-16 text-purple-100 font-medium"
-						disabled={true}
+						disabled={false}
+						onClick={() => dispatch(openModal('createReport'))}
 					>
 						Create Report
 					</Button>

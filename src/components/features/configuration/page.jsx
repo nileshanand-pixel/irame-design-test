@@ -279,9 +279,7 @@ const Configuration = () => {
 
 	const handleInputClick = (e) => {
 		e.preventDefault();
-		console.log(isAllFilesUploaded(), isLoading);
 		if (!isAllFilesUploaded() || isLoading) return;
-		// console.log(first)
 		inputRef.current.click();
 		trackEvent(
 			EVENTS_ENUM.UPLOAD_DATASOURCE_CLICKED,
@@ -435,34 +433,34 @@ const Configuration = () => {
 						</div>
 					)}
 					{/* Render Files and their progress */}
-					<div className='max-h-40 overflow-y-auto'>
-					{Array.isArray(files) &&
-						files?.map((file, idx) => (
-							<div
-								className="px-4 py-2.5 z-10 bg-purple-4 rounded-lg mt-2"
-								key={file.name}
-							>
-								<div className="flex justify-between">
-									<div className="flex gap-2 items-center">
-										<img
-											src={getFileIcon(file?.name)}
-											alt="file-icon"
-											className="size-6"
-										/>
-										<div className="text-sm text-purple-100 flex">
-											{file.name || file.file_name}&nbsp;
-											{file.size ? (
-												<p className="text-sm font-medium text-primary80">{`(${formatFileSize(
-													file?.size,
-												)})`}</p>
-											) : null}
+					<div className="max-h-40 overflow-y-auto">
+						{Array.isArray(files) &&
+							files?.map((file, idx) => (
+								<div
+									className="px-4 py-2.5 z-10 bg-purple-4 rounded-lg mt-2"
+									key={file.name}
+								>
+									<div className="flex justify-between">
+										<div className="flex gap-2 items-center">
+											<img
+												src={getFileIcon(file?.name)}
+												alt="file-icon"
+												className="size-6"
+											/>
+											<div className="text-sm text-purple-100 flex">
+												{file.name || file.file_name}&nbsp;
+												{file.size ? (
+													<p className="text-sm font-medium text-primary80">{`(${formatFileSize(
+														file?.size,
+													)})`}</p>
+												) : null}
+											</div>
 										</div>
-									</div>
-									<div className="flex items-center text-sm font-medium">
-										{progress[file.name] < 100 ? (
-											<p className="mr-4">uploading...</p>
-										) : null}
-										{/* <div
+										<div className="flex items-center text-sm font-medium">
+											{progress[file.name] < 100 ? (
+												<p className="mr-4">uploading...</p>
+											) : null}
+											{/* <div
 										onClick={() =>
 											window.open(file.file_url, '_blank')
 										}
@@ -470,36 +468,45 @@ const Configuration = () => {
 									>
 										<i className="bi-download text-lg text-primary80  font-semibold cursor-pointer "></i>
 									</div> */}
-										{file.url && (
+											{file.url && (
+												<div
+													onClick={(e) =>
+														handleRemoveFile(
+															e,
+															file,
+															idx,
+														)
+													}
+													className="text-md px-2 py-1 rounded-md bg-purple-8  hover:bg-purple-8 ml-2"
+												>
+													<i className="bi-x text-xl text-primary80  font-semibold cursor-pointer"></i>
+												</div>
+											)}
+										</div>
+									</div>
+									{progress[file.name] <= 99 ? (
+										<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
 											<div
-												onClick={(e) =>
-													handleRemoveFile(e, file, idx)
-												}
-												className="text-md px-2 py-1 rounded-md bg-purple-8  hover:bg-purple-8 ml-2"
-											>
-												<i className="bi-x text-xl text-primary80  font-semibold cursor-pointer"></i>
-											</div>
-										)}
-									</div>
+												className="h-full bg-purple-100"
+												style={{
+													width: `${progress[file.name]}%`,
+												}}
+											></div>
+										</div>
+									) : null}
 								</div>
-								{progress[file.name] <= 99 ? (
-									<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
-										<div
-											className="h-full bg-purple-100"
-											style={{
-												width: `${progress[file.name]}%`,
-											}}
-										></div>
-									</div>
-								) : null}
-							</div>
-						))}
+							))}
 					</div>
 				</div>
 			</div>
 
 			{/* Right Section Manage Data Source */}
-			<div className={cn("border flex flex-col rounded-3xl py-4 mx-8  col-span-12 shadow-1xl flex-1 mb-4 ", !showForm && 'overflow-y-hidden')}>
+			<div
+				className={cn(
+					'border flex flex-col rounded-3xl py-4 mx-8  col-span-12 shadow-1xl flex-1 mb-4 ',
+					!showForm && 'overflow-y-hidden',
+				)}
+			>
 				<div className="flex flex-none px-8 sm:flex-row flex-col gap-4 justify-between sm:items-center mb-4 pb-4">
 					<div>
 						<h3 className="text-primary80 font-semibold text-xl">
@@ -539,7 +546,7 @@ const Configuration = () => {
 						</div>
 					)}
 					<div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-						{filteredList.length &&
+						{filteredList.length > 0 &&
 							filteredList.map((source) => (
 								<div
 									className="flex justify-between items-center bg-purple-4 p-4 rounded-lg gap-4"

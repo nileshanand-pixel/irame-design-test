@@ -29,3 +29,6 @@ dist-ssr
 *.pem
 
 **/.DS_Store
+**todos.md
+.roo
+.roomodes

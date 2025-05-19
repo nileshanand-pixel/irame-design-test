@@ -12,6 +12,7 @@ import { pdfjs } from 'react-pdf';
 import useBreakpoint from '@/hooks/useBreakpoint';
 import { useQuery } from '@tanstack/react-query';
 import { authUserDetails } from './features/login/service/auth.service';
+import Modals from './Modals';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -98,6 +99,7 @@ const Layout = ({ children }) => {
 				<GlobalPollReports />
 			</main>
 			{/* <FreshdeskWidget/> */}
+			<Modals/>
 		</div>
 	);
 };

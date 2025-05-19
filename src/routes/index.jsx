@@ -16,6 +16,7 @@ import TermsModal from '@/components/TermsModal';
 import BusinessProcessPage from '@/components/features/business-process/page';
 import WorkflowPage from '@/components/features/business-process/workflow/page';
 import SingleBusinessProcessPage from '@/components/features/business-process/single-business-process/SingleBusinessProcess';
+import SingleReportPage from '@/components/features/reports/single-report/Page';
 
 
 const AppRoutes = () => {
@@ -96,6 +97,14 @@ const AppRoutes = () => {
 									element={
 										<ProtectedRoute
 											element={<ReportFolders />}
+										/>
+									}
+								/>
+								<Route
+									path="reports/:reportId"
+									element={
+										<ProtectedRoute
+											element={< SingleReportPage/>}
 										/>
 									}
 								/>

@@ -3,15 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn, getToken } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { getDatasources, getSharedReports } from './service/reports.service';
+import {
+	getDatasources,
+	getSharedReports,
+	getUserReports,
+} from './service/reports.service';
 import EmptyState from '@/components/elements/EmptyState';
 import DataSourceCard from './components/DataSourceCard';
 import DataSourceCardSkeleton from './components/DatasourceCardSkeleton';
+import { useDispatch } from 'react-redux';
+import { openModal } from '@/redux/reducer/modalReducer';
 
 const ReportFolders = () => {
 	const [datasources, setDatasources] = useState([]);
 	const [isFocused, setIsFocused] = useState(false);
 	const [search, setSearch] = useState('');
+	const dispatch = useDispatch();
 
 	const datasourcesQuery = useQuery({
 		queryKey: ['get-datasources-reports'],
@@ -22,6 +29,12 @@ const ReportFolders = () => {
 	const sharedReportsQuery = useQuery({
 		queryKey: ['get-shared-reports', getToken()],
 		queryFn: () => getSharedReports(getToken()),
+		refetchInterval: 600000,
+	});
+
+	const userAuditReports = useQuery({
+		queryKey: ['user-reports', getToken()],
+		queryFn: () => getUserReports(getToken()),
 		refetchInterval: 600000,
 	});
 
@@ -45,11 +58,23 @@ const ReportFolders = () => {
 					report_count: sharedReports.length,
 					reports: sharedReports,
 				};
-				updatedDatasources = [sharedDatasource, ...updatedDatasources];
+				if (updatedDatasources[0].datasource_id !== 'shared')
+					updatedDatasources = [sharedDatasource, ...updatedDatasources];
+			}
+			const auditReports = userAuditReports.data?.reports || [];
+			if (auditReports.length > 0) {
+				const auditReportDatasource = {
+					datasource_id: 'audit',
+					datasource_name: 'Audit Reports',
+					report_count: auditReports.length,
+					reports: auditReports,
+				};
+				if (updatedDatasources[0].datasource_id !== 'audit')
+					updatedDatasources.unshift(auditReportDatasource);
 			}
 			setDatasources(updatedDatasources);
 		}
-	}, [datasourcesQuery.data, sharedReportsQuery.data]);
+	}, [datasourcesQuery.data, sharedReportsQuery.data, userAuditReports.data]);
 
 	const emptyStateConfig = {
 		image: 'https://d2vkmtgu2mxkyq.cloudfront.net/empty-state.svg',
@@ -87,7 +112,8 @@ const ReportFolders = () => {
 					<Button
 						variant="secondary"
 						className="w-fit rounded-lg bg-purple-8 hover:bg-purple-16 text-purple-100 font-medium"
-						disabled={true}
+						disabled={false}
+						onClick={() => dispatch(openModal('createReport'))}
 					>
 						Create Report
 					</Button>

@@ -1,9 +1,3 @@
-// interface IDropdownOptions {
-// 	type: string | 'item' | 'separator';
-// 	label?: string;
-// 	onClick?: any;
-// }
-
 import { Button } from '../ui/button';
 import {
 	DropdownMenu,
@@ -13,9 +7,9 @@ import {
 	DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 
-const DotsDropdown = ({ options }) => {
+const DotsDropdown = ({ options, align="end" }) => {
 	return (
-		<DropdownMenu>
+		<DropdownMenu className="relative">
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" size="icon" className=" h-9 w-6">
 					<span className="material-symbols-outlined text-primary100 cursor-pointer ">
@@ -24,17 +18,22 @@ const DotsDropdown = ({ options }) => {
 					<span className="sr-only">Open menu</span>
 				</Button>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end" className="w-[160px]">
-				{options?.map((i) => (
-					<>
-						{i.type === 'item' && (
-							<DropdownMenuItem onClick={i.onClick}>
-								{i.label}
-							</DropdownMenuItem>
-						)}
-						{i.type === 'separator' && <DropdownMenuSeparator />}
-					</>
-				))}
+			<DropdownMenuContent align={align} className="text-primary80 p-0 max-h-60 overflow-y-auto">
+				{options?.map((i) => {
+					const { icon: Icon, label, type, onClick, show } = i;
+					if(!show)return;
+					return (
+						< >
+							{type === 'item' && (
+								<DropdownMenuItem key={label} className='flex gap-2 px-3 py-1.5 cursor-pointer focus:hover:bg-purple-4' onClick={onClick}>
+									{Icon ? Icon: null}
+									<span className='font-medium text-base'>{label}</span>
+								</DropdownMenuItem>
+							)}
+							{i.type === 'separator' && <DropdownMenuSeparator />}
+						</>
+					);
+				})}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);

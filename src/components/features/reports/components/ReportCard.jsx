@@ -10,9 +10,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useDispatch } from 'react-redux';
 import { updateReportStoreProp } from '@/redux/reducer/reportReducer';
-import ShareReportDialog from './ShareReportDialog';
+import { openModal } from '@/redux/reducer/modalReducer';
 import Lottie from '@/components/elements/loading/LottieRender';
 import { useRouter } from '@/hooks/useRouter';
+import { useNavigate } from 'react-router-dom';
 
 // Lottie animation URL
 const LOADING_ANIMATION_URL =
@@ -23,7 +24,7 @@ const ReportCard = ({ report }) => {
 	const [isHovered, setIsHovered] = useState(false);
 	const FALLBACK_PREVIEW_URL = '/assets/bgs/ira-logo.svg';
 	const dispatch = useDispatch();
-	const [shareModalOpen, setShareModalOpen] = useState(false);
+	const navigate = useNavigate();
 	const [imageSrc, setImageSrc] = useState(
 		report?.data?.preview_image_url || FALLBACK_PREVIEW_URL,
 	);
@@ -32,10 +33,10 @@ const ReportCard = ({ report }) => {
 		window.open(report.data.file_url, '_blank');
 	};
 
-	const handleShareClick = async () => {
-		await setTimeout(() => {}, 500);
+	const handleShareClick = (e) => {
+		if (e) e.stopPropagation();
 		dispatch(updateReportStoreProp([{ key: 'selectedReport', value: report }]));
-		setShareModalOpen(true);
+		dispatch(openModal('shareReport'));
 	};
 
 	useEffect(() => {
@@ -81,6 +82,10 @@ const ReportCard = ({ report }) => {
 	return (
 		<div
 			className={`rounded-lg hover:border px-4 pt-4 pb-2 ${report?.datasource_name ? 'min-h-[330px]' : 'min-h-[280px]'} w-full bg-purple-4 hover:bg-purple-8 text-[#26064ACC]`}
+			onClick={() =>
+				report?.type === 'user_generated' &&
+				navigate('/app/reports/' + report?.report_id)
+			}
 		>
 			<div
 				className="relative pb-[56.25%] overflow-hidden rounded-lg"
@@ -147,7 +152,10 @@ const ReportCard = ({ report }) => {
 					{report.data.summary}
 				</p>
 				{report?.datasource_name && (
-					<div title={report?.datasource_name} className="mt-4 text-gray-400 text-sm">
+					<div
+						title={report?.datasource_name}
+						className="mt-4 text-gray-400 text-sm"
+					>
 						<p className="text-primary80 font-medium max-w-[180px] lg:max-w-52 truncate flex items-center">
 							<img
 								src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
@@ -159,12 +167,6 @@ const ReportCard = ({ report }) => {
 					</div>
 				)}
 			</div>
-			{shareModalOpen && (
-				<ShareReportDialog
-					open={shareModalOpen}
-					closeModal={() => setShareModalOpen(false)}
-				/>
-			)}
 		</div>
 	);
 };
