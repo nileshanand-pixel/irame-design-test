@@ -17,6 +17,7 @@ import BusinessProcessPage from '@/components/features/business-process/page';
 import WorkflowPage from '@/components/features/business-process/workflow/page';
 import SingleBusinessProcessPage from '@/components/features/business-process/single-business-process/SingleBusinessProcess';
 import SingleReportPage from '@/components/features/reports/single-report/Page';
+import HelpMenu from '@/components/elements/HelpMenu';
 
 
 const AppRoutes = () => {
@@ -139,6 +140,7 @@ const AppRoutes = () => {
 				/>
 				<Route path="test" element={<TestRoute />} />
 			</Routes>
+			<HelpMenu/>
 		</>
 	);
 };
