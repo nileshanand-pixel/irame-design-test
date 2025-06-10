@@ -17,6 +17,7 @@ import InputArea from './InputArea';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { toast } from 'sonner';
+import { queryClient } from '@/lib/react-query';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -171,6 +172,7 @@ const NewChat = () => {
 							datasource_id: query.dataSourceId,
 						}),
 					);
+					queryClient.invalidateQueries(['chat-history']);
 				})
 				.catch((error) => {
 					navigate('/app/new-chat');

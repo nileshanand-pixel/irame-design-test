@@ -558,11 +558,7 @@ const Workzone = () => {
 						child_no: parseInt(lastAns.child_no) + 1,
 					}),
 				);
-
-				queryClient.invalidateQueries(['chat-history'], {
-					refetchActive: true,
-					refetchInactive: true,
-				});
+				queryClient.invalidateQueries(['chat-history']);
 			});
 
 			setResponseTimeElapsed(0);
@@ -649,10 +645,7 @@ const Workzone = () => {
 					]),
 				);
 
-				queryClient.invalidateQueries(['chat-history'], {
-					refetchActive: true,
-					refetchInactive: true,
-				});
+				queryClient.invalidateQueries(['chat-history']);
 			});
 
 			setResponseTimeElapsed(0);
@@ -870,6 +863,8 @@ const Workzone = () => {
 				answers?.[answers?.length - 1]?.session_id,
 				'done',
 			);
+			queryClient.invalidateQueries(['chat-history']);
+
 			setInputDisabled(false);
 			return;
 		}

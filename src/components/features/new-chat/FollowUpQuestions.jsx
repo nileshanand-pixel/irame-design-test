@@ -8,6 +8,7 @@ import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { Button } from '@/components/ui/button';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM } from '@/config/analytics-events';
+import { queryClient } from '@/lib/react-query';
 
 const FollowUpQuestions = ({
 	question,
@@ -61,14 +62,20 @@ const FollowUpQuestions = ({
 						{ key: 'activeQueryId', value: res?.query_id },
 					]),
 				);
-				trackEvent(EVENTS_ENUM.FOLLOW_UP_QUERY_INITIATED, EVENTS_REGISTRY.FOLLOW_UP_QUERY_INITIATED, (() => ({
-					child_no: parseInt(answerResp.child_no) + 1,
-					datasource_id: answerResp?.datasource_id,
-					parent_query_id: answerResp?.query_id,
-					query: question,
-					session_id: answerResp?.session_id,
-					query_id: res.query_id
-				})))
+				queryClient.invalidateQueries(['chat-history']);
+
+				trackEvent(
+					EVENTS_ENUM.FOLLOW_UP_QUERY_INITIATED,
+					EVENTS_REGISTRY.FOLLOW_UP_QUERY_INITIATED,
+					() => ({
+						child_no: parseInt(answerResp.child_no) + 1,
+						datasource_id: answerResp?.datasource_id,
+						parent_query_id: answerResp?.query_id,
+						query: question,
+						session_id: answerResp?.session_id,
+						query_id: res.query_id,
+					}),
+				);
 			});
 
 			setResponseTimeElapsed(0);
@@ -83,15 +90,16 @@ const FollowUpQuestions = ({
 	};
 
 	return (
-		<div onClick={handlePrompt} className="relative text-primary80 bg-white  border-b py-4 border-gray-200 cursor-pointer  w-full ">
+		<div
+			onClick={handlePrompt}
+			className="relative text-primary80 bg-white  border-b py-4 border-gray-200 cursor-pointer  w-full "
+		>
 			<div className="flex items-center justify-between gap-4">
 				<img
 					src={`https://d2vkmtgu2mxkyq.cloudfront.net/followup_questions.svg`}
 					className="size-12"
 				/>
-				<div className=" flex-1 text-base font-medium  pr-4">
-					{question}
-				</div>
+				<div className=" flex-1 text-base font-medium  pr-4">{question}</div>
 
 				<Button
 					onClick={(e) => {

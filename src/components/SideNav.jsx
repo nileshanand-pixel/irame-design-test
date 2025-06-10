@@ -63,6 +63,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		queryKey: ['chat-history'],
 		queryFn: fetchUserSession,
 		enabled: !!getToken(),
+		refetchInterval: 10000
 	});
 
 	const { data: recentWorkflowRuns, isLoading: isBusinessLoading } = useQuery({
@@ -225,9 +226,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const renderSession = (session) => {
 		const isActiveSession =
 			chatStoreReducer?.activeChatSession?.id === session.session_id;
-		let showSpinner = isActiveSession
-			? chatStoreReducer?.activeChatSession?.status !== 'done'
-			: session?.status !== 'done';
+		let showSpinner =  session?.status !== 'done';
 		const sessionIconUrl = session?.metadata?.workflow_run_id
 			? 'https://d2vkmtgu2mxkyq.cloudfront.net/sidenav_workflow_icon.svg'
 			: 'https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg';
