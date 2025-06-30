@@ -58,7 +58,7 @@ const ReportFolders = () => {
 					report_count: sharedReports.length,
 					reports: sharedReports,
 				};
-				if (updatedDatasources[0].datasource_id !== 'shared')
+				if (updatedDatasources[0]?.datasource_id !== 'shared')
 					updatedDatasources = [sharedDatasource, ...updatedDatasources];
 			}
 			const auditReports = userAuditReports.data?.reports || [];
@@ -69,7 +69,7 @@ const ReportFolders = () => {
 					report_count: auditReports.length,
 					reports: auditReports,
 				};
-				if (updatedDatasources[0].datasource_id !== 'audit')
+				if (updatedDatasources[0]?.datasource_id !== 'audit')
 					updatedDatasources.unshift(auditReportDatasource);
 			}
 			setDatasources(updatedDatasources);
