@@ -2,9 +2,10 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import { getWorkflowRunDetails } from '../service/workflow.service';
+import { getWorkflowRunDetails } from '../../service/workflow.service';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { getToken } from '@/lib/utils';
 
 const WorkflowPlan = ({ plan: initialPlan, disabled }) => {
 	const { workflowId } = useParams();
@@ -14,7 +15,15 @@ const WorkflowPlan = ({ plan: initialPlan, disabled }) => {
 	const { data: runDetails } = useQuery({
 		queryKey: ['workflow-run-details', runId],
 		queryFn: () => getWorkflowRunDetails(getToken(), workflowId, runId),
-		enabled: !!runId,
+		enabled: !initialPlan && !!runId,
+		refetchInterval: ({ state }) => {
+			const data = state?.data;
+			if (!runId) return false;
+			if (!data) return 2000;
+			if (data.status === 'IN_QUEUE' || data.status === 'COLUMN_MAPPING_DONE')
+				return 2000;
+			return false;
+		},
 	});
 
 	// Directly use the plan without modifications

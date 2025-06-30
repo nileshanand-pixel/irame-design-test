@@ -10,7 +10,7 @@ import { queryClient } from '@/lib/react-query';
 import { useReportId } from '../hooks/useReportId';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
 
-export default function QueryList({ reportDetails }) {
+export default function QueryList({ reportDetails, pdfMode }) {
 	const [cards, setCards] = useState([]);
 	const reportId = useReportId();
 	const { isOwner } = useReportPermission();
@@ -68,52 +68,70 @@ export default function QueryList({ reportDetails }) {
 	};
 
 	return (
-		<div className="mt-8 -ml-6 overflow-x-hidden w-full">
-			<DragDropContext onDragEnd={handleDragEnd}>
-				<Droppable droppableId="query-list">
-					{(provided) => (
-						<div
-							{...provided.droppableProps}
-							ref={provided.innerRef}
-							className="space-y-8"
-						>
-							{cards.map((card, index) => (
-								<Draggable
-									key={card.external_id}
-									draggableId={String(card.external_id)}
-									index={index}
-									isDragDisabled={!isOwner}
-								>
-									{(provided) => (
-										<div
-											ref={provided.innerRef}
-											{...provided.draggableProps}
-											className="flex items-center gap-2"
-										>
-											<div
-												{...provided.dragHandleProps}
-												className={cn("cursor-grab", 
-													!isOwner && 'cursor-not-allowed'
-												)}
-												
-											>
-												<DotsSixVertical size={20} />
-											</div>
-											<div className="flex-1 overflow-x-hidden">
-												<QueryCard
-													report={reportDetails.report}
-													card={card}
-												/>
-											</div>
-										</div>
-									)}
-								</Draggable>
-							))}
-							{provided.placeholder}
+		<div
+			className={cn('mt-8  overflow-x-hidden w-full', pdfMode ? '' : '-ml-6')}
+		>
+			{pdfMode ? (
+				<div className="flex flex-col space-y-8">
+					{cards.map((card) => (
+						<div className="flex-1 overflow-x-hidden">
+							<QueryCard
+								key={card.external_id}
+								report={reportDetails.report}
+								card={card}
+								pdfMode
+							/>
 						</div>
-					)}
-				</Droppable>
-			</DragDropContext>
+					))}
+				</div>
+			) : (
+				<DragDropContext onDragEnd={handleDragEnd}>
+					<Droppable droppableId="query-list">
+						{(provided) => (
+							<div
+								{...provided.droppableProps}
+								ref={provided.innerRef}
+								className="space-y-8"
+							>
+								{cards.map((card, index) => (
+									<Draggable
+										key={card.external_id}
+										draggableId={String(card.external_id)}
+										index={index}
+										isDragDisabled={!isOwner}
+									>
+										{(provided) => (
+											<div
+												ref={provided.innerRef}
+												{...provided.draggableProps}
+												className="flex items-center gap-2"
+											>
+												<div
+													{...provided.dragHandleProps}
+													className={cn(
+														'cursor-grab',
+														!isOwner &&
+															'cursor-not-allowed',
+													)}
+												>
+													<DotsSixVertical size={20} />
+												</div>
+												<div className="flex-1 overflow-x-hidden">
+													<QueryCard
+														report={reportDetails.report}
+														card={card}
+													/>
+												</div>
+											</div>
+										)}
+									</Draggable>
+								))}
+								{provided.placeholder}
+							</div>
+						)}
+					</Droppable>
+				</DragDropContext>
+			)}
 		</div>
 	);
 }

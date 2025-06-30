@@ -1,6 +1,6 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
 import ThemeToggle from './ThemeToggle';
-import { fullLogout, logout } from './features/login/service/auth.service';
+import { fullLogout } from './features/login/service/auth.service';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import {
 	DropdownMenu,

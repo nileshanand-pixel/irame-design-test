@@ -1,5 +1,5 @@
 import React from 'react';
-import Tooltip from '../../reports/components/Tooltip';
+import Tooltip from '@/components/features/reports/components/Tooltip';
 import capitalize from 'lodash.capitalize';
 
 const VariablesSection = ({ variables, onVariablesChange }) => {

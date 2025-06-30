@@ -29,7 +29,7 @@ const ReportHero = ({ reportDetails }) => {
 			</h1>
 
 			{description && (
-				<div className="text-muted-foreground text-base leading-relaxed">
+				<div className="text-muted-foreground text-sm leading-relaxed">
 					{capitalize(description)}
 				</div>
 			)}

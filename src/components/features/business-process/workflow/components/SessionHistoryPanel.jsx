@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { getWorkflowRuns } from '../service/workflow.service';
+import { getWorkflowRuns } from '../../service/workflow.service';
 import { getToken } from '@/lib/utils';
 
 const getStatusStyles = (status) => {

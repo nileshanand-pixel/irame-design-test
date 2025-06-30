@@ -9,21 +9,30 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import Breadcrumb from './Breadcrumb';
-import { MoreVertical, Share2 } from 'lucide-react';
+import { MoreVertical, Share2, Copy } from 'lucide-react';
 import { BoxArrowDown, FilePdf, Trash } from '@phosphor-icons/react';
 import { ReportStatusDropdown } from './ReportStatusDropdown';
 import { updateReportStoreProp } from '@/redux/reducer/reportReducer';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
+import { toast } from 'sonner';
 
-export default function ReportHeader({ report }) {
+export default function ReportHeader({ report, onDownload }) {
 	const [status, setStatus] = useState(report.status);
+	const [isDownloading, setIsDownloading] = useState(false); // <-- Add this
 	const dispatch = useDispatch();
 	const { isOwner } = useReportPermission();
 
 	if (!report) return null;
 
-	const handleDownload = () => {
-		alert('implement download');
+	const handleDownload = async () => {
+		setIsDownloading(true);
+		toast.success('Pdf generation started');
+		try {
+			if (onDownload) await onDownload();
+		} finally {
+			setIsDownloading(false);
+			toast.success('Pdf downloaded');
+		}
 	};
 
 	const handleDelete = () => {
@@ -39,15 +48,26 @@ export default function ReportHeader({ report }) {
 		dispatch(openModal('shareReport'));
 	};
 
+	const handleCopy = () => {
+		navigator.clipboard.writeText(report.report_id)
+			.then(() => {
+				toast.success("Report Id copied to clipboard!")
+			})
+			.catch(() => {
+				toast.error('Failed to copy!');
+			});
+	};
+
 	const ACTIONS_CONFIG = [
 		{
 			id: 'download',
-			label: 'Download',
+			label: isDownloading ? 'Downloading...' : 'Download',
 			icon: BoxArrowDown,
 			textButton: false,
 			variant: 'ghost',
 			onClick: handleDownload,
-			show: false,
+			show: true,
+			loading: isDownloading, // <-- Add this
 		},
 		{
 			id: 'delete',
@@ -82,7 +102,12 @@ export default function ReportHeader({ report }) {
 
 	return (
 		<header className="flex w-full items-center justify-between gap-16 border-b py-2">
-			<Breadcrumb reportName={report.name} />
+			<div className="flex items-end max-w-[75%]">
+				<Breadcrumb reportName={report.name} />
+				<Button variant="transparent" onClick={handleCopy} size="iconSm">
+					<Copy className="size-4" />
+				</Button>
+			</div>
 
 			<div className="flex items-center gap-2">
 				<ReportStatusDropdown
@@ -101,6 +126,7 @@ export default function ReportHeader({ report }) {
 							onClick,
 							textButton,
 							variant,
+							loading,
 						}) => (
 							<Button
 								key={id}
@@ -110,8 +136,13 @@ export default function ReportHeader({ report }) {
 								className={
 									textButton ? 'px-6 py-2 rounded-lg gap-2' : ''
 								}
+								disabled={loading} // <-- Disable while loading
 							>
-								{!textButton && <Icon className="size-5" />}
+								{loading ? (
+									<span className="animate-spin mr-2 w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full"></span>
+								) : (
+									!textButton && <Icon className="size-8" />
+								)}
 								{textButton && <span>{label}</span>}
 							</Button>
 						),

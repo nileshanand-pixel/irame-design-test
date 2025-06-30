@@ -8,7 +8,7 @@ import { v4 as uuid } from 'uuid';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 
-import { uploadFile as uploadFileHelper } from '../../configuration/service/configuration.service';
+import { uploadFile as uploadFileHelper } from '@/components/features/configuration/service/configuration.service'; 
 const gradientStyle = {
 	background: `
 linear-gradient(180deg, rgba(106, 18, 205, 0.02) 0%, rgba(106, 18, 205, 0.08) 100%)`,

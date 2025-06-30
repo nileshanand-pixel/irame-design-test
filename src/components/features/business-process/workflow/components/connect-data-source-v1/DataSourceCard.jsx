@@ -13,18 +13,19 @@ import {
 	CardContent,
 } from '@/components/ui/card';
 import { ChevronRight, RefreshCw, AlertCircle } from 'lucide-react';
-import QueueStatus from '../../new-chat/QueueStatus';
+import QueueStatus from '@/components/features/new-chat/QueueStatus';
 import { ErrorResolutionModal } from './ErrorResolutionModal';
 import VariablesSection from './VariablesSection';
 import { DataSourceSelector } from './DatasourceSelector';
-import Tooltip from '../../reports/components/Tooltip';
+import Tooltip from '@/components/features/reports/components/Tooltip';
 
 import {
 	clarifyWorkFlowRun,
 	getWorkflowRunDetails,
 	initiateWorkflowCheck,
-} from '../service/workflow.service';
-import { getDataSourceById } from '../../configuration/service/configuration.service';
+} from '../../../service/workflow.service';
+
+import { getDataSourceById } from '@/components/features/configuration/service/configuration.service';
 
 import { getFileIcon, getToken } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';

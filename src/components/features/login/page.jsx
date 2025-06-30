@@ -7,7 +7,7 @@ import LoginForm from './LoginForm';
 import { COGNITO_CLIENT_ID, GOOGLE_AUTH_API_URL } from '@/config';
 import { grantType } from '@/config/auth.config';
 import { toast } from 'sonner';
-import { authUserDetails, login, LoginWithRefreshToken } from './service/auth.service';
+import { authUserDetails, fullLogout, login, LoginWithRefreshToken, refreshFailureLogout } from './service/auth.service';
 import BoxLoader from '@/components/elements/loading/BoxLoader';
 import { getUserDetailsFromToken, setupAuthCookies } from '@/lib/cookies';
 import useAuth from '@/hooks/useAuth';
@@ -175,6 +175,7 @@ const SignInSignUp = () => {
 				EVENTS_ENUM.SIGN_IN_PAGE_LOADED,
 				EVENTS_REGISTRY.SIGN_IN_PAGE_LOADED,
 			);
+			await refreshFailureLogout();
 			return;
 		}
 		setIsLoading(true);

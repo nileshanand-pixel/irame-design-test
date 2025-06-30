@@ -31,6 +31,11 @@ export const getToken = () => {
 	return token ? token : tokenCookie;
 };
 
+export const getRefreshToken = () => {
+	const token = Cookies.get('refresh_token');
+	return token;
+};
+
 export const getInitials = (user_name) => {
 	if (!user_name) return;
 	const words = user_name.split(' ');
@@ -95,6 +100,22 @@ export const getPdfPageCount = async (url) => {
 		console.error('Error fetching PDF page count:', error);
 		return 0; // Fallback in case of an error
 	}
+
+};
+
+export const base64ToBlob = (base64, mimeType) => {
+	const byteCharacters = atob(base64);
+	const byteArrays = [];
+	for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+		const slice = byteCharacters.slice(offset, offset + 512);
+		const byteNumbers = new Array(slice.length);
+		for (let i = 0; i < slice.length; i++) {
+			byteNumbers[i] = slice.charCodeAt(i);
+		}
+		const byteArray = new Uint8Array(byteNumbers);
+		byteArrays.push(byteArray);
+	}
+	return new Blob(byteArrays, { type: mimeType });
 };
 
 export const downloadCsvWithCustomName = async ({
@@ -126,7 +147,9 @@ export const downloadCsvWithCustomName = async ({
 
 export const getSupportedGraphs = (graphList = []) => {
 	if (!graphList.length) return [];
-	const supportedTypesLower = new Set(supportedChartTypes.map(type => type.toLowerCase()));
+	const supportedTypesLower = new Set(
+		supportedChartTypes.map((type) => type.toLowerCase()),
+	);
 	return graphList.filter((item) => {
 		const itemType = item.type?.toLowerCase() || '';
 		return supportedTypesLower.has(itemType);
@@ -134,6 +157,6 @@ export const getSupportedGraphs = (graphList = []) => {
 };
 
 export const getChartType = (graph) => {
- if(!graph && !graph?.type)return;
- return graph.type.includes('polarArea') ? "polarArea": graph.type.toLowerCase()
+	if (!graph && !graph?.type) return;
+	return graph.type.includes('polarArea') ? 'polarArea' : graph.type.toLowerCase();
 }

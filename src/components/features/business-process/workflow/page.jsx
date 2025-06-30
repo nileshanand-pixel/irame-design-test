@@ -6,18 +6,18 @@ import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { getToken } from '@/lib/utils';
-import SessionHistoryPanel from './SessionHistoryPanel';
-import { WorkflowPageSkeleton } from './WorkflowPageSkeleton';
+import SessionHistoryPanel from './components/SessionHistoryPanel';
+import { WorkflowPageSkeleton } from './components/WorkflowPageSkeleton';
 import {
 	getBusinessProcesses,
 	getWorkflowDetails,
 	getWorkflowRunDetails,
 	RunWorkFlowRun,
 } from '../service/workflow.service';
-import Breadcrumb from './BreadCrumb';
-import WorkflowDetails from './WorkflowDetails';
-import DataSourceCard from './DataSourceCard';
-import WorkflowPlan from './WorkflowPlan';
+import Breadcrumb from './components/BreadCrumb';
+import WorkflowDetails from './components/WorkflowDetails';
+import DataSourceCard from './components/connect-data-source-v1/DataSourceCard';
+import WorkflowPlan from './components/WorkflowPlan';
 import { queryClient } from '@/lib/react-query';
 
 export default function WorkflowPage() {

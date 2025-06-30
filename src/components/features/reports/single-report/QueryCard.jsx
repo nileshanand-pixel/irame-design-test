@@ -1,11 +1,5 @@
 import { useState } from 'react';
-import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	CardFooter,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { QueryStatusDropdown } from './QueryStatusDropdown';
@@ -23,19 +17,21 @@ import DotsDropdown from '@/components/elements/DotsDropdown';
 import { QueryGraphs } from './QueryGraphs';
 import { useMutation } from '@tanstack/react-query';
 import { deleteReportCard } from '../service/reports.service';
+import { Loader2, Eye, Copy } from 'lucide-react';
 import {
 	downloadCsvWithCustomName,
 	getSupportedGraphs,
 	getToken,
 } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
 import { queryClient } from '@/lib/react-query';
 import { toast } from 'sonner';
 import { RiskLevelDropdown } from './RiskLevelDropdown';
 import { Hint } from '@/components/Hint';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
+import { QuerySources } from './QuerySources';
+import ReportComments from '../components/report-comments';
 
-export const QueryCard = ({ report, card }) => {
+export const QueryCard = ({ report, card, pdfMode }) => {
 	const queryNumber = card?.order_no || 1;
 	const { isOwner } = useReportPermission();
 
@@ -45,6 +41,7 @@ export const QueryCard = ({ report, card }) => {
 	);
 	const [riskLevel, setRiskLevel] = useState(card?.risk_level || 'medium');
 	const [showAddGraph, setShowAddGraph] = useState(false);
+	const [showGraphs, setShowGraphs] = useState(true);
 
 	const deleteMutation = useMutation({
 		mutationFn: deleteReportCard,
@@ -75,6 +72,23 @@ export const QueryCard = ({ report, card }) => {
 			label: 'Open Query ',
 			onClick: openQuery,
 			icon: <ArrowSquareOut size={20} />,
+			show: true,
+		},
+		{
+			type: 'item',
+			label: showGraphs ? 'Hide Graphs' : 'Show Graphs',
+			onClick: () => setShowGraphs((prev) => !prev),
+			icon: <Eye size={20} />,
+			show: false,
+		},
+		{
+			type: 'item',
+			label: 'Copy Card ID',
+			onClick: () => {
+				navigator.clipboard.writeText(card.external_id);
+				toast.success('Card ID copied to clipboard');
+			},
+			icon: <Copy size={20} />,
 			show: true,
 		},
 		{
@@ -133,24 +147,26 @@ export const QueryCard = ({ report, card }) => {
 				</div>
 
 				<div className="flex  flex-col sm:flex-row sm:items-center sm:justify-between gap-16 border-b border-gray-200 pb-2 min-w-0">
-					<CardTitle className="flex items-center gap-1 p-0 overflow-x-hidden text-base sm:text-lg md:text-xl font-medium text-primary80">
+					<CardTitle className="flex items-center gap-1 p-0 overflow-x-hidden text-base sm:text-lg md:text-xl lg:text-2xl font-medium lg:font-semibold text-primary80">
 						<span className="truncate">
 							{card?.title ?? 'Prescriptive analysis of this report'}
 						</span>
-						<Hint label="Open Query" side="top">
-							<Button
-								variant="ghost"
-								size="iconSm"
-								className="text-gray-500 hover:text-gray-700 relative"
-								onClick={openQuery}
-							>
-								<ArrowSquareOut className="size-6 shrink-0" />
-							</Button>
-						</Hint>
+						{!pdfMode && (
+							<Hint label="Open Query" side="top">
+								<Button
+									variant="ghost"
+									size="iconSm"
+									className="text-gray-500 hover:text-gray-700 relative"
+									onClick={openQuery}
+								>
+									<ArrowSquareOut className="size-6 shrink-0" />
+								</Button>
+							</Hint>
+						)}
 					</CardTitle>
 
-					<div className="flex shrink-0 items-center gap-3">
-						{getSupportedGraphs(card.data.graphs)?.length > 0 && (
+					{!pdfMode && (
+						<div className="flex shrink-0 items-center gap-3">
 							<Tooltip content="Add Graph">
 								<Button
 									variant="ghost"
@@ -162,48 +178,60 @@ export const QueryCard = ({ report, card }) => {
 									<ChartLineUp size={18} className="sm:size-20" />
 								</Button>
 							</Tooltip>
-						)}
-						<Tooltip content="Download">
-							<Button
-								variant="ghost"
-								size="iconSm"
-								className="text-gray-500 hover:text-gray-700"
-								onClick={() => {
-									const csvUrl = card?.data?.tables?.[0]?.csv_url;
-									if (!csvUrl) return;
+							<Tooltip content="Download">
+								<Button
+									variant="ghost"
+									size="iconSm"
+									className="text-gray-500 hover:text-gray-700"
+									onClick={() => {
+										const csvUrl =
+											card?.data?.tables?.[0]?.csv_url;
+										if (!csvUrl) return;
 
-									downloadCsvWithCustomName({
-										csvUrl,
-										reportName: report.name,
-										queryTitle: card.title ?? 'Untitled',
-										queryId: card.query_id,
-									});
-								}}
-							>
-								<BoxArrowDown size={18} className="sm:size-20" />
-							</Button>
-						</Tooltip>
-						<div className="relative">
-							<DotsDropdown options={cardActions} align="start" />
+										downloadCsvWithCustomName({
+											csvUrl,
+											reportName: report.name,
+											queryTitle: card.title ?? 'Untitled',
+											queryId: card.query_id,
+										});
+									}}
+								>
+									<BoxArrowDown size={18} className="sm:size-20" />
+								</Button>
+							</Tooltip>
+							<div className="relative">
+								<DotsDropdown options={cardActions} align="start" />
+							</div>
 						</div>
-					</div>
+					)}
 				</div>
 			</CardHeader>
 
 			<CardContent className="p-0 flex flex-col gap-2 pt-2">
-				<QueryGraphs
-					graphs={getSupportedGraphs(card.data.graphs)}
-					reportCardId={card.external_id}
-				/>
+				{showGraphs && (
+					<QueryGraphs
+						graphs={card.data.graphs}
+						reportCardId={card.external_id}
+					/>
+				)}
 				<div className="pl-8">
 					<div
-						className="text-primary80 "
+						className="text-primary80"
 						style={{ whiteSpace: 'pre-wrap' }}
 						dangerouslySetInnerHTML={{
 							__html: card?.data?.answer || '',
 						}}
 					/>
 				</div>
+				<QuerySources
+					queryCardId={card.external_id}
+					reportId={report.report_id}
+				/>
+				<ReportComments
+					withTrigger={true}
+					reportId={report.report_id}
+					reportCardId={card.external_id}
+				/>
 			</CardContent>
 
 			{/* ---------- footer ---------- */}

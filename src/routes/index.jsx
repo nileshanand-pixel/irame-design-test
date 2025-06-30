@@ -17,7 +17,10 @@ import BusinessProcessPage from '@/components/features/business-process/page';
 import WorkflowPage from '@/components/features/business-process/workflow/page';
 import SingleBusinessProcessPage from '@/components/features/business-process/single-business-process/SingleBusinessProcess';
 import SingleReportPage from '@/components/features/reports/single-report/Page';
+import ReportCoverPage from '@/components/features/reports/export/cover/Page';
+import ReportContentPage from '@/components/features/reports/export/Page';
 import HelpMenu from '@/components/elements/HelpMenu';
+import WorkflowPageV2 from '@/components/features/business-process/workflow/page-v2';
 
 
 const AppRoutes = () => {
@@ -105,11 +108,10 @@ const AppRoutes = () => {
 									path="reports/:reportId"
 									element={
 										<ProtectedRoute
-											element={< SingleReportPage/>}
+											element={<SingleReportPage />}
 										/>
 									}
 								/>
-								{/* New Business Process Routes */}
 								<Route
 									path="business-process"
 									element={
@@ -126,11 +128,17 @@ const AppRoutes = () => {
 										/>
 									}
 								/>
+								{/* <Route
+									path="business-process/:businessProcessId/workflows/:workflowId"
+									element={
+										<ProtectedRoute element={<WorkflowPage />} />
+									}
+								/> */}
 								<Route
 									path="business-process/:businessProcessId/workflows/:workflowId"
 									element={
 										<ProtectedRoute
-											element={<WorkflowPage />}
+											element={<WorkflowPageV2 />}
 										/>
 									}
 								/>
@@ -138,9 +146,17 @@ const AppRoutes = () => {
 						</Layout>
 					}
 				/>
+				<Route
+					path="export/reports/:reportId/content"
+					element={<ReportContentPage />}
+				/>
+				<Route
+					path="export/reports/:reportId/cover"
+					element={<ReportCoverPage />}
+				/>
 				<Route path="test" element={<TestRoute />} />
 			</Routes>
-			<HelpMenu/>
+			{!window.location.pathname.includes('export') && <HelpMenu />}
 		</>
 	);
 };

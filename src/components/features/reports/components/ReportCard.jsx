@@ -149,7 +149,7 @@ const ReportCard = ({ report }) => {
 					)}
 				</div>
 				<p className="text-sm text-gray-500 mt-2 line-clamp-2">
-					{report.data.summary}
+					{report.data.description || report.data.summary}
 				</p>
 				{report?.datasource_name && (
 					<div

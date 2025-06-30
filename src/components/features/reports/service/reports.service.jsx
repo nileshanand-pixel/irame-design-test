@@ -212,3 +212,76 @@ export const updateReportMetadata = async ({
 	);
 	return response.data;
 };
+
+export const generateReportSummary = async ({ token, reportId }) => {
+	const response = await axiosClientV2.post(
+		`/reports/${reportId}/initiate-generate-summary`,
+		undefined,
+		{ headers: { Authorization: `Bearer ${token}` } },
+	);
+	return response.data;
+};
+
+export const getReportSummary = async ({ token, reportId }) => {
+	const response = await axiosClientV2.get(`/reports/${reportId}/summary`, {
+		headers: { Authorization: `Bearer ${token}` },
+	});
+	return response.data;
+};
+
+export const getReportCardSources = async (token, reportId, reportCardId) => {
+	const response = await axiosClientV2.get(
+		`/reports/${reportId}/report-cards/${reportCardId}/sources`,
+		{
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		},
+	);
+	return response.data;
+};
+
+export const getActivityTrail = async (token, reportId) => {
+	const response = await axiosClientV2.get(`/reports/${reportId}/activity-trail`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+};
+
+export const getReportComments = async(token, reportId) => {
+	const response = await axiosClientV2.get(`/reports/${reportId}/comments`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+}
+
+export const getReportCardComments = async(token, reportId, reportCardId) => {
+	const response = await axiosClientV2.get(`/reports/${reportId}/report-cards/${reportCardId}/comments`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+}
+
+export const addReportComment = async (token, reportId, payload) => {
+	const response = await axiosClientV2.post(`/reports/${reportId}/comments`, payload,  {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+}
+
+export const addReportCardComment = async(token, reportId, reportCardId, payload) => {
+	const response = await axiosClientV2.post(`/reports/${reportId}/report-cards/${reportCardId}/comments`, payload,  {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
+}

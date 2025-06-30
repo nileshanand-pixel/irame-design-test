@@ -49,6 +49,7 @@ const ReportFolders = () => {
 	useEffect(() => {
 		if (datasourcesQuery.data) {
 			let updatedDatasources = datasourcesQuery.data.datasources || [];
+			if (!updatedDatasources.length) return;
 
 			const sharedReports = sharedReportsQuery.data?.reports || [];
 			if (sharedReports.length > 0) {
