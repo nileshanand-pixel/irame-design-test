@@ -175,14 +175,16 @@ const ResponseCard = ({
 									</Button>
 								)}
 							<div className="flex gap-2">
-								<Button
-									variant="outline"
-									className="text-muted-foreground cursor-pointer flex gap-1"
-									onClick={handleAddQueryToReport}
-								>
-									<ChartNoAxesCombinedIcon className="w-5 h-5" />
-									Add to Report
-								</Button>
+								{safeHTML && answerResp?.status === 'done' && (
+									<Button
+										variant="outline"
+										className="text-muted-foreground cursor-pointer flex gap-1"
+										onClick={handleAddQueryToReport}
+									>
+										<ChartNoAxesCombinedIcon className="w-5 h-5" />
+										Add to Report
+									</Button>
+								)}
 								{showGraph && (
 									<Button
 										variant="outline"
