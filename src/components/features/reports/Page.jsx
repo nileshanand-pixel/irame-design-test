@@ -47,34 +47,34 @@ const ReportFolders = () => {
 	}, [search, datasources]);
 
 	useEffect(() => {
-		if (datasourcesQuery.data) {
-			let updatedDatasources = datasourcesQuery.data.datasources || [];
-			if (!updatedDatasources.length) return;
+		const auditReports = userAuditReports?.data?.reports || [];
+		const sharedReports = sharedReportsQuery?.data?.reports || [];
+		let updatedDatasources = datasourcesQuery?.data?.datasources || [];
 
-			const sharedReports = sharedReportsQuery.data?.reports || [];
-			if (sharedReports.length > 0) {
-				const sharedDatasource = {
-					datasource_id: 'shared',
-					datasource_name: 'Shared',
-					report_count: sharedReports.length,
-					reports: sharedReports,
-				};
-				if (updatedDatasources[0]?.datasource_id !== 'shared')
-					updatedDatasources = [sharedDatasource, ...updatedDatasources];
-			}
-			const auditReports = userAuditReports.data?.reports || [];
-			if (auditReports.length > 0) {
-				const auditReportDatasource = {
-					datasource_id: 'audit',
-					datasource_name: 'Audit Reports',
-					report_count: auditReports.length,
-					reports: auditReports,
-				};
-				if (updatedDatasources[0]?.datasource_id !== 'audit')
-					updatedDatasources.unshift(auditReportDatasource);
-			}
-			setDatasources(updatedDatasources);
+		const folders = [];
+
+		if (auditReports?.length > 0) {
+			folders.push({
+				datasource_id: 'audit',
+				datasource_name: 'Audit Reports',
+				report_count: auditReports.length,
+				reports: auditReports,
+			});
 		}
+
+		if (sharedReports?.length > 0) {
+			folders.push({
+				datasource_id: 'shared',
+				datasource_name: 'Shared',
+				report_count: sharedReports.length,
+				reports: sharedReports,
+			});
+		}
+
+		// Add the rest of the datasources
+		folders.push(...updatedDatasources);
+
+		setDatasources(folders);
 	}, [datasourcesQuery.data, sharedReportsQuery.data, userAuditReports.data]);
 
 	const emptyStateConfig = {
