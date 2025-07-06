@@ -13,6 +13,7 @@ import useBreakpoint from '@/hooks/useBreakpoint';
 import { useQuery } from '@tanstack/react-query';
 import { authUserDetails } from './features/login/service/auth.service';
 import Modals from './Modals';
+import FreshdeskWidget from './features/freshdesk/FreshdeskWidget';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -98,7 +99,7 @@ const Layout = ({ children }) => {
 				</div>
 				<GlobalPollReports />
 			</main>
-			{/* <FreshdeskWidget/> */}
+			<FreshdeskWidget/>
 			<Modals/>
 		</div>
 	);

@@ -156,7 +156,7 @@ const AppRoutes = () => {
 				/>
 				<Route path="test" element={<TestRoute />} />
 			</Routes>
-			{!window.location.pathname.includes('export') && <HelpMenu />}
+			{/* {!window.location.pathname.includes('export') && <HelpMenu />} */}
 		</>
 	);
 };

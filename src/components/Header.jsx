@@ -15,6 +15,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { getUserDetailsFromToken } from '@/lib/cookies';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { LockClosedIcon } from '@radix-ui/react-icons';
+import { ReaderIcon } from '@radix-ui/react-icons';
+import { RocketIcon } from '@radix-ui/react-icons';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
@@ -71,6 +74,48 @@ const Header = () => {
 		}
 		return uiContent;
 	};
+
+	const menuItems = [
+		{  
+			title: (
+				<>
+					<RocketIcon width={16} height={16} className='mr-2'/>
+					Get Started
+				</>
+			), 
+			link: "https://irame.ai",
+		},
+		{
+			title: (
+				<>
+					<ReaderIcon width={16} height={16} className='mr-2'/>
+					Terms of Use
+				</>
+			),
+			link: "https://www.irame.ai/terms-of-use",
+		},
+		{
+			title: (
+				<>
+					<LockClosedIcon width={16} height={16} className='mr-2'/>
+					Privacy Policy
+				</>
+			),
+			link: "https://www.irame.ai/privacy-policy"
+		},
+		{
+			title: (
+				<>
+					<i className="bi-box-arrow-left mr-2 text-primary100"></i>
+					Logout
+				</>
+			),
+			onClick: () => {
+				fullLogout();	
+				setValue({});
+			}
+		}
+	]
 	return (
 		<header
 			className={cn(
@@ -108,16 +153,22 @@ const Header = () => {
 					</DropdownMenuTrigger>
 					<DropdownMenuContent className="w-46 mr-5">
 						<DropdownMenuGroup>
-							<DropdownMenuItem
-								className="text-primary100 text-sm font-medium"
-								onClick={() => {
-									fullLogout();
-									setValue({});
-								}}
-							>
-								<i className="bi-box-arrow-left mr-2 text-primary100"></i>
-								Logout
-							</DropdownMenuItem>
+							{
+								menuItems?.map((item, index) => (
+									<DropdownMenuItem
+										key={index}
+										className="text-primary100 text-sm"
+										onClick={() => {
+											if(item.link) {
+												window.open(item.link, '_blank')
+											}
+											item?.onClick?.();
+										}}
+									>
+										{item.title}
+									</DropdownMenuItem>
+								))
+							}							
 						</DropdownMenuGroup>
 					</DropdownMenuContent>
 				</DropdownMenu>

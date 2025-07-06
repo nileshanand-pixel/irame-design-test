@@ -3,7 +3,7 @@ import { getToken } from '@/lib/utils';
 import { getFreshdeskToken } from './service/freshdesk.service';
 import useAuth from '@/hooks/useAuth';
 
-const WIDGET_ID = 1060000001832;
+const WIDGET_ID = import.meta.env.VITE_WIDGET_ID;
 const WIDGET_SCRIPT_URL = `https://ind-widget.freshworks.com/widgets/${WIDGET_ID}.js`;
 
 const FreshdeskWidget = () => {
