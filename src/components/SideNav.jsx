@@ -80,7 +80,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					link: '/app/business-process',
 					text: 'Business Process',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/workflow_icon.svg',
-					beta: true,
+					// beta: true,
 					showHint: true,
 				},
 				{
@@ -97,7 +97,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					link: '/app/reports/datasources',
 					text: 'Reports',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/report-icon.svg',
-					beta: true,
+					// beta: true,
 					trackingCall: () =>
 						trackEvent(
 							EVENTS_ENUM.SIDENAV_REPORT_CLICKED,
