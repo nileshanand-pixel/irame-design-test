@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 
 const wordsPerMinute = 200;
 
@@ -25,12 +25,12 @@ const ReportHero = ({ reportDetails }) => {
 	return (
 		<div className="w-full overflow-x-hidden space-y-2">
 			<h1 className="text-2xl md:text-3xl lg:text-4xl break-words font-semibold text-primary100">
-				{capitalize(title)}
+				{upperFirst(title)}
 			</h1>
 
 			{description && (
 				<div className="text-muted-foreground text-sm leading-relaxed">
-					{capitalize(description)}
+					{upperFirst(description)}
 				</div>
 			)}
 

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import GradientSpinner from '@/components/elements/loading/GradientSpinner';
 import DotLoader from '@/components/elements/loading/DotLoader';
 import Typewriter from '@/components/elements/Typewriter';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 
 const QueueStatus = ({ text }) => {
 	useEffect(() => {}, [text]);
@@ -23,7 +23,7 @@ linear-gradient(180deg, rgba(106, 18, 205, 0.02) 0%, rgba(106, 18, 205, 0.08) 10
 			</div>
 			<div className="w-fit flex pl-4 items-center border-l-[1px] border-l-[#26064A1A]">
 				<span className="text-[#26064ACC]">
-					<Typewriter text={capitalize(text)} />
+					<Typewriter text={upperFirst(text)} />
 				</span>
 				<span>
 					<DotLoader size="3px" />

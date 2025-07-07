@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 
 // Constants
 const COMBO_BOX_PLACEHOLDER = 'Select an option...';
@@ -124,7 +124,7 @@ const ComboboxDropdown = ({ isOpen, filteredOptions, handleSelect }) => {
 const OptionGroup = ({ group, handleSelect }) => (
 	<div className="border-b last:border-b-0">
 		<div className="bg-gray-100 px-4 py-2 text-sm font-semibold">
-			{capitalize(group.filename || 'File')}
+			{upperFirst(group.filename || 'File')}
 		</div>
 		{group.items.map((item) => (
 			<div
@@ -132,7 +132,7 @@ const OptionGroup = ({ group, handleSelect }) => (
 				className="cursor-pointer px-8 py-2 hover:bg-purple-4"
 				onMouseDown={() => handleSelect(item, group)}
 			>
-				{capitalize(item.label)}
+				{upperFirst(item.label)}
 			</div>
 		))}
 	</div>
@@ -391,7 +391,7 @@ const MissingColumnsSection = ({ missingFields, mappings, setActiveFieldIndex })
 										{index + 1}
 									</div>
 									<div className="col-span-4 py-1 px-3 border-r-2 font-medium">
-										{capitalize(mf.header_name)}
+										{upperFirst(mf.header_name)}
 									</div>
 									<div className="col-span-6 py-1 px-3">
 										<FieldButton
@@ -426,7 +426,7 @@ const FieldButton = ({ index, mappings, onClick }) => (
 		onClick={onClick}
 	>
 		{mappings[index]?.column_name
-			? capitalize(mappings[index].column_name)
+			? upperFirst(mappings[index].column_name)
 			: '+ Add Field'}
 	</Button>
 );

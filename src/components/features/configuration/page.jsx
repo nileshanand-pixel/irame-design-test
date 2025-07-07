@@ -25,7 +25,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 import dayjs from 'dayjs';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
@@ -563,7 +563,7 @@ const Configuration = () => {
 										/>
 										<div className="flex flex-col">
 											<p className="text-base max-w-36 truncate text-ellipsis">
-												{capitalize(source.name)}
+												{upperFirst(source.name)}
 											</p>
 											<span className="text-primary40 text-xs">
 												{dayjs(source.created_at).format(

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const WorkflowCard = ({ workflow }) => {
@@ -33,9 +33,9 @@ const WorkflowCard = ({ workflow }) => {
 					</span>
 					<div className="flex flex-col gap-1">
 						<p className="text-base font-medium">
-							{capitalize(workflow.name)}
+							{upperFirst(workflow.name)}
 						</p>
-						<p className="mb-1 text-sm">{capitalize(workflow.description)}</p>
+						<p className="mb-1 text-sm">{upperFirst(workflow.description)}</p>
 						<div className="flex gap-2">
 							{workflow.tags.map((tag, index) => (
 								<Badge
@@ -43,14 +43,14 @@ const WorkflowCard = ({ workflow }) => {
 									variant="outline"
 									className={`px-2 py-[2px] text-xs font-medium ${badgeClass} border-none`}
 								>
-									{capitalize(tag)}
+									{upperFirst(tag)}
 								</Badge>
 							))}
 							<Badge
 								variant="outline"
 								className={`flex justify-center text-xs items-center border-none font-medium ${badgeClass}`}
 							>
-								{capitalize(workflow.status.toLowerCase())}
+								{upperFirst(workflow.status.toLowerCase())}
 								<span className="material-symbols-outlined text-base">
 									keyboard_arrow_down
 								</span>

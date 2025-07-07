@@ -22,7 +22,7 @@ import { useWorkflowRunId } from '../../../hooks/use-workflow-run-id';
 import FillButton from '@/components/elements/fill-button';
 import { useNavigate } from 'react-router-dom';
 import { useBusinessProcessId } from '../../../hooks/use-business-process-id';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 
 /** ---------- helpers that don’t hit React state ---------- **/
 
@@ -320,8 +320,8 @@ export const ColumnMapping = ({
 							>
 								<div className="truncate">
 									<h4 className="font-semibold truncate">
-										{capitalize(file.requiredFileName)} (
-										{capitalize(file.fileName)})
+										{upperFirst(file.requiredFileName)} (
+										{upperFirst(file.fileName)})
 									</h4>
 									{/* <p className="text-xs text-muted-foreground truncate">
 										{file.requiredFileName}

@@ -2,7 +2,7 @@
 import { ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import { useNavigate } from 'react-router-dom';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 
 export default function Breadcrumb({ reportName }) {
 	const navigate = useNavigate();
@@ -27,7 +27,7 @@ export default function Breadcrumb({ reportName }) {
 				)}
 				title={reportName}
 			>
-				{capitalize(reportName)}
+				{upperFirst(reportName)}
 			</p>
 		</nav>
 	);

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 
 const BusinessProcessCard = ({ process, onClick }) => {
 	const [isExpanded, setIsExpanded] = useState(false);
@@ -27,7 +27,7 @@ const BusinessProcessCard = ({ process, onClick }) => {
 			<CardContent className="text-primary100">
 				<div className="flex justify-between items-start">
 					<CardTitle className="text-base font-semibold">
-						{capitalize(process.name)}
+						{upperFirst(process.name)}
 					</CardTitle>
 					<span
 						className="material-symbols-outlined text-primary60 cursor-pointer"
@@ -48,7 +48,7 @@ const BusinessProcessCard = ({ process, onClick }) => {
 							variant="outline"
 							className="px-2 py-1 bg-primary4 text-primary80 font-medium border-none"
 						>
-							{capitalize(tag)}
+							{upperFirst(tag)}
 						</Badge>
 					))}
 				</div>
@@ -63,7 +63,7 @@ const BusinessProcessCard = ({ process, onClick }) => {
 								<span className="material-symbols-outlined rotate-180 text-primary40 ">
 									reply
 								</span>
-								<span className='font-medium'>{capitalize(workflow.name)}</span>
+								<span className='font-medium'>{upperFirst(workflow.name)}</span>
 							</div>
 						))}
 					</div>

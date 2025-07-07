@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -298,7 +298,7 @@ const DataSourceCard = ({
 								height={20}
 								alt="icon"
 							/>
-							{capitalize(file.file_name)}
+							{upperFirst(file.file_name)}
 						</Button>
 					))}
 
@@ -337,11 +337,11 @@ const DataSourceCard = ({
 									className="flex gap-2 px-2 py-1 items-center bg-purple-4 border-2 rounded-lg shadow-sm"
 								>
 									<Tooltip
-										content={capitalize(
+										content={upperFirst(
 											header.description || 'no description',
 										)}
 									>
-										{capitalize(header.name)}
+										{upperFirst(header.name)}
 									</Tooltip>
 								</li>
 							))}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getShortHandName } from '@/lib/utils';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 import Tooltip from './Tooltip';
 import {
 	DropdownMenu,
@@ -162,7 +162,7 @@ const ReportCard = ({ report }) => {
 								alt="database"
 								className="mr-2 size-5"
 							/>
-							{capitalize(report?.datasource_name) || 'DS'}
+							{upperFirst(report?.datasource_name) || 'DS'}
 						</p>
 					</div>
 				)}

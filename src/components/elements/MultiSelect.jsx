@@ -17,7 +17,7 @@ import {
 	CommandList,
 	CommandSeparator,
 } from '@/components/ui/command';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 
 const multiSelectVariants = cva('m-1', {
 	variants: {
@@ -148,7 +148,7 @@ export const MultiSelect = React.forwardRef(
 													{IconComponent && (
 														<IconComponent className="h-4 w-4 mr-2" />
 													)}
-													{capitalize(
+													{upperFirst(
 														option?.label || value,
 													)}
 													<i

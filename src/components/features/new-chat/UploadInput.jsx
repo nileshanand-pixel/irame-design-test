@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { welcomeTypography } from './config';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 import { getDataSourcesWithLimit } from '../configuration/service/configuration.service';
 import { getToken } from '@/lib/utils';
 import DividerWithText from '@/components/elements/DividerWithText';
@@ -110,7 +110,7 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 									/>
 									<div className="flex flex-col items-start">
 										<p className="text-base max-w-[200px] truncate text-ellipsis">
-											{capitalize(source.name)}
+											{upperFirst(source.name)}
 										</p>
 										<span className="text-primary40 text-xs">
 											{new Date(

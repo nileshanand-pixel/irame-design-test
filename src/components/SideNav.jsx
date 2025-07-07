@@ -26,7 +26,7 @@ import isYesterday from 'dayjs/plugin/isYesterday';
 import GradientSpinner from './elements/loading/GradientSpinner';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 import { getRecentWorkflowsRunsHomePage } from './features/business-process/service/workflow.service';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 import { resetAllStores } from '@/redux/GlobalStore';
 import { Hint } from './Hint';
 import Tag from './elements/Tag';
@@ -321,7 +321,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 								className="size-6 shrink-0"
 							/>
 							<span className="ml-3 truncate text-primary80">
-								{capitalize(bp.business_process_name)}
+								{upperFirst(bp.business_process_name)}
 							</span>
 						</div>
 

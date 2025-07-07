@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { RadioGroupItem } from '@/components/ui/radio-group';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 
 const formatDate = (dateString) => {
 	if (!dateString) return '';
@@ -43,14 +43,14 @@ const ReportRadioCardItem = ({ id, value, title, description, date, isSelected }
 			<div className="flex w-full overflow-x-hidden flex-col ">
 				<div className="flex justify-between items-start mb-1 gap-2">
 					<span className="text-base font-semibold text-primary80  truncate leading-[1.2] break-words">
-						{capitalize(title)}
+						{upperFirst(title)}
 					</span>
 					<span className="text-xs   text-[#999999] whitespace-nowrap flex-shrink-0">
 						{formatDate(date)}
 					</span>
 				</div>
 				<p className="text-sm  text-primary60 font-medium line-clamp-2 leading-snug">
-					{capitalize(description)}
+					{upperFirst(description)}
 				</p>
 			</div>
 		</Label>

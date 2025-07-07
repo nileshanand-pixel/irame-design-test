@@ -1,6 +1,6 @@
 import React from 'react';
 import Tooltip from '@/components/features/reports/components/Tooltip';
-import capitalize from 'lodash.capitalize';
+import upperFirst from 'lodash.upperfirst';
 
 const VariablesSection = ({ variables, onVariablesChange }) => {
   // variables shape: { v1: {name, description, type, value}, v2: {...}, ... }
@@ -15,7 +15,7 @@ const VariablesSection = ({ variables, onVariablesChange }) => {
             <div key={varKey} className="flex flex-col gap-2">
               <label className="font-medium w-fit">
                 <Tooltip content={variable.description || 'No Description'}>
-                  {capitalize(variable.name)}
+                  {upperFirst(variable.name)}
                 </Tooltip>
               </label>
               <input

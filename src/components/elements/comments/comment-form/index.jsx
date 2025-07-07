@@ -1,4 +1,4 @@
-import capitalize from "lodash.capitalize";
+import upperFirst from "lodash.upperfirst";
 import { Button } from "@/components/ui/button";
 import useLocalStorage from "@/hooks/useLocalStorage";
 import { useMemo, useState } from "react";
@@ -114,7 +114,7 @@ export default function CommentForm({
                         userName={value?.user_name}
                         userEmail={value?.email}
                     />
-                    <span className="text-sm font-semibold">{capitalize(value?.user_name)}</span>
+                    <span className="text-sm font-semibold">{upperFirst(value?.user_name)}</span>
                 </div>
 
                 <div className="w-full">
