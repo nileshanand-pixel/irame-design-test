@@ -3,26 +3,13 @@
  * @param {string} file_url - The URL of the file.
  * @returns {Promise<{ size: number, type: string }>} - File size in bytes and type (pdf, excel, csv, etc).
  */
+
+import axiosClientV1 from './axios';
+
 export async function getFileMeta(file_url) {
 	try {
-		const response = await fetch(file_url, { method: 'HEAD' });
-		if (!response.ok) throw new Error('Failed to fetch file metadata');
-
-		const contentType = response.headers.get('content-type') || '';
-		const contentLength = response.headers.get('content-length');
-		const size = contentLength ? parseInt(contentLength, 10) : null;
-
-		let type = '';
-		if (contentType.includes('pdf')) type = 'pdf';
-		else if (
-			contentType.includes('excel') ||
-			contentType.includes('spreadsheetml')
-		)
-			type = 'excel';
-		else if (contentType.includes('csv')) type = 'csv';
-		else type = contentType.split('/').pop();
-
-		return { size, type };
+		const response = await axiosClientV1.get("/files/file-metadata", { params: { file_url: file_url } });
+		return { size: response?.data?.content_length || 0 };
 	} catch (err) {
 		console.error('Error fetching file metadata:', err);
 		return { size: null, type: '' };

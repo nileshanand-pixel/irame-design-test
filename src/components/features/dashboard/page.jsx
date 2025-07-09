@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn, getToken } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { createDashboard, getUserDashboard } from './service/dashboard.service';
 import DashboardCard from './components/DashboardCard';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import EmptyState from '@/components/elements/EmptyState';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
+import { queryClient } from '@/lib/react-query';
 
 const Dashboard = () => {
 	const [dashboard, setDashboard] = useState([]);
@@ -23,11 +24,11 @@ const Dashboard = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [refetch, setRefetch] = useState(false);
 
-	const { navigate } = useRouter();
+	const { navigate, query } = useRouter();
 
 	const userDashboardQuery = useQuery({
 		queryKey: ['user-dashboard'],
-		queryFn: () => getUserDashboard(getToken()),
+		queryFn: () => getUserDashboard(),
 	});
 
 	const handleCreateNewDashboard = async () => {
@@ -37,21 +38,21 @@ const Dashboard = () => {
 				return;
 			}
 			setIsLoading(true);
-			const resp = await createDashboard(getToken(), dashboardName);
+			const resp = await createDashboard(dashboardName);
 			if (resp) {
 				setIsLoading(false);
 				setShowCreateDashboard(false);
 				toast.success('Dashboard created successfully');
 				trackEvent(
-					EVENTS_ENUM.DASHBOARD_CREATED,
-					EVENTS_REGISTRY.DASHBOARD_CREATED,
+					EVENTS_ENUM.DASHBOARD_NEW_CREATED,
+					EVENTS_REGISTRY.DASHBOARD_NEW_CREATED,
 					() => ({
 						dashboard_id: resp.dashboard_id,
-						title: dashboardName,
-						from: 'dashboard-page'
+						dashboard_name: dashboardName,
 					}),
 				);
-				navigate(`/app/new-chat`);
+				queryClient.invalidateQueries(['user-dashboard']);
+				navigate(`/app/new-chat?source=dashboard`);
 			}
 		} catch (error) {
 			setIsLoading(false);
@@ -61,12 +62,12 @@ const Dashboard = () => {
 	};
 
 	const filteredList = useMemo(() => {
-		if(search){
+		if (search) {
 			trackEvent(
 				EVENTS_ENUM.DASHBOARD_SEARCHED,
 				EVENTS_REGISTRY.DASHBOARD_SEARCHED,
 				() => ({
-					searchKey: search
+					search_query: search
 				}),
 			);
 		}
@@ -93,6 +94,16 @@ const Dashboard = () => {
 		ctaClickHandler: () => setShowCreateDashboard(true),
 	};
 
+	useEffect(() => {
+		trackEvent(
+			EVENTS_ENUM.DASHBOARD_HOMEPAGE_LOADED,
+			EVENTS_REGISTRY.DASHBOARD_HOMEPAGE_LOADED,
+			() => ({
+				source: query.source || "url",
+			})
+		)
+	}, [query]);
+
 	return (
 		<div className="w-full ml-8 h-full flex flex-col overflow-hidden">
 			<div className="w-full flex justify-between mt-2 ">
@@ -118,8 +129,14 @@ const Dashboard = () => {
 					</div>
 					<Button
 						variant="secondary"
-						className="w-fit rounded-lg bg-purple-8 hover:bg-purple-16 text-purple-100 font-medium"
-						onClick={() => setShowCreateDashboard(true)}
+						className="w-fit mr-9 rounded-lg bg-purple-8 hover:bg-purple-16 text-purple-100 font-medium"
+						onClick={() => {
+							trackEvent(
+								EVENTS_ENUM.DASHBOARD_CREATE_NEW_CLICKED,
+								EVENTS_REGISTRY.DASHBOARD_CREATE_NEW_CLICKED,
+							)
+							setShowCreateDashboard(true)
+						}}
 					>
 						Create a Dashboard
 					</Button>

@@ -13,10 +13,18 @@ const TAB_ORDER = [
 ];
 import { useWorkspaceEdit } from './components/WorkspaceEditProvider';
 import { Button } from '@/components/ui/button';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { useRouter } from '@/hooks/useRouter';
+import { useSelector } from 'react-redux';
 
 const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace, canEdit }) => {
 	const [workspaceHasChanges, setWorkspaceHasChanges] = useState(false);
-	const { regenerateResponse, editDisabled } = useWorkspaceEdit();
+	const { regenerateResponse, editDisabled, changeSets , segments: updatedSegments} = useWorkspaceEdit();
+	const { query } = useRouter();
+	const utilReducer = useSelector((state) => state.utilReducer);
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+
 	const availableTabs = useMemo(() => {
 		return TAB_ORDER.filter(
 			(tab) => answerResp?.answer?.[tab]?.tool_space === 'secondary',
@@ -96,6 +104,24 @@ const Workspace = ({ handleTabClick, workspace, answerResp, setWorkspace, canEdi
 							<Button
 								className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80 w-full"
 								onClick={() => {
+									const changedTabs = Object.entries(changeSets).map(([tab, isChanged]) => {
+										if(isChanged) {
+											return tab;
+										}
+									}).filter((tab) => !!tab);
+									
+
+									trackEvent(
+										EVENTS_ENUM.REGENERATE_RESPONSE_CLICKED,
+										EVENTS_REGISTRY.REGENERATE_RESPONSE_CLICKED,
+										() => ({
+											type_change: changedTabs,
+											chat_session_id: query?.sessionId,
+											dataset_id: utilReducer?.selectedDataSource?.id,
+											dataset_name: utilReducer?.selectedDataSource?.name,
+											query_id: chatStoreReducer?.activeQueryId,
+										}),
+									);
 									regenerateResponse(answerResp);
 									setWorkspaceHasChanges(false);
 								}}

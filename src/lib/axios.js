@@ -1,12 +1,7 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
 import { toast } from 'sonner';
-import {
-	fullLogout,
-	LoginWithRefreshToken,
-} from '@/components/features/login/service/auth.service';
+import { ensureCleanup } from '@/components/features/login/service/auth.service';
 import { serviceUrlMap } from '@/config/url.config';
-import { setupAuthCookies } from './cookies';
 
 let isLoggingOut = false;
 
@@ -15,52 +10,20 @@ const axiosClientV1 = axios.create({
 	baseURL: serviceUrlMap.DATA_MANAGER_SERVICE_V1,
 	headers: {
 		'Content-Type': 'application/json',
+		'x-app-token': 'e2bbb59e-d66f-4734-b034-cf6e8f3f8a4e'
 	},
+	withCredentials: true
 });
-
 
 // Client for the data manager service v2
 const axiosClientV2 = axios.create({
 	baseURL: serviceUrlMap.DATA_MANAGER_SERVICE_V2,
 	headers: {
 		'Content-Type': 'application/json',
+		'x-app-token': 'e2bbb59e-d66f-4734-b034-cf6e8f3f8a4e'
 	},
+	withCredentials: true
 });
-
-// Client for the oauth service
-const authAxiosClient = axios.create({
-	baseURL: serviceUrlMap.OAUTH_SERVICE,
-	headers: {
-		'Content-Type': 'application/json',
-	},
-});
-
-const handleTokenRefresh = async () => {
-	const refreshToken = Cookies.get('refresh_token');
-	if (!refreshToken) return null;
-
-	try {
-		const response = await LoginWithRefreshToken(refreshToken);
-		if (response.status_code === 200) {
-			const { id_token, access_token, expires_in } = response.body;
-			const cookiesData = {
-				id_token,
-				access_token,
-				expires_in,
-			};
-
-			// Save the new tokens in cookies
-			setupAuthCookies(cookiesData);
-
-			return id_token;
-		}
-	} catch (error) {
-		console.error(
-			'An error occurred while refreshing the token. Please try again.',
-		);
-		return null;
-	}
-};
 
 const setupInterceptors = (axiosClient) => {
 	axiosClient.interceptors.response.use(
@@ -69,21 +32,8 @@ const setupInterceptors = (axiosClient) => {
 		},
 		async (error) => {
 			if (error.response && error.response.status === 401 && !isLoggingOut) {
-				const originalRequest = error.config;
-
-				// Try to refresh the token
-				const newToken = await handleTokenRefresh();
-				if (newToken) {
-					// Set the Authorization header with the new token
-					originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-					// Retry the original request with the new token
-					return axiosClient(originalRequest);
-				} else {
-					// Token refresh failed, proceed to log out
-					toast.error('Session expired. Logging out...');
-					isLoggingOut = true;
-					await fullLogout();
-				}
+				isLoggingOut = true;
+				await ensureCleanup();
 			}
 			return Promise.reject(error);
 		},
@@ -93,7 +43,6 @@ const setupInterceptors = (axiosClient) => {
 // Attach interceptors to both clients
 setupInterceptors(axiosClientV1);
 setupInterceptors(axiosClientV2);
-setupInterceptors(authAxiosClient);
 
 export default axiosClientV1;
-export { authAxiosClient, axiosClientV2 };
+export { axiosClientV2 };

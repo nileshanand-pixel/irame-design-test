@@ -1,6 +1,6 @@
 import InputText from '@/components/elements/InputText';
 import { Input } from '@/components/ui/input';
-import { cn, formatFileSize, getFileIcon, getToken } from '@/lib/utils';
+import { cn, formatFileSize, getFileIcon } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,9 +29,11 @@ import upperFirst from 'lodash.upperfirst';
 import dayjs from 'dayjs';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { getFileType } from '@/utils/file';
 
 const Configuration = () => {
 	const [files, setFiles] = useState([]);
+	const [rowFiles, setRowFiles] = useState([]);
 	const [progress, setProgress] = useState({});
 	const [datasourceName, setDatasourceName] = useState('');
 	const [description, setDescription] = useState('');
@@ -46,18 +48,29 @@ const Configuration = () => {
 	const dispatch = useDispatch();
 	const utilReducer = useSelector((state) => state.utilReducer);
 
-	const { navigate } = useRouter();
+	const { navigate, query } = useRouter();
 
 	const inputRef = useRef();
 
 	const handleRemoveFile = (e, file, idx) => {
 		e.preventDefault();
 		e.stopPropagation();
+		trackEvent(
+			EVENTS_ENUM.REMOVE_UPLOAD_FILE,
+			EVENTS_REGISTRY.REMOVE_UPLOAD_FILE,
+			() => ({
+				file_type: file.type,
+				file_name: file.name,
+			}),
+		);
 		let tempArr = [...files];
 		tempArr = tempArr.filter((tempFile) => {
 			if (tempFile.name !== file.name) return true;
 		});
 		setFiles(tempArr);
+		setRowFiles((prevRowFiles) => {
+			return prevRowFiles.filter((tempFile) => file.name !== tempFile.name);
+		});
 		setProgress((prevProgress) => {
 			let tempProgress = { ...prevProgress };
 			delete tempProgress[file.name];
@@ -85,6 +98,7 @@ const Configuration = () => {
 			if (!e.target.files.length) return;
 			const selectedFiles = Array.from(e.target.files);
 			setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+			setRowFiles((prevRowFiles) => [...prevRowFiles, ...selectedFiles]);
 			setProgress((prevProgress) => {
 				const progessState = {};
 				selectedFiles.forEach((file) => {
@@ -106,10 +120,23 @@ const Configuration = () => {
 			}
 
 			const uploadPromises = filesToUpload.map((file) =>
-				uploadFile(file, setProgress, getToken()),
+				uploadFile(file, setProgress),
 			);
 
-			const uploadedData = await Promise.all(uploadPromises);
+			const uploadResults = await Promise.allSettled(uploadPromises);
+
+			const uploadedData = uploadResults
+				.filter((result) => result.status === 'fulfilled')
+				.map((result) => result.value);
+
+			const failedUploads = uploadResults
+				.map((result, idx) => {
+					if (result.status === 'rejected') {
+						return { file: filesToUpload[idx], error: result.reason };
+					}
+					return false;
+				})
+				.filter((result) => !!result);
 
 			const newFiles = files.map((file) => {
 				const uploadedFile = uploadedData.find(
@@ -119,29 +146,59 @@ const Configuration = () => {
 					...file,
 					url: uploadedFile ? uploadedFile.url : file.url || '',
 					name: uploadedFile ? uploadedFile.name : file.name,
+					type: getFileType(file) || file.type,
 				};
 			});
 
-			setFiles(newFiles);
-			toast.success('Files uploaded successfully');
+			if (failedUploads.length > 0) {
+				trackEvent(
+					EVENTS_ENUM.UPLOAD_DATASET_FAILED,
+					EVENTS_REGISTRY.UPLOAD_DATASET_FAILED,
+					() => ({
+						files_count: filesToUpload.length,
+						files_type: failedUploads.map((fileData) =>
+							getFileType(fileData.file),
+						),
+						files_failed_count: failedUploads.length,
+						...getErrorAnalyticsProps(failedUploads?.[0]?.error),
+					}),
+				);
+				toast.error('Some files failed to upload');
+				setFiles([]);
+				setRowFiles([]);
+			} else {
+				trackEvent(
+					EVENTS_ENUM.UPLOAD_DATASET_SUCCESSFUL,
+					EVENTS_REGISTRY.UPLOAD_DATASET_SUCCESSFUL,
+					() => ({
+						files_count: newFiles.length,
+						files_type: newFiles.map((file) => file.type),
+					}),
+				);
+				toast.success('Files uploaded successfully');
+				setFiles(newFiles);
+			}
 		} catch (error) {
-			setFiles([]);
 			toast.error('Error uploading files');
 			console.error('Error uploading files', error);
-			trackEvent(
-				EVENTS_ENUM.DATASOURCE_CREATION_FAILED,
-				EVENTS_REGISTRY.DATASOURCE_CREATION_FAILED,
-				() => ({
-					uploaded: false,
-					file_upload_status: false,
-					error: getErrorAnalyticsProps(error),
-				}),
-			);
+			setFiles([]);
+			setRowFiles([]);
 		}
 	};
+
 	const createDataSource = async () => {
+		trackEvent(
+			EVENTS_ENUM.SAVE_DATASET_CLICKED,
+			EVENTS_REGISTRY.SAVE_DATASET_CLICKED,
+			() => ({
+				files_count: files.length,
+				files_type: files.map((file) => file.type),
+				analysis_chosen: [...dataSourceIntent],
+				dataset_name: datasourceName,
+				is_description_filled: !!description,
+			}),
+		);
 		setIsLoading(true);
-		const token = getToken();
 
 		const data = {
 			name: datasourceName,
@@ -157,7 +214,7 @@ const Configuration = () => {
 		};
 
 		try {
-			const response = await createNewDtaSource(data, token);
+			const response = await createNewDtaSource(data);
 			queryClient.invalidateQueries(['data-sources'], {
 				refetchActive: true,
 				refetchInactive: true,
@@ -167,26 +224,44 @@ const Configuration = () => {
 			setProgress({});
 			setIsLoading(false);
 			trackEvent(
-				EVENTS_ENUM.DATASOURCE_CREATED_SUCCESSFULLY,
-				EVENTS_REGISTRY.DATASOURCE_CREATED_SUCCESSFULLY,
-				() => ({ datasource_id: response.datasource_id }),
+				EVENTS_ENUM.SAVE_DATASET_SUCCESSFUL,
+				EVENTS_REGISTRY.SAVE_DATASET_SUCCESSFUL,
+				() => ({
+					files_count: files.length,
+					files_type: files.map((file) => file.type),
+					analysis_chosen: [...dataSourceIntent],
+					dataset_id: response.datasource_id,
+					dataset_name: datasourceName,
+					is_description_filled: !!description,
+					total_dataset_size:
+						rowFiles?.reduce((total, file) => {
+							return total + (file.size || 0);
+						}, 0) /
+						(1024 * 1024),
+				}),
 			);
 		} catch (error) {
 			toast.error('Error creating data source');
 			setIsLoading(false);
 			trackEvent(
-				EVENTS_ENUM.DATASOURCE_CREATION_FAILED,
-				EVENTS_REGISTRY.DATASOURCE_CREATION_FAILED,
+				EVENTS_ENUM.SAVE_DATASET_FAILED,
+				EVENTS_REGISTRY.SAVE_DATASET_FAILED,
 				() => ({
-					uploaded: true,
-					file_upload_status: true,
-					error: getErrorAnalyticsProps(error),
+					files_count: files.length,
+					files_type: files.map((file) => file.type),
+					total_dataset_size:
+						rowFiles?.reduce((total, file) => {
+							return total + (file.size || 0);
+						}, 0) /
+						(1024 * 1024),
+					...getErrorAnalyticsProps(error),
 				}),
 			);
 		}
 	};
-	const handleDeleteDataSource = async (e, dataSourceId) => {
+	const handleDeleteDataSource = async (e, source) => {
 		e.stopPropagation();
+		const dataSourceId = source.datasource_id;
 		try {
 			const updatedList = utilReducer?.dataSources.filter((source) => {
 				if (source.datasource_id !== dataSourceId) {
@@ -194,10 +269,30 @@ const Configuration = () => {
 				}
 			});
 			if (!confirm('Are you sure you want to delete this datasource?')) return;
-			await deleteDataSource(dataSourceId, getToken());
+			await deleteDataSource(dataSourceId);
+			trackEvent(
+				EVENTS_ENUM.DATASET_DELETION_SUCCESSFUL,
+				EVENTS_REGISTRY.DATASET_DELETION_SUCCESSFUL,
+				() => ({
+					source: 'options',
+					dataset_id: dataSourceId,
+					dataset_name: source.name,
+				}),
+			);
 			dispatch(updateUtilProp([{ key: 'dataSources', value: updatedList }]));
 			setDataSources(updatedList);
-		} catch (error) {}
+		} catch (error) {
+			trackEvent(
+				EVENTS_ENUM.DATASET_DELETION_FAILED,
+				EVENTS_REGISTRY.DATASET_DELETION_FAILED,
+				() => ({
+					source: 'inside_dataset',
+					dataset_id: dataSourceId,
+					dataset_name: source.name,
+					...getErrorAnalyticsProps(error),
+				}),
+			);
+		}
 	};
 
 	const isAllFilesUploaded = () => {
@@ -209,8 +304,7 @@ const Configuration = () => {
 	};
 
 	const fetchDataSources = async () => {
-		const token = getToken();
-		const data = await getDataSources(token);
+		const data = await getDataSources();
 		return Array.isArray(data) ? data : [];
 	};
 
@@ -220,10 +314,6 @@ const Configuration = () => {
 	});
 
 	const handleSelectUseCase = (value) => {
-		trackEvent(
-			EVENTS_ENUM.DATASOURCE_INTENT_SELECTED,
-			EVENTS_REGISTRY.DATASOURCE_INTENT_SELECTED,
-		);
 		if (dataSourceIntent.includes(value)) {
 			setDataSourceIntent((prev) => prev.filter((item) => item !== value));
 		} else {
@@ -232,6 +322,15 @@ const Configuration = () => {
 	};
 
 	const startChatting = (data) => {
+		trackEvent(
+			EVENTS_ENUM.EXISTING_DATASET_CLICKED,
+			EVENTS_REGISTRY.EXISTING_DATASET_CLICKED,
+			() => ({
+				dataset_id: data.datasource_id,
+				dataset_name: data.name,
+				source: search ? 'search' : 'select',
+			}),
+		);
 		dispatch(
 			updateUtilProp([
 				{
@@ -240,7 +339,9 @@ const Configuration = () => {
 				},
 			]),
 		);
-		navigate(`/app/new-chat/?step=3&dataSourceId=${data.datasource_id}`);
+		navigate(
+			`/app/new-chat/?step=3&dataSourceId=${data.datasource_id}&source=configuration`,
+		);
 	};
 
 	useEffect(() => {
@@ -251,8 +352,17 @@ const Configuration = () => {
 	}, [data]);
 
 	const filteredList = useMemo(() => {
+		if (search) {
+			trackEvent(
+				EVENTS_ENUM.SEARCH_EXISTING_DATASET,
+				EVENTS_REGISTRY.SEARCH_EXISTING_DATASET,
+				() => ({
+					search_query: search,
+				}),
+			);
+		}
 		return dataSources.filter((item) =>
-			item?.name?.toLowerCase()?.startsWith(search?.trim()?.toLowerCase()),
+			item?.name?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
 		);
 	}, [search, dataSources]);
 
@@ -279,12 +389,22 @@ const Configuration = () => {
 
 	const handleInputClick = (e) => {
 		e.preventDefault();
+		if (files.length === 0) {
+			trackEvent(
+				EVENTS_ENUM.UPLOAD_DATASET_CLICKED,
+				EVENTS_REGISTRY.UPLOAD_DATASET_CLICKED,
+				() => ({
+					source: query?.source || 'url',
+				}),
+			);
+		} else {
+			trackEvent(
+				EVENTS_ENUM.UPLOAD_MORE_CLICKED,
+				EVENTS_REGISTRY.UPLOAD_MORE_CLICKED,
+			);
+		}
 		if (!isAllFilesUploaded() || isLoading) return;
 		inputRef.current.click();
-		trackEvent(
-			EVENTS_ENUM.UPLOAD_DATASOURCE_CLICKED,
-			EVENTS_REGISTRY.UPLOAD_DATASOURCE_CLICKED,
-		);
 	};
 
 	const renderUploadButtons = () => {
@@ -342,6 +462,20 @@ const Configuration = () => {
 				/>
 			</div>
 		);
+	};
+
+	useEffect(() => {
+		trackEvent(
+			EVENTS_ENUM.CONFIG_PAGE_LOADED,
+			EVENTS_REGISTRY.CONFIG_PAGE_LOADED,
+			() => ({
+				source: query?.source || 'url',
+			}),
+		);
+	}, [query]);
+
+	const handleSearch = (e) => {
+		setSearch(e.target.value);
 	};
 
 	return (
@@ -533,7 +667,7 @@ const Configuration = () => {
 								'border-none rounded-sm px-0 text-primary40 font-medium bg-transparent',
 							)}
 							value={search}
-							onChange={(e) => setSearch(e.target.value)}
+							onChange={handleSearch}
 							onFocus={() => setIsFocused(true)}
 							onBlur={() => setIsFocused(false)}
 						/>
@@ -593,7 +727,7 @@ const Configuration = () => {
 													onClick={(e) =>
 														handleDeleteDataSource(
 															e,
-															source.datasource_id,
+															source,
 														)
 													}
 												>

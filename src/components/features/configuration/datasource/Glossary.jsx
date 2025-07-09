@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
-const Glossary = ({ data, setForm, form }) => {
+const Glossary = ({ data, setForm, form, addChangeForTracking }) => {
 	const [localForm, setLocalForm] = useState(form.processed_files.glossary.items);
 
 	// Handle input change, update only if there's an actual change
@@ -33,6 +35,15 @@ const Glossary = ({ data, setForm, form }) => {
 
 	// Add more glossary entries
 	const addMoreGlossary = () => {
+		trackEvent(
+			EVENTS_ENUM.DATASET_GLOSARRY_ADD_MORE_CLICKED,
+			EVENTS_REGISTRY.DATASET_GLOSARRY_ADD_MORE_CLICKED,
+			() => ({
+				dataset_id: data?.datasource_id,
+				dataset_name: data?.name,
+			})
+		)
+		addChangeForTracking('glossary_new');
 		const newGlossary = { term: '', meaning: '', type: 'manual' };
 		const updatedGlossaries = [...localForm, newGlossary];
 		setLocalForm(updatedGlossaries);
@@ -70,6 +81,18 @@ const Glossary = ({ data, setForm, form }) => {
 			},
 		};
 		setForm(updatedForm);
+		const glossaryData = data?.processed_files?.glossary?.items[index];
+		trackEvent(
+			EVENTS_ENUM.DATASET_GLOSARRY_DELETED,
+			EVENTS_REGISTRY.DATASET_GLOSARRY_DELETED,
+			() => ({
+				dataset_id: data?.datasource_id,
+				dataset_name: data?.name,
+				glossary_term: glossaryData?.term,
+				glossary_desc: glossaryData?.meaning,
+			})
+		)
+		addChangeForTracking("glossary_delete"); 
 	};
 
 	return (
@@ -92,9 +115,20 @@ const Glossary = ({ data, setForm, form }) => {
 							<textarea
 								placeholder="Enter Word Here"
 								defaultValue={glossary.term}
-								onChange={(e) =>
+								onChange={(e) =>{
+									trackEvent(
+										EVENTS_ENUM.DATASET_GLOSARRY_TERM_EDITED,
+										EVENTS_REGISTRY.DATASET_GLOSARRY_TERM_EDITED,
+										() => ({
+											dataset_id: data?.datasource_id,
+											dataset_name: data?.name,
+											old_glossary_term: glossary.term,
+											new_glossary_term: e.target.value,
+										})
+									);
+									addChangeForTracking("glossary_edit_term");
 									handleChange(index, 'term', e.target.value)
-								}
+								}}
 								className="w-full border p-2 border-gray-300 rounded-md resize-none"
 							/>
 							{/* Delete Button next to Word */}
@@ -114,9 +148,20 @@ const Glossary = ({ data, setForm, form }) => {
 						<textarea
 							placeholder="Enter Definition Here"
 							defaultValue={glossary.meaning}
-							onChange={(e) =>
+							onChange={(e) =>{
+								trackEvent(
+									EVENTS_ENUM.DATASET_GLOSARRY_DESC_EDITED,
+									EVENTS_REGISTRY.DATASET_GLOSARRY_DESC_EDITED,
+									() => ({
+										dataset_id: data?.datasource_id,
+										dataset_name: data?.name,
+										old_glossary_desc: glossary.meaning,
+										new_glossary_desc: e.target.value,
+									})
+								);
+								addChangeForTracking("glossary_edit_desc");
 								handleChange(index, 'meaning', e.target.value)
-							}
+							}}
 							className="w-full border p-2 border-gray-300 rounded-md resize-none"
 						/>
 						<div className="flex justify-end">

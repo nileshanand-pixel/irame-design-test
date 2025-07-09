@@ -20,7 +20,6 @@ import { queryClient } from '@/lib/react-query';
 const AddQueryToNewReportDialog = ({
 	open,
 	onClose,
-	token,
 	queryId,
 	onSuccessCloseAll,
 }) => {
@@ -45,7 +44,6 @@ const AddQueryToNewReportDialog = ({
 		const trimmedName = reportName.trim();
 		const trimmedDesc = reportDescription.trim();
 		mutation.mutate({
-			token,
 			newReportData: {
 				report_name: trimmedName,
 				report_description: trimmedDesc,

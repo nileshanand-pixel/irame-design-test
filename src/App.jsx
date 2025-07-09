@@ -2,11 +2,15 @@ import { isMobileOnly } from 'react-device-detect';
 import AppProvider from './providers/AppProvider';
 import AppRoutes from './routes';
 import { ThemeProvider } from './providers/ThemeProvider';
-import { useEffect } from 'react';
+import { useMemo } from 'react';
 import { initAnalytics } from './lib/mixpanel';
+import SessionManager from './components/features/session-manager';
+import useAuth from './hooks/useAuth';
 
 export default function App() {
-	useEffect(() => {
+	const { isAuthenticated, isLoading } = useAuth();
+
+	useMemo(() => {
 		initAnalytics();
 	}, []);
 
@@ -20,6 +24,7 @@ export default function App() {
 	}
 	return (
 		<AppProvider>
+			{!isLoading && isAuthenticated && <SessionManager />}
 			<ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
 				<AppRoutes />
 			</ThemeProvider>

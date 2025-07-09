@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn, getToken } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import DividerWithText from '@/components/elements/DividerWithText';
 import PropTypes from 'prop-types';
 import { getDataSources } from '@/components/features/configuration/service/configuration.service'; 
@@ -19,8 +19,7 @@ export function DataSourceSelector({ open, onOpenChange, onContinue }) {
 	const [datasourceUploadData, setDatasourceUploadData] = useState(null);
 
 	const fetchDataSources = async () => {
-		const token = getToken();
-		const data = await getDataSources(token);
+		const data = await getDataSources();
 		return Array.isArray(data) ? data : [];
 	};
 

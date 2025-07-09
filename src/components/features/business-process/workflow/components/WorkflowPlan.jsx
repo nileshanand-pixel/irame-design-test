@@ -5,7 +5,6 @@ import remarkBreaks from 'remark-breaks';
 import { getWorkflowRunDetails } from '../../service/workflow.service';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { getToken } from '@/lib/utils';
 
 const WorkflowPlan = ({ plan: initialPlan, disabled }) => {
 	const { workflowId } = useParams();
@@ -14,7 +13,7 @@ const WorkflowPlan = ({ plan: initialPlan, disabled }) => {
 
 	const { data: runDetails } = useQuery({
 		queryKey: ['workflow-run-details', runId],
-		queryFn: () => getWorkflowRunDetails(getToken(), workflowId, runId),
+		queryFn: () => getWorkflowRunDetails(workflowId, runId),
 		enabled: !initialPlan && !!runId,
 		refetchInterval: ({ state }) => {
 			const data = state?.data;

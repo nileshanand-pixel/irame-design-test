@@ -22,6 +22,7 @@ export const useDataTable = ({
 	rowSelection,
 	setRowSelection,
 	defaultSort,
+	onSortingChange = () => {},
 }) => {
 	const config = {
 		data,
@@ -54,6 +55,7 @@ export const useDataTable = ({
 					},
 				}
 			: {}),
+		onSortingChange: onSortingChange,
 		_features: [SortingFixFeature]
 	};
 

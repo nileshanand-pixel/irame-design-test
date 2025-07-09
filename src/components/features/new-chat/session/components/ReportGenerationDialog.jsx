@@ -12,7 +12,6 @@ import Spinner from '@/components/elements/loading/Spinner';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createSessionReport, getSessionReports } from '@/components/features/reports/service/reports.service';
 import { useRouter } from '@/hooks/useRouter';
-import { getToken } from '@/lib/utils';
 import ReportCardSkeleton from './ReportCardSkeletion';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
@@ -27,7 +26,7 @@ const ReportGenerationDialog = React.memo(
 		const reportsGetter = useCallback(() => {
 			if (!query?.sessionId) return;
 			return getSessionReports(
-				getToken(),
+
 				query?.sessionId,
 			);
 		}, [query?.sessionId]);
@@ -41,7 +40,7 @@ const ReportGenerationDialog = React.memo(
 
 		const createSessionReportMutation = useMutation({
 			mutationFn: async () => {
-				await createSessionReport(getToken(), query.sessionId, {
+				await createSessionReport(query.sessionId, {
 					query_count: chatStoreReducer?.queries?.length || 0,
 				});
 			},
@@ -63,7 +62,7 @@ const ReportGenerationDialog = React.memo(
 		});
 
 		const handleGenerateReport = () => {
-			if(!query.sessionId || !chatStoreReducer?.queries?.length)return;
+			if (!query.sessionId || !chatStoreReducer?.queries?.length) return;
 			createSessionReportMutation.mutate();
 		}
 
@@ -128,7 +127,7 @@ const ReportGenerationDialog = React.memo(
 					<div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto">
 						{sessionReportsData.isLoading ? (
 							<div className="flex flex-col gap-4 justify-center mt-4">
-								<ReportCardSkeleton count={3}/>
+								<ReportCardSkeleton count={3} />
 							</div>
 						) : sessionReportsData.isError ? (
 							<p className="text-center text-red-500">Failed to load reports.</p>

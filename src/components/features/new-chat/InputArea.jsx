@@ -9,7 +9,7 @@ import {
 	getTemplates,
 } from './service/new-chat.service';
 import CHAT_CONSTANTS from '@/constants/chat.constant';
-import { chatCommandInitiator, getToken } from '@/lib/utils';
+import { chatCommandInitiator } from '@/lib/utils';
 import MoreActionsModal from './MoreActionsModal';
 import SaveEditTemplateModal from '../reports/components/SaveEditTemplateModal';
 
@@ -57,13 +57,13 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 
 	const getTemplatesQuery = useQuery({
 		queryKey: ['saved-queries'],
-		queryFn: () => getTemplates(getToken()),
+		queryFn: () => getTemplates(),
 		enabled: !!config?.savedQueries,
 	});
 
 	const deleteTemplateMutation = useMutation({
 		mutationFn: async (templateId) => {
-			await deleteTemplate(templateId, getToken());
+			await deleteTemplate(templateId);
 		},
 		onSuccess: () => {
 			getTemplatesQuery?.refetch();
@@ -412,7 +412,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	const renderSimpleMode = () => (
 		<Textarea
 			rows={1}
-			placeholder={!disabled ? CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER: CHAT_CONSTANTS.IRA_GENERATING_RESPONSE}
+			placeholder={!disabled ? CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER : CHAT_CONSTANTS.IRA_GENERATING_RESPONSE}
 			onFocus={() =>
 				utilReducer?.isSideNavOpen &&
 				dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]))
@@ -471,10 +471,9 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 											onClick={handleEnhancePrompt}
 											variant="transparent"
 											size="iconSm"
-											className={`${
-												disablePromptEnhancer &&
+											className={`${disablePromptEnhancer &&
 												'cursor-not-allowed opacity-40'
-											}`}
+												}`}
 											disabled={disablePromptEnhancer}
 										>
 											<img
@@ -499,7 +498,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 								)}
 								<div
 									className="flex items-end gap-2 cursor-pointer"
-									
+
 									onClick={handleSend}
 								>
 									<img

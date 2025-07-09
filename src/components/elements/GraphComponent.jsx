@@ -10,6 +10,7 @@ import ScrollList from './ScrollList';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getSupportedGraphs } from '@/lib/utils';
+import { useRouter } from '@/hooks/useRouter';
 
 const GraphComponent = ({
 	data,
@@ -26,6 +27,9 @@ const GraphComponent = ({
 	const tableData = data?.table?.tool_data;
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+	const { query } = useRouter();
+	const utilReducer = useSelector((state) => state.utilReducer);
+
 
 	const containerRef = useRef(null);
 	const [isOverflowing, setIsOverflowing] = useState(false);
@@ -89,6 +93,20 @@ const GraphComponent = ({
 		}
 	}, [chatStoreReducer?.activateGraphOnLast]);
 
+	const onSortingChange = () => {
+		trackEvent(
+			EVENTS_ENUM.TABLE_VIEW_CHANGED,
+			EVENTS_REGISTRY.TABLE_VIEW_CHANGED,
+			() => ({
+				chat_session_id: query?.sessionId,
+				dataset_id: utilReducer?.selectedDataSource?.id,
+				dataset_name: utilReducer?.selectedDataSource?.name,
+				query_id: chatStoreReducer?.activeQueryId,
+				change_type: "sorting",
+			}),
+		);
+	}
+
 	return (
 		<div className="mb-4">
 			{isGraphLoading ? (
@@ -108,14 +126,29 @@ const GraphComponent = ({
 									activeTab === item ? 'active-tab' : 'default-tab'
 								}`}
 								onClick={() => {
-									trackEvent(
-										EVENTS_ENUM.GRAPH_TAB_CLICKED,
-										EVENTS_REGISTRY.GRAPH_TAB_CLICKED,
-										() => ({
-											total_graph_generated:
-												graphList.length || 0,
-										}),
-									);
+									if(item === "Tabular View") {
+										trackEvent(
+											EVENTS_ENUM.TABULAR_VIEW_TAB_CLICKED,
+											EVENTS_REGISTRY.TABULAR_VIEW_TAB_CLICKED,
+											() => ({
+												chat_session_id: query?.sessionId,
+												dataset_id: utilReducer?.selectedDataSource?.id,
+												dataset_name: utilReducer?.selectedDataSource?.name,
+												query_id: chatStoreReducer?.activeQueryId,
+											}),
+										);
+									} else if(item === "Graphical View") {
+										trackEvent(
+											EVENTS_ENUM.GRAPHICAL_VIEW_TAB_CLICKED,
+											EVENTS_REGISTRY.GRAPHICAL_VIEW_TAB_CLICKED,
+											() => ({
+												chat_session_id: query?.sessionId,
+												dataset_id: utilReducer?.selectedDataSource?.id,
+												dataset_name: utilReducer?.selectedDataSource?.name,
+												query_id: chatStoreReducer?.activeQueryId,
+											}),
+										);
+									}
 									setActiveTab(item);
 								}}
 							>
@@ -137,11 +170,16 @@ const GraphComponent = ({
 										onClick={() => {
 											setActiveGraphTab(graph.id);
 											trackEvent(
-												EVENTS_ENUM.GRAPH_VIEW_CHANGED,
-												EVENTS_REGISTRY.GRAPH_VIEW_CHANGED,
+												EVENTS_ENUM.ANALYSIS_GRAPH_VARIANT_CLICKED,
+												EVENTS_REGISTRY.ANALYSIS_GRAPH_VARIANT_CLICKED,
 												() => ({
-													graph_viewed_number: index,
+													chat_session_id: query?.sessionId,
+													dataset_id: utilReducer?.selectedDataSource?.id,
+													dataset_name: utilReducer?.selectedDataSource?.name,
+													query_id: chatStoreReducer?.activeQueryId,
 													graph_id: graph.id,
+													graph_name: graph.title,
+													graph_type: graph.type
 												}),
 											);
 										}}
@@ -173,6 +211,7 @@ const GraphComponent = ({
 								<TableComponent
 									data={loadedData}
 									columns={columns}
+									onSortingChange={onSortingChange}
 								/>
 							</div>
 						</div>

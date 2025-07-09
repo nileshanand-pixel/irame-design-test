@@ -1,10 +1,10 @@
 import { clsx } from 'clsx';
-import Cookies from 'js-cookie';
 import capitalize from 'lodash.capitalize';
 import { twMerge } from 'tailwind-merge';
 import xlsIcon from '@/assets/icons/ms_excel.svg';
 import csvIcon from '@/assets/icons/csv_icon.svg';
 import pdfIcon from '@/assets/icons/pdf_icon.svg';
+import imageIcon from '@/assets/icons/image-icon.png';
 import { pdfjs } from 'react-pdf';
 import { supportedChartTypes } from '@/config/supported-graph-types';
 
@@ -24,12 +24,6 @@ export const formatFileSize = (size) => {
 	}
 };
 
-export const tokenCookie = '';
-
-export const getToken = () => {
-	const token = Cookies.get('id_token');
-	return token ? token : tokenCookie;
-};
 
 export const getRefreshToken = () => {
 	const token = Cookies.get('refresh_token');
@@ -53,6 +47,7 @@ export function toTitleCase(str) {
 		return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
 	});
 }
+
 export const getShortHandName = (fullName) => {
 	if (fullName?.length > 0) {
 		const splits = fullName.split(' ');
@@ -87,6 +82,14 @@ export const getFileIcon = (fileName) => {
 			return xlsIcon;
 		case 'pdf':
 			return pdfIcon;
+		case "jpeg":
+		case "jpg": 
+		case "gif": 
+		case "png": 
+		case "webp":
+		case "svg":
+		case "bmp": 
+			return imageIcon;
 		default:
 			return xlsIcon;
 	}
@@ -116,33 +119,6 @@ export const base64ToBlob = (base64, mimeType) => {
 		byteArrays.push(byteArray);
 	}
 	return new Blob(byteArrays, { type: mimeType });
-};
-
-export const downloadCsvWithCustomName = async ({
-	csvUrl,
-	reportName,
-	queryTitle,
-	queryId,
-}) => {
-	try {
-		const response = await fetch(csvUrl);
-		const blob = await response.blob();
-
-		const truncatedTitle = queryTitle.replace(/\s+/g, '_').slice(0, 20);
-
-		const filename = `${reportName}_${truncatedTitle}_${queryId}.csv`;
-
-		const blobUrl = URL.createObjectURL(blob);
-		const link = document.createElement('a');
-		link.href = blobUrl;
-		link.download = filename;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		URL.revokeObjectURL(blobUrl);
-	} catch (err) {
-		console.error('CSV download failed:', err);
-	}
 };
 
 export const getSupportedGraphs = (graphList = []) => {

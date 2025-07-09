@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { useReportId } from "../../hooks/useReportId"
-import { getToken } from "@/lib/utils";
 import { getActivityTrail } from "../../service/reports.service";
 import ActivityTrailSkeleton from "./skeleton";
 import { formatRelativeTime } from "@/utils/date-utils";
@@ -11,8 +10,7 @@ export default function ActivityTrail() {
 
 	const {data: activities, isLoading} = useQuery({
 		queryKey: ['activity-trail', reportId],
-		queryFn: () => getActivityTrail(getToken(), reportId),
-		enabled: !!getToken(),
+		queryFn: () => getActivityTrail(reportId),
 	})
 
     return (

@@ -1,124 +1,106 @@
 import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
 
-export const getReports = async (token) => {
+export const getReports = async () => {
 	const response = await axiosClientV1.get(`/reports/all`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data.reports;
 };
 
-export const shareReport = async (token, reportId, data) => {
+export const shareReport = async (reportId, data) => {
 	const response = await axiosClientV1.post(`/reports/${reportId}/share`, data, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
-export const getReportAccessDetails = async (token, reportId) => {
+export const getReportAccessDetails = async (reportId) => {
 	const response = await axiosClientV1.get(`/reports/${reportId}/shared`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
-export const getSessionReports = async (token, sessionId) => {
+export const getSessionReports = async (sessionId) => {
 	const response = await axiosClientV2.get(`/reports/sessions/${sessionId}`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
-export const getDatasourceReports = async (token, datasourceId) => {
+export const getDatasourceReports = async (datasourceId) => {
 	const response = await axiosClientV2.get(
 		`/reports/datasources/${datasourceId}`,
 		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		},
 	);
 	return response.data;
 };
 
-export const getDatasources = async (token) => {
+export const getDatasources = async () => {
 	const response = await axiosClientV2.get(`/reports/datasources`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
-export const createSessionReport = async (token, sessionId, data) => {
+export const createSessionReport = async (sessionId, data) => {
 	const response = await axiosClientV2.post(
 		`/reports/sessions/${sessionId}`,
 		data,
 		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		},
 	);
 	return response.data;
 };
 
-export const getSharedReports = async (token) => {
+export const getSharedReports = async () => {
 	const response = await axiosClientV2.get(`/reports/shared-reports`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
-export const createReport = async (token, reportData) => {
+export const createReport = async (reportData) => {
 	const response = await axiosClientV2.post('/reports', reportData, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
-export const getUserReports = async (token) => {
+export const getUserReports = async () => {
 	const response = await axiosClientV2.get('/reports/user-reports', {
-		headers: { Authorization: `Bearer ${token}` },
+		headers: { },
 	});
 	return response.data;
 };
 
-export const getUserReport = async (token, reportId) => {
+export const getUserReport = async (reportId) => {
 	const response = await axiosClientV2.get(`/reports/${reportId}/report-cards`, {
-		headers: { Authorization: `Bearer ${token}` },
+		headers: { },
 	});
 	return response.data;
 };
 
-export const addQueryToExistingReport = async ({ token, reportId, queryData }) => {
+export const addQueryToExistingReport = async ({ reportId, queryData }) => {
 	const url = `/reports/${reportId}/add-query`;
 	const response = await axiosClientV2.post(url, queryData, {
-		headers: { Authorization: `Bearer ${token}` },
+		headers: { },
 	});
 	return response.data;
 };
 
-export const createReportAndAddQuery = async ({ token, newReportData }) => {
+export const createReportAndAddQuery = async ({ newReportData }) => {
 	const url = '/reports/add-query';
 	const response = await axiosClientV2.post(url, newReportData, {
-		headers: { Authorization: `Bearer ${token}` },
+		headers: { },
 	});
 	return response.data;
 };
 
-export const updateReportCardOrder = async ({ token, reportId, reportCardIds }) => {
+export const updateReportCardOrder = async ({ reportId, reportCardIds }) => {
 	const url = `/reports/${reportId}/update-order`;
 	const response = await axiosClientV2.post(
 		url,
@@ -126,14 +108,13 @@ export const updateReportCardOrder = async ({ token, reportId, reportCardIds }) 
 			report_card_ids: reportCardIds,
 		},
 		{
-			headers: { Authorization: `Bearer ${token}` },
+			headers: { },
 		},
 	);
 	return response.data;
 };
 
 export const updateVisibleGraphs = async ({
-	token,
 	reportId,
 	reportCardId,
 	visibleGraphIds,
@@ -145,14 +126,13 @@ export const updateVisibleGraphs = async ({
 			visible_graph_ids: visibleGraphIds,
 		},
 		{
-			headers: { Authorization: `Bearer ${token}` },
+			headers: { },
 		},
 	);
 	return response.data;
 };
 
 export const updateReportCardStatus = async ({
-	token,
 	reportId,
 	reportCardId,
 	status,
@@ -164,25 +144,23 @@ export const updateReportCardStatus = async ({
 			report_card_status: status,
 		},
 		{
-			headers: { Authorization: `Bearer ${token}` },
+			headers: { },
 		},
 	);
 	return response.data;
 };
 
-export const deleteReportCard = async ({ token, reportId, reportCardId }) => {
+export const deleteReportCard = async ({ reportId, reportCardId }) => {
 	const response = await axiosClientV2.delete(
 		`/reports/${reportId}/report-cards/${reportCardId}`,
 		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		},
 	);
 	return response.data;
 };
 
-export const updateReportStatus = async ({ token, reportId, status }) => {
+export const updateReportStatus = async ({ reportId, status }) => {
 	const url = `/reports/${reportId}/update-status`;
 	const response = await axiosClientV2.post(
 		url,
@@ -191,7 +169,6 @@ export const updateReportStatus = async ({ token, reportId, status }) => {
 		},
 		{
 			headers: {
-				Authorization: `Bearer ${token}`,
 			},
 		},
 	);
@@ -199,7 +176,6 @@ export const updateReportStatus = async ({ token, reportId, status }) => {
 };
 
 export const updateReportMetadata = async ({
-	token,
 	reportId,
 	reportCardId,
 	riskLevel,
@@ -208,80 +184,51 @@ export const updateReportMetadata = async ({
 	const response = await axiosClientV2.post(
 		`/reports/${reportId}/report-cards/${reportCardId}/update-metadata`,
 		{ risk_level: riskLevel, risk_types: riskTypes },
-		{ headers: { Authorization: `Bearer ${token}` } },
+		{ headers: { } },
 	);
 	return response.data;
 };
 
-export const generateReportSummary = async ({ token, reportId }) => {
+export const generateReportSummary = async ({reportId}) => {
 	const response = await axiosClientV2.post(
 		`/reports/${reportId}/initiate-generate-summary`,
-		undefined,
-		{ headers: { Authorization: `Bearer ${token}` } },
 	);
 	return response.data;
 };
 
-export const getReportSummary = async ({ token, reportId }) => {
-	const response = await axiosClientV2.get(`/reports/${reportId}/summary`, {
-		headers: { Authorization: `Bearer ${token}` },
-	});
+export const getReportSummary = async ({reportId}) => {
+	const response = await axiosClientV2.get(`/reports/${reportId}/summary`);
 	return response.data;
 };
 
-export const getReportCardSources = async (token, reportId, reportCardId) => {
+export const getReportCardSources = async (reportId, reportCardId) => {
 	const response = await axiosClientV2.get(
 		`/reports/${reportId}/report-cards/${reportCardId}/sources`,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		},
 	);
 	return response.data;
 };
 
-export const getActivityTrail = async (token, reportId) => {
-	const response = await axiosClientV2.get(`/reports/${reportId}/activity-trail`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
+export const getActivityTrail = async (reportId) => {
+	const response = await axiosClientV2.get(`/reports/${reportId}/activity-trail`);
 	return response.data;
 };
 
-export const getReportComments = async(token, reportId) => {
-	const response = await axiosClientV2.get(`/reports/${reportId}/comments`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
+export const getReportComments = async(reportId) => {
+	const response = await axiosClientV2.get(`/reports/${reportId}/comments`);
 	return response.data;
 }
 
-export const getReportCardComments = async(token, reportId, reportCardId) => {
-	const response = await axiosClientV2.get(`/reports/${reportId}/report-cards/${reportCardId}/comments`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
+export const getReportCardComments = async(reportId, reportCardId) => {
+	const response = await axiosClientV2.get(`/reports/${reportId}/report-cards/${reportCardId}/comments`);
 	return response.data;
 }
 
-export const addReportComment = async (token, reportId, payload) => {
-	const response = await axiosClientV2.post(`/reports/${reportId}/comments`, payload,  {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
+export const addReportComment = async (reportId, payload) => {
+	const response = await axiosClientV2.post(`/reports/${reportId}/comments`, payload);
 	return response.data;
 }
 
-export const addReportCardComment = async(token, reportId, reportCardId, payload) => {
-	const response = await axiosClientV2.post(`/reports/${reportId}/report-cards/${reportCardId}/comments`, payload,  {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
+export const addReportCardComment = async(reportId, reportCardId, payload) => {
+	const response = await axiosClientV2.post(`/reports/${reportId}/report-cards/${reportCardId}/comments`, payload);
 	return response.data;
 }

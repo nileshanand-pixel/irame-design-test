@@ -3,26 +3,31 @@ import { toast } from 'sonner';
 import axiosClientV1 from '@/lib/axios';
 
 
-export const getPresignedUrl = async (fileName, authToken) => {
+export const getPresignedUrl = async (fileName) => {
 	const response = await axiosClientV1.get(
 		`/datasources/presigned-url?file_name=${fileName}&datasource_id=${uuidv4()}`,
 		{
-			headers: {
-				Authorization: `Bearer ${authToken}`,
-			},
+			headers: { },
 		},
 	);
 
 	return response.data;
 };
 
-export const uploadFile = async (file, setProgress, authToken, cancelToken=null) => {
+export const uploadFile = async (file, setProgress, cancelToken=null) => {
     try {
         const { presigned_url, url } = await getPresignedUrl(
             file?.name?.replace(/\s/g, '_'),
-            authToken,
         );
 
+		const headers = {}
+
+		if (presigned_url.includes('amazonaws.com')) {
+			headers['Content-Type'] = file.type
+		} else if (presigned_url.includes('core.windows.net')) {
+			headers['x-ms-blob-type'] = 'BlockBlob'
+		}
+		
         await axiosClientV1.put(presigned_url, file, {
             headers: {
               'Content-Type': file.type,
@@ -52,54 +57,44 @@ export const uploadFile = async (file, setProgress, authToken, cancelToken=null)
 };
 
 
-export const getDataSources = async (authToken, options) => {
+export const getDataSources = async (options) => {
 	const response = await axiosClientV1.get(`/datasources`, {
-		headers: {
-			Authorization: `Bearer ${authToken}`,
-		},
+		headers: { },
 	});
 
 	return response.data?.datasource_list;
 };
 
-export const getDataSourcesWithLimit = async (authToken, limit) => {
+export const getDataSourcesWithLimit = async (limit) => {
 	const response = await axiosClientV1.get(`/datasources?limit=${limit}`, {
-		headers: {
-			Authorization: `Bearer ${authToken}`,
-		},
+		headers: { },
 	});
 
 	return response.data?.datasource_list;
 };
 
-export const getDataSourceById = async(authToken, id) => {
+export const getDataSourceById = async(id) => {
 	const response = await axiosClientV1.get(`/datasources/${id}`, {
-		headers: {
-			Authorization: `Bearer ${authToken}`,
-		},
+		headers: { },
 	});
 
 	return response.data;
 }
 
-export const createNewDtaSource = async (data, authToken) => {
+export const createNewDtaSource = async (data) => {
 	const response = await axiosClientV1.post(`/datasources`, data, {
-		headers: {
-			Authorization: `Bearer ${authToken}`,
-		},
+		headers: { },
 	});
 
 	return response.data;
 };
 
-export const deleteDataSource = async (dataSourceId, authToken) => {
+export const deleteDataSource = async (dataSourceId) => {
 	try {
 		const response = await axiosClientV1.delete(
 			`/datasources/${dataSourceId}`,
 			{
-				headers: {
-					Authorization: `Bearer ${authToken}`,
-				},
+				headers: { },
 			},
 		);
 		toast.success('Data source deleted successfully');
@@ -112,10 +107,9 @@ export const deleteDataSource = async (dataSourceId, authToken) => {
 	}
 };
 
-export const updateDataSource = async (id, data, authToken) => {
+export const updateDataSource = async (id, data) => {
 	const response = await axiosClientV1.patch(`/datasources/${id}`, data, {
 		headers: {
-			Authorization: `Bearer ${authToken}`,
 			"Content-Type": "application/json",
 		},
 	});

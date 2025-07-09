@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
-import { cn, getToken } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import EmptyState from '@/components/elements/EmptyState';
 import WorkflowCard from './WorkflowCard';
 import WorkflowSkeleton from './WorkflowCardSkeleton';
@@ -47,13 +47,13 @@ const SingleBusinessProcessPage = () => {
 	// Fetch business processes
 	const { data: businessProcessesData, isLoading: isBusinessLoading } = useQuery({
 		queryKey: ['get-business-processes'],
-		queryFn: () => getBusinessProcesses(getToken()),
+		queryFn: () => getBusinessProcesses(),
 	});
 
 	// Fetch workflows
 	const { data: workflowsData, isLoading: isWorkflowsLoading } = useQuery({
 		queryKey: ['get-workflows-by-business-process', businessProcessId],
-		queryFn: () => getWorkflowsByBusinessProcess(getToken(), businessProcessId),
+		queryFn: () => getWorkflowsByBusinessProcess(businessProcessId),
 		enabled: !!businessProcessId,
 	});
 
@@ -100,7 +100,7 @@ const SingleBusinessProcessPage = () => {
 		reactionText: 'your workflows will appear here...',
 		ctaText: 'Create New Workflow',
 		ctaDisabled: true,
-		ctaClickHandler: () => {},
+		ctaClickHandler: () => { },
 		comingSoonText: 'Custom workflow creation coming soon...',
 	};
 

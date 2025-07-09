@@ -1,32 +1,19 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getReportCardSources } from '../service/reports.service';
-import { getFileIcon, getToken } from '@/lib/utils';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Download, ExternalLink } from 'lucide-react';
 import { useReportId } from '../hooks/useReportId';
-import { ArrowSquareOut, BoxArrowDown } from '@phosphor-icons/react';
-import { Hint } from '@/components/Hint';
+import SourceRow from './source-row';
 
 export default function TabSheet({ open = true, onOpenChange, queryCardId }) {
 	const reportId = useReportId();
 	const { data, isLoading } = useQuery({
 		queryKey: ['report-card-sources', reportId, queryCardId],
-		queryFn: () => getReportCardSources(getToken(), reportId, queryCardId),
+		queryFn: () => getReportCardSources(reportId, queryCardId),
 	});
 
 	const sources = data?.sources || [];
-
-	const downloadFile = (fileUrl, fileName) => {
-		const link = document.createElement('a');
-		link.href = fileUrl;
-		link.download = fileName;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-	};
 
 	const openFile = (fileUrl) => {
 		window.open(fileUrl, '_blank', 'noopener,noreferrer');
@@ -187,67 +174,7 @@ export default function TabSheet({ open = true, onOpenChange, queryCardId }) {
 												) : (
 													<div className="w-full space-y-4">
 														{sources.map((source) => (
-															<div
-																key={
-																	source.file_id ||
-																	source.id
-																}
-																className="border border-[#EAE8FA] rounded-lg py-2 px-4 flex items-center justify-between"
-															>
-																<div className="flex gap-2 w-4/5 items-center">
-																	<div className="p-1 shrink-0 rounded mr-2">
-																		<img
-																			src={getFileIcon(
-																				source.file_name,
-																			)}
-																			className="size-8"
-																			alt="icon"
-																		/>
-																	</div>
-																	<span className="font-semibold truncate text-base">
-																		{
-																			source.file_name
-																		}
-																	</span>
-																</div>
-																<div className="flex items-center gap-4">
-																	<Hint label="Download">
-																		<Button
-																			variant="ghost"
-																			size="iconSm"
-																			onClick={() =>
-																				downloadFile(
-																					source.url,
-																					source.file_name,
-																				)
-																			}
-																		>
-																			<BoxArrowDown
-																				size={
-																					20
-																				}
-																			/>
-																		</Button>
-																	</Hint>
-																	<Hint label="Open in new tab">
-																		<Button
-																			variant="ghost"
-																			size="iconSm"
-																			onClick={() =>
-																				openFile(
-																					source.url,
-																				)
-																			}
-																		>
-																			<ArrowSquareOut
-																				size={
-																					20
-																				}
-																			/>
-																		</Button>
-																	</Hint>
-																</div>
-															</div>
+															<SourceRow source={source}/>
 														))}
 													</div>
 												)

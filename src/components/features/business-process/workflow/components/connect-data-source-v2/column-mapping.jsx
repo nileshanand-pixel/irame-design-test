@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp, Check, AlertTriangle, Loader } from 'lucide-rea
 import { toast, Toaster } from 'sonner';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getDataSourceById } from '@/components/features/configuration/service/configuration.service';
-import { getToken, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -77,8 +77,7 @@ export const ColumnMapping = ({
 
 	const { data: aiDatasource, isLoading: isAiDsLoading } = useQuery({
 		queryKey: ['datasource-by-id', workflowRunDetails?.datasource_id],
-		queryFn: () =>
-			getDataSourceById(getToken(), workflowRunDetails?.datasource_id),
+		queryFn: () => getDataSourceById(workflowRunDetails?.datasource_id),
 		enabled: !!workflowRunDetails?.datasource_id,
 	});
 
@@ -133,7 +132,7 @@ export const ColumnMapping = ({
   ---------------------------------------------------------------- */
 	const clarifyWorkFlowMutation = useMutation({
 		mutationFn: ({ workflowId, workflowRunId, payload }) =>
-			clarifyWorkFlowRunV2(getToken(), workflowId, workflowRunId, payload),
+			clarifyWorkFlowRunV2(workflowId, workflowRunId, payload),
 		onSuccess: async () => {
 			toast.success('Workflow column mapping sent successfully');
 			queryClient.invalidateQueries(['workflow-run-details', runId]);
@@ -248,7 +247,7 @@ export const ColumnMapping = ({
 	const handleComplete = async () => {
 		onNext();
 		navigate(
-			`/app/new-chat/session/?sessionId=${workflowRunDetails.session_id}`,
+			`/app/new-chat/session/?sessionId=${workflowRunDetails.session_id}&source=workflow`,
 		);
 	};
 

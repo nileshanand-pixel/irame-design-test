@@ -3,10 +3,13 @@ import MultiSelect from '@/components/elements/MultiSelect';
 import PDFViewer from './components/PdfViewer';
 import { useQuery } from '@tanstack/react-query';
 import { getDataSourceById } from '../configuration/service/configuration.service';
-import { getFileIcon, getToken } from '@/lib/utils';
+import { getFileIcon } from '@/lib/utils';
 import { EditContext } from './components/WorkspaceEditProvider';
 import { useSelector } from 'react-redux';
 import { Button } from '@/components/ui/button';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { useRouter } from '@/hooks/useRouter';
 
 const ExcelFileContent = ({
 	file,
@@ -16,27 +19,44 @@ const ExcelFileContent = ({
 	setWorkspaceHasChanges,
 	changeSets,
 	setChangesets,
-}) => (
-	<div className="flex flex-wrap gap-2 mt-4 rounded-lg py-2.5">
-		<MultiSelect
-			options={file?.columns?.map((column) => ({
-				label: column.name,
-				value: column.name,
-			}))}
-			defaultValue={selectedColumns[file?.id]}
-			onValueChange={(newSelectedColumns) => {
-				if (editDisabled) return;
-				setWorkspaceHasChanges(true);
-				setChangesets({
-					...changeSets,
-					reference: true,
-				});
-				handleColumnChange(file?.id, newSelectedColumns);
-			}}
-			maxCount={3}
-		/>
-	</div>
-);
+}) => {
+	const { query } = useRouter();
+	const utilReducer = useSelector((state) => state.utilReducer);
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+
+	return(
+		<div className="flex flex-wrap gap-2 mt-4 rounded-lg py-2.5">
+			<MultiSelect
+				options={file?.columns?.map((column) => ({
+					label: column.name,
+					value: column.name,
+				}))}
+				defaultValue={selectedColumns[file?.id]}
+				onValueChange={(newSelectedColumns) => {
+					if (editDisabled) return;
+					trackEvent(
+						EVENTS_ENUM.REFERENCE_EDITED,
+						EVENTS_REGISTRY.REFERENCE_EDITED,
+						() => ({
+							edited_file_names: newSelectedColumns,
+							chat_session_id: query?.sessionId,
+							dataset_id: utilReducer?.selectedDataSource?.id,
+							dataset_name: utilReducer?.selectedDataSource?.name,
+							query_id: chatStoreReducer?.activeQueryId
+						})
+					)
+					setWorkspaceHasChanges(true);
+					setChangesets({
+						...changeSets,
+						reference: true,
+					});
+					handleColumnChange(file?.id, newSelectedColumns);
+				}}
+				maxCount={3}
+			/>
+		</div>
+	);
+}
 
 const PDFFileContent = ({ file, toolData, onViewPDF }) => {
 	const usedPages = toolData[file.id]?.bounding_boxes
@@ -92,7 +112,7 @@ const SourceComponent = ({
 
 	async function fetchDatasource(datasourceId) {
 		try {
-			return await getDataSourceById(getToken(), datasourceId);
+			return await getDataSourceById(datasourceId);
 		} catch (error) {
 			console.error('Error fetching data source:', error);
 		}

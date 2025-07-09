@@ -15,8 +15,7 @@ const useDataSourceName = (dataSourceId) => {
 		queryFn: fetchDataSources,
 		onSuccess: (data) => {
 			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
-		},
-		enabled: !!getToken(), // Only run the query if the token exists
+		}
 	});
 
 	const dataSource = dataSources?.find(

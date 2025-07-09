@@ -14,7 +14,6 @@ import {
 	createDashboardContent,
 	getUserDashboard,
 } from '../dashboard/service/dashboard.service';
-import { getToken } from '@/lib/utils';
 import { useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from '@/hooks/useRouter';
@@ -22,27 +21,42 @@ import { toast } from 'sonner';
 import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { EVENTS_ENUM } from '@/config/analytics-events';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { trackEvent } from '@/lib/mixpanel';
 
-const AddQueryToDashboard = ({ open, setDashboard }) => {
+const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 	const [dashboards, setDashboards] = useState([]);
 	const [search, setSearch] = useState('');
 	const [selectedDashboard, setSelectedDashboard] = useState(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const { query, navigate } = useRouter();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const userDashboardQuery = useQuery({
 		queryKey: ['user-dashboard'],
-		queryFn: () => getUserDashboard(getToken()),
+		queryFn: () => getUserDashboard(),
 	});
 
 	const handleAddQueryToDashboard = () => {
 		setIsLoading(true);
-		createDashboardContent(getToken(), selectedDashboard.dashboard_id, {
+		createDashboardContent(selectedDashboard.dashboard_id, {
 			query_id: chatStoreReducer?.activeQueryId,
 		})
 			.then((res) => {
+				trackEvent(
+					EVENTS_ENUM.ADDED_ANALYSIS_TO_DASHBOARD,
+					EVENTS_REGISTRY.ADDED_ANALYSIS_TO_DASHBOARD,
+					() => ({
+						chat_session_id: query?.sessionId,
+						dataset_id: utilReducer?.selectedDataSource?.id,
+						dataset_name: utilReducer?.selectedDataSource?.name,
+						query_id: chatStoreReducer?.activeQueryId,
+						dashboard_id: res?.dashboard_id,
+						dashboard_name: selectedDashboard?.title,
+						dashboard_type: newDashboardIds.includes(res?.dashboard_id) ? "new" : "old",
+					})
+				)
 				toast('Query added to dashboard successfully', {
 					duration: 5000,
 					action: (
@@ -52,9 +66,12 @@ const AddQueryToDashboard = ({ open, setDashboard }) => {
 									`/app/dashboard/content?id=${res?.dashboard_id}&name=${selectedDashboard?.title}`,
 								);
 								trackEvent(EVENTS_ENUM.VIEW_DASHBOARD_CLICKED, EVENTS_REGISTRY.VIEW_DASHBOARD_CLICKED, (() => ({
+									chat_session_id: query?.sessionId,
+									dataset_id: utilReducer?.selectedDataSource?.id,
+									dataset_name: utilReducer?.selectedDataSource?.name,
+									query_id: chatStoreReducer?.activeQueryId,
 									dashboard_id: res?.dashboard_id,
-									title: selectedDashboard?.title,
-									from: 'snack-bar'
+									dashboard_name: selectedDashboard?.title,
 								})))
 							}}
 							className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
@@ -92,6 +109,8 @@ const AddQueryToDashboard = ({ open, setDashboard }) => {
 			setDashboards(userDashboardQuery.data);
 		}
 	}, [userDashboardQuery.data]);
+
+	console.log(filteredList, "filteredList");
 	return (
 		<Dialog open={open} onOpenChange={closeModal}>
 			<DialogContent className="sm:max-w-[500px] ">
@@ -144,7 +163,7 @@ const AddQueryToDashboard = ({ open, setDashboard }) => {
 									</div>
 								</div>
 								{selectedDashboard &&
-								selectedDashboard.dashboard_id ===
+									selectedDashboard.dashboard_id ===
 									dashboard.dashboard_id ? (
 									<Button variant="icon" size="sm" className="">
 										<span className="material-icons-outlined text-purple-100">

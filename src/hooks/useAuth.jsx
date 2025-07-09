@@ -1,17 +1,34 @@
-import { getToken } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { authUserDetails } from '@/components/features/login/service/auth.service';
+import { toast } from 'sonner';
 
 const useAuth = () => {
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
+	const [userDetails, setUserDetails] = useState(null);
 
 	useEffect(() => {
-		const token = getToken();
-		setIsAuthenticated(!!token);
-		setIsLoading(false); // Set loading to false once the auth check is done
+		const checkAuth = async () => {
+			try {
+				const response = await authUserDetails();
+				setIsAuthenticated(true);
+				setUserDetails(response);
+			} catch (error) {
+				if (error.response?.status === 401) {
+					setIsAuthenticated(false);
+					setUserDetails(null);
+				} else {
+					// toast.error('Failed to check authentication status');
+				}
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		checkAuth();
 	}, []);
 
-	return { isAuthenticated, isLoading };
+	return { isAuthenticated, isLoading, userDetails };
 };
 
 export default useAuth;

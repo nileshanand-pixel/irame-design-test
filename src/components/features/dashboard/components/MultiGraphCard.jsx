@@ -5,9 +5,11 @@ import ScrollList from '@/components/elements/ScrollList';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getSupportedGraphs } from '@/lib/utils';
+import { useRouter } from '@/hooks/useRouter';
 
 const MultiGraphCard = ({ data, isGraphLoading }) => {
 	const graphList = data?.content?.graph?.graphs || [];
+	const { query } = useRouter();
 
 	const supportedGraphsData = getSupportedGraphs(graphList);
 
@@ -37,15 +39,17 @@ const MultiGraphCard = ({ data, isGraphLoading }) => {
 								} text-sm font-medium border rounded-3xl px-3 h-full py-2 my-3 cursor-pointer min-w-fit whitespace-nowrap`}
 								onClick={() => {
 									trackEvent(
-										EVENTS_ENUM.DASHBOARD_CONTENT_GRAPH_ITEM_CLICKED,
-										EVENTS_REGISTRY.DASHBOARD_CONTENT_GRAPH_ITEM_CLICKED,
+										EVENTS_ENUM.DASHBOARD_GRAPH_VIEW_CHANGED,
+										EVENTS_REGISTRY.DASHBOARD_GRAPH_VIEW_CHANGED,
 										() => ({
 											dashboard_id: data?.dashboard_id,
+											dashboard_name: query?.name,
+											dashboard_content_id: data?.dashboard_content_id,
 											query_id: data?.query_id,
-											dashboard_content_id:
-												data?.dashboard_content_id,
-											graphId: graph.id,
-											graphTitle: graph.title,
+											query_text: data?.content?.query,
+											graph_id: graph.id,
+											graph_title: graph.title,
+											graph_type: graph.type,
 										}),
 									);
 									setActiveGraphTab(graph.id);

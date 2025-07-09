@@ -13,7 +13,6 @@ import { Label } from '@/components/ui/label';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react'; // assuming you're using lucide-react for icons
-import { getToken } from '@/lib/utils';
 import { createReport } from '../service/reports.service';
 import { queryClient } from '@/lib/react-query';
 
@@ -31,7 +30,7 @@ const CreateReportModal = () => {
 
 	const createReportMutation = useMutation({
 		mutationFn: async (data) => {
-			await createReport(getToken(), data);
+			await createReport(data);
 		},
 		onSuccess: () => {
 			toast.success('Report created successfully');

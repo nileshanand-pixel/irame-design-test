@@ -10,15 +10,12 @@ import {
 } from '@/components/ui/dialog';
 import { useEffect, useState } from 'react';
 import { getDataSources } from '../configuration/service/configuration.service';
-import Cookies from 'js-cookie';
-import { tokenCookie, getToken } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
-import { queryClient } from '@/lib/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
@@ -40,14 +37,23 @@ const ChooseDataSourceDialog = ({
 
 	const handleSelect = () => {
 		if (!selectedDataSource) return;
+		
+		const selectedDataSourceIndex = data?.findIndex(
+			(item) => item.datasource_id === selectedDataSource,
+		);
+		const selectedDataSourceData = data[selectedDataSourceIndex];
+
 		trackEvent(
-			EVENTS_ENUM.CHAT_SESSION_STARTED,
-			EVENTS_REGISTRY.CHAT_SESSION_STARTED,
+			EVENTS_ENUM.SELECT_FROM_LIBRARY_CONTINUE_CLICKED,
+			EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CONTINUE_CLICKED,
 			() => ({
-				datasource_id: selectedDataSource,
+				total_datasets_shown: dataSources.length,
+				clicked_on: selectedDataSourceIndex + 1,
+				dataset_id: selectedDataSource,
+				dataset_name: selectedDataSourceData?.name
 			}),
 		);
-		navigate(`/app/new-chat/?step=3&dataSourceId=${selectedDataSource}`);
+		navigate(`/app/new-chat/?step=3&dataSourceId=${selectedDataSource}&source=homepage`);
 		handleNextStep(3);
 		setOpen(false);
 	};
@@ -74,8 +80,7 @@ const ChooseDataSourceDialog = ({
 		// });
 	};
 	const fetchDataSources = async () => {
-		const token = getToken();
-		const data = await getDataSources(token);
+		const data = await getDataSources();
 		return Array.isArray(data) ? data : [];
 	};
 
@@ -92,7 +97,18 @@ const ChooseDataSourceDialog = ({
 	}, [data]);
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog 
+			open={open} 
+			onOpenChange={(value) => {
+				if(!value) {
+					trackEvent(
+						EVENTS_ENUM.SELECT_FROM_LIBRARY_CROSS_CLICKED,
+						EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CROSS_CLICKED,
+					);
+				}
+				setOpen(value);
+			}}
+		>
 			<DialogContent className="sm:max-w-[525px] ">
 				<DialogHeader className="border-b pb-3">
 					<DialogTitle>Choose Data Source</DialogTitle>
@@ -147,8 +163,12 @@ const ChooseDataSourceDialog = ({
 							</div>
 							<Button
 								onClick={() => {
+									trackEvent(
+										EVENTS_ENUM.SELECT_FROM_LIBRARY_UPLOAD_DATASET_CLICKED,
+										EVENTS_REGISTRY.SELECT_FROM_LIBRARY_UPLOAD_DATASET_CLICKED,
+									);
 									setOpen(false);
-									navigate('/app/configuration');
+									navigate('/app/configuration?source=qna');
 								}}
 								variant="outline"
 								className="text-xs flex gap-2"
@@ -164,7 +184,13 @@ const ChooseDataSourceDialog = ({
 				</div>
 				<DialogFooter className="w-full">
 					<Button
-						onClick={() => setOpen(false)}
+						onClick={() => {
+							trackEvent(
+								EVENTS_ENUM.SELECT_FROM_LIBRARY_CANCEL_CLICKED,
+								EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CANCEL_CLICKED,
+							);
+							setOpen(false)
+						}}
 						variant="outline"
 						className="rounded-lg w-full"
 					>
@@ -172,7 +198,7 @@ const ChooseDataSourceDialog = ({
 					</Button>
 					<Button
 						onClick={() => handleSelect()}
-						disabled={dataSourceFetch || !data || !data?.length}
+						disabled={!selectedDataSource || dataSourceFetch || !data || !data?.length}
 						className="rounded-lg w-full hover:bg-purple-100 hover:text-white hover:opacity-80"
 					>
 						Continue

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn, getToken } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import {
 	getDatasources,
@@ -22,19 +22,19 @@ const ReportFolders = () => {
 
 	const datasourcesQuery = useQuery({
 		queryKey: ['get-datasources-reports'],
-		queryFn: () => getDatasources(getToken()),
+		queryFn: () => getDatasources(),
 		refetchInterval: 10000,
 	});
 
 	const sharedReportsQuery = useQuery({
-		queryKey: ['get-shared-reports', getToken()],
-		queryFn: () => getSharedReports(getToken()),
+		queryKey: ['get-shared-reports'],
+		queryFn: () => getSharedReports(),
 		refetchInterval: 600000,
 	});
 
 	const userAuditReports = useQuery({
-		queryKey: ['user-reports', getToken()],
-		queryFn: () => getUserReports(getToken()),
+		queryKey: ['user-reports'],
+		queryFn: () => getUserReports(),
 		refetchInterval: 600000,
 	});
 
@@ -83,7 +83,7 @@ const ReportFolders = () => {
 		reactionText: 'your report will be auto generated...',
 		ctaText: 'Create a Report',
 		ctaDisabled: true,
-		ctaClickHandler: () => {},
+		ctaClickHandler: () => { },
 		comingSoonText: 'Custom report feature coming soon...',
 	};
 

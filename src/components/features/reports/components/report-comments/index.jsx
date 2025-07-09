@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from "react";
 import { addReportCardComment, addReportComment, getReportCardComments, getReportComments } from "../../service/reports.service";
-import { getToken } from "@/lib/utils";
 import Comments from "@/components/elements/comments";
 import { queryClient } from "@/lib/react-query";
 
@@ -11,20 +10,20 @@ export default function ReportComments({
 }) {
     const fetchComments = useCallback(async () => {
         if(reportCardId) {
-            const response = await getReportCardComments(getToken(), reportId, reportCardId);
+            const response = await getReportCardComments(reportId, reportCardId);
             return response;
         } else {
-            const response = await getReportComments(getToken(), reportId);
+            const response = await getReportComments(reportId);
             return response;
         }
     }, [reportId, reportCardId]);
 
     const addComment = useCallback(async (commentData) => {
         if(reportCardId) {
-            const response = await addReportCardComment(getToken(), reportId, reportCardId, commentData);
+            const response = await addReportCardComment(reportId, reportCardId, commentData);
             return response;
         } else {
-            const response = await addReportComment(getToken(), reportId, commentData);
+            const response = await addReportComment(reportId, commentData);
             return response;
         }
     }, [reportId, reportCardId]);

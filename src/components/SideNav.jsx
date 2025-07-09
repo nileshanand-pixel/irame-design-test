@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
-import { cn, getToken } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import {
 	deleteSession,
 	getUserSession,
@@ -49,7 +49,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	const fetchUserSession = async () => {
 		try {
-			const data = await getUserSession(getToken());
+			const data = await getUserSession();
 			dispatch(
 				updateAuthStoreProp([{ key: 'user_id', value: data?.[0]?.user_id }]),
 			);
@@ -62,14 +62,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const { data, isLoading } = useQuery({
 		queryKey: ['chat-history'],
 		queryFn: fetchUserSession,
-		enabled: !!getToken(),
 		refetchInterval: 10000
 	});
 
 	const { data: recentWorkflowRuns, isLoading: isBusinessLoading } = useQuery({
 		queryKey: ['get-business-processes-home-page'],
-		queryFn: () => getRecentWorkflowsRunsHomePage(getToken()),
-		enabled: !!getToken(),
+		queryFn: () => getRecentWorkflowsRunsHomePage(),
 	});
 
 	const bottomMenuList = [
@@ -82,15 +80,21 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/workflow_icon.svg',
 					// beta: true,
 					showHint: true,
+					trackingCall: () => {
+						trackEvent(
+							EVENTS_ENUM.SIDE_BAR_BUSSINESS_PROCESS_CLICKED,
+							EVENTS_REGISTRY.SIDE_BAR_BUSSINESS_PROCESS_CLICKED,
+						);
+					}
 				},
 				{
-					link: '/app/dashboard',
+					link: '/app/dashboard?source=side_bar',
 					text: 'Dashboard',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/dashboard_columns.svg',
 					trackingCall: () =>
 						trackEvent(
-							EVENTS_ENUM.SIDENAV_DASHBOARD_CLICKED,
-							EVENTS_REGISTRY.SIDENAV_DASHBOARD_CLICKED,
+							EVENTS_ENUM.SIDE_BAR_DASHBOARD_CLICKED,
+							EVENTS_REGISTRY.SIDE_BAR_DASHBOARD_CLICKED,
 						),
 				},
 				{
@@ -100,18 +104,18 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					// beta: true,
 					trackingCall: () =>
 						trackEvent(
-							EVENTS_ENUM.SIDENAV_REPORT_CLICKED,
-							EVENTS_REGISTRY.SIDENAV_REPORT_CLICKED,
+							EVENTS_ENUM.SIDE_BAR_REPORT_CLICKED,
+							EVENTS_REGISTRY.SIDE_BAR_REPORT_CLICKED,
 						),
 				},
 				{
-					link: '/app/configuration',
+					link: '/app/configuration?source=side_bar',
 					text: 'Configuration',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/database.svg',
 					trackingCall: () =>
 						trackEvent(
-							EVENTS_ENUM.CONFIGURATION_TAB_CLICKED,
-							EVENTS_REGISTRY.CONFIGURATION_TAB_CLICKED,
+							EVENTS_ENUM.SIDE_BAR_CONFIGURATION_CLICKED,
+							EVENTS_REGISTRY.SIDE_BAR_CONFIGURATION_CLICKED,
 						),
 				},
 			],
@@ -119,9 +123,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	];
 
 	const fetchDataSources = async () => {
-		const token = getToken();
-		if (!token) throw new Error('No token available');
-		const data = await getDataSources(token);
+		const data = await getDataSources();
 		dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		return Array.isArray(data) ? data : [];
 	};
@@ -141,7 +143,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const getChatHistory = (session) => {
 		dispatch(resetChatStore());
 		dispatch(updateUtilProp([{ key: 'selectedDataSource', value: {} }]));
-		navigate('/app/new-chat/session');
+		navigate('/app/new-chat/session?source=side_bar');
 		dispatch(
 			updateChatStoreProp([
 				{
@@ -152,15 +154,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				{ key: 'refreshChat', value: true },
 				{ key: 'resetIra', value: !chatStoreReducer?.resetIra },
 			]),
-		);
-
-		trackEvent(
-			EVENTS_ENUM.CHAT_HISTORY_SESSION_CLICKED,
-			EVENTS_REGISTRY.CHAT_HISTORY_SESSION_CLICKED,
-			() => ({
-				title: session.title,
-				session_id: session.session_id,
-			}),
 		);
 
 		const datasourceId = session?.datasource_id;
@@ -175,22 +168,35 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		);
 	};
 
-	const handleDeleteChatSession = async (e, sessionId) => {
+	const handleDeleteChatSession = async (e, sessionId, threadTypeForTracking, workflowIdForTracking) => {
 		e.stopPropagation();
 		try {
 			const updatedList = utilReducer?.sessionHistory.filter(
 				(session) => session.session_id !== sessionId,
 			);
 			if (!confirm('Are you sure you want to delete this session?')) return;
-			await deleteSession(sessionId, getToken());
+			await deleteSession(sessionId);
+			trackEvent(
+				EVENTS_ENUM.SIDE_BAR_CHAT_DELETED,
+				EVENTS_REGISTRY.SIDE_BAR_CHAT_DELETED,
+				() => ({
+					type: threadTypeForTracking,
+					chat_session_id: sessionId,
+					workflow_id: workflowIdForTracking,
+				})
+			)
 			dispatch(
 				updateUtilProp([{ key: 'sessionHistory', value: updatedList }]),
 			);
-		} catch (error) {}
+		} catch (error) { }
 	};
 
 	const askIra = (e) => {
 		if (e) e.preventDefault();
+		trackEvent(	
+			EVENTS_ENUM.SIDE_BAR_ASK_IRA_CLICKED,
+			EVENTS_REGISTRY.SIDE_BAR_ASK_IRA_CLICKED,
+		);
 		dispatch(resetChatStore());
 		dispatch(
 			updateUtilProp([
@@ -198,7 +204,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				{ key: 'answerFromHistory', value: {} },
 			]),
 		);
-		navigate('/app/new-chat');
+		navigate('/app/new-chat?source=side_bar');
 	};
 
 	const groupItemsByDate = (items) => {
@@ -240,7 +246,16 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				)}
 				key={session.session_id}
 				onClick={() => {
+					trackEvent(
+						EVENTS_ENUM.SIDE_BAR_CHAT_THREAD_CLICKED,
+						EVENTS_REGISTRY.SIDE_BAR_CHAT_THREAD_CLICKED,
+						() => ({
+							type: "qna",
+							chat_session_id: session.session_id,
+						})
+					)
 					if (isEditing === session.session_id) return;
+					
 					getChatHistory(session);
 				}}
 			>
@@ -283,7 +298,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						<DropdownMenuItem
 							className="text-primary80 font-medium hover:!bg-purple-2"
 							onClick={(e) =>
-								handleDeleteChatSession(e, session.session_id)
+								handleDeleteChatSession(e, session.session_id, "qna")
 							}
 						>
 							<i className="bi-trash me-2 text-primary80 font-medium"></i>
@@ -359,6 +374,15 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				)}
 				key={workflow.external_id}
 				onClick={() => {
+					trackEvent(
+						EVENTS_ENUM.SIDE_BAR_CHAT_THREAD_CLICKED,
+						EVENTS_REGISTRY.SIDE_BAR_CHAT_THREAD_CLICKED,
+						() => ({
+							type: "workflow",
+							chat_session_id: workflow.session_id,
+							workflow_id: workflow.workflow_check_id,
+						})
+					)
 					if (shouldOpenSession) {
 						resetAllStores();
 						dispatch(
@@ -371,7 +395,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							]),
 						);
 						navigate(
-							`/app/new-chat/session/?sessionId=${workflow.session_id}`,
+							`/app/new-chat/session/?sessionId=${workflow.session_id}&source=side_bar`,
 						);
 					} else {
 						navigate(
@@ -411,7 +435,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							<DropdownMenuItem
 								className="text-primary80 font-medium hover:!bg-purple-2 focus:bg-purple-2"
 								onClick={(e) =>
-									handleDeleteChatSession(e, workflow.session_id)
+									handleDeleteChatSession(e, workflow.session_id, "workflow", workflow.workflow_check_id)
 								}
 								disabled
 							>
@@ -468,9 +492,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	return (
 		<div
-			className={`fixed flex flex-col h-screen ${
-				isSideNavOpen ? 'w-[270px] min-w-[270px]' : 'w-[72px] min-w-[72px]'
-			} border-r bg-purple-8`}
+			className={`fixed flex flex-col h-screen ${isSideNavOpen ? 'w-[270px] min-w-[270px]' : 'w-[72px] min-w-[72px]'
+				} border-r bg-purple-8`}
 		>
 			{/* SideNav Expand Collapse | Hamburger */}
 			<div className="flex-none m-4">
@@ -491,13 +514,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					show={!isSideNavOpen}
 				>
 					<Link
-						to={'/app/new-chat'}
+						to={'/app/new-chat?source=side_bar'}
 						onClick={askIra}
-						className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
-							isSideNavOpen
+						className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${isSideNavOpen
 								? 'rounded-[200px] px-5 py-3'
 								: 'rounded-full px-2 mx-auto py-2'
-						} bg-purple-4`}
+							} bg-purple-4`}
 					>
 						<img
 							src="https://d2vkmtgu2mxkyq.cloudfront.net/plus.svg"
@@ -527,13 +549,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 										key={optionKey}
 										onClick={() => {
 											setActiveTab(option.link);
-											option.trackingCall();
+											option?.trackingCall && option.trackingCall();
 										}}
-										className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-2 rounded-md hover:bg-purple-4 border-l-4 ${
-											isActive
+										className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-2 rounded-md hover:bg-purple-4 border-l-4 ${isActive
 												? ' border-purple-100 bg-purple-4 font-semibold text-purple-100 '
 												: ' border-transparent'
-										}`}
+											}`}
 									>
 										<img
 											src={option.icon}
@@ -578,8 +599,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 												item.type === 'session'
 													? renderSession(item.data)
 													: renderBusinessProcess(
-															item.data,
-														),
+														item.data,
+													),
 											)}
 										</div>
 									</div>
@@ -594,8 +615,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 												item.type === 'session'
 													? renderSession(item.data)
 													: renderBusinessProcess(
-															item.data,
-														),
+														item.data,
+													),
 											)}
 										</div>
 									</div>
@@ -610,8 +631,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 												item.type === 'session'
 													? renderSession(item.data)
 													: renderBusinessProcess(
-															item.data,
-														),
+														item.data,
+													),
 											)}
 										</div>
 									</div>
@@ -626,8 +647,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 												item.type === 'session'
 													? renderSession(item.data)
 													: renderBusinessProcess(
-															item.data,
-														),
+														item.data,
+													),
 											)}
 										</div>
 									</div>

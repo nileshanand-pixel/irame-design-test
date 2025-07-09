@@ -18,7 +18,7 @@ export const useOAuthLogin = (data) => {
 
 			// await loginWithGoogle(params);
 
-			navigate('/app/new-chat');
+			navigate('/app/new-chat?source=login');
 		} catch (err) {
 			console.log(err);
 			navigate('/');

@@ -6,7 +6,6 @@ import { useWorkflowId } from '../../../hooks/useWorkflowId';
 import { useWorkflowRunId } from '../../../hooks/use-workflow-run-id';
 import { useQuery } from '@tanstack/react-query';
 import { getWorkflowRunDetails } from '../../../service/workflow.service';
-import { getToken } from '@/lib/utils';
 import { useBusinessProcessId } from '../../../hooks/use-business-process-id';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,7 +19,7 @@ const DataSourceCard = ({ requiredFiles }) => {
 	// Poll every 2 seconds for certain statuses, stop polling for terminal statuses or if no runId
 	const { data: runDetails, isLoading: isRunLoading } = useQuery({
 		queryKey: ['workflow-run-details', runId],
-		queryFn: () => getWorkflowRunDetails(getToken(), workFlowId, runId),
+		queryFn: () => getWorkflowRunDetails(workFlowId, runId),
 		enabled: Boolean(runId),
 		refetchInterval: ({ state }) => {
 			const data = state?.data;
@@ -44,7 +43,7 @@ const DataSourceCard = ({ requiredFiles }) => {
 			runDetails &&
 			['COMPLETED', 'FAILED'].includes(runDetails.status)
 		) {
-			navigate(`/app/new-chat/session/?sessionId=${runDetails.session_id}`);
+			navigate(`/app/new-chat/session/?sessionId=${runDetails.session_id}&source=workflow`);
 		}
 	}, [runDetails]);
 

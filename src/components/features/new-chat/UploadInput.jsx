@@ -6,7 +6,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import upperFirst from 'lodash.upperfirst';
 import { getDataSourcesWithLimit } from '../configuration/service/configuration.service';
-import { getToken } from '@/lib/utils';
 import DividerWithText from '@/components/elements/DividerWithText';
 import { useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
@@ -19,8 +18,7 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 	useEffect(() => {}, [progress]);
 
 	const fetchDataSources = async () => {
-		const token = getToken();
-		const data = await getDataSourcesWithLimit(token, 3);
+		const data = await getDataSourcesWithLimit(3);
 		return Array.isArray(data) ? data : [];
 	};
 
@@ -29,8 +27,18 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 		queryFn: fetchDataSources,
 	});
 
-	const handleDataSourceClick = (data) => {
+	const handleDataSourceClick = (data, clickedOn) => {
 		if (!data?.datasource_id) return;
+		trackEvent(
+			EVENTS_ENUM.RECENT_DATA_SOURCE_CLICKED,
+			EVENTS_REGISTRY.RECENT_DATA_SOURCE_CLICKED,
+			() => ({
+				dataset_id: data?.datasource_id,
+				dataset_name: data?.name,
+				total_shown: filteredList.length,
+				clicked_on: clickedOn,
+			})
+		);
 		dispatch(
 					updateUtilProp([
 						{
@@ -39,7 +47,7 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 						},
 					]),
 				);
-		navigate(`/app/new-chat/?step=3&dataSourceId=${data?.datasource_id}`);
+		navigate(`/app/new-chat/?step=3&dataSourceId=${data?.datasource_id}&source=homepage`);
 		handleNextStep(2);
 		handleNextStep(3);
 	};
@@ -52,12 +60,12 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 	const handleConnectDataSource = (e) => {
 		e.stopPropagation();
 		trackEvent(EVENTS_ENUM.CONNECT_DATA_SOURCE_CLICKED, EVENTS_REGISTRY.CONNECT_DATA_SOURCE_CLICKED)
-		navigate('/app/configuration');
+		navigate('/app/configuration?source=qna');
 	};
 
 	return (
 		<div
-			className={`border flex flex-col border-dashed border-purple-24 bg-purple-2 py-6 rounded-2xl justify-center 
+			className={`border flex flex-col border-dashed border-purple-24 bg-purple-2 py-6 rounded-2xl justify-center
 			`}
 		>
 			<div className="flex flex-col w-full justify-center items-center gap-1 text-center ">
@@ -76,9 +84,11 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 						variant="outline"
 						className="w-full hover:bg-purple-8 border-purple-8 text-purple-100 font-medium hover:text-purple-100"
 						onClick={(e) => {
-										trackEvent(EVENTS_ENUM.SELECT_FROM_LIBRARY_CLICKED, EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CLICKED)
-										handleSelectFromLibrary(e)
-									}}
+							trackEvent(
+								EVENTS_ENUM.SELECT_FROM_LIBRARY_CLICKED, EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CLICKED
+							);
+							handleSelectFromLibrary(e)
+						}}
 					>
 						{welcomeTypography?.btn2Text}
 					</Button>
@@ -94,12 +104,12 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 				</p>
 				<div className="grid sm:grid-cols-1 text-primary80  w-full md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{filteredList.length ? (
-						filteredList.map((source) => (
+						filteredList.map((source, index) => (
 							<div
-								className="flex justify-between items-center bg-purple-4 p-4 rounded-lg gap-4 cursor-pointer hover:bg-purple-8 transition-colors"
+								className="flex justify-between items-center bg-purple-4 p-4 rounded-lg gap-4 cursor-pointer hover:bg-purple-8 transition-colors "
 								key={source.datasource_id}
 								onClick={() =>
-									handleDataSourceClick(source)
+									handleDataSourceClick(source, index + 1)
 								}
 							>
 								<div className="flex items-center">

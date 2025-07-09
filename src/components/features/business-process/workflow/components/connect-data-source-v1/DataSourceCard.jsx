@@ -27,9 +27,10 @@ import {
 
 import { getDataSourceById } from '@/components/features/configuration/service/configuration.service';
 
-import { getFileIcon, getToken } from '@/lib/utils';
+import { getFileIcon } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
 import WorkFlowDataSourceCardSkeleton from './WorkFlowDataSourceCardSkeleton';
+import { getFileMeta } from '@/lib/file';
 
 const gradientStyle = {
 	background: `
@@ -75,7 +76,7 @@ const DataSourceCard = ({
 	// -------------------------- Queries --------------------------
 	const { data: runDetails, isLoading: isRunLoading } = useQuery({
 		queryKey: ['workflow-run-details', runId],
-		queryFn: () => getWorkflowRunDetails(getToken(), workflowId, runId),
+		queryFn: () => getWorkflowRunDetails(workflowId, runId),
 		enabled: Boolean(runId),
 		refetchInterval:
 			runId && validationStatus !== 'NEED_CLARIFICATION' ? 5000 : false,
@@ -83,14 +84,14 @@ const DataSourceCard = ({
 
 	const datasourceQuery = useQuery({
 		queryKey: ['get-datasource-by-id', runDetails?.datasource_id],
-		queryFn: () => getDataSourceById(getToken(), runDetails?.datasource_id),
+		queryFn: () => getDataSourceById(runDetails?.datasource_id),
 		enabled: !!runDetails?.datasource_id,
 	});
 
 	// -------------------------- Mutations --------------------------
 	const initiateWorkflowCheckMutation = useMutation({
 		mutationFn: ({ workflowId, payload }) =>
-			initiateWorkflowCheck(getToken(), workflowId, payload),
+			initiateWorkflowCheck(workflowId, payload),
 		onSuccess: (data) => {
 			toast.success('Workflow initiated successfully');
 			queryClient.invalidateQueries(['workflow-runs', workflowId]);
@@ -109,7 +110,7 @@ const DataSourceCard = ({
 
 	const clarifyWorkFlowMutation = useMutation({
 		mutationFn: ({ workflowId, workflowRunId, payload }) =>
-			clarifyWorkFlowRun(getToken(), workflowId, workflowRunId, payload),
+			clarifyWorkFlowRun(workflowId, workflowRunId, payload),
 		onSuccess: () => {
 			toast.success('Workflow clarification sent successfully!');
 			queryClient.invalidateQueries(['workflow-run-details', runId]);
@@ -149,9 +150,9 @@ const DataSourceCard = ({
 			)?.file_name;
 			setActiveTab(
 				firstValidFile ||
-					(dataPoints.some((file) => !file.file_name)
-						? 'additional-columns'
-						: null),
+				(dataPoints.some((file) => !file.file_name)
+					? 'additional-columns'
+					: null),
 			);
 		}
 	}, [dataPoints]);
@@ -163,11 +164,8 @@ const DataSourceCard = ({
 				await Promise.all(
 					datasourceQuery.data.processed_files.files.map(async (file) => {
 						try {
-							const response = await fetch(file.url, {
-								method: 'HEAD',
-							});
-							const size = response.headers.get('Content-Length');
-							sizes[file.id] = parseInt(size, 10) || 0;
+							const response = await getFileMeta(file.url);
+							sizes[file.id] = response.size;
 						} catch (error) {
 							console.error('Error fetching file size:', error);
 							sizes[file.id] = 0;
@@ -285,11 +283,10 @@ const DataSourceCard = ({
 						<Button
 							key={file.file_name}
 							variant="outline"
-							className={`flex gap-2 items-center font-medium border-2 rounded-lg px-4 py-2 cursor-pointer min-w-fit max-w-[19.25rem] ${
-								activeTab === file.file_name
-									? 'text-purple-100 border-purple-40 tabActiveBg'
-									: 'text-black/60 border-black/10'
-							}`}
+							className={`flex gap-2 items-center font-medium border-2 rounded-lg px-4 py-2 cursor-pointer min-w-fit max-w-[19.25rem] ${activeTab === file.file_name
+								? 'text-purple-100 border-purple-40 tabActiveBg'
+								: 'text-black/60 border-black/10'
+								}`}
 							onClick={() => handleTabClick(file.file_name)}
 						>
 							<img
@@ -305,11 +302,10 @@ const DataSourceCard = ({
 					{additionalColumns.length > 0 && (
 						<Button
 							variant="outline"
-							className={`flex gap-2 items-center font-medium border-2 rounded-lg px-4 py-2 cursor-pointer min-w-fit max-w-[19.25rem] ${
-								activeTab === 'additional-columns'
-									? 'text-purple-100 border-purple-40 tabActiveBg'
-									: 'text-black/60 border-black/10'
-							}`}
+							className={`flex gap-2 items-center font-medium border-2 rounded-lg px-4 py-2 cursor-pointer min-w-fit max-w-[19.25rem] ${activeTab === 'additional-columns'
+								? 'text-purple-100 border-purple-40 tabActiveBg'
+								: 'text-black/60 border-black/10'
+								}`}
 							onClick={() => handleTabClick('additional-columns')}
 						>
 							<img
@@ -329,8 +325,8 @@ const DataSourceCard = ({
 							{(activeTab === 'additional-columns'
 								? additionalColumns.flatMap((file) => file.headers)
 								: validDataPoints.find(
-										(file) => file.file_name === activeTab,
-									)?.headers || []
+									(file) => file.file_name === activeTab,
+								)?.headers || []
 							).map((header) => (
 								<li
 									key={header.name}
@@ -475,19 +471,19 @@ const DataSourceCard = ({
 									{!['validating', 'NEED_CLARIFICATION'].includes(
 										validationStatus,
 									) && (
-										<Button
-											variant="outline"
-											className="rounded-lg bg-purple-8 font-medium border-none hover:bg-purple-4"
-											onClick={handleOpenModal}
-											disabled={
-												validationStatus === 'validating'
-											}
-										>
-											{selectedDatasourceId
-												? 'Try another data source'
-												: 'Connect Data Source'}
-										</Button>
-									)}
+											<Button
+												variant="outline"
+												className="rounded-lg bg-purple-8 font-medium border-none hover:bg-purple-4"
+												onClick={handleOpenModal}
+												disabled={
+													validationStatus === 'validating'
+												}
+											>
+												{selectedDatasourceId
+													? 'Try another data source'
+													: 'Connect Data Source'}
+											</Button>
+										)}
 								</div>
 							</div>
 						</CardHeader>

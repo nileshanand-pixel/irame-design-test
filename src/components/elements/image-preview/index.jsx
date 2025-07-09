@@ -1,6 +1,8 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import useS3File from "@/hooks/useS3File";
 import { XCircle } from "@phosphor-icons/react"
 import { useState } from "react"
+import CircularLoader from "../loading/CircularLoader";
 
 export default function ImagePreview({
     file,
@@ -10,16 +12,40 @@ export default function ImagePreview({
     showProgress=false,
     progress=100
 }) {
-
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const { createS3File, isCreatingS3File } = useS3File();
+    const [signedUrl, setSignedUrl] = useState("");
+    const [failCount, setFailCount] = useState(0);
+
+    const handleError = async () => {
+        if(failCount < 3) {
+            setFailCount(prev => prev + 1);
+            const newUrl = await createS3File(url);
+            if(newUrl) {
+                setFailCount(0);
+                setSignedUrl(newUrl)
+            }
+        }
+    }
 
     return (
         <div className="relative inline-flex">
-            <img 
-                src={url || URL.createObjectURL(file)} 
-                className="h-[100px] w-auto rounded-md cursor-pointer"
-                onClick = {() => setIsPreviewOpen(prev => !prev)}
-            />
+            {
+                isCreatingS3File ? (
+                    <div className="h-[100px] w-[150px] flex justify-center items-center gap-2 border rounded-md cursor-pointer text-sm">
+                        <CircularLoader size="sm" />
+                        <span>Loading...</span>
+                    </div>
+                ) : (
+                    <img 
+                        src={signedUrl || url || URL.createObjectURL(file)} 
+                        className="h-[100px] w-auto rounded-md cursor-pointer"
+                        onClick = {() => setIsPreviewOpen(prev => !prev)}
+                        onError={handleError}
+                    />
+                )
+            }
+            
 
             {
                 canCancel && 
@@ -45,10 +71,21 @@ export default function ImagePreview({
             <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
                 <DialogContent className="min-w-[80vw] h-[80vh]">
                     <div className="mt-[30px] w-full max-h-[calc(80vh-88px)]">
-                        <img 
-                            src={url || URL.createObjectURL(file)} 
-                            className="w-full h-full object-contain"
-                        />
+                        {
+                            isCreatingS3File ? (
+                                <div className="w-full h-full flex justify-center items-center gap-2">
+                                    <CircularLoader size="lg" />
+                                    <span>Loading...</span>
+                                </div>
+                            ) : (
+                                <img 
+                                    src={signedUrl || url || URL.createObjectURL(file)} 
+                                    className="w-full h-full object-contain"
+                                    onError={handleError}
+                                />
+                            )
+                        }
+                        
                     </div>
                 </DialogContent>
             </Dialog>

@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getToken } from '@/lib/utils';
 import { updateVisibleGraphs } from '../service/reports.service';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -29,7 +28,6 @@ export const AddGraphModal = ({ open, reportCardId, graphs = [], onClose }) => {
 	const updateVisibleGraphsMutation = useMutation({
 		mutationFn: async () => {
 			await updateVisibleGraphs({
-				token: getToken(),
 				reportId,
 				reportCardId,
 				visibleGraphIds: selectedGraphs,

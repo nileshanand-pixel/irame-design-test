@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useReportId } from '../../hooks/useReportId';
 import { getUserReport } from '../../service/reports.service';
-import { getToken } from '@/lib/utils';
 
 export default function ReportCoverPage() {
 	const reportId = useReportId();
@@ -9,7 +8,7 @@ export default function ReportCoverPage() {
 
 	const { data: reportDetails, isLoading } = useQuery({
 		queryKey: ['report-details', reportId],
-		queryFn: () => getUserReport(getToken(), reportId),
+		queryFn: () => getUserReport(reportId),
 		enabled: Boolean(reportId),
 	});
 

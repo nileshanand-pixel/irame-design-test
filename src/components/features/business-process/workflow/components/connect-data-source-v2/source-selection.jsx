@@ -28,7 +28,6 @@ import { useFileUploads } from '@/hooks/useFileUploads';
 import { useWorkflowId } from '../../../hooks/useWorkflowId';
 
 // API helpers
-import { getToken } from '@/lib/utils';
 import {
 	getDataSources,
 	getDataSourceById,
@@ -114,8 +113,7 @@ export const SourceSelection = ({
 
 	/* ───────────────────────────── 3. DATA‑SOURCE FETCH ───────────────────── */
 	const fetchDataSources = async () => {
-		const token = getToken();
-		const data = await getDataSources(token);
+		const data = await getDataSources();
 		return Array.isArray(data) ? data : [];
 	};
 
@@ -145,7 +143,7 @@ export const SourceSelection = ({
 	/* ───────────────────────────── 4. POST‑RUN HYDRATION ──────────────────── */
 	const { data: aiDatasource, isLoading: isAiDsLoading } = useQuery({
 		queryKey: ['datasource-by-id', topLevelDatasourceId],
-		queryFn: () => getDataSourceById(getToken(), topLevelDatasourceId),
+		queryFn: () => getDataSourceById(topLevelDatasourceId),
 		enabled: isPostRun && !!topLevelDatasourceId,
 	});
 
@@ -380,12 +378,11 @@ export const SourceSelection = ({
 		mutationFn: ({ workflowId, payload }) =>
 			isPostRun
 				? restartWorkflowCheckV2(
-						getToken(),
 						workflowId,
 						workflowRunId,
 						payload,
 					)
-				: initiateWorkflowCheckV2(getToken(), workflowId, payload),
+				: initiateWorkflowCheckV2(workflowId, payload),
 		onSuccess: (data) => {
 			toast.success(
 				`Workflow check ${isPostRun ? 're-initiated' : 'initiated'}`,

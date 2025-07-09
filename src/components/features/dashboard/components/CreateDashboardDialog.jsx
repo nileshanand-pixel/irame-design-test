@@ -10,6 +10,8 @@ import {
 } from '@/components/ui/dialog';
 import React from 'react';
 import dashboardIcon from '@/assets/icons/dashboard-create-dialog.svg';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const CreateDashboardDialog = ({
 	open,
@@ -21,6 +23,7 @@ const CreateDashboardDialog = ({
 	isLoading,
 }) => {
 	const closeModal = () => {
+
 		setOpen(false);
 	};
 	return (
@@ -45,7 +48,16 @@ const CreateDashboardDialog = ({
 					/>
 				</div>
 				<DialogFooter className="flex justify-between w-full">
-					<Button variant="outline" onClick={closeModal}>
+					<Button 
+						variant="outline" 
+						onClick={() => {
+							trackEvent(
+								EVENTS_ENUM.DASHBOARD_CREATE_NEW_CANCEL_CLICKED,
+								EVENTS_REGISTRY.DASHBOARD_CREATE_NEW_CANCEL_CLICKED
+							)
+							closeModal();
+						}}
+					>
 						Cancel
 					</Button>
 					<Button

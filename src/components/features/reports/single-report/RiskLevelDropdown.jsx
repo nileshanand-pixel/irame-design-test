@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { getToken } from '@/lib/utils';
 import { updateReportMetadata } from '../service/reports.service';
 import { queryClient } from '@/lib/react-query';
 import { toast } from 'sonner';
@@ -24,7 +23,6 @@ export const RiskLevelDropdown = ({ value, riskTypes, reportId, reportCardId }) 
 	const handleRiskLevelChange = (newRiskLevel) => {
 		setRiskLevel(newRiskLevel);
 		updateMetadataMutation.mutate({
-			token: getToken(),
 			reportId,
 			reportCardId,
 			riskLevel: newRiskLevel,

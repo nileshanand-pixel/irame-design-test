@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getReportCardSources } from '../service/reports.service';
-import { getToken } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { useReportId } from '../hooks/useReportId';
 import TabSheet from './TabSheet';
@@ -12,7 +11,7 @@ export const QuerySources = ({ queryCardId }) => {
 
 	const { data, isLoading } = useQuery({
 		queryKey: ['report-card-sources', reportId, queryCardId],
-		queryFn: () => getReportCardSources(getToken(), reportId, queryCardId),
+		queryFn: () => getReportCardSources(reportId, queryCardId),
 	});
 
 	const sourcesCount = data?.sources?.length || 0;

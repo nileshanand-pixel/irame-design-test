@@ -19,9 +19,7 @@ import { useMutation } from '@tanstack/react-query';
 import { deleteReportCard } from '../service/reports.service';
 import { Loader2, Eye, Copy } from 'lucide-react';
 import {
-	downloadCsvWithCustomName,
 	getSupportedGraphs,
-	getToken,
 } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
 import { toast } from 'sonner';
@@ -30,6 +28,8 @@ import { Hint } from '@/components/Hint';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
 import { QuerySources } from './QuerySources';
 import ReportComments from '../components/report-comments';
+import useS3File from '@/hooks/useS3File';
+import CircularLoader from '@/components/elements/loading/CircularLoader';
 
 export const QueryCard = ({ report, card, pdfMode }) => {
 	const queryNumber = card?.order_no || 1;
@@ -43,6 +43,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 	const [showAddGraph, setShowAddGraph] = useState(false);
 	const [showGraphs, setShowGraphs] = useState(true);
 
+	const { isDownloading, downloadS3File } = useS3File();
 	const deleteMutation = useMutation({
 		mutationFn: deleteReportCard,
 		onSuccess: () => {
@@ -55,7 +56,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 	});
 
 	const openQuery = () => {
-		const url = `${window.location.origin}/app/new-chat/session/?sessionId=${card.session_id}&queryId=${card.query_id}`;
+		const url = `${window.location.origin}/app/new-chat/session/?sessionId=${card.session_id}&queryId=${card.query_id}&source=report`;
 		window.open(url, '_blank');
 	};
 
@@ -98,7 +99,6 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 				const ok = confirm('Are you sure you want to remove this card?');
 				if (!ok) return;
 				deleteMutation.mutate({
-					token: getToken(),
 					reportId: report.report_id,
 					reportCardId: card.external_id,
 				});
@@ -178,7 +178,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 									<ChartLineUp size={18} className="sm:size-20" />
 								</Button>
 							</Tooltip>
-							<Tooltip content="Download">
+							<Tooltip content={isDownloading ? "Downloading" : "Download"}>
 								<Button
 									variant="ghost"
 									size="iconSm"
@@ -186,17 +186,20 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 									onClick={() => {
 										const csvUrl =
 											card?.data?.tables?.[0]?.csv_url;
-										if (!csvUrl) return;
+										if (!csvUrl || isDownloading) return;
 
-										downloadCsvWithCustomName({
-											csvUrl,
-											reportName: report.name,
-											queryTitle: card.title ?? 'Untitled',
-											queryId: card.query_id,
-										});
+										const truncatedTitle = (card.title ?? 'Untitled').replace(/\s+/g, '_').slice(0, 20);
+										const fileName = `${report.name}_${truncatedTitle}_${card.query_id}.csv`;
+										downloadS3File(csvUrl, fileName);
 									}}
-								>
-									<BoxArrowDown size={18} className="sm:size-20" />
+								>	
+									{
+										isDownloading ? (
+											<CircularLoader size="sm" />
+										) : (
+											<BoxArrowDown size={18} className="sm:size-20" />
+										)
+									}
 								</Button>
 							</Tooltip>
 							<div className="relative">

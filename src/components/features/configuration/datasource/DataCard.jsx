@@ -11,6 +11,11 @@ import PreviewTable from './PreviewTable';
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import PreviewPdf from './PreviewPdf';
 import { getPdfPageCount } from '@/lib/utils';
+import { getFileMeta } from '@/lib/file';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import useS3File from '@/hooks/useS3File';
+import CircularLoader from '@/components/elements/loading/CircularLoader';
 
 const formatFileSize = (sizeInBytes) => {
 	if (sizeInBytes < 1024) return `${sizeInBytes} B`;
@@ -23,16 +28,15 @@ const formatFileSize = (sizeInBytes) => {
 // Function to get file size from S3 URL
 const getFileSize = async (url) => {
 	try {
-		const response = await fetch(url, { method: 'HEAD' });
-		const size = response.headers.get('Content-Length');
-		return size ? parseInt(size, 10) : 0;
+		const response = await getFileMeta(url);
+		return response.size || 0;
 	} catch (error) {
 		console.error('Error fetching file size:', error);
 		return 0;
 	}
 };
 
-const DataCard = ({ data, form, setForm }) => {
+const DataCard = ({ data, form, setForm, addChangeForTracking }) => {
 	const [isEditingDescription, setIsEditingDescription] = useState(false);
 	const [description, setDescription] = useState(
 		form?.processed_files?.description,
@@ -46,6 +50,7 @@ const DataCard = ({ data, form, setForm }) => {
 	const handle = useFullScreenHandle();
 
 	const [pageCounts, setPageCounts] = useState({});
+	const { isDownloading, downloadS3File } = useS3File();
 
 	useEffect(() => {
 		// Fetch file sizes and page counts when component mounts
@@ -70,6 +75,16 @@ const DataCard = ({ data, form, setForm }) => {
 	}, [form?.processed_files?.files]);
 
 	const handleDescriptionEdit = () => {
+		if (description) {
+			trackEvent(
+				EVENTS_ENUM.DATASET_EDIT_DESCRIPTION_CLICKED,
+				EVENTS_REGISTRY.DATASET_EDIT_DESCRIPTION_CLICKED,
+				() => ({
+					dataset_id: data?.datasource_id,
+					dataset_name: data?.name,
+				}),
+			);
+		}
 		setIsEditingDescription(true);
 		setOriginalDescription(description);
 	};
@@ -77,6 +92,17 @@ const DataCard = ({ data, form, setForm }) => {
 	const handleDescriptionSave = () => {
 		setIsEditingDescription(false);
 		const updatedDescription = editRef.current.innerText;
+		trackEvent(
+			EVENTS_ENUM.DATASET_DESCRIPTION_UPDATED,
+			EVENTS_REGISTRY.DATASET_DESCRIPTION_UPDATED,
+			() => ({
+				dataset_id: data?.datasource_id,
+				dataset_name: data?.name,
+				old_desc: description,
+				new_desc: updatedDescription,
+			}),
+		);
+		addChangeForTracking('description');
 		setDescription(updatedDescription);
 		setForm({
 			...form,
@@ -93,15 +119,43 @@ const DataCard = ({ data, form, setForm }) => {
 		setDescription(originalDescription);
 	};
 
-	const handleFullScreen = (e) => {
+	const handleFullScreen = (e, file) => {
 		if (e) e.stopPropagation();
+		trackEvent(
+			EVENTS_ENUM.DATASET_FILE_ZOOM_CLICKED,
+			EVENTS_REGISTRY.DATASET_FILE_ZOOM_CLICKED,
+			() => ({
+				dataset_id: data?.datasource_id,
+				dataset_name: data?.name,
+				file_name: file?.filename,
+			}),
+		);
 		handle.active ? handle.exit() : handle.enter();
 	};
 
 	const handleDownloadFile = (e, file) => {
 		if (e) e.stopPropagation();
+		if (isDownloading) return;
+
+		trackEvent(
+			EVENTS_ENUM.DATASET_FILE_DOWNLOADED,
+			EVENTS_REGISTRY.DATASET_FILE_DOWNLOADED,
+			() => ({
+				dataset_id: data?.datasource_id,
+				dataset_name: data?.name,
+				file_name: file?.filename,
+			}),
+		);
+
 		const fileUrl = calculateFileUrl(file);
-		if (fileUrl) window.open(fileUrl, '_blank');
+		const downloadName =
+			file.filename === file.worksheet || !file.worksheet
+				? file.filename
+				: `${file.filename} (${file.worksheet})`;
+
+		if (fileUrl) {
+			downloadS3File(fileUrl, downloadName);
+		}
 	};
 
 	const calculateFileUrl = (file) => {
@@ -190,7 +244,7 @@ const DataCard = ({ data, form, setForm }) => {
 				onValueChange={setActiveAccordion}
 				collapsible
 			>
-				{form?.processed_files?.files.map((file) => (
+				{form?.processed_files?.files.map((file, fileIndex) => (
 					<AccordionItem key={file?.id} value={file?.id}>
 						<AccordionTrigger className="bg-purple-4 rounded-lg py-2 pl-4 pr-2 mt-2 border-none no-underline flex justify-between items-center">
 							<div className="flex w-full mr-5 justify-between">
@@ -208,7 +262,7 @@ const DataCard = ({ data, form, setForm }) => {
 										</span>
 									</div>
 								</div>
-								<div className="flex gap-6 font-medium">
+								<div className="flex gap-6 font-medium items-center">
 									{/* Show page count for PDFs or column count otherwise */}
 									<span>
 										{file.type === 'pdf'
@@ -218,7 +272,7 @@ const DataCard = ({ data, form, setForm }) => {
 									<i
 										onClick={
 											activeAccordion === file.id
-												? handleFullScreen
+												? (e) => handleFullScreen(e, file)
 												: null
 										}
 										className={`bi bi-fullscreen text-lg !font-bold cursor-pointer ${
@@ -227,10 +281,16 @@ const DataCard = ({ data, form, setForm }) => {
 												: 'text-gray-400 cursor-not-allowed'
 										}`}
 									></i>
-									<i
-										onClick={(e) => handleDownloadFile(e, file)}
-										className="bi bi-download text-lg font-bold cursor-pointer"
-									></i>
+									{isDownloading ? (
+										<CircularLoader className="size-[18px]" />
+									) : (
+										<i
+											onClick={(e) =>
+												handleDownloadFile(e, file)
+											}
+											className="bi bi-download text-lg font-bold cursor-pointer"
+										></i>
+									)}
 								</div>
 							</div>
 						</AccordionTrigger>
@@ -250,6 +310,10 @@ const DataCard = ({ data, form, setForm }) => {
 											form={form}
 											setForm={setForm}
 											data={file}
+											datasetData={data}
+											addChangeForTracking={
+												addChangeForTracking
+											}
 										/>
 									)}
 								</div>

@@ -1,5 +1,4 @@
 import CommentTrigger from "@/components/elements/comments/comment-trigger/CommentTrigger";
-import { getToken } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import CommentHeading from "./comment-heading";
@@ -23,7 +22,7 @@ export default function Comments({
     const {data, isLoading: isLoadingComments} = useQuery({
         queryKey,
         queryFn: commentsFetcher,
-        enabled: !!getToken() && isCommentSectionVisible,
+        enabled: isCommentSectionVisible,
     })
 
     const commentsData = useMemo(() => {

@@ -5,7 +5,7 @@ import { DotsSixVertical } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
 import { updateReportCardOrder } from '../service/reports.service';
 import { toast } from 'sonner';
-import { cn, getToken } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
 import { useReportId } from '../hooks/useReportId';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
@@ -60,7 +60,6 @@ export default function QueryList({ reportDetails, pdfMode }) {
 			const reportCardIds = updatedCards.map((card) => card.external_id);
 
 			updateOrderMutation.mutate({
-				token: getToken(),
 				reportId,
 				reportCardIds,
 			});

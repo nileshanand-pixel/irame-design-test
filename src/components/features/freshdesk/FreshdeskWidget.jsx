@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { getToken } from '@/lib/utils';
 import { getFreshdeskToken } from './service/freshdesk.service';
 import useAuth from '@/hooks/useAuth';
 
@@ -45,7 +44,7 @@ const FreshdeskWidget = () => {
 
 		const getFreshdeskAuthToken = async () => {
 			try {
-				return await getFreshdeskToken(getToken());
+				return await getFreshdeskToken();
 			} catch (error) {
 				console.error('Failed to authenticate', error);
 				return null;

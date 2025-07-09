@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import GradientSpinner from '@/components/elements/loading/GradientSpinner';
-import { getToken } from '@/lib/utils';
 import { generateReportSummary, getReportSummary } from '../service/reports.service';
 import { useReportId } from '../hooks/useReportId';
 import DOMPurify from 'dompurify';
@@ -23,7 +22,7 @@ export default function ReportSummary() {
 		refetch: refetchReport,
 	} = useQuery({
 		queryKey: ['report-summary', reportId],
-		queryFn: () => getReportSummary({ token: getToken(), reportId }),
+		queryFn: () => getReportSummary({ reportId }),
 		// Poll only while server is generating
 		refetchInterval: status === 'polling' ? 5000 : false,
 		gcTime: 0,
@@ -64,7 +63,7 @@ export default function ReportSummary() {
 	}, [reportId, summary, isOutdated, isInProgress]);
 
 	const { mutate: startGeneration } = useMutation({
-		mutationFn: () => generateReportSummary({ token: getToken(), reportId }),
+		mutationFn: () => generateReportSummary({ reportId }),
 		onMutate: () => setStatus('mutating'),
 		onSuccess: () => {
 			toast.success('Summary generation started');

@@ -2,7 +2,6 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { getWorkflowRuns } from '../../service/workflow.service';
-import { getToken } from '@/lib/utils';
 
 const getStatusStyles = (status) => {
 	switch (status) {
@@ -44,7 +43,7 @@ const SessionHistoryPanel = ({ onClose }) => {
 
 	const { data: runDetails, isLoading, isError, error } = useQuery({
 		queryKey: ['workflow-runs', workflowId],
-		queryFn: () => getWorkflowRuns(getToken(), workflowId),
+		queryFn: () => getWorkflowRuns(workflowId),
 		enabled: Boolean(workflowId),
 		refetchInterval: 60000,
 	});
@@ -105,7 +104,7 @@ const SessionHistoryPanel = ({ onClose }) => {
 					<div className="divide-y text-black/60">
 						{runs.map((item) => {
 							const linkActive = isLinkActive(item.status);
-							const sessionUrl = `${window.location.origin}/app/new-chat/session/?sessionId=${item.session_id}`;
+							const sessionUrl = `${window.location.origin}/app/new-chat/session/?sessionId=${item.session_id}&source=workflow`;
 
 							// Determine if this row is the selected one
 							const isSelected = currentRunId === item.external_id;
@@ -113,9 +112,8 @@ const SessionHistoryPanel = ({ onClose }) => {
 							return (
 								<div
 									key={item.external_id}
-									className={`grid grid-cols-12 items-center py-5 px-4 hover:bg-gray-100 cursor-pointer ${
-										isSelected ? 'bg-purple-50' : ''
-									}`}
+									className={`grid grid-cols-12 items-center py-5 px-4 hover:bg-gray-100 cursor-pointer ${isSelected ? 'bg-purple-50' : ''
+										}`}
 									onClick={() => handleRowClick(item.external_id, linkActive, sessionUrl)}
 								>
 									<div className="col-span-3">{formatDate(item.created_at)}</div>

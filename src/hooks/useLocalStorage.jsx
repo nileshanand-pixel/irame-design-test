@@ -5,7 +5,6 @@ const initialValue = {
 		user_name: '',
 		email: '',
 		user_id: '',
-		token: '',
 		avatar: '',
 	},
 	answerRespConfig: {},

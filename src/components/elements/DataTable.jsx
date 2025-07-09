@@ -58,6 +58,7 @@ export function DataTable({
 	setRowSelection,
 	FloatingBarContent,
 	selectedRow,
+	onSortingChange
 }) {
 	const { table } = useDataTable({
 		data,
@@ -72,7 +73,9 @@ export function DataTable({
 		rowSelection,
 		setRowSelection,
 		defaultSort,
+		onSortingChange
 	});
+	
 	return (
 		<div className="w-full space-y-2.5 overflow-auto">
 			<div className="text-primary100">

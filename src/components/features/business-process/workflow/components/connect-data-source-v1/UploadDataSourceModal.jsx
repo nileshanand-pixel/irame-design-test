@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { formatFileSize, getToken, getFileIcon } from '@/lib/utils';
+import { formatFileSize, getFileIcon } from '@/lib/utils';
 import { v4 as uuid } from 'uuid';
 import axios from 'axios';
 import PropTypes from 'prop-types';
@@ -89,7 +89,7 @@ export default function UploadDataSourceModal({
 			setUploadingCount((count) => count + 1);
 
 			uploadSingleFile(file)
-				.catch(() => {})
+				.catch(() => { })
 				.finally(() => setUploadingCount((count) => count - 1));
 		}
 	};
@@ -105,7 +105,7 @@ export default function UploadDataSourceModal({
 			const data = await uploadFileHelper(
 				file,
 				setProgress,
-				getToken(),
+
 				source.token,
 			);
 			setProgress((prev) => ({ ...prev, [file.name]: 100 }));

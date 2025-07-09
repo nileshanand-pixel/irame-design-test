@@ -8,10 +8,10 @@ const ReportPermissionContext = createContext({
 export const ReportPermissionProvider = ({ report, children }) => {
 	let user = null;
 	try {
-		const authData = localStorage.getItem('auth-user-data');
+		const authData = localStorage.getItem('userDetails');
 		user = authData ? JSON.parse(authData) : null;
 	} catch (error) {
-		console.error('Error parsing auth-user-data', error);
+		console.error('Error parsing userDetails', error);
 	}
 
 	// Each report has a user_id and the logged in user's id is in auth-user-data.user_id

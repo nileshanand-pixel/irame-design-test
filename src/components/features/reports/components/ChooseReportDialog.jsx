@@ -17,14 +17,13 @@ export default function ChooseReportDialog({
 	onClose,
 	onAddNewReport,
 	onContinue,
-	token,
 }) {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedReportId, setSelectedReportId] = useState('');
 
 	const { data, isLoading, isError } = useQuery({
 		queryKey: ['user-reports'],
-		queryFn: () => getUserReports(token),
+		queryFn: () => getUserReports(),
 		enabled: open,
 		staleTime: 5 * 60 * 1000,
 	});

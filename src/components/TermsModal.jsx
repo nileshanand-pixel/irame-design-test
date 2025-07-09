@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { Button } from './ui/button';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const TermsModal = () => {
 	const [isVisible, setIsVisible] = useState(false);
@@ -14,6 +16,10 @@ const TermsModal = () => {
 
 	const handleAgree = () => {
 		Cookies.set('termsAccepted', 'true', { expires: 365 });
+		trackEvent(
+			EVENTS_ENUM.TNC_ACCEPTED,
+			EVENTS_REGISTRY.TNC_ACCEPTED
+		)
 		setIsVisible(false);
 	};
 

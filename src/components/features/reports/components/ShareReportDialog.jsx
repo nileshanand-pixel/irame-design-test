@@ -13,7 +13,6 @@ import AccessDropdown from './AccessDropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getReportAccessDetails, shareReport } from '../service/reports.service';
-import { getToken } from '@/lib/utils';
 import { toast } from 'sonner';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import AccessSkeletonList from './AccessSkeleton';
@@ -49,7 +48,7 @@ const ShareReportDialog = React.memo(() => {
 
 	const shareMutation = useMutation({
 		mutationFn: async (data) => {
-			await shareReport(getToken(), data.reportId, {
+			await shareReport(data.reportId, {
 				accesses: data.accesses,
 			});
 		},
@@ -69,7 +68,7 @@ const ShareReportDialog = React.memo(() => {
 
 	const queryFn = useCallback(() => {
 		if (!reportId) return;
-		return getReportAccessDetails(getToken(), reportId);
+		return getReportAccessDetails(reportId);
 	}, [reportId]);
 
 	const reportSharedData = useQuery({
@@ -134,7 +133,6 @@ const ShareReportDialog = React.memo(() => {
 			reportId: reportId,
 			accesses: invitedEmails,
 		});
-		trackEvent(EVENTS_ENUM.REPORT_SHARED, EVENTS_REGISTRY.REPORT_SHARED);
 	}, [invitedEmails, reportId, shareMutation, selectedReport?.user_id]);
 
 	const isValidEmail = (email) => {

@@ -3,7 +3,7 @@ import ImagePreview from "@/components/elements/image-preview";
 import UserProfileIcon from "@/components/elements/user-profile-icon";
 import { formatRelativeTime } from "@/utils/date-utils";
 import { isImageUrl } from "@/utils/file";
-import upperFirst from "lodash.upperfirst";
+import capitalize from "lodash.capitalize";
 import { useMemo } from "react";
 
 export default function Comment({
@@ -37,7 +37,7 @@ export default function Comment({
             </div>
             <div className="flex flex-col gap-2">
                 <div>
-                    <div className="text-sm font-semibold">{upperFirst(commentData?.user)}</div>
+                    <div className="text-sm font-semibold">{capitalize(commentData?.user)}</div>
                     <div className="text-[#999999] text-xs font-medium mb-2">{formatRelativeTime(commentData?.created_at)}</div>
                     <div className="text-sm text-primary100">{commentData?.text}</div>
                 </div>

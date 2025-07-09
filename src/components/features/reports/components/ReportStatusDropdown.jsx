@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { getToken } from '@/lib/utils';
 import { updateReportStatus } from '../service/reports.service';
 import { queryClient } from '@/lib/react-query';
 import { toast } from 'sonner';
@@ -29,7 +28,6 @@ export const ReportStatusDropdown = ({ value, onChange }) => {
 		setStatus(newStatus);
 		onChange(newStatus);
 		updateStatusMutation.mutate({
-			token: getToken(),
 			reportId,
 			status: newStatus,
 		});

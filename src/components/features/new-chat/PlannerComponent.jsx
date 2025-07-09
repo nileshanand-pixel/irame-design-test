@@ -29,6 +29,7 @@ const PlannerComponent = ({
 	const [enableSaveButton, setEnableSaveButton] = useState(false);
 	const editRef = useRef(null);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const setInitialSegments = () => {
 		if (!data?.tool_data?.text) return;
@@ -62,15 +63,6 @@ const PlannerComponent = ({
 				break;
 			}
 		}
-		trackEvent(
-			EVENTS_ENUM.EDIT_WORKSPACE_CLICKED,
-			EVENTS_REGISTRY.EDIT_WORKSPACE_CLICKED,
-			() => ({
-				session_id: query?.sessionId,
-				query_id: chatStoreReducer?.activeQueryId,
-				[editedTitle]: true,
-			}),
-		);
 	};
 
 	const handleSave = () => {
@@ -81,11 +73,16 @@ const PlannerComponent = ({
 		setIsEditing(false);
 		setEditIndex(null);
 		setEditContent('');
+
 		trackEvent(
-			EVENTS_ENUM.WORKSPACE_EDIT_SAVE_CLICKED,
-			EVENTS_REGISTRY.WORKSPACE_EDIT_SAVE_CLICKED,
+			EVENTS_ENUM.PLANNER_EDITED,
+			EVENTS_REGISTRY.PLANNER_EDITED,
 			() => ({
-				changedSegment: editRef.current.innerHTML,
+				chat_session_id: query.sessionId,
+				dataset_id: utilReducer?.selectedDataSource?.id,
+				dataset_name: utilReducer?.selectedDataSource?.name,
+				query_id: chatStoreReducer?.activeQueryId,
+				type_change: [...editRef.current.innerHTML.matchAll(/<b>(.*?)<\/b>/g)]?.[0]?.[1],
 			}),
 		);
 	};
@@ -94,10 +91,6 @@ const PlannerComponent = ({
 		setIsEditing(false);
 		setEditIndex(null);
 		setEditContent('');
-		trackEvent(
-			EVENTS_ENUM.WORKSPACE_EDIT_CANCEL_CLICKED,
-			EVENTS_REGISTRY.WORKSPACE_EDIT_CANCEL_CLICKED,
-		);
 	};
 
 	return (

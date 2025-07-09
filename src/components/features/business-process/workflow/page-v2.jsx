@@ -5,7 +5,6 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { getToken } from '@/lib/utils';
 import SessionHistoryPanel from './components/SessionHistoryPanel';
 import { WorkflowPageSkeleton } from './components/WorkflowPageSkeleton';
 import {
@@ -29,25 +28,25 @@ export default function WorkflowPageV2() {
 	const [isValidationSuccessful, setIsValidationSuccessful] = useState(false);
 
 	// Data fetching
-	const { data: workflowDetails, isLoading: isWorkflowLoading } = useQuery({
+	const { data: workflowDetails, isLoading: isWorkflowLoading } = useQuery({		
 		queryKey: ['workflow-details', workflowId],
-		queryFn: () => getWorkflowDetails(getToken(), workflowId),
+		queryFn: () => getWorkflowDetails(workflowId),
 		enabled: Boolean(workflowId),
 	});
 
 	const { data: businessProcesses, isLoading: isBusinessLoading } = useQuery({
 		queryKey: ['get-business-processes'],
-		queryFn: () => getBusinessProcesses(getToken()),
+		queryFn: () => getBusinessProcesses(),
 	});
 
 	const runWorkFlowMutation = useMutation({
-		mutationFn: () => RunWorkFlowRun(getToken(), workflowId, runId),
+		mutationFn: () => RunWorkFlowRun(workflowId, runId),
 		onSuccess: async () => {
 			toast.success('Workflow run successful');
 			queryClient.invalidateQueries(['workflow-runs', workflowId]);
 			queryClient.invalidateQueries(['workflow-run-details', runId]);
-			const data = await getWorkflowRunDetails(getToken(), workflowId, runId);
-			navigate(`/app/new-chat/session/?sessionId=${data.session_id}`);
+			const data = await getWorkflowRunDetails(workflowId, runId);
+			navigate(`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow`);
 		},
 		onError: (err) => {
 			console.error('Workflow run failed:', err);

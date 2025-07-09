@@ -3,7 +3,6 @@ import QueryDisplay from '../new-chat/session/components/QueryDisplay';
 import { Button } from '@/components/ui/button';
 import ComboBoxOnFire from './ComboBoxOnFire';
 import axios from 'axios';
-import { getRefreshToken, getToken } from '@/lib/utils';
 
 const TestRoute = () => {
 	const [bulkPrompt, setBulkPrompt] = useState([
@@ -62,52 +61,40 @@ const TestRoute = () => {
 		return new Blob(byteArrays, { type: mimeType });
 	};
 
-	const handleConvertUrl = async (e) => {
-		e.preventDefault();
-		setPdfUrl(null);
-		setLoading(true);
-		const cookies = [
-			{
-				name: 'id_token',
-				value: getToken(),
-				path: '/',
-				domain: '.irame.ai',
-			},
-			{
-				name: 'refresh_token',
-				value: getRefreshToken(),
-				path: '/',
-				domain: '.irame.ai',
-			},
-			{
-				name: 'termsAccepted',
-				value: 'true',
-				path: '/',
-				domain: '.irame.ai',
-			},
-		];
-		try {
-			const response = await axios.post(
-				`${import.meta.env.VITE_PDF_SERVER_ENDPOINT}/convert/url`,
-				{
-					url: inputUrl,
-					cookies: cookies,
-					waitDelay: '3s',
-					responseType: 'base64',
-				},
-				{ headers: { 'Content-Type': 'application/json' } },
-			);
+	// const handleConvertUrl = async (e) => {
+	// 	e.preventDefault();
+	// 	setPdfUrl(null);
+	// 	setLoading(true);
+	// 	const cookies = [
+	// 		{
+	// 			name: 'termsAccepted',
+	// 			value: 'true',
+	// 			path: '/',
+	// 			domain: '.irame.ai',
+	// 		},
+	// 	];
+	// 	try {
+	// 		const response = await axios.post(
+	// 			`${import.meta.env.VITE_PDF_SERVER_ENDPOINT}/convert/url`,
+	// 			{
+	// 				url: inputUrl,
+	// 				cookies: cookies,
+	// 				waitDelay: '3s',
+	// 				responseType: 'base64',
+	// 			},
+	// 			{ headers: { 'Content-Type': 'application/json' } },
+	// 		);
 
-			const pdfBase64 = response.data.pdf;
-			const pdfBlob = base64ToBlob(pdfBase64, 'application/pdf');
-			const url = window.URL.createObjectURL(pdfBlob);
-			setPdfUrl(url);
-		} catch (error) {
-			console.error('Failed:', error);
-			alert('PDF generation failed.');
-		}
-		setLoading(false);
-	};
+	// 		const pdfBase64 = response.data.pdf;
+	// 		const pdfBlob = base64ToBlob(pdfBase64, 'application/pdf');
+	// 		const url = window.URL.createObjectURL(pdfBlob);
+	// 		setPdfUrl(url);
+	// 	} catch (error) {
+	// 		console.error('Failed:', error);
+	// 		alert('PDF generation failed.');
+	// 	}
+	// 	setLoading(false);
+	// };
 
 	return (
 		<div className="w-full p-20 flex flex-col items-center">
@@ -140,7 +127,7 @@ const TestRoute = () => {
 				</div>
 			)}
 
-			{step > 3 && (
+			{/* {step > 3 && (
 				<div className="w-full max-w-2xl mb-8">
 					<form onSubmit={handleConvertUrl} className="flex gap-2 mb-2">
 						<input
@@ -174,7 +161,7 @@ const TestRoute = () => {
 						/>
 					)}
 				</div>
-			)}
+			)} */}
 
 			{step < 4 && (
 				<Button className="mt-8" onClick={() => setStep((prev) => prev + 1)}>

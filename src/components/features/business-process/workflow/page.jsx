@@ -5,7 +5,6 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { getToken } from '@/lib/utils';
 import SessionHistoryPanel from './components/SessionHistoryPanel';
 import { WorkflowPageSkeleton } from './components/WorkflowPageSkeleton';
 import {
@@ -31,23 +30,23 @@ export default function WorkflowPage() {
 	// Data fetching
 	const { data: workflowDetails, isLoading: isWorkflowLoading } = useQuery({
 		queryKey: ['workflow-details', workflowId],
-		queryFn: () => getWorkflowDetails(getToken(), workflowId),
+		queryFn: () => getWorkflowDetails(workflowId),
 		enabled: Boolean(workflowId),
 	});
 
 	const { data: businessProcesses, isLoading: isBusinessLoading } = useQuery({
 		queryKey: ['get-business-processes'],
-		queryFn: () => getBusinessProcesses(getToken()),
+		queryFn: () => getBusinessProcesses(),
 	});
 
 	const runWorkFlowMutation = useMutation({
-		mutationFn: () => RunWorkFlowRun(getToken(), workflowId, runId),
-		onSuccess: async() => {
+		mutationFn: () => RunWorkFlowRun(workflowId, runId),
+		onSuccess: async () => {
 			toast.success('Workflow run successful');
 			queryClient.invalidateQueries(['workflow-runs', workflowId]);
 			queryClient.invalidateQueries(['workflow-run-details', runId]);
-			const data = await getWorkflowRunDetails(getToken(), workflowId, runId);
-			navigate(`/app/new-chat/session/?sessionId=${data.session_id}`);
+			const data = await getWorkflowRunDetails(workflowId, runId);
+			navigate(`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow`);
 		},
 		onError: (err) => {
 			console.error('Workflow run failed:', err);
@@ -80,19 +79,17 @@ export default function WorkflowPage() {
 	const plan = useMemo(
 		() => workflowDetails?.data?.plan || '',
 		[workflowDetails]
-	  );
+	);
 
 	if (isWorkflowLoading || isBusinessLoading) {
 		return <WorkflowPageSkeleton />;
 	}
 
-	const mainContentClasses = `h-[calc(100vh-64px)] overflow-x-scroll ${
-		sidebarOpen ? 'md:w-full' : 'w-full lg:w-3/5 md:mx-auto'
-	} transition-all duration-300 ${
-		runWorkFlowMutation.isPending
+	const mainContentClasses = `h-[calc(100vh-64px)] overflow-x-scroll ${sidebarOpen ? 'md:w-full' : 'w-full lg:w-3/5 md:mx-auto'
+		} transition-all duration-300 ${runWorkFlowMutation.isPending
 			? 'overflow-y-hidden'
 			: 'overflow-y-auto'
-	}`;
+		}`;
 
 	return (
 		<div className="h-full w-full overflow-hidden text-primary80">
@@ -102,11 +99,10 @@ export default function WorkflowPage() {
 				<PanelGroup direction="horizontal" className="w-full h-full">
 					<Panel defaultSize={60} minSize={40}>
 						<div
-							className={`h-full bg-white relative p-4 flex flex-col min-h-full ${
-								runWorkFlowMutation.isPending
-									? 'overflow-y-hidden'
-									: 'overflow-auto'
-							}`}
+							className={`h-full bg-white relative p-4 flex flex-col min-h-full ${runWorkFlowMutation.isPending
+								? 'overflow-y-hidden'
+								: 'overflow-auto'
+								}`}
 						>
 							<WorkflowDetails
 								workflowDetails={workflowDetails}

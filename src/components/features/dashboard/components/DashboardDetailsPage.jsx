@@ -1,7 +1,7 @@
 import { useRouter } from '@/hooks/useRouter';
 import React, { useEffect, useRef, useState } from 'react';
 import { getDashboardContent } from '../service/dashboard.service';
-import { cn, getToken } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import TooltipWrapper from '@/components/elements/TooltipWrapper';
@@ -10,6 +10,8 @@ import { queryClient } from '@/lib/react-query';
 import MultiGraphCard from './MultiGraphCard';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import useS3File from '@/hooks/useS3File';
+import CircularLoader from '@/components/elements/loading/CircularLoader';
 
 const DashboardDetailsPage = () => {
 	const [dashboard, setDashboard] = useState([]);
@@ -17,6 +19,7 @@ const DashboardDetailsPage = () => {
 	const { query, navigate } = useRouter();
 
 	const elementRef = useRef(null);
+	const { isDownloading, downloadS3File} = useS3File();
 
 	let safeHTML = '';
 	if (selectedItem && selectedItem?.content?.summary?.text) {
@@ -25,17 +28,19 @@ const DashboardDetailsPage = () => {
 
 	const dashboardDetailsQuery = useQuery({
 		queryKey: ['dashboard-details'],
-		queryFn: () => getDashboardContent(getToken(), query.id),
+		queryFn: () => getDashboardContent(query.id),
 	});
 	const handleItemClick = (item) => {
 		scrollToElement();
 		trackEvent(
-			EVENTS_ENUM.DASHBOARD_ITEM_CLICKED,
-			EVENTS_REGISTRY.DASHBOARD_ITEM_CLICKED,
+			EVENTS_ENUM.GRAPH_CARD_CLICKED,
+			EVENTS_REGISTRY.GRAPH_CARD_CLICKED,
 			() => ({
 				dashboard_id: query.id,
+				dashboard_name: query.name,
 				query_id: item?.query_id,
-				dashboard_content_id: item?.dashboard_content_id
+				query_text: item?.content?.query,
+				dashboard_content_id: item?.dashboard_content_id,
 			}),
 		);
 		setSelectedItem(item);
@@ -53,39 +58,39 @@ const DashboardDetailsPage = () => {
 	const renderGraphs = () => {
 		return dashboard?.length > 0 ? (
 			Array.isArray(dashboard) &&
-				dashboard.map((item) => {
-					return (
+			dashboard.map((item) => {
+				return (
+					<div
+						key={item.dashboard_content_id}
+						className="w-full h-full"
+					>
 						<div
-							key={item.dashboard_content_id}
-							className="w-full h-full"
+							className={`bg-white rounded-3xl p-2 cursor-pointer w-full h-full ${selectedItem === item ? 'border-2 border-purple-500' : ''}`}
+							onClick={() => handleItemClick(item)}
 						>
-							<div
-								className={`bg-white rounded-3xl p-2 cursor-pointer w-full h-full ${selectedItem === item ? 'border-2 border-purple-500' : ''}`}
-								onClick={() => handleItemClick(item)}
-							>
-								<div className="flex flex-col py-2 px-4 items-center justify-center w-full h-full">
-									<MultiGraphCard
-										data={item}
-										isGraphLoading={
-											dashboardDetailsQuery.isLoading
-										}
-										selectedItem={selectedItem}
-									/>
-									{false ? (
-										<p
-											className="text-primary80 font-medium mb-2 px-4 line-clamp-2"
-											style={{
-												whiteSpace: 'pre-wrap',
-											}}
-										>
-											{item?.content?.query}
-										</p>
-									) : null}
-								</div>
+							<div className="flex flex-col py-2 px-4 items-center justify-center w-full h-full">
+								<MultiGraphCard
+									data={item}
+									isGraphLoading={
+										dashboardDetailsQuery.isLoading
+									}
+									selectedItem={selectedItem}
+								/>
+								{false ? (
+									<p
+										className="text-primary80 font-medium mb-2 px-4 line-clamp-2"
+										style={{
+											whiteSpace: 'pre-wrap',
+										}}
+									>
+										{item?.content?.query}
+									</p>
+								) : null}
 							</div>
 						</div>
-					);
-				})
+					</div>
+				);
+			})
 		) : dashboardDetailsQuery?.isLoading ? (
 			<div className="darkSoul-glowing-button2 mb-10 mt-5 ml-4">
 				<button className="darkSoul-button2" type="button">
@@ -111,6 +116,19 @@ const DashboardDetailsPage = () => {
 			});
 		};
 	}, [query, dashboardDetailsQuery.data]);
+
+	useEffect(() => {
+		trackEvent(
+			EVENTS_ENUM.DASHBOARD_LOADED,
+			EVENTS_REGISTRY.DASHBOARD_LOADED,
+			() => ({
+				dashboard_id: query.id,
+				dashboard_name: query.name,
+				total_cards: dashboard.length,
+			})
+		)
+	}, []);
+
 	return (
 		<div className="w-full h-full px-8 " ref={elementRef}>
 			<div className="w-full flex flex-col justify-between mt-2 ">
@@ -155,7 +173,20 @@ const DashboardDetailsPage = () => {
 									</h2>
 									<button
 										className="text-primary60 font-medium"
-										onClick={() => setSelectedItem(null)}
+										onClick={() => {
+											trackEvent(
+												EVENTS_ENUM.DASHBOARD_CLOSE_SUMMARY,
+												EVENTS_REGISTRY.DASHBOARD_CLOSE_SUMMARY,
+												() => ({
+													dashboard_id: query.id,
+													dashboard_name: query.name,
+													dashboard_content_id: selectedItem?.dashboard_content_id,
+													query_id: selectedItem?.query_id,
+													query_text: selectedItem?.content?.query
+												})
+											)
+											setSelectedItem(null)
+										}}
 									>
 										<span className="material-symbols-outlined">
 											close
@@ -184,16 +215,40 @@ const DashboardDetailsPage = () => {
 											<Button
 												variant="outlined"
 												className="text-sm font-medium text-purple-100 bg-purple-8 hover:bg-purple-16 border-none flex items-center"
-												onClick={() =>
-													window.open(
-														selectedItem?.content?.table
-															?.csv_url,
-														'_blank',
+												onClick={() =>{
+													if(isDownloading) return;
+
+													trackEvent(
+														EVENTS_ENUM.DASHBOARD_DOWNLOAD_CSV_CLICKED,
+														EVENTS_REGISTRY.DASHBOARD_DOWNLOAD_CSV_CLICKED,
+														() => ({
+															dashboard_id: query.id,
+															dashboard_name: query.name,
+															dashboard_content_id: selectedItem?.dashboard_content_id,
+															query_id: selectedItem?.query_id,
+															query_text: selectedItem?.content?.query,
+
+														})
 													)
-												}
-											>
-												<i className="bi-download mr-2"></i>
-												Download CSV
+													downloadS3File(selectedItem?.content?.table?.csv_url);
+												}}
+											>	
+											{
+												isDownloading ? (
+													<>
+														<span className="mr-2">
+															<CircularLoader size="md" />
+														</span>
+														Downloading...
+													</>
+												) : (
+													<>
+														<i className="bi-download mr-2"></i>
+														Download CSV
+													</>
+												)
+											}
+												
 											</Button>
 										)}
 
@@ -201,11 +256,22 @@ const DashboardDetailsPage = () => {
 											<Button
 												variant="secondary"
 												className="w-fit rounded-lg bg-purple-8  text-purple-100 font-medium"
-												onClick={() =>
-													navigate(
-														`/app/new-chat/session?sessionId=${selectedItem?.content?.session_id}`,
+												onClick={() =>{
+													trackEvent(
+														EVENTS_ENUM.DASHBOARD_IRA_CLICKED,
+														EVENTS_REGISTRY.DASHBOARD_IRA_CLICKED,
+														() => ({
+															dashboard_id: query.id,
+															dashboard_name: query.name,
+															dashboard_content_id: selectedItem?.dashboard_content_id,
+															query_id: selectedItem?.query_id,
+															query_text: selectedItem?.content?.query
+														})
 													)
-												}
+													navigate(
+														`/app/new-chat/session?sessionId=${selectedItem?.content?.session_id}&source=dashboard`,
+													)
+												}}
 											>
 												<span className="material-icons-outlined me-2">
 													auto_awesome

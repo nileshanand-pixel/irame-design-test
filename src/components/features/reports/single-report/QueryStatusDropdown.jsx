@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateReportCardStatus } from '../service/reports.service';
-import { getToken } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useReportId } from '../hooks/useReportId';
 import { CustomDropdown } from '../components/CustomDropdown';
@@ -14,8 +13,7 @@ export const QueryStatusDropdown = ({ value, onChange, reportCardId }) => {
 
 	const mutation = useMutation({
 		mutationFn: async (status) => {
-			const token = getToken();
-			await updateReportCardStatus({ token, reportId, reportCardId, status });
+			await updateReportCardStatus({ reportId, reportCardId, status });
 		},
 		onSuccess: () => {
 			toast.success('Status updated!');

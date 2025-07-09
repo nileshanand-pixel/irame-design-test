@@ -1,13 +1,12 @@
 import React from 'react';
 import { createQuery } from './service/new-chat.service';
 import { useRouter } from '@/hooks/useRouter';
-import { getToken } from '@/lib/utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { Button } from '@/components/ui/button';
 import { trackEvent } from '@/lib/mixpanel';
-import { EVENTS_ENUM } from '@/config/analytics-events';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { queryClient } from '@/lib/react-query';
 
 const FollowUpQuestions = ({
@@ -25,6 +24,19 @@ const FollowUpQuestions = ({
 
 	const handlePrompt = () => {
 		try {
+			trackEvent(
+				EVENTS_ENUM.CLICKED_FOLLOW_UP_SUGGESTION,
+				EVENTS_REGISTRY.CLICKED_FOLLOW_UP_SUGGESTION,
+				() => ({
+					chat_session_id: query?.sessionId,
+					dataset_id: utilReducer?.selectedDataSource?.id,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					query_id: chatStoreReducer?.activeQueryId,
+					question: question,
+					clicked_on: index + 1,
+				}),
+			);
+			
 			const tempCurrentQueries = [
 				...chatStoreReducer?.queries,
 				{ id: '', question: question, parentQueryId: answerResp?.query_id },
@@ -44,7 +56,7 @@ const FollowUpQuestions = ({
 					query: question,
 					session_id: answerResp?.session_id,
 				},
-				getToken(),
+
 			).then((res) => {
 				const updatedQueries = tempCurrentQueries?.map((item) => {
 					if (item?.parentQueryId === answerResp?.query_id) {
@@ -65,16 +77,20 @@ const FollowUpQuestions = ({
 				queryClient.invalidateQueries(['chat-history']);
 
 				trackEvent(
-					EVENTS_ENUM.FOLLOW_UP_QUERY_INITIATED,
-					EVENTS_REGISTRY.FOLLOW_UP_QUERY_INITIATED,
+					EVENTS_ENUM.CHAT_MESSAGE_SENT,
+					EVENTS_REGISTRY.CHAT_MESSAGE_SENT,
 					() => ({
-						child_no: parseInt(answerResp.child_no) + 1,
-						datasource_id: answerResp?.datasource_id,
-						parent_query_id: answerResp?.query_id,
-						query: question,
-						session_id: answerResp?.session_id,
-						query_id: res.query_id,
-					}),
+						chat_session_id: query?.sessionId,
+						dataset_id: utilReducer?.selectedDataSource?.id,
+						dataset_name: utilReducer?.selectedDataSource?.name,
+						query_id: chatStoreReducer?.activeQueryId,
+						message_type: "user",
+						message_source: "follow_up",
+						message_text: question,
+						is_clarification: false,
+						message_number: chatStoreReducer?.queries?.length * 2 + 1,
+						first_message_in_chat: false,
+					})
 				);
 			});
 

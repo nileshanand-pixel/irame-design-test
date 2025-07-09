@@ -1,21 +1,17 @@
 import axiosClientV1 from '@/lib/axios';
 import { toast } from 'sonner';
 
-export const getUserDashboard = async (token) => {
+export const getUserDashboard = async () => {
 	const response = await axiosClientV1.get(`/dashboards`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data?.dashboard_list;
 };
 
-export const deleteUserDashboard = async (token, id) => {
+export const deleteUserDashboard = async (id) => {
 	try {
 		const response = await axiosClientV1.delete(`/dashboards/${id}`, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		});
 		toast.success('Dashboard deleted successfully');
 		return response.data;
@@ -25,12 +21,10 @@ export const deleteUserDashboard = async (token, id) => {
 	}
 };
 
-export const getDashboardContent = async (token, id) => {
+export const getDashboardContent = async (id) => {
 	try {
 		const response = await axiosClientV1.get(`/dashboards/${id}/contents`, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		});
 
 		return response.data?.dashboard_content_list;
@@ -40,40 +34,34 @@ export const getDashboardContent = async (token, id) => {
 	}
 };
 
-export const createDashboard = async (token, name) => {
+export const createDashboard = async (name) => {
 	const response = await axiosClientV1.post(
 		`/dashboards`,
 		{ title: name },
 		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		},
 	);
 	return response.data;
 };
 
-export const createDashboardContent = async (token, id, content) => {
+export const createDashboardContent = async (id, content) => {
 	const response = await axiosClientV1.post(
 		`/dashboards/${id}/contents`,
 		content,
 		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		},
 	);
 	return response.data;
 };
 
-export const updateDashboardName = async (token, id, name) => {
+export const updateDashboardName = async (id, name) => {
 	const response = await axiosClientV1.put(
 		`/dashboards/${id}/?title=${name}`,
 		{},
 		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		},
 	);
 	return response.data;

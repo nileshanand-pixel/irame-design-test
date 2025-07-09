@@ -12,6 +12,9 @@ import { trackEvent } from '@/lib/mixpanel';
 import { ChartNoAxesCombinedIcon, LayoutDashboard } from 'lucide-react';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import AddQueryFlow from '../reports/components/AddQueryFlow';
+import { useRouter } from '@/hooks/useRouter';
+import useS3File from '@/hooks/useS3File';
+import CircularLoader from '@/components/elements/loading/CircularLoader';
 
 const ResponseCard = ({
 	answerResp,
@@ -30,6 +33,9 @@ const ResponseCard = ({
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const [isAddToReportOpen, setIsAddToReportOpen] = useState(false);
+	const { query } = useRouter();
+	const utilReducer = useSelector((state) => state.utilReducer);
+	const { isDownloading, downloadS3File} = useS3File();
 
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
@@ -82,7 +88,16 @@ const ResponseCard = ({
 			]),
 		);
 		setIsAddToReportOpen(true);
-		// TODO Add mixpanel event later
+		trackEvent(
+			EVENTS_ENUM.ADD_TO_REPORT_CLICKED,
+			EVENTS_REGISTRY.ADD_TO_REPORT_CLICKED,
+			() => ({
+				chat_session_id: query?.sessionId,
+				dataset_id: utilReducer?.selectedDataSource?.id,
+				dataset_name: utilReducer?.selectedDataSource?.name,
+				query_id: chatStoreReducer?.activeQueryId,
+			}),
+		);
 	};
 
 	const handleAddToDashboard = () => {
@@ -102,12 +117,34 @@ const ResponseCard = ({
 			EVENTS_ENUM.ADD_TO_DASHBOARD_CLICKED,
 			EVENTS_REGISTRY.ADD_TO_DASHBOARD_CLICKED,
 			() => ({
-				query_id: answerResp.query_id,
-				session_id: answerResp.session_id,
-				child_query_number: answerResp.child_no,
+				chat_session_id: query?.sessionId,
+				dataset_id: utilReducer?.selectedDataSource?.id,
+				dataset_name: utilReducer?.selectedDataSource?.name,
+				query_id: chatStoreReducer?.activeQueryId,
 			}),
 		);
 	};
+
+	useEffect(() => {
+		if(
+			answerResp?.answer?.follow_up &&
+			showFollowup &&
+			!doingScience &&
+			!isGraphLoading
+		) {
+			trackEvent(
+				EVENTS_ENUM.FOLLOW_UP_SUGGESTION_SHOWED,
+				EVENTS_REGISTRY.FOLLOW_UP_SUGGESTION_SHOWED,
+				() => ({
+					chat_session_id: query?.sessionId,
+					dataset_id: utilReducer?.selectedDataSource?.id,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					query_id: chatStoreReducer?.activeQueryId,
+					ques_count: answerResp?.answer?.follow_up?.tool_data?.questions?.length,
+				})
+			)
+		}
+	}, [answerResp, showFollowup, doingScience, isGraphLoading]);
 
 	return (
 		<>
@@ -163,15 +200,39 @@ const ResponseCard = ({
 									<Button
 										variant="outline"
 										className="text-muted-foreground cursor-pointer"
-										onClick={() =>
-											window.open(
-												dataFrameItem[1]?.tool_data?.csv_url,
-												'_blank',
+										onClick={() => {
+											if(isDownloading) return;
+
+											trackEvent(
+												EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
+												EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
+												() => ({
+													chat_session_id: query?.sessionId,
+													dataset_id: utilReducer?.selectedDataSource?.id,
+													dataset_name: utilReducer?.selectedDataSource?.name,
+													query_id: chatStoreReducer?.activeQueryId,
+												}),
+											);
+
+											downloadS3File(dataFrameItem[1]?.tool_data?.csv_url);
+										}}
+									>
+										{
+											isDownloading ? (
+												<>
+														<span className="mr-2">
+															<CircularLoader size="md" />
+														</span>
+														Downloading...
+													</>
+											) : (
+												<>
+													<i className="bi-download mr-2"></i>
+													Download CSV
+												</>
 											)
 										}
-									>
-										<i className="bi-download mr-2"></i>
-										Download CSV
+										
 									</Button>
 								)}
 							<div className="flex gap-2">

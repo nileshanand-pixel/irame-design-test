@@ -1,4 +1,8 @@
+import { FIRST_EVENT_IN_USER_SESSION, USER_SESSION_ID } from '@/constants/session-manager.constant';
+import { getCookie } from '@/utils/cookies';
+import { getLocalStorage, removeFromLocalStorage } from '@/utils/local-storage';
 import mixpanel from 'mixpanel-browser';
+import { MIXPANEL_URL } from '@/config';
 
 const env = import.meta.env.VITE_ENV;
 const tokens = {
@@ -11,6 +15,7 @@ export const initAnalytics = () => {
 	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 
 	mixpanel.init(tokens[env], {
+		api_host: MIXPANEL_URL,
 		debug: env === 'local',
 		persistence: "localStorage",
 	});
@@ -27,13 +32,27 @@ export const trackEvent = (
 
 	const mappedProperties = propertiesMapper(parameters || {});
 
-	const authUserDetails = JSON.parse(localStorage.getItem("auth-user-data"))
+	const authUserDetails = JSON.parse(localStorage.getItem("userDetails"))
+	const user_session_id = getCookie(USER_SESSION_ID);
+
+	const loggedInUserProperties = !!authUserDetails ? {
+		...authUserDetails,
+		user_session_id,
+	} : {};
+
+	if(!!authUserDetails) {
+		const first_event_in_user_session = getLocalStorage(FIRST_EVENT_IN_USER_SESSION);
+		if(first_event_in_user_session) {
+			loggedInUserProperties.first_event_in_user_session = true;
+			removeFromLocalStorage(FIRST_EVENT_IN_USER_SESSION);
+		}	
+	}
 
 	const finalProperties = {
 		...rest, //properties except parameters
 		...mappedProperties, // build event custom parameters
 		env,
-		...(!!authUserDetails && authUserDetails)
+		...loggedInUserProperties
 	};
 
 	mixpanel.track(eventName, finalProperties);
@@ -54,9 +73,10 @@ export const untrackUser = () => {
 }
 
 export const getErrorAnalyticsProps = (error) => {
+	const errorResponseData = error?.response?.data;
+
 	return {
-		code: error.code,
-		message: error.message,
-		status: error.status
+		error_code: errorResponseData?.error_code || error.code,
+		error_desc: errorResponseData?.message || error.message,
 	}
 }

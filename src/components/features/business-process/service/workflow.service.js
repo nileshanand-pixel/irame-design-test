@@ -1,63 +1,39 @@
 import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
 
-export const getBusinessProcesses = async (token) => {
+export const getBusinessProcesses = async () => {
 	const response = await axiosClientV1.get(`/business-processes`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
-export const getWorkflowsByBusinessProcess = async (token, businessProcessId) => {
-	const response = await axiosClientV1.get(
-		`/workflow-checks/business-process/${businessProcessId}`,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		},
-	);
+
+export const getWorkflowsByBusinessProcess = async (businessProcessId) => {
+	const response = await axiosClientV1.get(`/workflow-checks/business-process/${businessProcessId}`, {
+		headers: { },
+	});
 	return response.data;
 };
 
-export const getRecentWorkflowsRunsHomePage = async (token) => {
+export const getRecentWorkflowsRunsHomePage = async () => {
 	const response = await axiosClientV1.get(`/business-processes/home-page`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
-export const getWorkflowDetails = async (token, workflowCheckId) => {
+export const getWorkflowDetails = async (workflowCheckId) => {
 	const response = await axiosClientV1.get(`/workflow-checks/${workflowCheckId}`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
-export const initiateWorkflowCheck = async (token, workflowCheckId, data) => {
-	const response = await axiosClientV1.post(
-		`/workflow-checks/${workflowCheckId}/initiate`,
-		data,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		},
-	);
-	return response.data;
-};
-
-export const initiateWorkflowCheckV2 = async (token, workflowCheckId, data) => {
+export const initiateWorkflowCheckV2 = async (workflowCheckId, data) => {
 	const response = await axiosClientV2.post(
 		`/workflow-checks/${workflowCheckId}/initiate`,
 		data,
 		{
 			headers: {
-				Authorization: `Bearer ${token}`,
 				'Content-Type': 'application/json',
 			},
 		},
@@ -65,8 +41,21 @@ export const initiateWorkflowCheckV2 = async (token, workflowCheckId, data) => {
 	return response.data;
 };
 
+export const initiateWorkflowCheck = async (workflowCheckId,  data) => {
+	const response = await axiosClientV1.post(`/workflow-checks/${workflowCheckId}/initiate`, data, {
+		headers: { },
+	});
+	return response.data;
+};
+
+export const getWorkflowRunDetails = async (workflowCheckId,  workflowRunId) => {
+	const response = await axiosClientV1.get(`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}`, {
+		headers: { },
+	});
+	return response.data;
+};
+
 export const restartWorkflowCheckV2 = async (
-	token,
 	workflowCheckId,
 	runId,
 	data,
@@ -76,7 +65,6 @@ export const restartWorkflowCheckV2 = async (
 		data,
 		{
 			headers: {
-				Authorization: `Bearer ${token}`,
 				'Content-Type': 'application/json',
 			},
 		},
@@ -84,54 +72,28 @@ export const restartWorkflowCheckV2 = async (
 	return response.data;
 };
 
-export const getWorkflowRunDetails = async (
-	token,
-	workflowCheckId,
-	workflowRunId,
-) => {
-	const response = await axiosClientV1.get(
-		`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}`,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		},
-	);
+export const getWorkflowRuns = async (workflowCheckId,) => {
+	const response = await axiosClientV1.get(`/workflow-checks/${workflowCheckId}/runs`, {
+		headers: { },
+	});
 	return response.data;
 };
 
-export const getWorkflowRuns = async (token, workflowCheckId) => {
-	const response = await axiosClientV1.get(
-		`/workflow-checks/${workflowCheckId}/runs`,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		},
-	);
+export const clarifyWorkFlowRun = async (workflowCheckId,  workflowRunId, data) => {
+	const response = await axiosClientV1.post(`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}/clarify`, data, {
+		headers: { },
+	});
 	return response.data;
 };
 
-export const clarifyWorkFlowRun = async (
-	token,
-	workflowCheckId,
-	workflowRunId,
-	data,
-) => {
-	const response = await axiosClientV1.post(
-		`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}/clarify`,
-		data,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
-		},
-	);
+export const RunWorkFlowRun = async (workflowCheckId,  workflowRunId) => {
+	const response = await axiosClientV1.post(`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}/run `, null, {
+		headers: { },
+	});
 	return response.data;
 };
 
 export const clarifyWorkFlowRunV2 = async (
-	token,
 	workflowCheckId,
 	workflowRunId,
 	data,
@@ -141,21 +103,7 @@ export const clarifyWorkFlowRunV2 = async (
 		data,
 		{
 			headers: {
-				Authorization: `Bearer ${token}`,
 				'Content-Type': 'application/json',
-			},
-		},
-	);
-	return response.data;
-};
-
-export const RunWorkFlowRun = async (token, workflowCheckId, workflowRunId) => {
-	const response = await axiosClientV1.post(
-		`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}/run `,
-		null,
-		{
-			headers: {
-				Authorization: `Bearer ${token}`,
 			},
 		},
 	);

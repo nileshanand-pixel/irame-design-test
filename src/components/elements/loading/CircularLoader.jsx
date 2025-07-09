@@ -6,7 +6,7 @@ const CircularLoader = ({className, size}) => {
         'xl': 'border-[8px] size-10'
     }
     return (
-        <div class={`border-gray-300 ${size  && classNameMap[size] } animate-spin rounded-full border-2 border-t-purple-80 `} />
+        <div class={`border-gray-300 ${size  && classNameMap[size] } animate-spin rounded-full border-2 border-t-purple-80 ${className}`} />
     )
 }
 

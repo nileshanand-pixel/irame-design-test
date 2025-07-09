@@ -3,7 +3,6 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { getReports } from '@/components/features/reports/service/reports.service';
 import useAuth from '@/hooks/useAuth';
-import { getToken } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 const GlobalPollReports = () => {
@@ -12,14 +11,14 @@ const GlobalPollReports = () => {
 	const navigate = useNavigate();
 	const { isAuthenticated } = useAuth();
 	// added this for manually stopping polling to help development while keeping network tab clean
-	const stopPolling = localStorage.getItem('stopPolling') 
+	const stopPolling = localStorage.getItem('stopPolling')
 
 	useEffect(() => {
 		if (!isAuthenticated || stopPolling === 'yes') return;
 
 		const pollReports = async () => {
 			try {
-				const currentReports = await getReports(getToken());
+				const currentReports = await getReports();
 
 				currentReports.forEach((currentReport) => {
 					const currentReportId = currentReport?.report_id;
@@ -28,9 +27,9 @@ const GlobalPollReports = () => {
 						(report) => report?.report_id === currentReportId
 					)?.[0];
 
-					if(
-						correspondingPrevReport && 
-						correspondingPrevReport?.status === "in_progress" && 
+					if (
+						correspondingPrevReport &&
+						correspondingPrevReport?.status === "in_progress" &&
 						currentReport?.status === "done"
 					) {
 						toast(`Report "${currentReport.name}" is now done!`, {
@@ -50,7 +49,7 @@ const GlobalPollReports = () => {
 									View Reports
 								</Button>
 							),
-							},
+						},
 						);
 					}
 				})
@@ -71,7 +70,7 @@ const GlobalPollReports = () => {
 		return () => clearInterval(intervalId);
 	}, [isAuthenticated, navigate, previousReports]);
 
-	return null; 
+	return null;
 };
 
 export default GlobalPollReports;

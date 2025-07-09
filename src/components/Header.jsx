@@ -9,12 +9,14 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { getToken, getInitials, cn } from '@/lib/utils';
+import { getInitials, cn } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
-import { getUserDetailsFromToken } from '@/lib/cookies';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { authUserDetails } from './features/login/service/auth.service';
+import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { LockClosedIcon } from '@radix-ui/react-icons';
 import { ReaderIcon } from '@radix-ui/react-icons';
 import { RocketIcon } from '@radix-ui/react-icons';
@@ -38,12 +40,11 @@ const Header = () => {
 		const fetchData = async () => {
 			try {
 				if (value.user_name && value.email && value.user_id) return;
-				const userData = getUserDetailsFromToken();
+				const userData = await authUserDetails();
 
 				// Update local state with user details
 				setValue({
 					...userData,
-					token: getToken(),
 				});
 			} catch (error) {
 				console.error('Error fetching user details:', error);
@@ -56,7 +57,7 @@ const Header = () => {
 		utilReducer?.selectedDataSource?.name && pathname.includes('/new-chat');
 
 	const openReportGenerateModal = () => {
-		dispatch(updateUtilProp([{key: 'isGenerateReportModalOpen', value: true}]))
+		dispatch(updateUtilProp([{ key: 'isGenerateReportModalOpen', value: true }]))
 	}
 
 	const renderGenerateSessionReport = () => {
@@ -66,7 +67,7 @@ const Header = () => {
 		let uiContent = '';
 		if (enabled) {
 			uiContent = (
-				<div className={`flex gap-1 mb-4 p-2  items-center rounded-lg ${enabled ? 'cursor-pointer bg-purple-10 text-primary80': 'bg-gray-1 text-primary40'}`} onClick={() => enabled && openReportGenerateModal()} >
+				<div className={`flex gap-1 mb-4 p-2  items-center rounded-lg ${enabled ? 'cursor-pointer bg-purple-10 text-primary80' : 'bg-gray-1 text-primary40'}`} onClick={() => enabled && openReportGenerateModal()} >
 					<span className="material-symbols-outlined">description</span>
 					<span className='text-sm font-medium'>Generate Session Report</span>
 				</div>
@@ -110,9 +111,27 @@ const Header = () => {
 					Logout
 				</>
 			),
-			onClick: () => {
-				fullLogout();	
-				setValue({});
+			onClick: async () => {
+				try {
+					trackEvent(
+						EVENTS_ENUM.LOGOUT_CLICKED,
+						EVENTS_REGISTRY.LOGOUT_CLICKED
+					)
+					await fullLogout();
+					setValue({});
+					trackEvent(
+						EVENTS_ENUM.LOGOUT_SUCCESSFUL,
+						EVENTS_REGISTRY.LOGOUT_SUCCESSFUL
+					)
+				} catch(error){
+					trackEvent(
+						EVENTS_ENUM.LOGOUT_FAILED,
+						EVENTS_REGISTRY.LOGOUT_FAILED,
+						() => ({
+							...getErrorAnalyticsProps(error)
+						})
+					)
+				}
 			}
 		}
 	]
@@ -124,26 +143,26 @@ const Header = () => {
 			)}
 		>
 			<div className='flex gap-6'>
-			{showDataSourceName ? (
-				<div className="mb-4 flex gap-2 items-center rounded-lg px-3 py-2 bg-purple-10 text-primary80 text-sm font-medium w-fit truncate">
-					<img
-						src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
-						alt="edit-prompt"
-					/>
-					{utilReducer?.selectedDataSource?.name}
-					<span className="relative flex size-3 ">
-						<span className="absolute inline-flex h-full w-full rounded-full bg-green-500"></span>
-						<span className="animate-ping relative inline-flex rounded-full size-3 bg-green-500"></span>
+				{showDataSourceName ? (
+					<div className="mb-4 flex gap-2 items-center rounded-lg px-3 py-2 bg-purple-10 text-primary80 text-sm font-medium w-fit truncate">
+						<img
+							src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
+							alt="edit-prompt"
+						/>
+						{utilReducer?.selectedDataSource?.name}
+						<span className="relative flex size-3 ">
+							<span className="absolute inline-flex h-full w-full rounded-full bg-green-500"></span>
+							<span className="animate-ping relative inline-flex rounded-full size-3 bg-green-500"></span>
+						</span>
+					</div>
+				) : (
+					<span className="font-medium text-lg leading-[21.78px]">
+						{'Irame.ai'}
 					</span>
-				</div>
-			) : (
-				<span className="font-medium text-lg leading-[21.78px]">
-					{'Irame.ai'}
-				</span>
-			)}
-			{/* {renderGenerateSessionReport()} */}
+				)}
+				{/* {renderGenerateSessionReport()} */}
 			</div>
-			
+
 			<div className="flex gap-6">
 				{/* <ThemeToggle /> */}
 

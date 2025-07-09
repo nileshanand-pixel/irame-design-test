@@ -4,7 +4,6 @@ import { getUserReport } from '../service/reports.service';
 import ReportHero from '../single-report/ReportHero';
 import QueryList from '../single-report/QueryList';
 import { useQuery } from '@tanstack/react-query';
-import { getToken } from '@/lib/utils';
 import ReportSummary from '../single-report/ReportSummary';
 
 const ReportContentPage = () => {
@@ -17,7 +16,7 @@ const ReportContentPage = () => {
 		isLoading,
 	} = useQuery({
 		queryKey: ['report-details', reportId],
-		queryFn: () => getUserReport(getToken(), reportId),
+		queryFn: () => getUserReport(reportId),
 		enabled: Boolean(reportId),
 	});
 

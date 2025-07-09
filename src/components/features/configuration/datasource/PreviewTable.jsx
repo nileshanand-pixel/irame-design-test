@@ -3,8 +3,10 @@ import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import TableLoader from '@/components/elements/loading/TableLoader';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
-const PreviewTable = ({ data, form, setForm, width = '200px' }) => {
+const PreviewTable = ({ data, form, setForm, width = '200px', datasetData }) => {
   const [columns, setColumns] = useState(data.columns);
   const [previewData, setPreviewData] = useState([]);
   const [editColumnIndex, setEditColumnIndex] = useState(null);
@@ -31,7 +33,11 @@ const PreviewTable = ({ data, form, setForm, width = '200px' }) => {
     }
 
     // Identify file extension for parsing
-    const fileExtension = fileUrl.split('.').pop().toLowerCase();
+    const fileExtension = fileUrl?.split('?')[0]?.split('.').pop().toLowerCase();
+    if (!fileExtension) {
+      setLoading(false);
+      return;
+    }
     await fetchSheetData(fileUrl, worksheet, fileExtension);
     setLoading(false); // Stop loader once data is fetched and parsed
   };
@@ -80,6 +86,20 @@ const PreviewTable = ({ data, form, setForm, width = '200px' }) => {
 
   const handleDescriptionChange = (index, newDescription) => {
     const updatedColumns = [...columns];
+    trackEvent(
+      EVENTS_ENUM.DATASET_COLUMN_DESCRIPTION_UPDATED,
+      EVENTS_REGISTRY.DATASET_COLUMN_DESCRIPTION_UPDATED,
+      () => ({
+        dataset_id: datasetData?.datasource_id,
+        dataset_name: datasetData?.name,
+        file_name: data?.filename,
+        file_id: data?.id,
+        col_name: updatedColumns?.[index]?.name,
+        old_col_desc: columns?.[index]?.description,
+        new_col_desc: newDescription,
+      })
+    )
+    addChangeForTracking("column_desc");
     updatedColumns[index].description = newDescription;
     setColumns(updatedColumns);
 
@@ -126,7 +146,7 @@ const PreviewTable = ({ data, form, setForm, width = '200px' }) => {
                     <textarea
                       value={column.description}
                       onChange={(e) => handleDescriptionChange(index, e.target.value)}
-                      onBlur={handleColumnBlur}
+                      onBlur={() => handleColumnBlur(column, index)}
                       autoFocus
                       className="mt-1 w-full h-full text-wrap p-2 bg-blue-50 resize-none"
                     />

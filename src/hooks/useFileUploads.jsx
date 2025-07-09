@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { getToken } from '@/lib/utils';
 import { uploadFile } from '@/components/features/configuration/service/configuration.service';
 import * as XLSX from 'xlsx'; // npm install xlsx
 import { v4 as uuidv4 } from 'uuid'; // <-- Add this import
@@ -60,6 +59,7 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 							status: 'uploading',
 						});
 						newFiles.push(fileWithStatus);
+						csvFiles.push(fileWithStatus);
 						newProgress[csvFile.name] = 0;
 					});
 				}),
@@ -69,7 +69,10 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 			for (const file of csvFiles) {
 				if (files.some((f) => f.name === file.name)) continue; // prevent duplicates
 				const fileId = uuidv4();
-				const fileWithStatus = Object.assign(file, { status: 'uploading', id: fileId });
+				const fileWithStatus = Object.assign(file, {
+					status: 'uploading',
+					id: fileId,
+				});
 				newFiles.push(fileWithStatus);
 				newProgress[file.name] = 0;
 			}
@@ -160,20 +163,15 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 		setCancelTokens((prev) => ({ ...prev, [file.name]: source }));
 
 		try {
-			const data = await uploadFile(
-				file,
-				setProgress,
-				getToken(),
-				source.token,
-			);
+			const data = await uploadFile(file, setProgress, source.token);
 			setProgress((prev) => ({ ...prev, [file.name]: 100 }));
 			setFiles((prev) =>
 				prev.map((f) => {
 					if (f.name === file.name) {
-						console.log({file, f})
+						console.log({ file, f });
 						const newF = Object.assign(f, {
 							status: 'ready',
-						});	
+						});
 						return newF;
 					}
 					return f;
@@ -182,7 +180,7 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 
 			setUploadedMetadata((prev) => ({
 				...prev,
-				[file.id]: { ...data, id: file.id, type: file.type},
+				[file.id]: { ...data, id: file.id, type: file.type },
 			}));
 		} catch (err) {
 			if (!axios.isCancel(err)) {

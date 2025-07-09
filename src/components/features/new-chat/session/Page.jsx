@@ -1,6 +1,6 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useRouter } from '@/hooks/useRouter';
-import { cn, getInitials, getToken } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createQuery, getQueriesOfSession } from '../service/new-chat.service';
@@ -69,6 +69,7 @@ const Workzone = () => {
 	const [inputDisabled, setInputDisabled] = useState(false);
 	const [activeQueryResponse, setActiveQueryResponse] = useState({});
 	const [activeQueryProgress, setActiveQueryProgress] = useState(null);
+	const [newDashboardIds, setNewDashboardIds] = useState([]);
 	const queries = chatStoreReducer?.queries;
 
 	const scrollToBottom = () => {
@@ -81,6 +82,40 @@ const Workzone = () => {
 	};
 
 	const handleTabClick = (tab) => {
+		if(tab === "planner") {
+			trackEvent(
+				EVENTS_ENUM.PLANNER_TAB_CLICKED,
+				EVENTS_REGISTRY.PLANNER_TAB_CLICKED,
+				() => ({
+					chat_session_id: query?.sessionId,
+					dataset_id: utilReducer?.selectedDataSource?.id,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					query_id: chatStoreReducer?.activeQueryId
+				})
+			)
+		} else if(tab === "reference") {
+			trackEvent(
+				EVENTS_ENUM.REFERENCE_TAB_CLICKED,
+				EVENTS_REGISTRY.REFERENCE_TAB_CLICKED,
+				() => ({
+					chat_session_id: query?.sessionId,
+					dataset_id: utilReducer?.selectedDataSource?.id,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					query_id: chatStoreReducer?.activeQueryId
+				})
+			)
+		} else if(tab === "coder") {
+			trackEvent(
+				EVENTS_ENUM.CODER_TAB_CLICKED,
+				EVENTS_REGISTRY.CODER_TAB_CLICKED,
+				() => ({
+					chat_session_id: query?.sessionId,
+					dataset_id: utilReducer?.selectedDataSource?.id,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					query_id: chatStoreReducer?.activeQueryId
+				})
+			)
+		}
 		setWorkspace((prevState) => ({
 			...prevState,
 			activeTab: tab,
@@ -108,230 +143,6 @@ const Workzone = () => {
 		});
 	};
 
-	const trackQueryStatus = (answerItem) => {
-		if (!answerItem) return;
-
-		let track = false;
-		let plannerFinishTime = null;
-		let coderFinishTime = null;
-
-		const formatISTTimestamp = (timestamp) => {
-			if (!timestamp) return null;
-			const date = new Date(timestamp);
-			return date
-				.toLocaleString('en-IN', {
-					timeZone: 'Asia/Kolkata',
-					hour12: true,
-				})
-				.replace(',', '');
-		};
-
-		const truncateLargeText = (text, limit = 500) => {
-			if (!text) return undefined;
-			return text?.substring(0, limit) || undefined;
-		};
-
-		const extractPlannerText = (answer) => {
-			if (!answer?.planner?.tool_data?.text) return '';
-			return answer.planner.tool_data.text;
-		};
-
-		const extractCoderText = (answer) => {
-			if (!answer?.coder?.tool_data?.text) return '';
-			return answer.coder.tool_data.text;
-		};
-
-		const formatTimeTaken = (startTime, endTime) => {
-			const timeTaken = (endTime - startTime) / 1000;
-			if (timeTaken < 60) {
-				return `${Math.ceil(timeTaken)} seconds`;
-			}
-			const minutes = Math.floor(timeTaken / 60);
-			const seconds = Math.floor(timeTaken % 60);
-			return seconds > 0
-				? `${minutes} mins ${seconds} seconds`
-				: `${minutes} mins`;
-		};
-
-		if (answerItem.status === 'in_queue' && !activeQueryProgress) {
-			const createdTime = new Date(answerItem.created_at).getTime();
-			setActiveQueryProgress({
-				query_id: answerItem.query_id,
-				initial_queue: answerItem.rank,
-				initial_time: createdTime,
-				queue_start: createdTime,
-				queue_end: null,
-				processing_start: null,
-				planner_started: null,
-				planner_completed: null,
-				planner_completed_text: null,
-				planner_time_taken: null,
-				coder_started: null,
-				coder_completed: null,
-				coder_completed_text: null,
-				coder_time_taken: null,
-				status_history: [answerItem.status],
-				current_planner_text: extractPlannerText(answerItem.answer),
-				current_coder_text: extractCoderText(answerItem.answer),
-			});
-			track = true;
-		}
-
-		if (answerItem.rank === null && !activeQueryProgress?.processing_start) {
-			const processingStart = Date.now();
-			setActiveQueryProgress((prev) => ({
-				...prev,
-				processing_start: processingStart,
-				queue_end: processingStart,
-			}));
-			track = true;
-		}
-
-		const currentPlanner = extractPlannerText(answerItem.answer);
-		if (currentPlanner) {
-			if (!activeQueryProgress?.current_planner_text) {
-				const startTime = Date.now();
-				setActiveQueryProgress((prev) => ({
-					...prev,
-					current_planner_text: currentPlanner,
-					planner_started: startTime,
-				}));
-				track = true;
-			} else if (activeQueryProgress.current_planner_text !== currentPlanner) {
-				setActiveQueryProgress((prev) => ({
-					...prev,
-					current_planner_text: currentPlanner,
-					planner_completed: null,
-					planner_completed_text: null,
-					planner_time_taken: null,
-				}));
-			} else if (!activeQueryProgress.planner_completed) {
-				plannerFinishTime = Date.now();
-				const timeTaken = formatTimeTaken(
-					activeQueryProgress.planner_started,
-					plannerFinishTime,
-				);
-				setActiveQueryProgress((prev) => ({
-					...prev,
-					planner_completed: plannerFinishTime,
-					planner_completed_text: currentPlanner,
-					planner_time_taken: timeTaken,
-				}));
-				track = true;
-			}
-		}
-
-		const currentCoder = extractCoderText(answerItem.answer);
-		if (currentCoder) {
-			if (!activeQueryProgress?.current_coder_text) {
-				const startTime = Date.now();
-				setActiveQueryProgress((prev) => ({
-					...prev,
-					current_coder_text: currentCoder,
-					coder_started: startTime,
-				}));
-				track = true;
-			} else if (activeQueryProgress.current_coder_text !== currentCoder) {
-				setActiveQueryProgress((prev) => ({
-					...prev,
-					current_coder_text: currentCoder,
-				}));
-			} else if (!activeQueryProgress.coder_completed) {
-				coderFinishTime = Date.now();
-				const timeTaken = formatTimeTaken(
-					activeQueryProgress.coder_started,
-					coderFinishTime,
-				);
-				setActiveQueryProgress((prev) => ({
-					...prev,
-					coder_completed: coderFinishTime,
-					coder_completed_text: currentCoder,
-					coder_time_taken: timeTaken,
-				}));
-				track = true;
-			}
-		}
-
-		const isDone = answerItem.status === 'done';
-		const doneTimestamp = isDone
-			? new Date(answerItem.updated_at).getTime()
-			: null;
-		const initialTime = activeQueryProgress?.initial_time;
-		const queueStart = activeQueryProgress?.queue_start;
-		const queueEnd = activeQueryProgress?.queue_end;
-		const processingStart = activeQueryProgress?.processing_start;
-
-		const eventPayload = {
-			query_id: answerItem.query_id,
-			session_id: answerItem.session_id,
-			datasource_id: answerItem.datasource_id,
-			query: answerItem.query,
-			initial_queue_number:
-				activeQueryProgress?.initial_queue ?? answerItem?.rank,
-			current_queue_number: isDone ? null : answerItem.rank,
-			initial_time: formatISTTimestamp(initialTime),
-			queue_time_taken: queueEnd
-				? formatTimeTaken(queueStart, queueEnd)
-				: null,
-			processing_time_taken: isDone
-				? formatTimeTaken(processingStart, doneTimestamp)
-				: null,
-			total_time_taken: isDone
-				? formatTimeTaken(initialTime, doneTimestamp)
-				: null,
-			planner_time_taken: activeQueryProgress?.planner_time_taken || null,
-			planner_started_time: formatISTTimestamp(
-				activeQueryProgress?.planner_started,
-			),
-			planner_completed_time: formatISTTimestamp(
-				activeQueryProgress?.planner_completed,
-			),
-			planner_text: activeQueryProgress?.current_planner_text?.substring(
-				0,
-				500,
-			),
-			planner_completed_text:
-				activeQueryProgress?.planner_completed_text?.substring(0, 500),
-			coder_time_taken: activeQueryProgress?.coder_time_taken || null,
-			coder_started_time: formatISTTimestamp(
-				activeQueryProgress?.coder_started,
-			),
-			coder_completed_time: formatISTTimestamp(
-				activeQueryProgress?.coder_completed,
-			),
-			coder_text: activeQueryProgress?.current_coder_text?.substring(0, 500),
-			coder_completed_text:
-				activeQueryProgress?.coder_completed_text?.substring(0, 500),
-			queue_start: formatISTTimestamp(queueStart),
-			queue_end: formatISTTimestamp(queueEnd),
-			processing_start: formatISTTimestamp(processingStart),
-			completed_at: formatISTTimestamp(doneTimestamp),
-			status: answerItem.status,
-			status_text: isDone ? null : answerItem.metadata?.status_text,
-			progress_state: {
-				...activeQueryProgress,
-				planner_completed_text: null,
-				planner_text: null,
-				coder_text: null,
-				coder_completed_text: null,
-				current_coder_text: null,
-				current_planner_text: null,
-			},
-		};
-
-		if (!answerItem?.status_text || isDone) {
-			track = true;
-		}
-
-		if (track) {
-			trackEvent(
-				EVENTS_ENUM.QUERY_STATUS,
-				EVENTS_REGISTRY.QUERY_STATUS,
-				() => eventPayload,
-			);
-		}
-	};
-
 	const fetchQueries = () => {
 		if (!chatStoreReducer?.activeChatSession?.id) return;
 		const checkGraphOrObservationAbsent = (resp) => {
@@ -344,7 +155,7 @@ const Workzone = () => {
 			return firstAnswer?.type || 'single';
 		};
 
-		getQueriesOfSession(chatStoreReducer?.activeChatSession?.id, getToken())
+		getQueriesOfSession(chatStoreReducer?.activeChatSession?.id)
 			.then((resp) => {
 				const res = resp?.query_list;
 				if (res.length <= 0) return;
@@ -357,6 +168,30 @@ const Workzone = () => {
 					type: item?.type,
 					metadata: item?.metadata,
 				}));
+
+				const lastQueryPreviousAnswer = answers[answers.length - 1];
+				if(lastQueryPreviousAnswer && lastQueryPreviousAnswer?.status === "in_progress") {
+					const lastQueryCurrentAnswer = res[res.length - 1];
+					if(lastQueryCurrentAnswer?.status === "done") {
+						trackEvent(
+							EVENTS_ENUM.CHAT_MESSAGE_SENT,
+							EVENTS_REGISTRY.CHAT_MESSAGE_SENT,
+							() => ({
+								chat_session_id: lastQueryCurrentAnswer?.session_id,
+								query_id: lastQueryCurrentAnswer?.query_id,
+								dataset_id: lastQueryCurrentAnswer.dataSourceId,
+								dataset_name: resp?.datasource_name,
+								message_type: "ai",
+								message_source: "",
+								message_text: lastQueryCurrentAnswer?.answer?.clarification?.tool_data?.text,
+								is_clarification: !!lastQueryCurrentAnswer?.answer?.clarification,
+								message_number: res.length * 2,
+								first_message_in_chat: false,
+							})
+						);
+					}
+				}
+				
 				dispatch(
 					updateChatStoreProp([
 						{ key: 'queries', value: [...tempQueries] },
@@ -388,9 +223,6 @@ const Workzone = () => {
 						]),
 					);
 				}
-
-				const activeQuery = res[res.length - 1];
-				trackQueryStatus(activeQuery);
 
 				setAnswers((prevAnswers) => {
 					return res.map((newAnswer) => {
@@ -472,6 +304,7 @@ const Workzone = () => {
 					showFailedResponse: true,
 				}));
 				clearPolling();
+				navigate('/app/new-chat');
 			});
 
 		setResponseTimeElapsed((prev) => {
@@ -524,7 +357,7 @@ const Workzone = () => {
 			dispatch(
 				updateChatStoreProp([{ key: 'queries', value: tempCurrentQueries }]),
 			);
-			createQuery(payload, getToken()).then((res) => {
+			createQuery(payload).then((res) => {
 				const updatedQueries = tempCurrentQueries?.map((item) => {
 					if (item?.parentQueryId === res?.query_id) {
 						return { id: res.query_id, question: tempPrompt };
@@ -548,15 +381,20 @@ const Workzone = () => {
 				);
 
 				trackEvent(
-					EVENTS_ENUM.REPLY_QUERY_INITIATED,
-					EVENTS_REGISTRY.REPLY_QUERY_INITIATED,
+					EVENTS_ENUM.CHAT_MESSAGE_SENT,
+					EVENTS_REGISTRY.CHAT_MESSAGE_SENT,
 					() => ({
+						chat_session_id: res?.session_id,
 						query_id: res?.query_id,
-						datasource_id: query.dataSourceId,
-						session_id: res?.session_id,
-						parent_query_id: lastAns?.query_id,
-						child_no: parseInt(lastAns.child_no) + 1,
-					}),
+						dataset_id: query.dataSourceId,
+						dataset_name: utilReducer?.selectedDataSource?.name,
+						message_type: "user",
+						message_source: "manual_input",
+						message_text: prompt,
+						is_clarification: false,
+						message_number: 2 * answers.length + 1,
+						first_message_in_chat: false,
+					})
 				);
 				queryClient.invalidateQueries(['chat-history']);
 			});
@@ -587,23 +425,6 @@ const Workzone = () => {
 			dispatch(
 				updateChatStoreProp([{ key: 'queries', value: tempCurrentQueries }]),
 			);
-			trackEvent(
-				EVENTS_ENUM.REGENERATE_RESPONSE_CLICKED,
-				EVENTS_REGISTRY.REGENERATE_RESPONSE_CLICKED,
-				() => ({
-					session_id: answer?.session_id,
-					child_no: parseInt(answer.child_no) + 1,
-					parent_query_id: answer?.query_id,
-					workspace_changes: workspaceChanges.apiConfig,
-					metadata: {
-						queries: answer?.metadata?.queries
-							.filter((query) => query?.text?.length > 0)
-							.map((item) => ({ query: item?.text })),
-						saved_query_reference:
-							answer?.metadata?.saved_query_reference,
-					},
-				}),
-			);
 			createQuery(
 				{
 					child_no: parseInt(answer.child_no) + 1,
@@ -621,7 +442,7 @@ const Workzone = () => {
 					},
 					type: answer?.type,
 				},
-				getToken(),
+
 			).then((res) => {
 				const updatedQueries = tempCurrentQueries?.map((item) => {
 					if (item?.parentQueryId === res?.query_id) {
@@ -645,6 +466,22 @@ const Workzone = () => {
 					]),
 				);
 
+				trackEvent(
+					EVENTS_ENUM.CHAT_MESSAGE_SENT,
+					EVENTS_REGISTRY.CHAT_MESSAGE_SENT,
+					() => ({
+						chat_session_id: query?.sessionId,
+						dataset_id: utilReducer?.selectedDataSource?.id,
+						dataset_name: utilReducer?.selectedDataSource?.name,
+						query_id: chatStoreReducer?.activeQueryId,
+						message_type: "user",
+						message_source: "regenerate_from_edit",
+						message_text: tempPrompt,
+						is_clarification: false,
+						message_number: chatStoreReducer?.queries?.length * 2 + 1,
+						first_message_in_chat: false,
+					})
+				);
 				queryClient.invalidateQueries(['chat-history']);
 			});
 
@@ -676,7 +513,7 @@ const Workzone = () => {
 				return;
 			}
 			setDashboard((prev) => ({ ...prev, isCreating: true }));
-			const resp = await createDashboard(getToken(), dashboard.name);
+			const resp = await createDashboard(dashboard.name);
 			if (resp) {
 				setDashboard((prev) => ({
 					...prev,
@@ -684,17 +521,9 @@ const Workzone = () => {
 					showCreate: false,
 				}));
 				toast.success('Dashboard created successfully');
-				trackEvent(
-					EVENTS_ENUM.DASHBOARD_CREATED,
-					EVENTS_REGISTRY.DASHBOARDS_CREATED,
-					() => ({
-						dashboard_id: resp.dashboard_id,
-						title: dashboard.name,
-						from: 'chat-page',
-					}),
-				);
+				setNewDashboardIds((prev) => [...prev, resp.dashboard_id]);
 				if (pathname.includes('/app/dashboard')) {
-					navigate(`/app/new-chat/`);
+					navigate(`/app/new-chat?source=dashboard`);
 				} else if (pathname.includes('/app/new-chat/')) {
 					queryClient.invalidateQueries(['user-dashboard'], {
 						refetchActive: true,
@@ -760,16 +589,6 @@ const Workzone = () => {
 								variant="outline"
 								className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
 								onClick={() => {
-									trackEvent(
-										EVENTS_ENUM.TOGGLE_WORKSPACE_BUTTON,
-										EVENTS_REGISTRY.TOGGLE_WORKSPACE_BUTTON,
-										() => ({
-											query_id: query?.id,
-											parent_query_id:
-												answerElem?.parent_query_id,
-											child_no: answerElem?.child_no,
-										}),
-									);
 									toggleIra(query?.id);
 								}}
 							>
@@ -779,7 +598,7 @@ const Workzone = () => {
 								/>
 								{(workspace.show &&
 									chatStoreReducer?.activeQueryId === query?.id) ||
-								!chatStoreReducer?.activeQueryId
+									!chatStoreReducer?.activeQueryId
 									? 'Hide'
 									: 'Show'}{' '}
 								Workspace
@@ -899,7 +718,7 @@ const Workzone = () => {
 	useEffect(() => {
 		if (!query?.sessionId && chatStoreReducer?.activeChatSession?.id) {
 			navigate(
-				`/app/new-chat/session/?sessionId=${chatStoreReducer?.activeChatSession?.id}`,
+				`/app/new-chat/session/?sessionId=${chatStoreReducer?.activeChatSession?.id}&source=chat_screen`,
 				{ replace: true },
 			);
 			setPrompt('');
@@ -940,7 +759,7 @@ const Workzone = () => {
 		}
 	}, [query]);
 
-	useEffect(() => {}, [utilReducer?.isGenerateReportModalOpen]);
+	useEffect(() => { }, [utilReducer?.isGenerateReportModalOpen]);
 
 	const showWorkSpace = () => {
 		const markerAnswer =
@@ -959,6 +778,26 @@ const Workzone = () => {
 		savedQueries: { enabled: true },
 	};
 
+	useEffect(() => {
+		const { sessionId, source } = query;
+		trackEvent(
+			EVENTS_ENUM.CHAT_SCREEN_LOADED,
+			EVENTS_REGISTRY.CHAT_SCREEN_LOADED,
+			() => ({
+				chat_session_id: sessionId,
+				dataset_id: utilReducer?.selectedDataSource?.id,
+				dataset_name: utilReducer?.selectedDataSource?.name,
+				source: source || "url",
+			})
+		);
+	}, [query]);
+
+	useEffect(() => {
+		if(!dashboard?.showAdd) {
+			setNewDashboardIds([]);
+		}
+	}, [dashboard?.showAdd]);
+	
 	return (
 		<div
 			className="grid grid-cols-12 gap-4 px-8 h-[90vh] w-full overflow-hidden"
@@ -1035,6 +874,7 @@ const Workzone = () => {
 				<AddQueryToDashboard
 					open={dashboard.showAdd}
 					setDashboard={setDashboard}
+					newDashboardIds={newDashboardIds}
 				/>
 			)}
 			{dashboard?.showCreate && (

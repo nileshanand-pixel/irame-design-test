@@ -4,7 +4,6 @@ import {
 	deleteUserDashboard,
 	updateDashboardName,
 } from '../service/dashboard.service';
-import { getToken } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import InputText from '@/components/elements/InputText';
 import { toast } from 'sonner';
@@ -20,10 +19,8 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 
 	const { navigate } = useRouter();
 
-	const userToken = getToken();
-
 	const deleteMutation = useMutation({
-		mutationFn: (id) => deleteUserDashboard(userToken, id),
+		mutationFn: (id) => deleteUserDashboard(id),
 		onSuccess: () => {
 			toast.success('Dashboard deleted successfully');
 			queryClient.invalidateQueries(['user-dashboard'], {
@@ -33,7 +30,7 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 		},
 	});
 	const editMutation = useMutation({
-		mutationFn: ({ id, name }) => updateDashboardName(userToken, id, name),
+		mutationFn: ({ id, name }) => updateDashboardName(id, name),
 		onSuccess: () => {
 			setIsEditing(false);
 			toast.success('Dashboard updated successfully');
@@ -41,6 +38,14 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 				refetchActive: true,
 				refetchInactive: true,
 			});
+			trackEvent(
+				EVENTS_ENUM.DASHBOARD_DETAILS_CHANGED,
+				EVENTS_REGISTRY.DASHBOARD_DETAILS_CHANGED,
+				() => ({
+					dashboard_id: data.dashboard_id,
+					change_param: ["name"],
+				}),
+			);
 		},
 		onError: (err) => {
 			console.log('Error updating dashboard', err);
@@ -76,12 +81,11 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 			className="p-6 flex justify-between w-full gap-6 border-b last:border-none border-primary10 cursor-pointer hover:bg-purple-2"
 			onClick={isEditing? null : () => {
 				trackEvent(
-					EVENTS_ENUM.DASHBOARD_CLICKED,
-					EVENTS_REGISTRY.DASHBOARD_CLICKED,
+					EVENTS_ENUM.EXISTING_DASHBOARD_CLICKED,
+					EVENTS_REGISTRY.EXISTING_DASHBOARD_CLICKED,
 					() => ({
 						dashboard_id: data.dashboard_id,
-						from: 'dashboard-page',
-						name: data?.title,
+						dashboard_name: data?.title,
 					}),
 				);
 				navigate(
@@ -126,6 +130,16 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 					className="material-symbols-outlined text-primary100 cursor-pointer hover:bg-purple-4 rounded-full p-2"
 					onClick={(e) => {
 						e.stopPropagation();
+						if(!isEditing) {
+							trackEvent(
+								EVENTS_ENUM.EDIT_DASHBOARD_CLICKED,
+								EVENTS_REGISTRY.EDIT_DASHBOARD_CLICKED,
+								() => ({
+									dashboard_id: data.dashboard_id,
+									dashboard_name: data?.title,
+								}),
+							);
+						}
 						setIsEditing(isEditing ? false : true);
 					}}
 				>

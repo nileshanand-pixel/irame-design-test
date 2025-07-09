@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn, getToken } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import EmptyState from '@/components/elements/EmptyState';
 import { getBusinessProcesses } from './service/workflow.service';
 import BusinessProcessPageSkeleton from './BusinessProcessPageSkeleton';
@@ -36,7 +36,7 @@ const BusinessProcessPage = () => {
 
 	const { data, isLoading } = useQuery({
 		queryKey: ['get-business-processes'],
-		queryFn: () => getBusinessProcesses(getToken()),
+		queryFn: () => getBusinessProcesses(),
 	});
 
 	useEffect(() => {
@@ -66,7 +66,7 @@ const BusinessProcessPage = () => {
 		reactionText: 'your processes will appear here...',
 		ctaText: 'Create New Process',
 		ctaDisabled: true,
-		ctaClickHandler: () => {},
+		ctaClickHandler: () => { },
 		comingSoonText: 'Custom process creation coming soon...',
 	};
 

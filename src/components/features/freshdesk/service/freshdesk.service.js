@@ -1,13 +1,11 @@
 import axiosClientV1 from '@/lib/axios';
 
-export const getFreshdeskToken = async (token) => {
+export const getFreshdeskToken = async () => {
 	const response = await axiosClientV1.post(
 		`/freshdesk/authenticate`,
 		{},
 		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		},
 	);
 

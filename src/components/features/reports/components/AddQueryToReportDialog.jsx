@@ -17,23 +17,41 @@ import ReportRadioCardItem from './ReportRadioCardItem';
 import { RadioGroup } from '@/components/ui/radio-group';
 import { RISK_CATEGORIES, RISK_LEVELS } from '@/config/risks';
 import { queryClient } from '@/lib/react-query';
+import { trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { useRouter } from '@/hooks/useRouter';
+import { useSelector } from 'react-redux';
 
 const AddQueryToReportDialog = ({
 	open,
 	onClose,
-	token,
 	report,
 	queryId,
 	onSuccessCloseAll,
 }) => {
 	const [riskLevel, setRiskLevel] = useState('');
 	const [riskCategory, setRiskCategory] = useState('');
+	const { query } = useRouter();
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const mutation = useMutation({
 		mutationFn: (payload) => addQueryToExistingReport(payload),
 		onSuccess: () => {
 			queryClient.invalidateQueries(['report-details', report.report_id]);
 			toast.success('Query added to report successfully!');
+			trackEvent(
+				EVENTS_ENUM.ADDED_ANALYSIS_TO_REPORT,
+				EVENTS_REGISTRY.ADDED_ANALYSIS_TO_REPORT,
+				() => ({
+					chat_session_id: query?.sessionId,
+					dataset_id: utilReducer?.selectedDataSource?.id,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					query_id: chatStoreReducer?.activeQueryId,
+					report_id: report.report_id,
+					report_name: report.name,
+				})
+			)
 			onSuccessCloseAll();
 		},
 		onError: () => toast.error('Failed to add query to report!'),
@@ -41,7 +59,6 @@ const AddQueryToReportDialog = ({
 
 	const handleSubmit = () => {
 		mutation.mutate({
-			token,
 			reportId: report.report_id,
 			queryData: {
 				query_id: queryId,

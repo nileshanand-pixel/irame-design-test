@@ -5,7 +5,6 @@ import ConnectDataSource from './ConnectDataSource';
 import SelectPrompt from './SelectPromt';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
-import { getToken } from '@/lib/utils';
 import { createQuerySession, getUserSession } from './service/new-chat.service';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
@@ -131,14 +130,14 @@ const NewChat = () => {
 			if (mode === 'single' && prompt) payload.query = prompt;
 			if (mode !== 'single' && metadata) payload.metadata = metadata;
 
-			navigate(`/app/new-chat/session`);
+			navigate(`/app/new-chat/session?source=chat_screen`);
 			dispatch(
 				updateChatStoreProp([
 					{ key: 'queries', value: [{ id: '', question: prompt }] },
 					{ key: 'refreshChat', value: !chatStoreReducer?.refreshChat },
 				]),
 			);
-			createQuerySession(payload, getToken())
+			createQuerySession(payload)
 				.then((res) => {
 					dispatch(
 						updateChatStoreProp([
@@ -165,17 +164,35 @@ const NewChat = () => {
 						]),
 					);
 					trackEvent(
-						EVENTS_ENUM.QUERY_INITIATED,
-						EVENTS_REGISTRY.QUERY_INITIATED,
+						EVENTS_ENUM.CHAT_SESSION_STARTED,
+						EVENTS_REGISTRY.CHAT_SESSION_STARTED,
 						() => ({
+							dataset_id: query.dataSourceId,
+							dataset_name: utilReducer?.selectedDataSource?.name,
+							start_method: "manual_input",
+							chat_session_id: res?.session_id,
+						})
+					);
+					trackEvent(
+						EVENTS_ENUM.CHAT_MESSAGE_SENT,
+						EVENTS_REGISTRY.CHAT_MESSAGE_SENT,
+						() => ({
+							chat_session_id: res?.session_id,
 							query_id: res?.query_id,
-							datasource_id: query.dataSourceId,
-						}),
+							dataset_id: query.dataSourceId,
+							dataset_name: utilReducer?.selectedDataSource?.name,
+							message_type: "user",
+							message_source: "manual_input",
+							message_text: prompt,
+							is_clarification: false,
+							message_number: 1,
+							first_message_in_chat: true,
+						})
 					);
 					queryClient.invalidateQueries(['chat-history']);
 				})
 				.catch((error) => {
-					navigate('/app/new-chat');
+					navigate('/app/new-chat?source=chat');
 					toast.error('Error Creating Session, Please Try Again');
 				});
 		} catch (error) {
@@ -186,7 +203,7 @@ const NewChat = () => {
 	const fetchUserSession = () => {
 		try {
 			// if (utilReducer?.sessionHistory?.length > 0) return;
-			getUserSession(getToken()).then((res) => {
+			getUserSession().then((res) => {
 				dispatch(updateUtilProp([{ key: 'sessionHistory', value: res }]));
 				if (!authStoreReducer?.user_id)
 					dispatch(
@@ -206,7 +223,7 @@ const NewChat = () => {
 		error,
 	} = useQuery({
 		queryKey: ['data-sources'],
-		queryFn: () => getDataSources(getToken()),
+		queryFn: () => getDataSources(),
 		onSuccess: (data) => {
 			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		},
@@ -229,12 +246,31 @@ const NewChat = () => {
 	};
 
 	useEffect(() => {
-		trackEvent(
-			EVENTS_ENUM.LANDING_PAGE_LOADED,
-			EVENTS_REGISTRY.LANDING_PAGE_LOADED,
-		);
+		
 		fetchUserSession();
 	}, []);
+
+	useEffect(() => {
+		const { step, dataSourceId, source, sessionId } = query;
+
+		if(step && dataSourceId) {
+			trackEvent(
+				EVENTS_ENUM.CHAT_SCREEN_LOADED,
+				EVENTS_REGISTRY.CHAT_SCREEN_LOADED,
+				() => ({
+					dataset_id: dataSourceId,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					source: source || "url",
+					chat_session_id: sessionId,
+				})
+			);
+		} else {
+			trackEvent(
+				EVENTS_ENUM.LANDING_PAGE_LOADED,
+				EVENTS_REGISTRY.LANDING_PAGE_LOADED,
+			);
+		}
+	}, [query]);
 
 	useEffect(() => {
 		let intervalId;
@@ -255,7 +291,7 @@ const NewChat = () => {
 		query?.step,
 		query?.queryId,
 		dispatch,
-		getToken(),
+
 		utilReducer?.promptQuery,
 	]);
 
@@ -306,7 +342,7 @@ const NewChat = () => {
 							>{`${welcomeTypography?.headingLine1} ${value?.user_name}`}</h1>
 							<h2 className="text-5xl leading-[60px] font-semibold text-primary20">
 								{completedSteps.includes(2) ||
-								completedSteps.includes(3)
+									completedSteps.includes(3)
 									? welcomeTypography?.headingLine2_2
 									: welcomeTypography?.headingLine2}
 							</h2>
@@ -320,7 +356,7 @@ const NewChat = () => {
 													`h-2 w-14 rounded-3xl `,
 													showProgress(items),
 												].join(' ')}
-												onClick={() => {}}
+												onClick={() => { }}
 											></li>
 										</>
 									);

@@ -4,71 +4,57 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { promptMap } from '@/config/enhance-prompt';
 
-export const fetchSuggestions = async (dataSourceId, token) => {
+export const fetchSuggestions = async (dataSourceId) => {
 	const response = await axiosClientV1.get(
 		`/datasources/${dataSourceId}/suggestions`,
 		{
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		},
 	);
 	return response.data;
 };
 
-export const createQuerySession = async (data, token) => {
+export const createQuerySession = async (data) => {
 	const response = await axiosClientV1.post(`/queries/session`, data, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
 // This is not used anywhere as of now. Need to remove
-export const getAnswerConfig = async (token) => {
+export const getAnswerConfig = async () => {
 	const response = await axiosClientV1.get(`/config/answer`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
 // NO API PRESENT
-export const getUserDetails = async (token) => {
+export const getUserDetails = async () => {
 	const response = await axiosClientV1.get(`/oauth/google/user`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
-export const getUserSession = async (token) => {
+export const getUserSession = async () => {
 	const response = await axiosClientV1.get(`/sessions`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data?.session_list;
 };
 
-export const createQuery = async (data, token) => {
+export const createQuery = async (data) => {
 	const response = await axiosClientV1.post(`/queries`, data, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
+		headers: { },
 	});
 	return response.data;
 };
 
-export const deleteSession = async (sessionId, token) => {
+export const deleteSession = async (sessionId) => {
 	try {
 		const response = await axiosClientV1.delete(`/sessions/${sessionId}`, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		});
 		toast.success('Session deleted successfully');
 
@@ -79,12 +65,10 @@ export const deleteSession = async (sessionId, token) => {
 	}
 };
 
-export const getQueriesOfSession = async (sessionId, token) => {
+export const getQueriesOfSession = async (sessionId) => {
 	try {
 		const response = await axiosClientV1.get(`/queries/session/${sessionId}`, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 			params: {
 				sort_param: 'created_at',
 				sort_order: 'asc',
@@ -97,12 +81,10 @@ export const getQueriesOfSession = async (sessionId, token) => {
 	}
 };
 
-export const getTemplate = async (templateId, token) => {
+export const getTemplate = async (templateId) => {
 	try {
 		const response = await axiosClientV1.get(`/saved-queries/${templateId}`, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		});
 		return response.data;
 	} catch (error) {
@@ -111,12 +93,10 @@ export const getTemplate = async (templateId, token) => {
 	}
 };
 
-export const saveTemplate = async (data, token) => {
+export const saveTemplate = async (data) => {
 	try {
 		const response = await axiosClientV1.post(`/saved-queries`, data, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		});
 		return response.data;
 	} catch (error) {
@@ -125,12 +105,10 @@ export const saveTemplate = async (data, token) => {
 	}
 };
 
-export const getTemplates = async (token) => {
+export const getTemplates = async () => {
 	try {
 		const response = await axiosClientV1.get(`/saved-queries`, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		});
 		return response.data;
 	} catch (error) {
@@ -139,15 +117,13 @@ export const getTemplates = async (token) => {
 	}
 };
 
-export const editTemplate = async (templateId, data, token) => {
+export const editTemplate = async (templateId, data) => {
 	try {
 		const response = await axiosClientV1.patch(
 			`/saved-queries/${templateId}`,
 			data,
 			{
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
+				headers: { },
 			},
 		);
 		return response.data;
@@ -157,12 +133,10 @@ export const editTemplate = async (templateId, data, token) => {
 	}
 };
 
-export const deleteTemplate = async (templateId, token) => {
+export const deleteTemplate = async (templateId) => {
 	try {
 		const response = await axiosClientV1.delete(`/saved-queries/${templateId}`, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { },
 		});
 		return response.data;
 	} catch (error) {

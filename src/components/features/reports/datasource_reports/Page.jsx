@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { cn, getToken } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { getDatasourceReports, getSharedReports, getUserReports } from '../service/reports.service';
 import ReportCardSkeleton from '../components/ReportCardSkeleton';
@@ -22,27 +22,27 @@ const ReportsInDatasource = () => {
 
 	const reportsQuery = useQuery({
 		queryKey: ['get-reports-by-datasource', query.datasourceId],
-		queryFn: () => getDatasourceReports(getToken(), query.datasourceId),
+		queryFn: () => getDatasourceReports(query.datasourceId),
 		refetchInterval: 10000,
 		enabled: !!(query.datasourceId && query.datasourceId !== 'shared' && query.datasourceId !== 'audit'),
 	});
 
 	const sharedReportsQuery = useQuery({
-		queryKey: ['get-shared-reports', getToken()],
-		queryFn: () => getSharedReports(getToken()),
+		queryKey: ['get-shared-reports'],
+		queryFn: () => getSharedReports(),
 		refetchInterval: 600000,
 		enabled: !!(query.datasourceId && query.datasourceId === 'shared'),
 	});
 
 	const userAuditReports = useQuery({
-			queryKey: ['user-reports', getToken()],
-			queryFn: () => getUserReports(getToken()),
-			enabled: !!(query.datasourceId && query.datasourceId === 'audit'),
+		queryKey: ['user-reports'],
+		queryFn: () => getUserReports(),
+		enabled: !!(query.datasourceId && query.datasourceId === 'audit'),
 	})
 
 	const datasourceQuery = useQuery({
 		queryKey: ['get-datasource', query.datasourceId],
-		queryFn: () => getDataSourceById(getToken(), query.datasourceId),
+		queryFn: () => getDataSourceById(query.datasourceId),
 		refetchInterval: 10000,
 		enabled: !!(query.datasourceId && query.datasourceId !== 'shared' && query.datasourceId !== 'audit'),
 	});
@@ -78,7 +78,7 @@ const ReportsInDatasource = () => {
 		reactionText: 'your report will be auto generated...',
 		ctaText: 'Create a Report',
 		ctaDisabled: true,
-		ctaClickHandler: () => {},
+		ctaClickHandler: () => { },
 		comingSoonText: 'Custom report feature coming soon...',
 	};
 

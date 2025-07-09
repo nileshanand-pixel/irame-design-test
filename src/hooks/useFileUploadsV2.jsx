@@ -1,6 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
 import { uploadFile } from '@/components/features/configuration/service/configuration.service';
-import { getToken } from '@/lib/utils';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -80,7 +79,6 @@ export function useFileUploadsV2() {
 			const data = await uploadFile(
 				file,
 				setProgress,
-				getToken(),
 				source.token,
 			);
 			setProgress((prev) => ({ ...prev, [file.name]: 100 }));
