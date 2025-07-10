@@ -43,7 +43,7 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 				EVENTS_REGISTRY.DASHBOARD_DETAILS_CHANGED,
 				() => ({
 					dashboard_id: data.dashboard_id,
-					change_param: ["name"],
+					change_param: ['name'],
 				}),
 			);
 		},
@@ -65,6 +65,7 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 		{
 			type: 'item',
 			label: 'Delete',
+			show: true,
 			onClick: (e) => {
 				e.stopPropagation();
 				deleteMutation.mutateAsync(data?.dashboard_id);
@@ -79,19 +80,22 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 		<div
 			key={data.dashboard_id}
 			className="p-6 flex justify-between w-full gap-6 border-b last:border-none border-primary10 cursor-pointer hover:bg-purple-2"
-			onClick={isEditing? null : () => {
-				trackEvent(
-					EVENTS_ENUM.EXISTING_DASHBOARD_CLICKED,
-					EVENTS_REGISTRY.EXISTING_DASHBOARD_CLICKED,
-					() => ({
-						dashboard_id: data.dashboard_id,
-						dashboard_name: data?.title,
-					}),
-				);
-				navigate(
-					`/app/dashboard/content?id=${data?.dashboard_id}&name=${data?.title}`,
-				)
-			} 
+			onClick={
+				isEditing
+					? null
+					: () => {
+							trackEvent(
+								EVENTS_ENUM.EXISTING_DASHBOARD_CLICKED,
+								EVENTS_REGISTRY.EXISTING_DASHBOARD_CLICKED,
+								() => ({
+									dashboard_id: data.dashboard_id,
+									dashboard_name: data?.title,
+								}),
+							);
+							navigate(
+								`/app/dashboard/content?id=${data?.dashboard_id}&name=${data?.title}`,
+							);
+						}
 			}
 		>
 			<div className="flex gap-6">
@@ -130,7 +134,7 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 					className="material-symbols-outlined text-primary100 cursor-pointer hover:bg-purple-4 rounded-full p-2"
 					onClick={(e) => {
 						e.stopPropagation();
-						if(!isEditing) {
+						if (!isEditing) {
 							trackEvent(
 								EVENTS_ENUM.EDIT_DASHBOARD_CLICKED,
 								EVENTS_REGISTRY.EDIT_DASHBOARD_CLICKED,
