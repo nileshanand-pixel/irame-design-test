@@ -74,11 +74,19 @@ export const ColumnMapping = ({
 	const runId = useWorkflowRunId();
 	const businessProcessId = useBusinessProcessId(); // not used here, but left untouched
 	const navigate = useNavigate();
-
-	const { data: aiDatasource, isLoading: isAiDsLoading } = useQuery({
+	const {
+		data: aiDatasource,
+		isLoading: isAiDsLoading,
+		refetch,
+	} = useQuery({
 		queryKey: ['datasource-by-id', workflowRunDetails?.datasource_id],
-		queryFn: () => getDataSourceById(workflowRunDetails?.datasource_id),
-		enabled: !!workflowRunDetails?.datasource_id,
+		queryFn: () =>
+			!!workflowRunDetails?.datasource_id
+				? getDataSourceById(workflowRunDetails?.datasource_id)
+				: null,
+		refetchInterval: ({ state }) => {
+			return state?.data?.status === 'active' ? false : 2000;
+		},
 	});
 
 	/* ----------------------------------------------------------------
@@ -88,7 +96,7 @@ export const ColumnMapping = ({
 		const fileMapping =
 			workflowRunDetails?.data?.file_mapping_ira ??
 			workflowRunDetails?.data?.file_mapping_user;
-
+		if (!aiDatasource) refetch();
 		if (!fileMapping || !aiDatasource) return [];
 		return buildUploadedFileList(requiredFiles, fileMapping, aiDatasource);
 	}, [workflowRunDetails, aiDatasource, requiredFiles]);
@@ -262,7 +270,8 @@ export const ColumnMapping = ({
 	/* ----------------------------------------------------------------
      Loading skeleton while AI is still guessing
   ---------------------------------------------------------------- */
-	if (isValidating) {
+
+	if (isValidating || aiDatasource?.status !== 'active') {
 		return (
 			<div className="flex items-center justify-center h-64 text-lg font-medium">
 				<div className="flex flex-col items-center">
@@ -279,7 +288,7 @@ export const ColumnMapping = ({
      RENDER
   ---------------------------------------------------------------- */
 	return (
-		<div className="p-6 max-w-4xl mx-auto text-primary80">
+		<div className="p-6 max-w-full mx-auto text-primary80">
 			<div className="sticky top-0 z-30 bg-white pt-2 pb-2">
 				<div className="flex items-center justify-between mb-2">
 					<h3 className="font-medium text-lg">

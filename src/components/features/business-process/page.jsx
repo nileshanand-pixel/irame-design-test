@@ -81,7 +81,7 @@ const BusinessProcessPage = () => {
 				</p>
 			</header>
 
-			<section className="max-w-full flex-1 border-2 mb-4 border-primary8 bg-misc-offWhite shadow-1xl rounded-3xl">
+			<section className="max-w-full flex-1 border-2 mb-4 border-primary8 bg-misc-offWhite shadow-1xl rounded-lg">
 				<div className="p-4 mt-2 flex flex-col sm:flex-row justify-between gap-4">
 					<SearchBar
 						value={search}

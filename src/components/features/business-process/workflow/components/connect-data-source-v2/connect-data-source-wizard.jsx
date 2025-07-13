@@ -43,6 +43,8 @@ export const ConnectDataSourceWizard = ({ onClose, runDetails, csvFiles }) => {
 			setCurrentStep(2);
 		} else if (runDetails.status === 'RUNNING') {
 			setCurrentStep(2.5);
+		}else{
+			setCurrentStep(1);
 		}
 	}, [runDetails]);
 
