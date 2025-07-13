@@ -408,7 +408,7 @@ export const SourceSelection = ({
 		}
 	}, [workflowRunDetails?.status]);
 
-	if (isValidating || mutation.isPending || (workflowRunId && !workflowRunDetails) || true) {
+	if (isValidating || mutation.isPending || (workflowRunId && !workflowRunDetails)) {
 		return (
 			<div className="p-6 relative h-60 top-1/2">
 				<div className="absolute  inset-0  flex items-center justify-center z-10">
