@@ -2,28 +2,31 @@ import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
 
 export const getBusinessProcesses = async () => {
 	const response = await axiosClientV1.get(`/business-processes`, {
-		headers: { },
+		headers: {},
 	});
 	return response.data;
 };
 
 export const getWorkflowsByBusinessProcess = async (businessProcessId) => {
-	const response = await axiosClientV1.get(`/workflow-checks/business-process/${businessProcessId}`, {
-		headers: { },
-	});
+	const response = await axiosClientV1.get(
+		`/workflow-checks/business-process/${businessProcessId}`,
+		{
+			headers: {},
+		},
+	);
 	return response.data;
 };
 
 export const getRecentWorkflowsRunsHomePage = async () => {
 	const response = await axiosClientV1.get(`/business-processes/home-page`, {
-		headers: { },
+		headers: {},
 	});
 	return response.data;
 };
 
 export const getWorkflowDetails = async (workflowCheckId) => {
 	const response = await axiosClientV1.get(`/workflow-checks/${workflowCheckId}`, {
-		headers: { },
+		headers: {},
 	});
 	return response.data;
 };
@@ -41,25 +44,28 @@ export const initiateWorkflowCheckV2 = async (workflowCheckId, data) => {
 	return response.data;
 };
 
-export const initiateWorkflowCheck = async (workflowCheckId,  data) => {
-	const response = await axiosClientV1.post(`/workflow-checks/${workflowCheckId}/initiate`, data, {
-		headers: { },
-	});
+export const initiateWorkflowCheck = async (workflowCheckId, data) => {
+	const response = await axiosClientV1.post(
+		`/workflow-checks/${workflowCheckId}/initiate`,
+		data,
+		{
+			headers: {},
+		},
+	);
 	return response.data;
 };
 
-export const getWorkflowRunDetails = async (workflowCheckId,  workflowRunId) => {
-	const response = await axiosClientV1.get(`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}`, {
-		headers: { },
-	});
+export const getWorkflowRunDetails = async (workflowCheckId, workflowRunId) => {
+	const response = await axiosClientV1.get(
+		`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}`,
+		{
+			headers: {},
+		},
+	);
 	return response.data;
 };
 
-export const restartWorkflowCheckV2 = async (
-	workflowCheckId,
-	runId,
-	data,
-) => {
+export const restartWorkflowCheckV2 = async (workflowCheckId, runId, data) => {
 	const response = await axiosClientV2.post(
 		`/workflow-checks/${workflowCheckId}/runs/${runId}/re-initiate`,
 		data,
@@ -72,32 +78,39 @@ export const restartWorkflowCheckV2 = async (
 	return response.data;
 };
 
-export const getWorkflowRuns = async (workflowCheckId,) => {
-	const response = await axiosClientV1.get(`/workflow-checks/${workflowCheckId}/runs`, {
-		headers: { },
-	});
+export const getWorkflowRuns = async (workflowCheckId) => {
+	const response = await axiosClientV1.get(
+		`/workflow-checks/${workflowCheckId}/runs`,
+		{
+			headers: {},
+		},
+	);
 	return response.data;
 };
 
-export const clarifyWorkFlowRun = async (workflowCheckId,  workflowRunId, data) => {
-	const response = await axiosClientV1.post(`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}/clarify`, data, {
-		headers: { },
-	});
+export const clarifyWorkFlowRun = async (workflowCheckId, workflowRunId, data) => {
+	const response = await axiosClientV1.post(
+		`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}/clarify`,
+		data,
+		{
+			headers: {},
+		},
+	);
 	return response.data;
 };
 
-export const RunWorkFlowRun = async (workflowCheckId,  workflowRunId) => {
-	const response = await axiosClientV1.post(`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}/run `, null, {
-		headers: { },
-	});
+export const RunWorkFlowRun = async (workflowCheckId, workflowRunId) => {
+	const response = await axiosClientV1.post(
+		`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}/run `,
+		null,
+		{
+			headers: {},
+		},
+	);
 	return response.data;
 };
 
-export const clarifyWorkFlowRunV2 = async (
-	workflowCheckId,
-	workflowRunId,
-	data,
-) => {
+export const clarifyWorkFlowRunV2 = async (workflowCheckId, workflowRunId, data) => {
 	const response = await axiosClientV2.post(
 		`/workflow-checks/${workflowCheckId}/runs/${workflowRunId}/clarify`,
 		data,

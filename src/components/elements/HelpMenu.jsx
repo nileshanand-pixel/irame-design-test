@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function HelpMenu() {
 	const [isOpen, setIsOpen] = useState(false);
-    const navigate = useNavigate();
+	const navigate = useNavigate();
 
 	const toggleMenu = (e) => {
 		// Prevent the click event from propagating to the document
@@ -48,15 +48,15 @@ export default function HelpMenu() {
 					className="absolute bottom-8 right-0 w-56 bg-white rounded-2xl shadow-lg p-4 mb-4 border border-gray-100"
 				>
 					<div className="space-y-4">
-							<MenuItem
-								icon={<Compass className="w-5 h-5" />}
-								text="Get Started"
-                                onClick={() => {
-                                    window.open('https://irame.ai', '_blank')
-                                    toggleMenu();
-                                }}
-							/>
-							{/* <MenuItem
+						<MenuItem
+							icon={<Compass className="w-5 h-5" />}
+							text="Get Started"
+							onClick={() => {
+								window.open('https://irame.ai', '_blank');
+								toggleMenu();
+							}}
+						/>
+						{/* <MenuItem
 								icon={<Book className="w-5 h-5" />}
 								text="Help Center"
                                 disabled
@@ -72,8 +72,14 @@ export default function HelpMenu() {
 						/> */}
 
 						<div className="">
-							<FooterLink link="https://www.irame.ai/terms-of-use" text="Terms of Use" />
-							<FooterLink link="https://www.irame.ai/privacy-policy" text="Privacy Policy" />
+							<FooterLink
+								link="https://www.irame.ai/terms-of-use"
+								text="Terms of Use"
+							/>
+							<FooterLink
+								link="https://www.irame.ai/privacy-policy"
+								text="Privacy Policy"
+							/>
 						</div>
 					</div>
 				</div>
@@ -97,7 +103,7 @@ function MenuItem({ icon, text, onClick, disabled = false }) {
 				disabled ? 'opacity-90 cursor-text' : 'hover:opacity-80'
 			}`}
 			disabled={disabled}
-            onClick={onClick}
+			onClick={onClick}
 		>
 			<div>{icon}</div>
 			<span className="text-base">{text}</span>
@@ -106,12 +112,12 @@ function MenuItem({ icon, text, onClick, disabled = false }) {
 }
 
 function FooterLink({ text, link }) {
-    return (
-        <button 
-            onClick={() => window.open(link, '_blank')}
-            className="block w-full text-left text-primary60 text-sm py-1 hover:underline"
-        >
-            {text}
-        </button>
-    );
+	return (
+		<button
+			onClick={() => window.open(link, '_blank')}
+			className="block w-full text-left text-primary60 text-sm py-1 hover:underline"
+		>
+			{text}
+		</button>
+	);
 }

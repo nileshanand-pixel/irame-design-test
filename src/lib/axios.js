@@ -10,9 +10,9 @@ const axiosClientV1 = axios.create({
 	baseURL: serviceUrlMap.DATA_MANAGER_SERVICE_V1,
 	headers: {
 		'Content-Type': 'application/json',
-		'x-app-token': 'e2bbb59e-d66f-4734-b034-cf6e8f3f8a4e'
+		'x-app-token': 'e2bbb59e-d66f-4734-b034-cf6e8f3f8a4e',
 	},
-	withCredentials: true
+	withCredentials: true,
 });
 
 // Client for the data manager service v2
@@ -20,9 +20,9 @@ const axiosClientV2 = axios.create({
 	baseURL: serviceUrlMap.DATA_MANAGER_SERVICE_V2,
 	headers: {
 		'Content-Type': 'application/json',
-		'x-app-token': 'e2bbb59e-d66f-4734-b034-cf6e8f3f8a4e'
+		'x-app-token': 'e2bbb59e-d66f-4734-b034-cf6e8f3f8a4e',
 	},
-	withCredentials: true
+	withCredentials: true,
 });
 
 const setupInterceptors = (axiosClient) => {

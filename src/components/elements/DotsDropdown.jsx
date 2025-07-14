@@ -7,7 +7,7 @@ import {
 	DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 
-const DotsDropdown = ({ options, align="end" }) => {
+const DotsDropdown = ({ options, align = 'end' }) => {
 	return (
 		<DropdownMenu className="relative">
 			<DropdownMenuTrigger asChild>
@@ -18,16 +18,25 @@ const DotsDropdown = ({ options, align="end" }) => {
 					<span className="sr-only">Open menu</span>
 				</Button>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent align={align} className="text-primary80 p-0 max-h-60 overflow-y-auto">
+			<DropdownMenuContent
+				align={align}
+				className="text-primary80 p-0 max-h-60 overflow-y-auto"
+			>
 				{options?.map((i) => {
 					const { icon: Icon, label, type, onClick, show } = i;
-					if(!show)return;
+					if (!show) return;
 					return (
-						< >
+						<>
 							{type === 'item' && (
-								<DropdownMenuItem key={label} className='flex gap-2 px-3 py-1.5 cursor-pointer focus:hover:bg-purple-4' onClick={onClick}>
-									{Icon ? Icon: null}
-									<span className='font-medium text-base'>{label}</span>
+								<DropdownMenuItem
+									key={label}
+									className="flex gap-2 px-3 py-1.5 cursor-pointer focus:hover:bg-purple-4"
+									onClick={onClick}
+								>
+									{Icon ? Icon : null}
+									<span className="font-medium text-base">
+										{label}
+									</span>
 								</DropdownMenuItem>
 							)}
 							{i.type === 'separator' && <DropdownMenuSeparator />}

@@ -34,7 +34,7 @@ export const QuerySources = ({ queryCardId }) => {
 					)}
 				</button>
 			</div>
-			<TabSheet open={open} onOpenChange={setOpen} queryCardId={queryCardId}/>
+			<TabSheet open={open} onOpenChange={setOpen} queryCardId={queryCardId} />
 		</>
 	);
 };

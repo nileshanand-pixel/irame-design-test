@@ -46,7 +46,9 @@ export default function WorkflowPage() {
 			queryClient.invalidateQueries(['workflow-runs', workflowId]);
 			queryClient.invalidateQueries(['workflow-run-details', runId]);
 			const data = await getWorkflowRunDetails(workflowId, runId);
-			navigate(`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow`);
+			navigate(
+				`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow`,
+			);
 		},
 		onError: (err) => {
 			console.error('Workflow run failed:', err);
@@ -63,7 +65,6 @@ export default function WorkflowPage() {
 		[businessProcesses, businessProcessId],
 	);
 
-
 	const breadcrumbItems = useMemo(
 		() => [
 			{ label: 'Business Process', path: '/app/business-process' },
@@ -76,20 +77,17 @@ export default function WorkflowPage() {
 		[businessProcess, businessProcessId, workflowDetails],
 	);
 
-	const plan = useMemo(
-		() => workflowDetails?.data?.plan || '',
-		[workflowDetails]
-	);
+	const plan = useMemo(() => workflowDetails?.data?.plan || '', [workflowDetails]);
 
 	if (isWorkflowLoading || isBusinessLoading) {
 		return <WorkflowPageSkeleton />;
 	}
 
-	const mainContentClasses = `h-[calc(100vh-64px)] overflow-x-scroll ${sidebarOpen ? 'md:w-full' : 'w-full lg:w-3/5 md:mx-auto'
-		} transition-all duration-300 ${runWorkFlowMutation.isPending
-			? 'overflow-y-hidden'
-			: 'overflow-y-auto'
-		}`;
+	const mainContentClasses = `h-[calc(100vh-64px)] overflow-x-scroll ${
+		sidebarOpen ? 'md:w-full' : 'w-full lg:w-3/5 md:mx-auto'
+	} transition-all duration-300 ${
+		runWorkFlowMutation.isPending ? 'overflow-y-hidden' : 'overflow-y-auto'
+	}`;
 
 	return (
 		<div className="h-full w-full overflow-hidden text-primary80">
@@ -99,10 +97,11 @@ export default function WorkflowPage() {
 				<PanelGroup direction="horizontal" className="w-full h-full">
 					<Panel defaultSize={60} minSize={40}>
 						<div
-							className={`h-full bg-white relative p-4 flex flex-col min-h-full ${runWorkFlowMutation.isPending
-								? 'overflow-y-hidden'
-								: 'overflow-auto'
-								}`}
+							className={`h-full bg-white relative p-4 flex flex-col min-h-full ${
+								runWorkFlowMutation.isPending
+									? 'overflow-y-hidden'
+									: 'overflow-auto'
+							}`}
 						>
 							<WorkflowDetails
 								workflowDetails={workflowDetails}
@@ -120,7 +119,6 @@ export default function WorkflowPage() {
 							/>
 
 							<WorkflowPlan plan={plan} disabled />
-
 
 							<div className="mt-auto sticky bottom-12 left-0 flex justify-center py-4">
 								<Button

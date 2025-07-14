@@ -45,7 +45,6 @@ const storageLogoutCleanup = () => {
 	resetAllStores();
 };
 
-
 const mixpanelLogoutCleanup = () => {
 	untrackUser();
 };

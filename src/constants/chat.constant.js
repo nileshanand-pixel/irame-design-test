@@ -1,6 +1,8 @@
 const CHAT_CONSTANTS = {
-    IRA_INPUT_PLACEHOLDER: "Enter a prompt, or press ‘/’ for multiple prompts...",
-    IRA_GENERATING_RESPONSE: "Generating response, wait for magic..."
-}
+	IRA_INPUT_PLACEHOLDER: 'Enter a prompt, or press ‘/’ for multiple prompts...',
+	IRA_GENERATING_RESPONSE: 'Generating response, wait for magic...',
+};
 
 export default CHAT_CONSTANTS;
+
+export const CHAT_SESSION_STARTED_EVENT_DATA_KEY = 'chatSessionStartedEventData';

@@ -67,7 +67,7 @@ const Dashboard = () => {
 				EVENTS_ENUM.DASHBOARD_SEARCHED,
 				EVENTS_REGISTRY.DASHBOARD_SEARCHED,
 				() => ({
-					search_query: search
+					search_query: search,
 				}),
 			);
 		}
@@ -99,9 +99,9 @@ const Dashboard = () => {
 			EVENTS_ENUM.DASHBOARD_HOMEPAGE_LOADED,
 			EVENTS_REGISTRY.DASHBOARD_HOMEPAGE_LOADED,
 			() => ({
-				source: query.source || "url",
-			})
-		)
+				source: query.source || 'url',
+			}),
+		);
 	}, [query]);
 
 	return (
@@ -134,8 +134,8 @@ const Dashboard = () => {
 							trackEvent(
 								EVENTS_ENUM.DASHBOARD_CREATE_NEW_CLICKED,
 								EVENTS_REGISTRY.DASHBOARD_CREATE_NEW_CLICKED,
-							)
-							setShowCreateDashboard(true)
+							);
+							setShowCreateDashboard(true);
 						}}
 					>
 						Create a Dashboard

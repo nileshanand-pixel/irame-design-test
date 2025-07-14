@@ -32,7 +32,7 @@ export default function FillButton({
 
 	const startFill = useCallback(() => {
 		if (!disabled && !isActive) {
-			console.log('Starting fill');
+			// console.log('Starting fill');
 			setIsActive(true);
 			setProgress(0);
 			setIsCompleted(false);
@@ -42,7 +42,7 @@ export default function FillButton({
 	}, [disabled, isActive]);
 
 	const resetButton = useCallback(() => {
-		console.log('Resetting button');
+		// console.log('Resetting button');
 		setIsActive(false);
 		setProgress(0);
 		setIsCompleted(false);
@@ -60,10 +60,10 @@ export default function FillButton({
 					pausedDurationRef.current +=
 						performance.now() - pauseTimeRef.current;
 				}
-				console.log('Resuming');
+				// console.log('Resuming');
 			} else {
 				pauseTimeRef.current = performance.now();
-				console.log('Pausing');
+				// console.log('Pausing');
 			}
 			setIsPaused(!isPaused);
 		}
@@ -103,7 +103,7 @@ export default function FillButton({
 			if (newProgress < 1) {
 				requestRef.current = requestAnimationFrame(animate);
 			} else {
-				console.log('Animation completed');
+				// console.log('Animation completed');
 				setIsCompleted(true);
 				setIsActive(false);
 				setIsPaused(false);

@@ -45,7 +45,7 @@ Assume metrics, timeframes, or relationships not explicitly stated.
 
 Use placeholders, markdown, emojis, arrows, or unsolicited commentary.
 
-Include statistical jargon without layman explanations.`
+Include statistical jargon without layman explanations.`;
 
 const AUDITOR_BASE_PROMPT = `
 Enhance user requests by:
@@ -94,12 +94,12 @@ Assume metrics, timeframes, or relationships not explicitly stated.
 
 Use placeholders, markdown, emojis, arrows, or unsolicited commentary.
 
-Include statistical jargon without layman explanations.`
+Include statistical jargon without layman explanations.`;
 
 export const promptMap = {
-    auditor: AUDITOR_BASE_PROMPT,
-    analyst: ANALYST_BASE_PROMPT
-}
+	auditor: AUDITOR_BASE_PROMPT,
+	analyst: ANALYST_BASE_PROMPT,
+};
 
 export const rolesConfig = {
 	analyst: {
@@ -107,15 +107,13 @@ export const rolesConfig = {
 		value: 'Analyst',
 		enabled: true,
 		description: 'Detailed analysis with data insights',
-        prompt: promptMap.analyst
+		prompt: promptMap.analyst,
 	},
 	auditor: {
 		mode: 'auditor',
 		value: 'Auditor',
 		enabled: false,
 		description: 'Critical evaluation and verification',
-        prompt: promptMap.analyst
+		prompt: promptMap.analyst,
 	},
 };
-
-

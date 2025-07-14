@@ -8,7 +8,7 @@ export const fetchSuggestions = async (dataSourceId) => {
 	const response = await axiosClientV1.get(
 		`/datasources/${dataSourceId}/suggestions`,
 		{
-			headers: { },
+			headers: {},
 		},
 	);
 	return response.data;
@@ -16,7 +16,7 @@ export const fetchSuggestions = async (dataSourceId) => {
 
 export const createQuerySession = async (data) => {
 	const response = await axiosClientV1.post(`/queries/session`, data, {
-		headers: { },
+		headers: {},
 	});
 	return response.data;
 };
@@ -24,7 +24,7 @@ export const createQuerySession = async (data) => {
 // This is not used anywhere as of now. Need to remove
 export const getAnswerConfig = async () => {
 	const response = await axiosClientV1.get(`/config/answer`, {
-		headers: { },
+		headers: {},
 	});
 	return response.data;
 };
@@ -32,21 +32,21 @@ export const getAnswerConfig = async () => {
 // NO API PRESENT
 export const getUserDetails = async () => {
 	const response = await axiosClientV1.get(`/oauth/google/user`, {
-		headers: { },
+		headers: {},
 	});
 	return response.data;
 };
 
 export const getUserSession = async () => {
 	const response = await axiosClientV1.get(`/sessions`, {
-		headers: { },
+		headers: {},
 	});
 	return response.data?.session_list;
 };
 
 export const createQuery = async (data) => {
 	const response = await axiosClientV1.post(`/queries`, data, {
-		headers: { },
+		headers: {},
 	});
 	return response.data;
 };
@@ -54,7 +54,7 @@ export const createQuery = async (data) => {
 export const deleteSession = async (sessionId) => {
 	try {
 		const response = await axiosClientV1.delete(`/sessions/${sessionId}`, {
-			headers: { },
+			headers: {},
 		});
 		toast.success('Session deleted successfully');
 
@@ -68,7 +68,7 @@ export const deleteSession = async (sessionId) => {
 export const getQueriesOfSession = async (sessionId) => {
 	try {
 		const response = await axiosClientV1.get(`/queries/session/${sessionId}`, {
-			headers: { },
+			headers: {},
 			params: {
 				sort_param: 'created_at',
 				sort_order: 'asc',
@@ -84,7 +84,7 @@ export const getQueriesOfSession = async (sessionId) => {
 export const getTemplate = async (templateId) => {
 	try {
 		const response = await axiosClientV1.get(`/saved-queries/${templateId}`, {
-			headers: { },
+			headers: {},
 		});
 		return response.data;
 	} catch (error) {
@@ -96,7 +96,7 @@ export const getTemplate = async (templateId) => {
 export const saveTemplate = async (data) => {
 	try {
 		const response = await axiosClientV1.post(`/saved-queries`, data, {
-			headers: { },
+			headers: {},
 		});
 		return response.data;
 	} catch (error) {
@@ -108,7 +108,7 @@ export const saveTemplate = async (data) => {
 export const getTemplates = async () => {
 	try {
 		const response = await axiosClientV1.get(`/saved-queries`, {
-			headers: { },
+			headers: {},
 		});
 		return response.data;
 	} catch (error) {
@@ -123,7 +123,7 @@ export const editTemplate = async (templateId, data) => {
 			`/saved-queries/${templateId}`,
 			data,
 			{
-				headers: { },
+				headers: {},
 			},
 		);
 		return response.data;
@@ -136,7 +136,7 @@ export const editTemplate = async (templateId, data) => {
 export const deleteTemplate = async (templateId) => {
 	try {
 		const response = await axiosClientV1.delete(`/saved-queries/${templateId}`, {
-			headers: { },
+			headers: {},
 		});
 		return response.data;
 	} catch (error) {
@@ -145,7 +145,7 @@ export const deleteTemplate = async (templateId) => {
 	}
 };
 
-export const enhancePrompt = async (userInput, mode="analyst") => {
+export const enhancePrompt = async (userInput, mode = 'analyst') => {
 	try {
 		const data = new FormData();
 		data.append('user_input', userInput);

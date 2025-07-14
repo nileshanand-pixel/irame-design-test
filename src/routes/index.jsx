@@ -22,7 +22,6 @@ import ReportContentPage from '@/components/features/reports/export/Page';
 import HelpMenu from '@/components/elements/HelpMenu';
 import WorkflowPageV2 from '@/components/features/business-process/workflow/page-v2';
 
-
 const AppRoutes = () => {
 	return (
 		<>

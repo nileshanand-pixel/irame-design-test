@@ -49,9 +49,10 @@ export default function ReportHeader({ report, onDownload }) {
 	};
 
 	const handleCopy = () => {
-		navigator.clipboard.writeText(report.report_id)
+		navigator.clipboard
+			.writeText(report.report_id)
 			.then(() => {
-				toast.success("Report Id copied to clipboard!")
+				toast.success('Report Id copied to clipboard!');
 			})
 			.catch(() => {
 				toast.error('Failed to copy!');

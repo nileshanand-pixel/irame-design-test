@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 
 export const getUserDashboard = async () => {
 	const response = await axiosClientV1.get(`/dashboards`, {
-		headers: { },
+		headers: {},
 	});
 	return response.data?.dashboard_list;
 };
@@ -11,7 +11,7 @@ export const getUserDashboard = async () => {
 export const deleteUserDashboard = async (id) => {
 	try {
 		const response = await axiosClientV1.delete(`/dashboards/${id}`, {
-			headers: { },
+			headers: {},
 		});
 		toast.success('Dashboard deleted successfully');
 		return response.data;
@@ -24,7 +24,7 @@ export const deleteUserDashboard = async (id) => {
 export const getDashboardContent = async (id) => {
 	try {
 		const response = await axiosClientV1.get(`/dashboards/${id}/contents`, {
-			headers: { },
+			headers: {},
 		});
 
 		return response.data?.dashboard_content_list;
@@ -39,7 +39,7 @@ export const createDashboard = async (name) => {
 		`/dashboards`,
 		{ title: name },
 		{
-			headers: { },
+			headers: {},
 		},
 	);
 	return response.data;
@@ -50,7 +50,7 @@ export const createDashboardContent = async (id, content) => {
 		`/dashboards/${id}/contents`,
 		content,
 		{
-			headers: { },
+			headers: {},
 		},
 	);
 	return response.data;
@@ -61,7 +61,7 @@ export const updateDashboardName = async (id, name) => {
 		`/dashboards/${id}/?title=${name}`,
 		{},
 		{
-			headers: { },
+			headers: {},
 		},
 	);
 	return response.data;

@@ -44,11 +44,11 @@ const DataSource = () => {
 				EVENTS_ENUM.DATASET_DELETION_SUCCESSFUL,
 				EVENTS_REGISTRY.DATASET_DELETION_SUCCESSFUL,
 				() => ({
-					source: "inside_dataset",
+					source: 'inside_dataset',
 					dataset_id: datasourceQuery?.data?.datasource_id,
 					dataset_name: datasourceQuery?.data?.name,
-				})
-			)
+				}),
+			);
 			navigate('/app/configuration?source=configuration');
 		},
 		onError: (err) => {
@@ -56,13 +56,13 @@ const DataSource = () => {
 				EVENTS_ENUM.DATASET_DELETION_FAILED,
 				EVENTS_REGISTRY.DATASET_DELETION_FAILED,
 				() => ({
-					source: "inside_dataset",
+					source: 'inside_dataset',
 					dataset_id: datasourceQuery?.data?.datasource_id,
 					dataset_name: datasourceQuery?.data?.name,
 					...getErrorAnalyticsProps(err),
-				})
-			)
-			console.log('Error deleting data source', err);
+				}),
+			);
+			console.error('Error deleting data source', err);
 			toast.error('Something went wrong while deleting Data source');
 		},
 	});
@@ -81,69 +81,86 @@ const DataSource = () => {
 
 			const oldDataSourceData = datasourceQuery?.data;
 
-			if(changesForTracking.includes("name")) {
+			if (changesForTracking.includes('name')) {
 				eventProperties.old_name = oldDataSourceData?.name;
 				eventProperties.new_name = form.name;
 			}
 
-			if(changesForTracking.includes("description")) {
-				eventProperties.old_desc = oldDataSourceData?.processed_files?.description;
+			if (changesForTracking.includes('description')) {
+				eventProperties.old_desc =
+					oldDataSourceData?.processed_files?.description;
 				eventProperties.new_desc = form?.processed_files?.description;
 			}
 
-			if(changesForTracking.includes("column_desc")) {
-				const oldColumns = oldDataSourceData?.processed_files?.files?.flatMap(file => 
-					file.columns.map(col => ({ ...col, file_name: file.file_name }))
-				) || [];
-				const newColumns = form?.processed_files?.files?.flatMap(file => 
-					file.columns.map(col => ({ ...col, file_name: file.file_name }))
-				) || [];
+			if (changesForTracking.includes('column_desc')) {
+				const oldColumns =
+					oldDataSourceData?.processed_files?.files?.flatMap((file) =>
+						file.columns.map((col) => ({
+							...col,
+							file_name: file.file_name,
+						})),
+					) || [];
+				const newColumns =
+					form?.processed_files?.files?.flatMap((file) =>
+						file.columns.map((col) => ({
+							...col,
+							file_name: file.file_name,
+						})),
+					) || [];
 				const changedColumns = newColumns.filter((newCol, index) => {
 					const oldCol = oldColumns[index];
 					return !areStringObjectsEqual(newCol, oldCol);
 				});
-				eventProperties.changed_columns = changedColumns.map(col => ({
+				eventProperties.changed_columns = changedColumns.map((col) => ({
 					file_name: col.file_name,
 					name: col.name,
-					old_desc: oldColumns.find(oldCol => oldCol.name === col.name && oldCol.file_name === col.file_name)?.description,
+					old_desc: oldColumns.find(
+						(oldCol) =>
+							oldCol.name === col.name &&
+							oldCol.file_name === col.file_name,
+					)?.description,
 					new_desc: col.description,
 				}));
 			}
 
-			const newGlossariesTerms = (form?.processed_files?.glossary?.items || []).map(glossary => glossary.term);
-			const oldGlossariesTerms = (oldDataSourceData?.processed_files?.glossary?.items || []).map(glossary => glossary.term);
-			
+			const newGlossariesTerms = (
+				form?.processed_files?.glossary?.items || []
+			).map((glossary) => glossary.term);
+			const oldGlossariesTerms = (
+				oldDataSourceData?.processed_files?.glossary?.items || []
+			).map((glossary) => glossary.term);
+
 			eventProperties.old_glossary_terms = oldGlossariesTerms;
 			eventProperties.new_glossary_terms = newGlossariesTerms;
 
 			trackEvent(
 				EVENTS_ENUM.DATASET_UPDATION_SUCCESSFUL,
 				EVENTS_REGISTRY.DATASET_UPDATION_SUCCESSFUL,
-				() => eventProperties
+				() => eventProperties,
 			);
 		},
 		onError: (err) => {
 			trackEvent(
-				EVENTS_ENUM.DATASET_UPDATION_SUCCESSFUL,
-				EVENTS_REGISTRY.DATASET_UPDATION_SUCCESSFUL,
+				EVENTS_ENUM.DATASET_UPDATION_FAILED,
+				EVENTS_REGISTRY.DATASET_UPDATION_FAILED,
 				() => ({
 					dataset_id: datasourceQuery?.data?.datasource_id,
 					dataset_name: datasourceQuery?.data?.name,
 					changes: changesForTracking,
-					...getErrorAnalyticsProps(err)
-				})
+					...getErrorAnalyticsProps(err),
+				}),
 			);
-			console.log('Error updating data source', err);
+			// console.log('Error updating data source', err);
 			toast.error(
 				'Something went wrong while updating Data source ' + err.message,
 			);
 		},
 	});
-	
+
 	const addChangeForTracking = (change) => {
 		setChangesForTracking((prev) => {
 			if (prev.includes(change)) {
-				return prev;				
+				return prev;
 			} else {
 				return [...prev, change];
 			}
@@ -160,9 +177,9 @@ const DataSource = () => {
 				dataset_name: datasourceQuery?.data?.name,
 				old_name: form.name,
 				new_name: e.target.value,
-			})
+			}),
 		);
-		addChangeForTracking("name")
+		addChangeForTracking('name');
 	};
 
 	const handleEditClick = () => {
@@ -190,7 +207,12 @@ const DataSource = () => {
 			},
 			name: form.name,
 		};
-		if (!confirm('Are you sure you want to save these changes to your data source?')) return;
+		if (
+			!confirm(
+				'Are you sure you want to save these changes to your data source?',
+			)
+		)
+			return;
 		editMutation.mutateAsync({ id: query?.id, payload });
 	};
 
@@ -234,9 +256,11 @@ const DataSource = () => {
 							() => ({
 								dataset_id: datasourceQuery?.data?.datasource_id,
 								dataset_name: datasourceQuery?.data?.name,
-							})	
+							}),
 						);
-						navigate(`/app/new-chat/?step=3&dataSourceId=${query?.id}&source=configuration`);
+						navigate(
+							`/app/new-chat/?step=3&dataSourceId=${query?.id}&source=configuration`,
+						);
 					}}
 				>
 					Start Querying
@@ -258,7 +282,8 @@ const DataSource = () => {
 			if (
 				!form ||
 				form.name !== fetchedData.name ||
-				JSON.stringify(form.processed_files) !== JSON.stringify(fetchedData.processed_files)
+				JSON.stringify(form.processed_files) !==
+					JSON.stringify(fetchedData.processed_files)
 			) {
 				setForm({
 					processed_files: fetchedData.processed_files,
@@ -269,15 +294,17 @@ const DataSource = () => {
 		}
 	}, [datasourceQuery.isSuccess, datasourceQuery.data]);
 
-
 	return (
 		<div className="w-full px-8 relative h-full grid grid-cols-1 pt-2">
-
-			{(editMutation.isPending || deleteMutation.isPending) && <BackdropLoader />}
+			{(editMutation.isPending || deleteMutation.isPending) && (
+				<BackdropLoader />
+			)}
 			<div className="text-primary80 gap-2">
 				<span
 					className="text-2xl font-semibold cursor-pointer"
-					onClick={() => navigate('/app/configuration?source=configuration')}
+					onClick={() =>
+						navigate('/app/configuration?source=configuration')
+					}
 				>
 					Configuration
 				</span>

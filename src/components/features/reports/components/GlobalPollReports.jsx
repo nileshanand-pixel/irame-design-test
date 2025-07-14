@@ -11,7 +11,7 @@ const GlobalPollReports = () => {
 	const navigate = useNavigate();
 	const { isAuthenticated } = useAuth();
 	// added this for manually stopping polling to help development while keeping network tab clean
-	const stopPolling = localStorage.getItem('stopPolling')
+	const stopPolling = localStorage.getItem('stopPolling');
 
 	useEffect(() => {
 		if (!isAuthenticated || stopPolling === 'yes') return;
@@ -24,13 +24,13 @@ const GlobalPollReports = () => {
 					const currentReportId = currentReport?.report_id;
 
 					const correspondingPrevReport = previousReports?.filter(
-						(report) => report?.report_id === currentReportId
+						(report) => report?.report_id === currentReportId,
 					)?.[0];
 
 					if (
 						correspondingPrevReport &&
-						correspondingPrevReport?.status === "in_progress" &&
-						currentReport?.status === "done"
+						correspondingPrevReport?.status === 'in_progress' &&
+						currentReport?.status === 'done'
 					) {
 						toast(`Report "${currentReport.name}" is now done!`, {
 							duration: 30000,
@@ -38,21 +38,24 @@ const GlobalPollReports = () => {
 								<Button
 									onClick={() => {
 										navigate('/app/reports/');
-										trackEvent(EVENTS_ENUM.VIEW_RE, EVENTS_REGISTRY.VIEW_DASHBOARD_CLICKED, (() => ({
-											report_id: currentReport?.report_id,
-											name: currentReport?.name,
-											from: 'snack-bar'
-										})))
+										trackEvent(
+											EVENTS_ENUM.VIEW_RE,
+											EVENTS_REGISTRY.VIEW_DASHBOARD_CLICKED,
+											() => ({
+												report_id: currentReport?.report_id,
+												name: currentReport?.name,
+												from: 'snack-bar',
+											}),
+										);
 									}}
 									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 								>
 									View Reports
 								</Button>
 							),
-						},
-						);
+						});
 					}
-				})
+				});
 
 				// Update the previous reports reference with the latest data
 				setPreviousReports([...currentReports]);
@@ -63,7 +66,7 @@ const GlobalPollReports = () => {
 
 		// Start polling every 10 seconds
 		const intervalId = setInterval(() => {
-			pollReports()
+			pollReports();
 		}, 10000);
 
 		// Clean up the interval when the component is unmounted or user logs out

@@ -100,7 +100,7 @@ const SingleBusinessProcessPage = () => {
 		reactionText: 'your workflows will appear here...',
 		ctaText: 'Create New Workflow',
 		ctaDisabled: true,
-		ctaClickHandler: () => { },
+		ctaClickHandler: () => {},
 		comingSoonText: 'Custom workflow creation coming soon...',
 	};
 

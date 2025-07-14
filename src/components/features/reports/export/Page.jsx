@@ -37,9 +37,7 @@ const ReportContentPage = () => {
 			"
 		>
 			<ReportHero reportDetails={reportDetails} pdfMode />
-			{showSummary() && (
-				<ReportSummary />
-			)}
+			{showSummary() && <ReportSummary />}
 			<QueryList reportDetails={reportDetails} pdfMode />
 		</div>
 	);

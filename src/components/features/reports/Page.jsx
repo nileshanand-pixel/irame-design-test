@@ -83,7 +83,7 @@ const ReportFolders = () => {
 		reactionText: 'your report will be auto generated...',
 		ctaText: 'Create a Report',
 		ctaDisabled: true,
-		ctaClickHandler: () => { },
+		ctaClickHandler: () => {},
 		comingSoonText: 'Custom report feature coming soon...',
 	};
 

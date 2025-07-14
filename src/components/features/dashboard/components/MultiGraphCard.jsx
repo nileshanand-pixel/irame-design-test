@@ -44,7 +44,8 @@ const MultiGraphCard = ({ data, isGraphLoading }) => {
 										() => ({
 											dashboard_id: data?.dashboard_id,
 											dashboard_name: query?.name,
-											dashboard_content_id: data?.dashboard_content_id,
+											dashboard_content_id:
+												data?.dashboard_content_id,
 											query_id: data?.query_id,
 											query_text: data?.content?.query,
 											graph_id: graph.id,

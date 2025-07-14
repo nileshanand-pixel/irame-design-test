@@ -6,11 +6,11 @@ import React from 'react';
 
  * @returns 
  */
-const DotLoader = ({size = '4px' }) => {
-  const circleClass = `my-12 rounded-full`;
-  const sizeStyle = {width: size, height: size}
+const DotLoader = ({ size = '4px' }) => {
+	const circleClass = `my-12 rounded-full`;
+	const sizeStyle = { width: size, height: size };
 
-  const styles = `
+	const styles = `
     @keyframes loader {
       to {
         transform: translate3d(0, 0.35rem, 0);
@@ -30,16 +30,25 @@ const DotLoader = ({size = '4px' }) => {
     }
   `;
 
-  return (
-    <>
-      <style>{styles}</style>
-      <div className="flex ms-1 gap-[4px] justify-center">
-        <span style={sizeStyle} className={`animate-loader bg-[#26064ACC]  ${circleClass}`}></span>
-        <span style={sizeStyle} className={`animate-loader bg-[#26064ACC] animation-delay-200 ${circleClass}`}></span>
-        <span style={sizeStyle} className={`animate-loader bg-[#26064ACC] animation-delay-400 ${circleClass}`}></span>
-      </div>
-    </>
-  );
+	return (
+		<>
+			<style>{styles}</style>
+			<div className="flex ms-1 gap-[4px] justify-center">
+				<span
+					style={sizeStyle}
+					className={`animate-loader bg-[#26064ACC]  ${circleClass}`}
+				></span>
+				<span
+					style={sizeStyle}
+					className={`animate-loader bg-[#26064ACC] animation-delay-200 ${circleClass}`}
+				></span>
+				<span
+					style={sizeStyle}
+					className={`animate-loader bg-[#26064ACC] animation-delay-400 ${circleClass}`}
+				></span>
+			</div>
+		</>
+	);
 };
 
 export default DotLoader;

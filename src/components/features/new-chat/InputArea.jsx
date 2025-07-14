@@ -88,7 +88,8 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 			let i = 0;
 			const intervalId = setInterval(() => {
 				setPrompt((prevPrompt) => prevPrompt + (newPrompt[i] ?? ''));
-				simpleInputRef.current.scrollTop = simpleInputRef.current.scrollHeight
+				simpleInputRef.current.scrollTop =
+					simpleInputRef.current.scrollHeight;
 				i++;
 				if (i >= newPrompt.length) {
 					setShowStream(false);
@@ -343,7 +344,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 
 	const handleEnhancePrompt = () => {
 		if (disablePromptEnhancer) return;
-		setPrompt('Enhancing prompt...')
+		setPrompt('Enhancing prompt...');
 		enhancePromptMutation.mutate(prompt);
 	};
 
@@ -412,7 +413,11 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	const renderSimpleMode = () => (
 		<Textarea
 			rows={1}
-			placeholder={!disabled ? CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER : CHAT_CONSTANTS.IRA_GENERATING_RESPONSE}
+			placeholder={
+				!disabled
+					? CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER
+					: CHAT_CONSTANTS.IRA_GENERATING_RESPONSE
+			}
 			onFocus={() =>
 				utilReducer?.isSideNavOpen &&
 				dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]))
@@ -471,9 +476,10 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 											onClick={handleEnhancePrompt}
 											variant="transparent"
 											size="iconSm"
-											className={`${disablePromptEnhancer &&
+											className={`${
+												disablePromptEnhancer &&
 												'cursor-not-allowed opacity-40'
-												}`}
+											}`}
 											disabled={disablePromptEnhancer}
 										>
 											<img
@@ -489,7 +495,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 							{!disablePromptEnhancer && <PromptingRole />}
 						</div>
 
-						{(!enhancePromptMutation.isPending && !showStream) && (
+						{!enhancePromptMutation.isPending && !showStream && (
 							<div className="flex gap-4 items-center justify-between">
 								{mode === 'single' && prompt?.trim()?.length > 0 && (
 									<span className="text-muted-foreground font-bold text-xs ">
@@ -498,7 +504,6 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 								)}
 								<div
 									className="flex items-end gap-2 cursor-pointer"
-
 									onClick={handleSend}
 								>
 									<img

@@ -19,7 +19,9 @@ const getStatusStyles = (status) => {
 };
 
 const StatusBadge = ({ status }) => (
-	<span className={`text-sm font-medium px-3 py-1 rounded-full ${getStatusStyles(status)}`}>
+	<span
+		className={`text-sm font-medium px-3 py-1 rounded-full ${getStatusStyles(status)}`}
+	>
 		{status}
 	</span>
 );
@@ -41,7 +43,12 @@ const SessionHistoryPanel = ({ onClose }) => {
 	const searchParams = new URLSearchParams(location.search);
 	const currentRunId = searchParams.get('run_id');
 
-	const { data: runDetails, isLoading, isError, error } = useQuery({
+	const {
+		data: runDetails,
+		isLoading,
+		isError,
+		error,
+	} = useQuery({
 		queryKey: ['workflow-runs', workflowId],
 		queryFn: () => getWorkflowRuns(workflowId),
 		enabled: Boolean(workflowId),
@@ -53,7 +60,10 @@ const SessionHistoryPanel = ({ onClose }) => {
 			window.open(sessionUrl, '_blank', 'noopener,noreferrer');
 		} else {
 			searchParams.set('run_id', externalId);
-			navigate({ pathname: location.pathname, search: searchParams.toString() });
+			navigate({
+				pathname: location.pathname,
+				search: searchParams.toString(),
+			});
 		}
 	};
 
@@ -82,10 +92,15 @@ const SessionHistoryPanel = ({ onClose }) => {
 			{/* Header */}
 			<div className="flex justify-between items-center text-primary80 p-4">
 				<h2 className="text-xl font-semibold flex items-center space-x-2">
-					<span className="material-symbols-outlined text-2xl">history</span>
+					<span className="material-symbols-outlined text-2xl">
+						history
+					</span>
 					<span>Session History</span>
 				</h2>
-				<span onClick={onClose} className="material-symbols-outlined text-black/40 cursor-pointer">
+				<span
+					onClick={onClose}
+					className="material-symbols-outlined text-black/40 cursor-pointer"
+				>
 					close
 				</span>
 			</div>
@@ -112,19 +127,33 @@ const SessionHistoryPanel = ({ onClose }) => {
 							return (
 								<div
 									key={item.external_id}
-									className={`grid grid-cols-12 items-center py-5 px-4 hover:bg-gray-100 cursor-pointer ${isSelected ? 'bg-purple-50' : ''
-										}`}
-									onClick={() => handleRowClick(item.external_id, linkActive, sessionUrl)}
+									className={`grid grid-cols-12 items-center py-5 px-4 hover:bg-gray-100 cursor-pointer ${
+										isSelected ? 'bg-purple-50' : ''
+									}`}
+									onClick={() =>
+										handleRowClick(
+											item.external_id,
+											linkActive,
+											sessionUrl,
+										)
+									}
 								>
-									<div className="col-span-3">{formatDate(item.created_at)}</div>
+									<div className="col-span-3">
+										{formatDate(item.created_at)}
+									</div>
 
 									{/* Session Link Column */}
 									<div className="col-span-6 truncate flex items-center">
-										<span className="truncate text-black/80 max-w-52 overflow-hidden text-ellipsis" title={sessionUrl}>
+										<span
+											className="truncate text-black/80 max-w-52 overflow-hidden text-ellipsis"
+											title={sessionUrl}
+										>
 											{sessionUrl}
 										</span>
 										{linkActive && (
-											<span className="material-symbols-outlined text-primary80 ml-1">open_in_new</span>
+											<span className="material-symbols-outlined text-primary80 ml-1">
+												open_in_new
+											</span>
 										)}
 									</div>
 

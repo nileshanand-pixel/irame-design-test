@@ -12,6 +12,8 @@ import { pdfjs } from 'react-pdf';
 import useBreakpoint from '@/hooks/useBreakpoint';
 import Modals from './Modals';
 import FreshdeskWidget from './features/freshdesk/FreshdeskWidget';
+import { CHAT_SESSION_STARTED_EVENT_DATA_KEY } from '@/constants/chat.constant';
+import { removeFromLocalStorage } from '@/utils/local-storage';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -20,10 +22,15 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 const Layout = ({ children }) => {
 	const utilReducer = useSelector((state) => state.utilReducer);
-	const breakPoint = useBreakpoint()
+	const breakPoint = useBreakpoint();
 	const dispatch = useDispatch();
-	const { pathname } = useRouter();
+	const { pathname, query } = useRouter();
 
+	useEffect(() => {
+		if (pathname && pathname !== '/app/new-chat/session') {
+			removeFromLocalStorage(CHAT_SESSION_STARTED_EVENT_DATA_KEY);
+		}
+	}, [pathname]);
 
 	const toggleSideNav = () => {
 		dispatch(
@@ -38,9 +45,6 @@ const Layout = ({ children }) => {
 			toggleSideNav();
 		}
 	}, [breakPoint, utilReducer?.isSideNavOpen]);
-
-
-
 
 	useMemo(() => {
 		if (!pathname.includes('/app/new-chat')) {
@@ -65,8 +69,9 @@ const Layout = ({ children }) => {
 				isSideNavOpen={utilReducer?.isSideNavOpen}
 			/>
 			<main
-				className={`grid w-full ${utilReducer?.isSideNavOpen ? 'pl-[270px]' : 'pl-[72px]'
-					} `}
+				className={`grid w-full ${
+					utilReducer?.isSideNavOpen ? 'pl-[270px]' : 'pl-[72px]'
+				} `}
 			>
 				<Header />
 				<div
@@ -74,7 +79,7 @@ const Layout = ({ children }) => {
 						'pt-0 px-0 flex bg-gray-300 justify-center h-[calc(100vh-64px)] overflow-x-hidden w-full',
 						pathname.includes('/dashboard')
 							? 'bg-gray-muted'
-							: 'bg-white'
+							: 'bg-white',
 					)}
 				>
 					{/* <Outlet /> */}
@@ -82,8 +87,8 @@ const Layout = ({ children }) => {
 				</div>
 				<GlobalPollReports />
 			</main>
-			<FreshdeskWidget/>
-			<Modals/>
+			<FreshdeskWidget />
+			<Modals />
 		</div>
 	);
 };

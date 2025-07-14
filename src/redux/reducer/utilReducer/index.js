@@ -5,7 +5,7 @@ const initialState = {
 	suggestionData: {},
 	dataSources: [],
 	sessionHistory: [],
-	selectedDataSource: {id: "", name: ""},
+	selectedDataSource: { id: '', name: '' },
 	resetChat: false,
 	answerFromHistory: {},
 	isGenerateReportModalOpen: false,

@@ -102,7 +102,6 @@ export default function ReportCoverPage() {
 							width={79}
 							height={79}
 							fill="none"
-
 						>
 							<path fill="url(#a)" d="M0 0h79v79H0z" />
 							<defs>

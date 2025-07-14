@@ -251,13 +251,15 @@ export const ErrorResolutionModal = ({
 	};
 
 	const handleContinue = () => {
-		const textClarificationResponses = textClarifications.map((clarification, idx) => ({
-			response: clarificationAnswers[idx] || '',
-			ira_clarification: {
-			  description: clarification.description,
-			  metadata: clarification.metadata || {},
-			}
-		  }));
+		const textClarificationResponses = textClarifications.map(
+			(clarification, idx) => ({
+				response: clarificationAnswers[idx] || '',
+				ira_clarification: {
+					description: clarification.description,
+					metadata: clarification.metadata || {},
+				},
+			}),
+		);
 
 		const finalDataMapping = dataMappings.map((file) => {
 			const updatedHeaders = (file.headers || []).map((header) => {
@@ -435,7 +437,7 @@ const ClarificationSection = ({
 	textClarifications,
 	clarificationAnswers,
 	handleClarificationChange,
-	missingFields
+	missingFields,
 }) => {
 	const hasClarifications = textClarifications && textClarifications.length > 0;
 

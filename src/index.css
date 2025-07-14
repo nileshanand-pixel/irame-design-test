@@ -74,13 +74,12 @@
 
 	*::-webkit-scrollbar-track {
 		border-radius: 5px;
-		background-color: #DFE9EB;
+		background-color: #dfe9eb;
 	}
 
 	*::-webkit-scrollbar-track:hover {
-		background-color: #B8C0C2;
+		background-color: #b8c0c2;
 	}
-
 
 	*::-webkit-scrollbar-thumb {
 		border-radius: 5px;
@@ -91,12 +90,6 @@
 	*::-webkit-scrollbar-thumb:hover {
 		background-color: #676666;
 	}
-
-
-
-
-
-
 
 	html,
 	body {
@@ -113,7 +106,6 @@
 		@apply bg-background text-foreground;
 	}
 
-
 	.or-tagline {
 		@apply relative bg-transparent text-center z-[1];
 	}
@@ -127,44 +119,56 @@
 	}
 
 	.light {
-		background: -moz-linear-gradient(-45deg,
-				#6a12cd 0%,
-				#6a12cd 40%,
-				#ffffff 50%,
-				#6a12cd 60%,
-				#6a12cd 100%);
-		background: -webkit-gradient(linear,
-				left top,
-				right bottom,
-				color-stop(0%, #6a12cd),
-				color-stop(40%, #6a12cd),
-				color-stop(50%, #ffffff),
-				color-stop(60%, #6a12cd),
-				color-stop(100%, #6a12cd));
-		background: -webkit-linear-gradient(-45deg,
-				#6a12cd 0%,
-				#6a12cd 40%,
-				#ffffff 50%,
-				#6a12cd 60%,
-				#6a12cd 100%);
-		background: -o-linear-gradient(-45deg,
-				#6a12cd 0%,
-				#6a12cd 40%,
-				#ffffff 50%,
-				#6a12cd 60%,
-				#6a12cd 100%);
-		background: -ms-linear-gradient(-45deg,
-				#6a12cd 0%,
-				#6a12cd 40%,
-				#ffffff 50%,
-				#6a12cd 60%,
-				#6a12cd 100%);
-		background: linear-gradient(115deg,
-				#6a12cd 0%,
-				#6a12cd 40%,
-				#ffffff 50%,
-				#6a12cd 60%,
-				#6a12cd 100%);
+		background: -moz-linear-gradient(
+			-45deg,
+			#6a12cd 0%,
+			#6a12cd 40%,
+			#ffffff 50%,
+			#6a12cd 60%,
+			#6a12cd 100%
+		);
+		background: -webkit-gradient(
+			linear,
+			left top,
+			right bottom,
+			color-stop(0%, #6a12cd),
+			color-stop(40%, #6a12cd),
+			color-stop(50%, #ffffff),
+			color-stop(60%, #6a12cd),
+			color-stop(100%, #6a12cd)
+		);
+		background: -webkit-linear-gradient(
+			-45deg,
+			#6a12cd 0%,
+			#6a12cd 40%,
+			#ffffff 50%,
+			#6a12cd 60%,
+			#6a12cd 100%
+		);
+		background: -o-linear-gradient(
+			-45deg,
+			#6a12cd 0%,
+			#6a12cd 40%,
+			#ffffff 50%,
+			#6a12cd 60%,
+			#6a12cd 100%
+		);
+		background: -ms-linear-gradient(
+			-45deg,
+			#6a12cd 0%,
+			#6a12cd 40%,
+			#ffffff 50%,
+			#6a12cd 60%,
+			#6a12cd 100%
+		);
+		background: linear-gradient(
+			115deg,
+			#6a12cd 0%,
+			#6a12cd 40%,
+			#ffffff 50%,
+			#6a12cd 60%,
+			#6a12cd 100%
+		);
 		filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#4600F2', endColorstr='#4600F2', GradientType=1);
 		background-repeat: no-repeat;
 		background-position: 0px;
@@ -178,8 +182,6 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-
-
 
 	.light {
 		animation: light 2s infinite;
@@ -211,16 +213,22 @@
 	}
 
 	.form-bg {
-		background: linear-gradient(0deg,
+		background:
+			linear-gradient(
+				0deg,
 				rgba(106, 18, 205, 0.02),
-				rgba(106, 18, 205, 0.02)),
-			linear-gradient(180deg,
+				rgba(106, 18, 205, 0.02)
+			),
+			linear-gradient(
+				180deg,
 				rgba(255, 255, 255, 0.4) 1.14%,
-				rgba(255, 255, 255, 0.16) 98.72%);
+				rgba(255, 255, 255, 0.16) 98.72%
+			);
 	}
 
 	.tabActiveBg {
-		background: linear-gradient(0deg, #ffffff, #ffffff),
+		background:
+			linear-gradient(0deg, #ffffff, #ffffff),
 			linear-gradient(0deg, rgba(106, 18, 205, 0.04), rgba(106, 18, 205, 0.04));
 	}
 
@@ -250,9 +258,11 @@
 		border-radius: 100px;
 		animation: rotation 2.5s linear 0s infinite;
 
-		background: linear-gradient(var(--gradient-angle),
-				rgba(106, 18, 205, 1),
-				rgba(106, 18, 205, 0));
+		background: linear-gradient(
+			var(--gradient-angle),
+			rgba(106, 18, 205, 1),
+			rgba(106, 18, 205, 0)
+		);
 	}
 
 	.darkSoul-button2 {
@@ -445,7 +455,7 @@
 
 	.horizontal-scrollbar {
 		scrollbar-width: thin;
-		scrollbar-color: #0000000A #0000000A;
+		scrollbar-color: #0000000a #0000000a;
 	}
 
 	.markdown-content h1 {
@@ -485,7 +495,7 @@
 	.markdown-content pre {
 		width: 100%;
 		overflow-x: auto;
-		@apply show-scrollbar
+		@apply show-scrollbar;
 	}
 
 	.markdown-content code {
@@ -494,14 +504,13 @@
 		background-color: rgba(38, 6, 74, 0.08) !important;
 	}
 
-
 	.rendered-markdown {
 		/* Reset box-sizing from Tailwind's border-box */
 		box-sizing: content-box;
 	}
-	
+
 	/* Allow user-agent defaults for margins/padding */
-	
+
 	/* .rendered-markdown,
 	.rendered-markdown * {
 		margin: initial !important;
@@ -559,8 +568,7 @@
 	}
 
 	.rendered-markdown ol {
-				list-style: disc !important;
-
+		list-style: disc !important;
 	}
 
 	/* Images */
@@ -602,7 +610,6 @@
 		font-family: monospace;
 		white-space: pre-wrap;
 	}
-
 
 	@-webkit-keyframes spinner-fade {
 		0% {

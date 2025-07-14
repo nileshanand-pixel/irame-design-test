@@ -12,7 +12,9 @@ export default function Breadcrumb({ reportName }) {
 			aria-label="Breadcrumb"
 		>
 			<span
-				onClick={() => navigate('/app/reports/datasources/report?datasourceId=audit')}
+				onClick={() =>
+					navigate('/app/reports/datasources/report?datasourceId=audit')
+				}
 				className="text-sm font-medium cursor-pointer"
 			>
 				Report

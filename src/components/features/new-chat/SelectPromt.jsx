@@ -1,9 +1,8 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createQuerySession, fetchSuggestions } from './service/new-chat.service';
 import { useRouter } from '@/hooks/useRouter';
 import { Skeleton } from '@/components/ui/skeleton';
-import useLocalStorage from '@/hooks/useLocalStorage';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
@@ -12,7 +11,7 @@ import ScrollList from '@/components/elements/ScrollList';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
-const SelectPrompt = ({ setPrompt }) => {
+const SelectPrompt = ({ setPrompt, dataSources }) => {
 	const [activeTab, setActiveTab] = useState('');
 	const [data, setData] = useState([]);
 	const { query, navigate } = useRouter();
@@ -21,15 +20,21 @@ const SelectPrompt = ({ setPrompt }) => {
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
+	const datasourceName = useMemo(() => {
+		return dataSources?.filter(
+			(dataSource) => dataSource.datasource_id === query.dataSourceId,
+		)?.[0]?.name;
+	}, [query, dataSources]);
+
 	const handleActiveTab = (selectedTab) => {
 		trackEvent(
 			EVENTS_ENUM.L1_CATEGORY_CLICKED,
 			EVENTS_REGISTRY.L1_CATEGORY_CLICKED,
 			() => ({
 				dataset_id: query.dataSourceId,
-				dataset_name: utilReducer?.selectedDataSource?.name,
+				dataset_name: datasourceName,
 				category_name: selectedTab,
-			})
+			}),
 		);
 		setActiveTab(selectedTab);
 	};
@@ -41,14 +46,13 @@ const SelectPrompt = ({ setPrompt }) => {
 				EVENTS_REGISTRY.L2_CATEGORY_CLICKED,
 				() => ({
 					dataset_id: query.dataSourceId,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_name: datasourceName,
 					l1_category_name: activeTab,
 					clicked_on: index + 1,
 					total_suggestions: questions.length,
-				})
+				}),
 			);
 
-			navigate(`/app/new-chat/session?source=chat_screen`);
 			dispatch(
 				updateChatStoreProp([
 					{ key: 'queries', value: [{ id: '', query: question }] },
@@ -63,7 +67,10 @@ const SelectPrompt = ({ setPrompt }) => {
 				type: 'single',
 			};
 			createQuerySession(payload).then((res) => {
-				dispatch(
+				navigate(
+					`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen`,
+				);
+				(dispatch(
 					updateChatStoreProp([
 						{
 							key: 'initialQuery',
@@ -91,16 +98,17 @@ const SelectPrompt = ({ setPrompt }) => {
 					queryClient.invalidateQueries(['chat-history'], {
 						refetchActive: true,
 						refetchInactive: true,
-					});
+					}));
 				trackEvent(
 					EVENTS_ENUM.CHAT_SESSION_STARTED,
 					EVENTS_REGISTRY.CHAT_SESSION_STARTED,
 					() => ({
 						dataset_id: query.dataSourceId,
-						dataset_name: utilReducer?.selectedDataSource?.name,
-						start_method: "suggestion_click",
+						dataset_name: datasourceName,
+						start_method: 'suggestion_click',
 						chat_session_id: res?.session_id,
-					})
+						chat_session_type: 'new',
+					}),
 				);
 				trackEvent(
 					EVENTS_ENUM.CHAT_MESSAGE_SENT,
@@ -109,15 +117,15 @@ const SelectPrompt = ({ setPrompt }) => {
 						chat_session_id: res?.session_id,
 						query_id: res?.query_id,
 						dataset_id: query.dataSourceId,
-						dataset_name: utilReducer?.selectedDataSource?.name,
+						dataset_name: datasourceName,
 						message_type: 'user',
-						message_source: "suggestion_click",
+						message_source: 'suggestion_click',
 						message_text: question,
 						is_clarification: false,
 						message_number: 1,
 						first_message_in_chat: true,
-					})
-				)
+					}),
+				);
 			});
 		} catch (error) {
 			console.log(error);
@@ -139,10 +147,7 @@ const SelectPrompt = ({ setPrompt }) => {
 						setActiveTab(utilReducer.suggestionData?.suggestion[0].type);
 					}
 				} else {
-					const resp = await fetchSuggestions(
-						query.dataSourceId,
-
-					);
+					const resp = await fetchSuggestions(query.dataSourceId);
 					setData(resp);
 					setActiveTab(resp?.suggestion[0]?.type);
 					dispatch(
@@ -154,9 +159,11 @@ const SelectPrompt = ({ setPrompt }) => {
 							EVENTS_REGISTRY.CHAT_SUGGESTIONS_LOADED,
 							() => ({
 								dataset_id: query.dataSourceId,
-								dataset_name: utilReducer?.selectedDataSource?.name,
-								categories: resp?.suggestion?.map((suggestion) => suggestion.type),
-							})
+								dataset_name: datasourceName,
+								categories: resp?.suggestion?.map(
+									(suggestion) => suggestion.type,
+								),
+							}),
 						);
 						clearInterval(intervalId); // Stop polling
 					}
@@ -175,7 +182,7 @@ const SelectPrompt = ({ setPrompt }) => {
 		return () => {
 			clearInterval(intervalId);
 		};
-	}, [query.dataSourceId]);
+	}, [query.dataSourceId, dataSources]);
 
 	return (
 		<div className="">
@@ -186,10 +193,11 @@ const SelectPrompt = ({ setPrompt }) => {
 							{data?.suggestion?.map((suggestion, index) => (
 								<li
 									key={suggestion?.suggestion_id}
-									className={`${suggestion?.type === activeTab
-										? ' text-purple-100 border-purple-40 tabActiveBg'
-										: 'text-black/60 border-black/10'
-										}  text-xs 2xl:text-sm font-medium border rounded-3xl px-3 py-2 cursor-pointer min-w-fit max-w-[19.25rem]`}
+									className={`${
+										suggestion?.type === activeTab
+											? ' text-purple-100 border-purple-40 tabActiveBg'
+											: 'text-black/60 border-black/10'
+									}  text-xs 2xl:text-sm font-medium border rounded-3xl px-3 py-2 cursor-pointer min-w-fit max-w-[19.25rem]`}
 									onClick={() => handleActiveTab(suggestion?.type)}
 								>
 									<div className="min-w-fit">
@@ -218,43 +226,49 @@ const SelectPrompt = ({ setPrompt }) => {
 											(suggestion) =>
 												suggestion.type === activeTab,
 										)
-										.questions.map((question, index, questions) => (
-											<div
-												className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] min-h-[8rem] xl:min-h-[10rem] max-h-[21.75rem] p-4 hover:bg-purple-8 mb-3"
-												key={`${index}_question`}
-											>
-										<div
-											className="overflow-y-auto text-sm font-medium text-primary80"
-											onClick={() =>
-												handlePrompt(question, index, questions)
-											}
-										>
-											<ul className="divide-y-[24px] divide-transparent ">
-												<li className="flex items-center gap-2 hover:cursor-pointer hover:text-purple-80 !line-clamp-5 ">
-													{question}
-												</li>
-											</ul>
-											</div>
-											<div
-												className="absolute bottom-4 right-4 text-right mt-6 cursor-pointer"
-												onClick={(e) => {
-													e.stopPropagation();
-													setPrompt(question);
-												}}
-											>
-												<img
-													src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
-													alt="edit-prompt"
-													className="bg-white py-1 px-1 rounded-full"
-												/>
-											</div>
-										</div>
-									))
+										.questions.map(
+											(question, index, questions) => (
+												<div
+													className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] min-h-[8rem] xl:min-h-[10rem] max-h-[21.75rem] p-4 hover:bg-purple-8 mb-3"
+													key={`${index}_question`}
+												>
+													<div
+														className="overflow-y-auto text-sm font-medium text-primary80"
+														onClick={() =>
+															handlePrompt(
+																question,
+																index,
+																questions,
+															)
+														}
+													>
+														<ul className="divide-y-[24px] divide-transparent ">
+															<li className="flex items-center gap-2 hover:cursor-pointer hover:text-purple-80 !line-clamp-5 ">
+																{question}
+															</li>
+														</ul>
+													</div>
+													<div
+														className="absolute bottom-4 right-4 text-right mt-6 cursor-pointer"
+														onClick={(e) => {
+															e.stopPropagation();
+															setPrompt(question);
+														}}
+													>
+														<img
+															src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
+															alt="edit-prompt"
+															className="bg-white py-1 px-1 rounded-full"
+														/>
+													</div>
+												</div>
+											),
+										)
 								: [...Array(5)].map((_, index) => (
-									<div className="flex space-x-2" key={index}>
-										<Skeleton className="h-[125px] w-[250px] rounded-xl bg-purple-4" />
-									</div>
-								))}
+										<div className="flex space-x-2" key={index}>
+											<Skeleton className="h-[125px] w-[250px] rounded-xl bg-purple-4" />
+										</div>
+									))}
 						</div>
 					</ScrollList>
 				) : (

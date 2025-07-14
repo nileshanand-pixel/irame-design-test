@@ -10,6 +10,8 @@ export const ConnectDataSourceWizard = ({ onClose, runDetails, csvFiles }) => {
 	const [requiredFiles, setRequiredFiles] = useState([]); // Start empty, will fill from csvFiles
 	const [columnMappings, setColumnMappings] = useState([]);
 
+	const [urlStep, setUrlStep] = useState(null);
+
 	// Populate requiredFiles from csvFiles prop
 	useEffect(() => {
 		if (csvFiles && Array.isArray(csvFiles)) {
@@ -43,26 +45,35 @@ export const ConnectDataSourceWizard = ({ onClose, runDetails, csvFiles }) => {
 			setCurrentStep(2);
 		} else if (runDetails.status === 'RUNNING') {
 			setCurrentStep(2.5);
-		}else{
+		} else {
 			setCurrentStep(1);
 		}
 	}, [runDetails]);
 
+	useEffect(() => {
+		if (urlStep === 1) {
+			setCurrentStep(urlStep);
+			return;
+		}
+	}, [urlStep]);
+
 	const handleNext = () => {
 		if (currentStep < 2) {
 			setCurrentStep(currentStep + 1);
+			setUrlStep(null);
 		}
 	};
 
 	const handleBack = () => {
 		if (currentStep > 1) {
 			setCurrentStep(currentStep - 1);
+			setUrlStep(currentStep - 1);
 		}
 	};
 
 	const handleRunWorkflow = () => {
 		// In a real app, this would post data to an API
-		console.log('Running workflow with mappings:', columnMappings);
+		// console.log('Running workflow with mappings:', columnMappings);
 		onClose();
 	};
 

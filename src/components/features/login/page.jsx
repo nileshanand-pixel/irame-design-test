@@ -64,7 +64,7 @@ const SignInSignUp = () => {
 		const provider = oauthProviders.find(
 			(p) => p.name.toLowerCase() === team.toLowerCase(),
 		);
-		console.log(provider);
+		// console.log(provider);
 		if (provider) {
 			const redirectUri = `${window.location.origin}`;
 			window.location.href = `${provider.authorize_url}?provider=${provider.name}&redirect_uri=${redirectUri}`;
@@ -81,7 +81,7 @@ const SignInSignUp = () => {
 				EVENTS_REGISTRY.CREDENTIALS_LOGIN_ATTEMPTED,
 			);
 			const [response, status_code] = await login(data);
-			console.log(response, status_code);
+			// console.log(response, status_code);
 
 			const authUserData = await authUserDetails();
 			localStorage.setItem('userDetails', JSON.stringify(authUserData));

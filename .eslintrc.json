@@ -1,0 +1,24 @@
+{
+	"extends": ["airbnb", "plugin:react/recommended", "plugin:prettier/recommended"],
+	"plugins": ["react", "prettier"],
+	"env": {
+		"browser": true,
+		"es2021": true
+	},
+	"parserOptions": {
+		"ecmaFeatures": {
+			"jsx": true
+		},
+		"ecmaVersion": "latest",
+		"sourceType": "module"
+	},
+	"rules": {
+		"prettier/prettier": "error",
+		"react/react-in-jsx-scope": "off" // not needed with React 17+
+	},
+	"settings": {
+		"react": {
+			"version": "detect"
+		}
+	}
+}

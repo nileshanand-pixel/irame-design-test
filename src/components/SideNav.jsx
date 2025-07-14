@@ -32,6 +32,7 @@ import { Hint } from './Hint';
 import Tag from './elements/Tag';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
+import { useSessionId } from '@/hooks/use-session-id';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -41,6 +42,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const [isEditing, setIsEditing] = useState(-1);
 	const [sessionTitle, setSessionTitle] = useState('');
 	const [expandedBusinessProcesses, setExpandedBusinessProcesses] = useState([]);
+	const sessionId = useSessionId();
 
 	const { pathname, navigate } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -62,7 +64,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const { data, isLoading } = useQuery({
 		queryKey: ['chat-history'],
 		queryFn: fetchUserSession,
-		refetchInterval: 10000
+		refetchInterval: 20000,
 	});
 
 	const { data: recentWorkflowRuns, isLoading: isBusinessLoading } = useQuery({
@@ -85,7 +87,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							EVENTS_ENUM.SIDE_BAR_BUSSINESS_PROCESS_CLICKED,
 							EVENTS_REGISTRY.SIDE_BAR_BUSSINESS_PROCESS_CLICKED,
 						);
-					}
+					},
 				},
 				{
 					link: '/app/dashboard?source=side_bar',
@@ -141,9 +143,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	};
 
 	const getChatHistory = (session) => {
+		if (sessionId === session.session_id) return;
 		dispatch(resetChatStore());
 		dispatch(updateUtilProp([{ key: 'selectedDataSource', value: {} }]));
-		navigate('/app/new-chat/session?source=side_bar');
+		navigate(
+			`/app/new-chat/session?sessionId=${session.session_id}&source=side_bar`,
+		);
 		dispatch(
 			updateChatStoreProp([
 				{
@@ -168,7 +173,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		);
 	};
 
-	const handleDeleteChatSession = async (e, sessionId, threadTypeForTracking, workflowIdForTracking) => {
+	const handleDeleteChatSession = async (
+		e,
+		sessionId,
+		threadTypeForTracking,
+		workflowIdForTracking,
+	) => {
 		e.stopPropagation();
 		try {
 			const updatedList = utilReducer?.sessionHistory.filter(
@@ -183,17 +193,17 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					type: threadTypeForTracking,
 					chat_session_id: sessionId,
 					workflow_id: workflowIdForTracking,
-				})
-			)
+				}),
+			);
 			dispatch(
 				updateUtilProp([{ key: 'sessionHistory', value: updatedList }]),
 			);
-		} catch (error) { }
+		} catch (error) {}
 	};
 
 	const askIra = (e) => {
 		if (e) e.preventDefault();
-		trackEvent(	
+		trackEvent(
 			EVENTS_ENUM.SIDE_BAR_ASK_IRA_CLICKED,
 			EVENTS_REGISTRY.SIDE_BAR_ASK_IRA_CLICKED,
 		);
@@ -232,7 +242,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const renderSession = (session) => {
 		const isActiveSession =
 			chatStoreReducer?.activeChatSession?.id === session.session_id;
-		let showSpinner =  session?.status !== 'done';
+		let showSpinner = session?.status !== 'done';
 		const sessionIconUrl = session?.metadata?.workflow_run_id
 			? 'https://d2vkmtgu2mxkyq.cloudfront.net/sidenav_workflow_icon.svg'
 			: 'https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg';
@@ -245,17 +255,17 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					isActiveSession ? 'bg-purple-10' : '',
 				)}
 				key={session.session_id}
-				onClick={() => {
+				onClick={(e) => {
 					trackEvent(
 						EVENTS_ENUM.SIDE_BAR_CHAT_THREAD_CLICKED,
 						EVENTS_REGISTRY.SIDE_BAR_CHAT_THREAD_CLICKED,
 						() => ({
-							type: "qna",
+							type: 'qna',
 							chat_session_id: session.session_id,
-						})
-					)
+						}),
+					);
 					if (isEditing === session.session_id) return;
-					
+					e.stopPropagation();
 					getChatHistory(session);
 				}}
 			>
@@ -298,7 +308,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						<DropdownMenuItem
 							className="text-primary80 font-medium hover:!bg-purple-2"
 							onClick={(e) =>
-								handleDeleteChatSession(e, session.session_id, "qna")
+								handleDeleteChatSession(e, session.session_id, 'qna')
 							}
 						>
 							<i className="bi-trash me-2 text-primary80 font-medium"></i>
@@ -378,11 +388,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						EVENTS_ENUM.SIDE_BAR_CHAT_THREAD_CLICKED,
 						EVENTS_REGISTRY.SIDE_BAR_CHAT_THREAD_CLICKED,
 						() => ({
-							type: "workflow",
+							type: 'workflow',
 							chat_session_id: workflow.session_id,
 							workflow_id: workflow.workflow_check_id,
-						})
-					)
+						}),
+					);
 					if (shouldOpenSession) {
 						resetAllStores();
 						dispatch(
@@ -435,7 +445,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							<DropdownMenuItem
 								className="text-primary80 font-medium hover:!bg-purple-2 focus:bg-purple-2"
 								onClick={(e) =>
-									handleDeleteChatSession(e, workflow.session_id, "workflow", workflow.workflow_check_id)
+									handleDeleteChatSession(
+										e,
+										workflow.session_id,
+										'workflow',
+										workflow.workflow_check_id,
+									)
 								}
 								disabled
 							>
@@ -492,8 +507,9 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	return (
 		<div
-			className={`fixed flex flex-col h-screen ${isSideNavOpen ? 'w-[270px] min-w-[270px]' : 'w-[72px] min-w-[72px]'
-				} border-r bg-purple-8`}
+			className={`fixed flex flex-col h-screen ${
+				isSideNavOpen ? 'w-[270px] min-w-[270px]' : 'w-[72px] min-w-[72px]'
+			} border-r bg-purple-8`}
 		>
 			{/* SideNav Expand Collapse | Hamburger */}
 			<div className="flex-none m-4">
@@ -516,10 +532,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					<Link
 						to={'/app/new-chat?source=side_bar'}
 						onClick={askIra}
-						className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${isSideNavOpen
+						className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
+							isSideNavOpen
 								? 'rounded-[200px] px-5 py-3'
 								: 'rounded-full px-2 mx-auto py-2'
-							} bg-purple-4`}
+						} bg-purple-4`}
 					>
 						<img
 							src="https://d2vkmtgu2mxkyq.cloudfront.net/plus.svg"
@@ -549,12 +566,14 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 										key={optionKey}
 										onClick={() => {
 											setActiveTab(option.link);
-											option?.trackingCall && option.trackingCall();
+											option?.trackingCall &&
+												option.trackingCall();
 										}}
-										className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-2 rounded-md hover:bg-purple-4 border-l-4 ${isActive
+										className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium p-2 rounded-md hover:bg-purple-4 border-l-4 ${
+											isActive
 												? ' border-purple-100 bg-purple-4 font-semibold text-purple-100 '
 												: ' border-transparent'
-											}`}
+										}`}
 									>
 										<img
 											src={option.icon}
@@ -599,8 +618,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 												item.type === 'session'
 													? renderSession(item.data)
 													: renderBusinessProcess(
-														item.data,
-													),
+															item.data,
+														),
 											)}
 										</div>
 									</div>
@@ -615,8 +634,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 												item.type === 'session'
 													? renderSession(item.data)
 													: renderBusinessProcess(
-														item.data,
-													),
+															item.data,
+														),
 											)}
 										</div>
 									</div>
@@ -631,8 +650,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 												item.type === 'session'
 													? renderSession(item.data)
 													: renderBusinessProcess(
-														item.data,
-													),
+															item.data,
+														),
 											)}
 										</div>
 									</div>
@@ -647,8 +666,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 												item.type === 'session'
 													? renderSession(item.data)
 													: renderBusinessProcess(
-														item.data,
-													),
+															item.data,
+														),
 											)}
 										</div>
 									</div>

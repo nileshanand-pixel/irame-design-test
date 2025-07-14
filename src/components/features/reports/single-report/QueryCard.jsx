@@ -18,9 +18,7 @@ import { QueryGraphs } from './QueryGraphs';
 import { useMutation } from '@tanstack/react-query';
 import { deleteReportCard } from '../service/reports.service';
 import { Loader2, Eye, Copy } from 'lucide-react';
-import {
-	getSupportedGraphs,
-} from '@/lib/utils';
+import { getSupportedGraphs } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
 import { toast } from 'sonner';
 import { RiskLevelDropdown } from './RiskLevelDropdown';
@@ -178,7 +176,9 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 									<ChartLineUp size={18} className="sm:size-20" />
 								</Button>
 							</Tooltip>
-							<Tooltip content={isDownloading ? "Downloading" : "Download"}>
+							<Tooltip
+								content={isDownloading ? 'Downloading' : 'Download'}
+							>
 								<Button
 									variant="ghost"
 									size="iconSm"
@@ -188,18 +188,23 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 											card?.data?.tables?.[0]?.csv_url;
 										if (!csvUrl || isDownloading) return;
 
-										const truncatedTitle = (card.title ?? 'Untitled').replace(/\s+/g, '_').slice(0, 20);
+										const truncatedTitle = (
+											card.title ?? 'Untitled'
+										)
+											.replace(/\s+/g, '_')
+											.slice(0, 20);
 										const fileName = `${report.name}_${truncatedTitle}_${card.query_id}.csv`;
 										downloadS3File(csvUrl, fileName);
 									}}
-								>	
-									{
-										isDownloading ? (
-											<CircularLoader size="sm" />
-										) : (
-											<BoxArrowDown size={18} className="sm:size-20" />
-										)
-									}
+								>
+									{isDownloading ? (
+										<CircularLoader size="sm" />
+									) : (
+										<BoxArrowDown
+											size={18}
+											className="sm:size-20"
+										/>
+									)}
 								</Button>
 							</Tooltip>
 							<div className="relative">

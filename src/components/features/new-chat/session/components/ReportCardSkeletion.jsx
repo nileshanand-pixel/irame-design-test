@@ -8,9 +8,12 @@ const renderReportCTASkeleton = () => (
 	</div>
 );
 
-function ReportCardSkeleton({count = 4}) {
+function ReportCardSkeleton({ count = 4 }) {
 	return Array.from({ length: count }).map((_, i) => (
-		<div key={i} className="w-full rounded-xl flex flex-col border gap-2 border-primary16 px-3 py-2">
+		<div
+			key={i}
+			className="w-full rounded-xl flex flex-col border gap-2 border-primary16 px-3 py-2"
+		>
 			<div className="flex justify-between items-center">
 				<Skeleton className="w-1/3 h-6 bg-purple-20 rounded-md" />
 				{renderReportCTASkeleton()}

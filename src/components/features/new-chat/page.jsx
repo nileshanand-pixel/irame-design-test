@@ -1,6 +1,6 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { welcomeTypography } from './config';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ConnectDataSource from './ConnectDataSource';
 import SelectPrompt from './SelectPromt';
 import AnalysisData from './AnalysisData';
@@ -39,6 +39,7 @@ const NewChat = () => {
 	const [promptQuery, setPromptQuery] = useState({ data: '' });
 	const [isGraphLoading, setIsGraphLoading] = useState(true);
 	const [errors, setErrors] = useState({});
+	const preChatScreenLoadedRef = useRef(false);
 
 	const gradientText = {
 		backgroundImage:
@@ -99,7 +100,9 @@ const NewChat = () => {
 			case 2:
 				return <AnalysisData />;
 			case 3:
-				return <SelectPrompt setPrompt={setPrompt} />;
+				return (
+					<SelectPrompt setPrompt={setPrompt} dataSources={dataSources} />
+				);
 			default:
 				return <div>Chat / Converse</div>;
 		}
@@ -130,7 +133,6 @@ const NewChat = () => {
 			if (mode === 'single' && prompt) payload.query = prompt;
 			if (mode !== 'single' && metadata) payload.metadata = metadata;
 
-			navigate(`/app/new-chat/session?source=chat_screen`);
 			dispatch(
 				updateChatStoreProp([
 					{ key: 'queries', value: [{ id: '', question: prompt }] },
@@ -139,6 +141,9 @@ const NewChat = () => {
 			);
 			createQuerySession(payload)
 				.then((res) => {
+					navigate(
+						`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen`,
+					);
 					dispatch(
 						updateChatStoreProp([
 							{
@@ -169,9 +174,10 @@ const NewChat = () => {
 						() => ({
 							dataset_id: query.dataSourceId,
 							dataset_name: utilReducer?.selectedDataSource?.name,
-							start_method: "manual_input",
+							start_method: 'manual_input',
 							chat_session_id: res?.session_id,
-						})
+							chat_session_type: 'new',
+						}),
 					);
 					trackEvent(
 						EVENTS_ENUM.CHAT_MESSAGE_SENT,
@@ -181,13 +187,13 @@ const NewChat = () => {
 							query_id: res?.query_id,
 							dataset_id: query.dataSourceId,
 							dataset_name: utilReducer?.selectedDataSource?.name,
-							message_type: "user",
-							message_source: "manual_input",
+							message_type: 'user',
+							message_source: 'manual_input',
 							message_text: prompt,
 							is_clarification: false,
 							message_number: 1,
 							first_message_in_chat: true,
-						})
+						}),
 					);
 					queryClient.invalidateQueries(['chat-history']);
 				})
@@ -246,25 +252,34 @@ const NewChat = () => {
 	};
 
 	useEffect(() => {
-		
 		fetchUserSession();
 	}, []);
 
 	useEffect(() => {
-		const { step, dataSourceId, source, sessionId } = query;
+		if (dataSources) {
+			const { dataSourceId, source } = query;
+			const currentDataSourceData = dataSources.filter(
+				(dataSource) => dataSource.datasource_id === dataSourceId,
+			)?.[0];
+			if (currentDataSourceData && !preChatScreenLoadedRef.current) {
+				trackEvent(
+					EVENTS_ENUM.PRE_CHAT_SCREEN_LOADED,
+					EVENTS_REGISTRY.PRE_CHAT_SCREEN_LOADED,
+					() => ({
+						dataset_id: dataSourceId,
+						dataset_name: currentDataSourceData?.name,
+						source: source || 'url',
+					}),
+				);
+				preChatScreenLoadedRef.current = true;
+			}
+		}
+	}, [dataSources, query]);
 
-		if(step && dataSourceId) {
-			trackEvent(
-				EVENTS_ENUM.CHAT_SCREEN_LOADED,
-				EVENTS_REGISTRY.CHAT_SCREEN_LOADED,
-				() => ({
-					dataset_id: dataSourceId,
-					dataset_name: utilReducer?.selectedDataSource?.name,
-					source: source || "url",
-					chat_session_id: sessionId,
-				})
-			);
-		} else {
+	useEffect(() => {
+		const { step, dataSourceId } = query;
+
+		if (!step || !dataSourceId) {
 			trackEvent(
 				EVENTS_ENUM.LANDING_PAGE_LOADED,
 				EVENTS_REGISTRY.LANDING_PAGE_LOADED,
@@ -287,13 +302,7 @@ const NewChat = () => {
 		return () => {
 			clearInterval(intervalId);
 		};
-	}, [
-		query?.step,
-		query?.queryId,
-		dispatch,
-
-		utilReducer?.promptQuery,
-	]);
+	}, [query?.step, query?.queryId, dispatch, utilReducer?.promptQuery]);
 
 	useEffect(() => {
 		setIsGraphLoading(true);
@@ -342,7 +351,7 @@ const NewChat = () => {
 							>{`${welcomeTypography?.headingLine1} ${value?.user_name}`}</h1>
 							<h2 className="text-5xl leading-[60px] font-semibold text-primary20">
 								{completedSteps.includes(2) ||
-									completedSteps.includes(3)
+								completedSteps.includes(3)
 									? welcomeTypography?.headingLine2_2
 									: welcomeTypography?.headingLine2}
 							</h2>
@@ -356,7 +365,7 @@ const NewChat = () => {
 													`h-2 w-14 rounded-3xl `,
 													showProgress(items),
 												].join(' ')}
-												onClick={() => { }}
+												onClick={() => {}}
 											></li>
 										</>
 									);

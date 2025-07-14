@@ -16,10 +16,9 @@ const TermsModal = () => {
 
 	const handleAgree = () => {
 		Cookies.set('termsAccepted', 'true', { expires: 365 });
-		trackEvent(
-			EVENTS_ENUM.TNC_ACCEPTED,
-			EVENTS_REGISTRY.TNC_ACCEPTED
-		)
+		trackEvent(EVENTS_ENUM.TNC_ACCEPTED, EVENTS_REGISTRY.TNC_ACCEPTED, () => ({
+			tnc_version: '1.0',
+		}));
 		setIsVisible(false);
 	};
 
@@ -38,9 +37,9 @@ const TermsModal = () => {
 						target="_blank"
 						className="text-blue-600 mx-1 underline"
 					>
-						Terms of Use 
+						Terms of Use
 					</a>
-					 and
+					and
 					<a
 						href="https://www.irame.ai/privacy-policy"
 						target="_blank"

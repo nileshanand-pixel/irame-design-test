@@ -28,7 +28,7 @@ export default function WorkflowPageV2() {
 	const [isValidationSuccessful, setIsValidationSuccessful] = useState(false);
 
 	// Data fetching
-	const { data: workflowDetails, isLoading: isWorkflowLoading } = useQuery({		
+	const { data: workflowDetails, isLoading: isWorkflowLoading } = useQuery({
 		queryKey: ['workflow-details', workflowId],
 		queryFn: () => getWorkflowDetails(workflowId),
 		enabled: Boolean(workflowId),
@@ -46,7 +46,9 @@ export default function WorkflowPageV2() {
 			queryClient.invalidateQueries(['workflow-runs', workflowId]);
 			queryClient.invalidateQueries(['workflow-run-details', runId]);
 			const data = await getWorkflowRunDetails(workflowId, runId);
-			navigate(`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow`);
+			navigate(
+				`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow`,
+			);
 		},
 		onError: (err) => {
 			console.error('Workflow run failed:', err);

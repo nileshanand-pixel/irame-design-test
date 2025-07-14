@@ -23,7 +23,7 @@ export function GraphCategoryFilter({ filterData, onChange }) {
 
 	useEffect(() => {
 		setSelectedValue(filterData?.options[0]?.value);
-	}, [filterData])
+	}, [filterData]);
 
 	return (
 		<Select value={selectedValue} onValueChange={handleChange}>
@@ -31,8 +31,8 @@ export function GraphCategoryFilter({ filterData, onChange }) {
 				<i className="font-extrabold text-2xl bi bi-filter"></i>
 				<SelectValue placeholder={filterData.placeholder} />
 			</SelectTrigger>
-			<SelectContent >
-				<SelectGroup className='text-[#26064A]'>
+			<SelectContent>
+				<SelectGroup className="text-[#26064A]">
 					<SelectLabel>{filterData.label}</SelectLabel>
 					<SelectItem value="none" disabled={!selectedValue}>
 						None (Remove filter)

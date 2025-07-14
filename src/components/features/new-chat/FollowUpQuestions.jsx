@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { queryClient } from '@/lib/react-query';
+import { sendChatSessionStartedEvent } from '@/utils/chat';
 
 const FollowUpQuestions = ({
 	question,
@@ -36,7 +37,7 @@ const FollowUpQuestions = ({
 					clicked_on: index + 1,
 				}),
 			);
-			
+
 			const tempCurrentQueries = [
 				...chatStoreReducer?.queries,
 				{ id: '', question: question, parentQueryId: answerResp?.query_id },
@@ -48,16 +49,13 @@ const FollowUpQuestions = ({
 					]),
 				);
 			dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]));
-			createQuery(
-				{
-					child_no: parseInt(answerResp.child_no) + 1,
-					datasource_id: answerResp?.datasource_id,
-					parent_query_id: answerResp?.query_id,
-					query: question,
-					session_id: answerResp?.session_id,
-				},
-
-			).then((res) => {
+			createQuery({
+				child_no: parseInt(answerResp.child_no) + 1,
+				datasource_id: answerResp?.datasource_id,
+				parent_query_id: answerResp?.query_id,
+				query: question,
+				session_id: answerResp?.session_id,
+			}).then((res) => {
 				const updatedQueries = tempCurrentQueries?.map((item) => {
 					if (item?.parentQueryId === answerResp?.query_id) {
 						return { id: res.query_id, question };
@@ -84,14 +82,22 @@ const FollowUpQuestions = ({
 						dataset_id: utilReducer?.selectedDataSource?.id,
 						dataset_name: utilReducer?.selectedDataSource?.name,
 						query_id: chatStoreReducer?.activeQueryId,
-						message_type: "user",
-						message_source: "follow_up",
+						message_type: 'user',
+						message_source: 'follow_up',
 						message_text: question,
 						is_clarification: false,
 						message_number: chatStoreReducer?.queries?.length * 2 + 1,
 						first_message_in_chat: false,
-					})
+					}),
 				);
+
+				sendChatSessionStartedEvent({
+					dataset_id: utilReducer?.selectedDataSource?.id,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					start_method: 'follow_up',
+					chat_session_id: query?.session_id,
+					chat_session_type: 'old',
+				});
 			});
 
 			setResponseTimeElapsed(0);

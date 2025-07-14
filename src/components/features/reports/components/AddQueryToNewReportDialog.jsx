@@ -104,9 +104,9 @@ const AddQueryToNewReportDialog = ({
 						label="Risk Category"
 						value={riskCategory}
 						onChange={setRiskCategory}
-						options={RISK_CATEGORIES.map(opt => ({
+						options={RISK_CATEGORIES.map((opt) => ({
 							...opt,
-							icon: opt.icon && <opt.icon className="size-5" />
+							icon: opt.icon && <opt.icon className="size-5" />,
 						}))}
 					/>
 

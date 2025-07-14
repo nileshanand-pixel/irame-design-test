@@ -5,7 +5,7 @@ export const getFreshdeskToken = async () => {
 		`/freshdesk/authenticate`,
 		{},
 		{
-			headers: { },
+			headers: {},
 		},
 	);
 

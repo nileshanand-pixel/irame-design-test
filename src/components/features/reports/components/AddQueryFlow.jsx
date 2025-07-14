@@ -7,7 +7,6 @@ import ChooseReportDialog from './ChooseReportDialog';
 import { use } from 'react';
 
 function AddQueryFlow({ isOpen, onClose }) {
-
 	const queryId = useSelector((state) => state.chatStoreReducer.activeQueryId);
 
 	const [addQueryOpen, setAddQueryOpen] = useState(false);

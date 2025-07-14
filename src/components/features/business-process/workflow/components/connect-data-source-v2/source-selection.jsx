@@ -99,7 +99,7 @@ export const SourceSelection = ({
 		if (!uploadedFiles.length) return;
 
 		const newFiles = uploadedFiles.map((file) => ({
-			id: file.id, // uuid from hook – source‑of‑truth
+			id: file.id,
 			name: uploadedMetadata[file.id]?.name || file.name,
 			file_url: uploadedMetadata[file.id]?.url || '',
 			type: labelForType(file.type).toLowerCase(),
@@ -332,17 +332,15 @@ export const SourceSelection = ({
        7. BUILD PAYLOAD (as per spec)
   --------------------------------------------------------------------- */
 	const buildPayload = () => {
-		const raw_files = availableFiles
-			.filter((f) => f.type === 'csv')
-			.map((f) => ({
-				file_id: f.id,
-				file_url: f.file_url,
-				file_name: f.name,
-				datasource_id: f.datasource_id,
-			}));
+		const raw_files = availableFiles.map((f) => ({
+			file_id: f.id,
+			file_url: f.file_url,
+			file_name: f.name,
+			datasource_id: f.datasource_id,
+		}));
 
 		const raw_excel_files = availableFiles
-			.filter((f) => ['xls', 'xlsx'].includes(f.type))
+			.filter((f) => ['xls', 'xlsx, xlsb, xlsm'].includes(f.type))
 			.map((f) => ({
 				file_id: f.id,
 				file_url: f.file_url,
@@ -359,10 +357,19 @@ export const SourceSelection = ({
 			}));
 		});
 
+		const mappedFileIds = new Set(
+			Object.values(csv_files)
+				.flat()
+				.map((f) => f.file_id),
+		);
+
+		const filteredRawFiles = raw_files.filter((f) =>
+			mappedFileIds.has(f.file_id),
+		);
+
 		return {
-			datasource_id: selectedDataSourceIds.length === 1 ? selectedDataSourceIds[0]: null,
 			datasource_payload: {
-				raw_files,
+				raw_files: filteredRawFiles,
 				raw_excel_files,
 			},
 			file_mapping: {
@@ -377,11 +384,7 @@ export const SourceSelection = ({
 	const mutation = useMutation({
 		mutationFn: ({ workflowId, payload }) =>
 			isPostRun
-				? restartWorkflowCheckV2(
-						workflowId,
-						workflowRunId,
-						payload,
-					)
+				? restartWorkflowCheckV2(workflowId, workflowRunId, payload)
 				: initiateWorkflowCheckV2(workflowId, payload),
 		onSuccess: (data) => {
 			toast.success(
@@ -408,7 +411,11 @@ export const SourceSelection = ({
 		}
 	}, [workflowRunDetails?.status]);
 
-	if (isValidating || mutation.isPending || (workflowRunId && !workflowRunDetails)) {
+	if (
+		isValidating ||
+		mutation.isPending ||
+		(workflowRunId && !workflowRunDetails)
+	) {
 		return (
 			<div className="p-6 relative h-60 top-1/2">
 				<div className="absolute  inset-0  flex items-center justify-center z-10">
@@ -544,6 +551,8 @@ const UploadPanel = ({ onUpload, isProcessingExcel }) => {
 				'.xlsx',
 			],
 			'application/vnd.ms-excel': ['.xls'],
+			'application/vnd.ms-excel.sheet.binary.macroEnabled.12': ['.xlsb'],
+			'application/vnd.ms-excel.sheet.macroEnabled.12': ['.xlsm'],
 		},
 		multiple: true,
 	});

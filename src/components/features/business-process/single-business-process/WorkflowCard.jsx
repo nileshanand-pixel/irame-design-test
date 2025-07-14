@@ -18,13 +18,13 @@ const WorkflowCard = ({ workflow }) => {
 	const handleCardClick = (externalId) => {
 		navigate(
 			`/app/business-process/${businessProcessId}/workflows/${externalId}`,
-		); 
+		);
 	};
 
 	return (
 		<Card
 			className={`mb-4 ${cardClass}  hover:bg-[#F9F6FD]/80 border-primary16/0 hover:border-primary16 border-[1.5px] cursor-pointer`}
-			onClick={() => handleCardClick(workflow.external_id)} 
+			onClick={() => handleCardClick(workflow.external_id)}
 		>
 			<CardContent className="p-4">
 				<div className="flex items-start gap-4">
@@ -35,7 +35,9 @@ const WorkflowCard = ({ workflow }) => {
 						<p className="text-base font-medium">
 							{upperFirst(workflow.name)}
 						</p>
-						<p className="mb-1 text-sm">{upperFirst(workflow.description)}</p>
+						<p className="mb-1 text-sm">
+							{upperFirst(workflow.description)}
+						</p>
 						<div className="flex gap-2">
 							{workflow.tags.map((tag, index) => (
 								<Badge

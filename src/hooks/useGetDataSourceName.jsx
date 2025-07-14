@@ -15,7 +15,7 @@ const useDataSourceName = (dataSourceId) => {
 		queryFn: fetchDataSources,
 		onSuccess: (data) => {
 			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
-		}
+		},
 	});
 
 	const dataSource = dataSources?.find(

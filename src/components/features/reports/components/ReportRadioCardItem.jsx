@@ -17,14 +17,21 @@ const formatDate = (dateString) => {
 	}
 };
 
-const ReportRadioCardItem = ({ id, value, title, description, date, isSelected }) => {
+const ReportRadioCardItem = ({
+	id,
+	value,
+	title,
+	description,
+	date,
+	isSelected,
+}) => {
 	return (
 		<Label
 			htmlFor={id}
 			className={cn(
 				'flex justify-start min-w-0 gap-4 p-4 border border-gray-200 rounded-xl cursor-pointer transition-all duration-150 ease-in-out',
 				' hover:bg-purple-4',
-				{ 'bg-purple-50': isSelected }
+				{ 'bg-purple-50': isSelected },
 			)}
 		>
 			<RadioGroupItem

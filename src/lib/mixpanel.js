@@ -1,4 +1,7 @@
-import { FIRST_EVENT_IN_USER_SESSION, USER_SESSION_ID } from '@/constants/session-manager.constant';
+import {
+	FIRST_EVENT_IN_USER_SESSION,
+	USER_SESSION_ID,
+} from '@/constants/session-manager.constant';
 import { getCookie } from '@/utils/cookies';
 import { getLocalStorage, removeFromLocalStorage } from '@/utils/local-storage';
 import mixpanel from 'mixpanel-browser';
@@ -17,14 +20,14 @@ export const initAnalytics = () => {
 	mixpanel.init(tokens[env], {
 		api_host: MIXPANEL_URL,
 		debug: env === 'local',
-		persistence: "localStorage",
+		persistence: 'localStorage',
 	});
 };
 
 export const trackEvent = (
 	eventName,
 	properties,
-	propertiesMapper = (params) => ({})
+	propertiesMapper = (params) => ({}),
 ) => {
 	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 
@@ -32,27 +35,33 @@ export const trackEvent = (
 
 	const mappedProperties = propertiesMapper(parameters || {});
 
-	const authUserDetails = JSON.parse(localStorage.getItem("userDetails"))
+	const authUserDetails = JSON.parse(localStorage.getItem('userDetails'));
 	const user_session_id = getCookie(USER_SESSION_ID);
 
-	const loggedInUserProperties = !!authUserDetails ? {
-		...authUserDetails,
-		user_session_id,
-	} : {};
+	const loggedInUserProperties = !!authUserDetails
+		? {
+				...authUserDetails,
+				enterprise_id: authUserDetails?.team_id,
+				enterprise_name: authUserDetails?.team_name,
+				user_session_id,
+			}
+		: {};
 
-	if(!!authUserDetails) {
-		const first_event_in_user_session = getLocalStorage(FIRST_EVENT_IN_USER_SESSION);
-		if(first_event_in_user_session) {
+	if (!!authUserDetails) {
+		const first_event_in_user_session = getLocalStorage(
+			FIRST_EVENT_IN_USER_SESSION,
+		);
+		if (first_event_in_user_session) {
 			loggedInUserProperties.first_event_in_user_session = true;
 			removeFromLocalStorage(FIRST_EVENT_IN_USER_SESSION);
-		}	
+		}
 	}
 
 	const finalProperties = {
 		...rest, //properties except parameters
 		...mappedProperties, // build event custom parameters
 		env,
-		...loggedInUserProperties
+		...loggedInUserProperties,
 	};
 
 	mixpanel.track(eventName, finalProperties);
@@ -62,15 +71,16 @@ export const trackUser = (userDetails) => {
 	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 	mixpanel.identify(userDetails.user_id);
 	mixpanel.people.set({
-		$name: userDetails.user_name,
-		$email: userDetails.email
+		user_id: userDetails.user_id,
+		enterprise_name: userDetails.team_name,
+		enterprise_id: userDetails.team_id,
 	});
-}
+};
 
 export const untrackUser = () => {
 	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 	mixpanel.reset();
-}
+};
 
 export const getErrorAnalyticsProps = (error) => {
 	const errorResponseData = error?.response?.data;
@@ -78,5 +88,5 @@ export const getErrorAnalyticsProps = (error) => {
 	return {
 		error_code: errorResponseData?.error_code || error.code,
 		error_desc: errorResponseData?.message || error.message,
-	}
-}
+	};
+};

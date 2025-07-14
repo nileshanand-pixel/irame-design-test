@@ -30,7 +30,6 @@ const GraphComponent = ({
 	const { query } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
 
-
 	const containerRef = useRef(null);
 	const [isOverflowing, setIsOverflowing] = useState(false);
 
@@ -102,10 +101,10 @@ const GraphComponent = ({
 				dataset_id: utilReducer?.selectedDataSource?.id,
 				dataset_name: utilReducer?.selectedDataSource?.name,
 				query_id: chatStoreReducer?.activeQueryId,
-				change_type: "sorting",
+				change_type: 'sorting',
 			}),
 		);
-	}
+	};
 
 	return (
 		<div className="mb-4">
@@ -126,26 +125,36 @@ const GraphComponent = ({
 									activeTab === item ? 'active-tab' : 'default-tab'
 								}`}
 								onClick={() => {
-									if(item === "Tabular View") {
+									if (item === 'Tabular View') {
 										trackEvent(
 											EVENTS_ENUM.TABULAR_VIEW_TAB_CLICKED,
 											EVENTS_REGISTRY.TABULAR_VIEW_TAB_CLICKED,
 											() => ({
 												chat_session_id: query?.sessionId,
-												dataset_id: utilReducer?.selectedDataSource?.id,
-												dataset_name: utilReducer?.selectedDataSource?.name,
-												query_id: chatStoreReducer?.activeQueryId,
+												dataset_id:
+													utilReducer?.selectedDataSource
+														?.id,
+												dataset_name:
+													utilReducer?.selectedDataSource
+														?.name,
+												query_id:
+													chatStoreReducer?.activeQueryId,
 											}),
 										);
-									} else if(item === "Graphical View") {
+									} else if (item === 'Graphical View') {
 										trackEvent(
 											EVENTS_ENUM.GRAPHICAL_VIEW_TAB_CLICKED,
 											EVENTS_REGISTRY.GRAPHICAL_VIEW_TAB_CLICKED,
 											() => ({
 												chat_session_id: query?.sessionId,
-												dataset_id: utilReducer?.selectedDataSource?.id,
-												dataset_name: utilReducer?.selectedDataSource?.name,
-												query_id: chatStoreReducer?.activeQueryId,
+												dataset_id:
+													utilReducer?.selectedDataSource
+														?.id,
+												dataset_name:
+													utilReducer?.selectedDataSource
+														?.name,
+												query_id:
+													chatStoreReducer?.activeQueryId,
 											}),
 										);
 									}
@@ -173,13 +182,20 @@ const GraphComponent = ({
 												EVENTS_ENUM.ANALYSIS_GRAPH_VARIANT_CLICKED,
 												EVENTS_REGISTRY.ANALYSIS_GRAPH_VARIANT_CLICKED,
 												() => ({
-													chat_session_id: query?.sessionId,
-													dataset_id: utilReducer?.selectedDataSource?.id,
-													dataset_name: utilReducer?.selectedDataSource?.name,
-													query_id: chatStoreReducer?.activeQueryId,
+													chat_session_id:
+														query?.sessionId,
+													dataset_id:
+														utilReducer
+															?.selectedDataSource?.id,
+													dataset_name:
+														utilReducer
+															?.selectedDataSource
+															?.name,
+													query_id:
+														chatStoreReducer?.activeQueryId,
 													graph_id: graph.id,
 													graph_name: graph.title,
-													graph_type: graph.type
+													graph_type: graph.type,
 												}),
 											);
 										}}

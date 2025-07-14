@@ -82,7 +82,9 @@ const PlannerComponent = ({
 				dataset_id: utilReducer?.selectedDataSource?.id,
 				dataset_name: utilReducer?.selectedDataSource?.name,
 				query_id: chatStoreReducer?.activeQueryId,
-				type_change: [...editRef.current.innerHTML.matchAll(/<b>(.*?)<\/b>/g)]?.[0]?.[1],
+				type_change: [
+					...editRef.current.innerHTML.matchAll(/<b>(.*?)<\/b>/g),
+				]?.[0]?.[1],
 			}),
 		);
 	};

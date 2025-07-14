@@ -24,7 +24,7 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 
 			const excelFiles = filesArr.filter((file) => {
 				const ext = file.name.split('.').pop()?.toLowerCase();
-				return ['xlsx', 'xls'].includes(ext);
+				return ['xlsx', 'xls', 'xlsb', 'xlsm'].includes(ext);
 			});
 			const csvFiles = filesArr.filter((file) => {
 				const ext = file.name.split('.').pop()?.toLowerCase();
@@ -168,7 +168,7 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 			setFiles((prev) =>
 				prev.map((f) => {
 					if (f.name === file.name) {
-						console.log({ file, f });
+						// console.log({ file, f });
 						const newF = Object.assign(f, {
 							status: 'ready',
 						});

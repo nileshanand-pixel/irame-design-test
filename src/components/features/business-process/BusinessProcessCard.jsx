@@ -63,7 +63,9 @@ const BusinessProcessCard = ({ process, onClick }) => {
 								<span className="material-symbols-outlined rotate-180 text-primary40 ">
 									reply
 								</span>
-								<span className='font-medium'>{upperFirst(workflow.name)}</span>
+								<span className="font-medium">
+									{upperFirst(workflow.name)}
+								</span>
 							</div>
 						))}
 					</div>

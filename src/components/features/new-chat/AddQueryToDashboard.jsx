@@ -54,9 +54,11 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 						query_id: chatStoreReducer?.activeQueryId,
 						dashboard_id: res?.dashboard_id,
 						dashboard_name: selectedDashboard?.title,
-						dashboard_type: newDashboardIds.includes(res?.dashboard_id) ? "new" : "old",
-					})
-				)
+						dashboard_type: newDashboardIds.includes(res?.dashboard_id)
+							? 'new'
+							: 'old',
+					}),
+				);
 				toast('Query added to dashboard successfully', {
 					duration: 5000,
 					action: (
@@ -65,14 +67,20 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 								navigate(
 									`/app/dashboard/content?id=${res?.dashboard_id}&name=${selectedDashboard?.title}`,
 								);
-								trackEvent(EVENTS_ENUM.VIEW_DASHBOARD_CLICKED, EVENTS_REGISTRY.VIEW_DASHBOARD_CLICKED, (() => ({
-									chat_session_id: query?.sessionId,
-									dataset_id: utilReducer?.selectedDataSource?.id,
-									dataset_name: utilReducer?.selectedDataSource?.name,
-									query_id: chatStoreReducer?.activeQueryId,
-									dashboard_id: res?.dashboard_id,
-									dashboard_name: selectedDashboard?.title,
-								})))
+								trackEvent(
+									EVENTS_ENUM.VIEW_DASHBOARD_CLICKED,
+									EVENTS_REGISTRY.VIEW_DASHBOARD_CLICKED,
+									() => ({
+										chat_session_id: query?.sessionId,
+										dataset_id:
+											utilReducer?.selectedDataSource?.id,
+										dataset_name:
+											utilReducer?.selectedDataSource?.name,
+										query_id: chatStoreReducer?.activeQueryId,
+										dashboard_id: res?.dashboard_id,
+										dashboard_name: selectedDashboard?.title,
+									}),
+								);
 							}}
 							className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 						>
@@ -110,7 +118,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 		}
 	}, [userDashboardQuery.data]);
 
-	console.log(filteredList, "filteredList");
+	// console.log(filteredList, "filteredList");
 	return (
 		<Dialog open={open} onOpenChange={closeModal}>
 			<DialogContent className="sm:max-w-[500px] ">
@@ -163,7 +171,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 									</div>
 								</div>
 								{selectedDashboard &&
-									selectedDashboard.dashboard_id ===
+								selectedDashboard.dashboard_id ===
 									dashboard.dashboard_id ? (
 									<Button variant="icon" size="sm" className="">
 										<span className="material-icons-outlined text-purple-100">

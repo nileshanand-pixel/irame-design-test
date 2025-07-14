@@ -19,12 +19,14 @@ const ExcelFileContent = ({
 	setWorkspaceHasChanges,
 	changeSets,
 	setChangesets,
+	setEditedFileNames,
+	editedFileNames,
 }) => {
 	const { query } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
-	return(
+	return (
 		<div className="flex flex-wrap gap-2 mt-4 rounded-lg py-2.5">
 			<MultiSelect
 				options={file?.columns?.map((column) => ({
@@ -34,17 +36,23 @@ const ExcelFileContent = ({
 				defaultValue={selectedColumns[file?.id]}
 				onValueChange={(newSelectedColumns) => {
 					if (editDisabled) return;
+					const newEditedFileNames = [...editedFileNames];
+					if (!newEditedFileNames.includes(file?.filename)) {
+						newEditedFileNames.push(file?.filename);
+					}
+					setEditedFileNames(newEditedFileNames);
+
 					trackEvent(
 						EVENTS_ENUM.REFERENCE_EDITED,
 						EVENTS_REGISTRY.REFERENCE_EDITED,
 						() => ({
-							edited_file_names: newSelectedColumns,
+							edited_file_names: newEditedFileNames,
 							chat_session_id: query?.sessionId,
 							dataset_id: utilReducer?.selectedDataSource?.id,
 							dataset_name: utilReducer?.selectedDataSource?.name,
-							query_id: chatStoreReducer?.activeQueryId
-						})
-					)
+							query_id: chatStoreReducer?.activeQueryId,
+						}),
+					);
 					setWorkspaceHasChanges(true);
 					setChangesets({
 						...changeSets,
@@ -56,7 +64,7 @@ const ExcelFileContent = ({
 			/>
 		</div>
 	);
-}
+};
 
 const PDFFileContent = ({ file, toolData, onViewPDF }) => {
 	const usedPages = toolData[file.id]?.bounding_boxes
@@ -85,6 +93,7 @@ const SourceComponent = ({
 	const [selectedPDF, setSelectedPDF] = useState(null);
 	const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
 	const [usedPages, setUsedPages] = useState([]);
+	const [editedFileNames, setEditedFileNames] = useState([]);
 
 	const {
 		changeSets,
@@ -185,6 +194,8 @@ const SourceComponent = ({
 								setWorkspaceHasChanges={setWorkspaceHasChanges}
 								changeSets={changeSets}
 								setChangesets={setChangesets}
+								setEditedFileNames={setEditedFileNames}
+								editedFileNames={editedFileNames}
 							/>
 						)}
 					</div>

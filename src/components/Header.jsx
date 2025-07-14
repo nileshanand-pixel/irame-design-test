@@ -57,8 +57,10 @@ const Header = () => {
 		utilReducer?.selectedDataSource?.name && pathname.includes('/new-chat');
 
 	const openReportGenerateModal = () => {
-		dispatch(updateUtilProp([{ key: 'isGenerateReportModalOpen', value: true }]))
-	}
+		dispatch(
+			updateUtilProp([{ key: 'isGenerateReportModalOpen', value: true }]),
+		);
+	};
 
 	const renderGenerateSessionReport = () => {
 		const validPath = pathname.includes('session');
@@ -67,9 +69,14 @@ const Header = () => {
 		let uiContent = '';
 		if (enabled) {
 			uiContent = (
-				<div className={`flex gap-1 mb-4 p-2  items-center rounded-lg ${enabled ? 'cursor-pointer bg-purple-10 text-primary80' : 'bg-gray-1 text-primary40'}`} onClick={() => enabled && openReportGenerateModal()} >
+				<div
+					className={`flex gap-1 mb-4 p-2  items-center rounded-lg ${enabled ? 'cursor-pointer bg-purple-10 text-primary80' : 'bg-gray-1 text-primary40'}`}
+					onClick={() => enabled && openReportGenerateModal()}
+				>
 					<span className="material-symbols-outlined">description</span>
-					<span className='text-sm font-medium'>Generate Session Report</span>
+					<span className="text-sm font-medium">
+						Generate Session Report
+					</span>
 				</div>
 			);
 		}
@@ -77,32 +84,32 @@ const Header = () => {
 	};
 
 	const menuItems = [
-		{  
+		{
 			title: (
 				<>
-					<RocketIcon width={16} height={16} className='mr-2'/>
+					<RocketIcon width={16} height={16} className="mr-2" />
 					Get Started
 				</>
-			), 
-			link: "https://irame.ai",
+			),
+			link: 'https://irame.ai',
 		},
 		{
 			title: (
 				<>
-					<ReaderIcon width={16} height={16} className='mr-2'/>
+					<ReaderIcon width={16} height={16} className="mr-2" />
 					Terms of Use
 				</>
 			),
-			link: "https://www.irame.ai/terms-of-use",
+			link: 'https://www.irame.ai/terms-of-use',
 		},
 		{
 			title: (
 				<>
-					<LockClosedIcon width={16} height={16} className='mr-2'/>
+					<LockClosedIcon width={16} height={16} className="mr-2" />
 					Privacy Policy
 				</>
 			),
-			link: "https://www.irame.ai/privacy-policy"
+			link: 'https://www.irame.ai/privacy-policy',
 		},
 		{
 			title: (
@@ -115,26 +122,26 @@ const Header = () => {
 				try {
 					trackEvent(
 						EVENTS_ENUM.LOGOUT_CLICKED,
-						EVENTS_REGISTRY.LOGOUT_CLICKED
-					)
+						EVENTS_REGISTRY.LOGOUT_CLICKED,
+					);
 					await fullLogout();
 					setValue({});
 					trackEvent(
 						EVENTS_ENUM.LOGOUT_SUCCESSFUL,
-						EVENTS_REGISTRY.LOGOUT_SUCCESSFUL
-					)
-				} catch(error){
+						EVENTS_REGISTRY.LOGOUT_SUCCESSFUL,
+					);
+				} catch (error) {
 					trackEvent(
 						EVENTS_ENUM.LOGOUT_FAILED,
 						EVENTS_REGISTRY.LOGOUT_FAILED,
 						() => ({
-							...getErrorAnalyticsProps(error)
-						})
-					)
+							...getErrorAnalyticsProps(error),
+						}),
+					);
 				}
-			}
-		}
-	]
+			},
+		},
+	];
 	return (
 		<header
 			className={cn(
@@ -142,7 +149,7 @@ const Header = () => {
 				pathname.includes('/dashboard') ? 'bg-gray-muted' : 'bg-white',
 			)}
 		>
-			<div className='flex gap-6'>
+			<div className="flex gap-6">
 				{showDataSourceName ? (
 					<div className="mb-4 flex gap-2 items-center rounded-lg px-3 py-2 bg-purple-10 text-primary80 text-sm font-medium w-fit truncate">
 						<img
@@ -172,22 +179,20 @@ const Header = () => {
 					</DropdownMenuTrigger>
 					<DropdownMenuContent className="w-46 mr-5">
 						<DropdownMenuGroup>
-							{
-								menuItems?.map((item, index) => (
-									<DropdownMenuItem
-										key={index}
-										className="text-primary100 text-sm"
-										onClick={() => {
-											if(item.link) {
-												window.open(item.link, '_blank')
-											}
-											item?.onClick?.();
-										}}
-									>
-										{item.title}
-									</DropdownMenuItem>
-								))
-							}							
+							{menuItems?.map((item, index) => (
+								<DropdownMenuItem
+									key={index}
+									className="text-primary100 text-sm"
+									onClick={() => {
+										if (item.link) {
+											window.open(item.link, '_blank');
+										}
+										item?.onClick?.();
+									}}
+								>
+									{item.title}
+								</DropdownMenuItem>
+							))}
 						</DropdownMenuGroup>
 					</DropdownMenuContent>
 				</DropdownMenu>

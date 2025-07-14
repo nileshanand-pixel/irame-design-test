@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 import ActivityTrail from '../components/activity-trail';
 import ReportComments from '../components/report-comments';
 
-
 const SingleReportPage = () => {
 	const reportId = useReportId();
 	if (!reportId) return null;
@@ -37,14 +36,14 @@ const SingleReportPage = () => {
 				axiosClientV1.post(
 					`/files/convert/url`,
 					{
-						url: coverUrl
+						url: coverUrl,
 					},
 					{ headers: { 'Content-Type': 'application/json' } },
 				),
 				axiosClientV1.post(
 					`/files/convert/url`,
 					{
-						url: contentUrl
+						url: contentUrl,
 					},
 					{ headers: { 'Content-Type': 'application/json' } },
 				),
@@ -101,11 +100,9 @@ const SingleReportPage = () => {
 					<ReportSummary />
 					<QueryList reportDetails={reportDetails} />
 					<ActivityTrail />
-					
+
 					<div className="mt-12">
-						<ReportComments 
-							reportId={reportId}
-						/>
+						<ReportComments reportId={reportId} />
 					</div>
 				</div>
 			</div>

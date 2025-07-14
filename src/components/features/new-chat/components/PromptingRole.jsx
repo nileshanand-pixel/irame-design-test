@@ -10,8 +10,6 @@ import {
 
 import { rolesConfig } from '@/config/enhance-prompt';
 
-
-
 function PromptingRole() {
 	const [selectedRole, setSelectedRole] = useState('');
 	const [hoveredRole, setHoveredRole] = useState(null);
@@ -31,7 +29,8 @@ function PromptingRole() {
 	const shownDescription =
 		hoveredRole && rolesConfig[hoveredRole]?.enabled
 			? rolesConfig[hoveredRole].description
-			: rolesConfig[selectedRole]?.description || 'Choose a role to enhance your prompt';
+			: rolesConfig[selectedRole]?.description ||
+				'Choose a role to enhance your prompt';
 
 	return (
 		<DropdownMenu>

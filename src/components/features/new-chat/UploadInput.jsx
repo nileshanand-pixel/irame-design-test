@@ -37,17 +37,19 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 				dataset_name: data?.name,
 				total_shown: filteredList.length,
 				clicked_on: clickedOn,
-			})
+			}),
 		);
 		dispatch(
-					updateUtilProp([
-						{
-							key: 'selectedDataSource',
-							value: { id: data.datasource_id, name: data.name },
-						},
-					]),
-				);
-		navigate(`/app/new-chat/?step=3&dataSourceId=${data?.datasource_id}&source=homepage`);
+			updateUtilProp([
+				{
+					key: 'selectedDataSource',
+					value: { id: data.datasource_id, name: data.name },
+				},
+			]),
+		);
+		navigate(
+			`/app/new-chat/?step=3&dataSourceId=${data?.datasource_id}&source=homepage`,
+		);
 		handleNextStep(2);
 		handleNextStep(3);
 	};
@@ -59,7 +61,10 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 
 	const handleConnectDataSource = (e) => {
 		e.stopPropagation();
-		trackEvent(EVENTS_ENUM.CONNECT_DATA_SOURCE_CLICKED, EVENTS_REGISTRY.CONNECT_DATA_SOURCE_CLICKED)
+		trackEvent(
+			EVENTS_ENUM.CONNECT_DATA_SOURCE_CLICKED,
+			EVENTS_REGISTRY.CONNECT_DATA_SOURCE_CLICKED,
+		);
 		navigate('/app/configuration?source=qna');
 	};
 
@@ -85,9 +90,10 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 						className="w-full hover:bg-purple-8 border-purple-8 text-purple-100 font-medium hover:text-purple-100"
 						onClick={(e) => {
 							trackEvent(
-								EVENTS_ENUM.SELECT_FROM_LIBRARY_CLICKED, EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CLICKED
+								EVENTS_ENUM.SELECT_FROM_LIBRARY_CLICKED,
+								EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CLICKED,
 							);
-							handleSelectFromLibrary(e)
+							handleSelectFromLibrary(e);
 						}}
 					>
 						{welcomeTypography?.btn2Text}

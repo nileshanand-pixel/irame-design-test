@@ -24,7 +24,6 @@ export const formatFileSize = (size) => {
 	}
 };
 
-
 export const getRefreshToken = () => {
 	const token = Cookies.get('refresh_token');
 	return token;
@@ -82,13 +81,13 @@ export const getFileIcon = (fileName) => {
 			return xlsIcon;
 		case 'pdf':
 			return pdfIcon;
-		case "jpeg":
-		case "jpg": 
-		case "gif": 
-		case "png": 
-		case "webp":
-		case "svg":
-		case "bmp": 
+		case 'jpeg':
+		case 'jpg':
+		case 'gif':
+		case 'png':
+		case 'webp':
+		case 'svg':
+		case 'bmp':
 			return imageIcon;
 		default:
 			return xlsIcon;
@@ -103,7 +102,6 @@ export const getPdfPageCount = async (url) => {
 		console.error('Error fetching PDF page count:', error);
 		return 0; // Fallback in case of an error
 	}
-
 };
 
 export const base64ToBlob = (base64, mimeType) => {
@@ -135,4 +133,4 @@ export const getSupportedGraphs = (graphList = []) => {
 export const getChartType = (graph) => {
 	if (!graph && !graph?.type) return;
 	return graph.type.includes('polarArea') ? 'polarArea' : graph.type.toLowerCase();
-}
+};

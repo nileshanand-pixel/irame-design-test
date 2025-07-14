@@ -18,7 +18,9 @@ import { queryClient } from '@/lib/react-query';
 import QueueStatus from '../QueueStatus';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { WorkspaceEditProvider } from '../components/WorkspaceEditProvider';
-import CHAT_CONSTANTS from '@/constants/chat.constant';
+import CHAT_CONSTANTS, {
+	CHAT_SESSION_STARTED_EVENT_DATA_KEY,
+} from '@/constants/chat.constant';
 import QueryDisplay from './components/QueryDisplay';
 import Clarification from '../Clarification';
 import { WorkspaceEnum } from '../types/new-chat.enum';
@@ -27,6 +29,8 @@ import ReportGenerationDialog from './components/ReportGenerationDialog';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
 import AddQueryFlow from '../../reports/components/AddQueryFlow';
+import { getLocalStorage, setLocalStorage } from '@/utils/local-storage';
+import { sendChatSessionStartedEvent } from '@/utils/chat';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -34,6 +38,7 @@ const Workzone = () => {
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const dispatch = useDispatch();
 	const { pathname, navigate, query } = useRouter();
+	const chatScreenLoadedRef = useRef(false);
 
 	const intervalRef = useRef();
 	const scrollRef = useRef(null);
@@ -82,7 +87,7 @@ const Workzone = () => {
 	};
 
 	const handleTabClick = (tab) => {
-		if(tab === "planner") {
+		if (tab === 'planner') {
 			trackEvent(
 				EVENTS_ENUM.PLANNER_TAB_CLICKED,
 				EVENTS_REGISTRY.PLANNER_TAB_CLICKED,
@@ -90,10 +95,10 @@ const Workzone = () => {
 					chat_session_id: query?.sessionId,
 					dataset_id: utilReducer?.selectedDataSource?.id,
 					dataset_name: utilReducer?.selectedDataSource?.name,
-					query_id: chatStoreReducer?.activeQueryId
-				})
-			)
-		} else if(tab === "reference") {
+					query_id: chatStoreReducer?.activeQueryId,
+				}),
+			);
+		} else if (tab === 'reference') {
 			trackEvent(
 				EVENTS_ENUM.REFERENCE_TAB_CLICKED,
 				EVENTS_REGISTRY.REFERENCE_TAB_CLICKED,
@@ -101,10 +106,10 @@ const Workzone = () => {
 					chat_session_id: query?.sessionId,
 					dataset_id: utilReducer?.selectedDataSource?.id,
 					dataset_name: utilReducer?.selectedDataSource?.name,
-					query_id: chatStoreReducer?.activeQueryId
-				})
-			)
-		} else if(tab === "coder") {
+					query_id: chatStoreReducer?.activeQueryId,
+				}),
+			);
+		} else if (tab === 'coder') {
 			trackEvent(
 				EVENTS_ENUM.CODER_TAB_CLICKED,
 				EVENTS_REGISTRY.CODER_TAB_CLICKED,
@@ -112,9 +117,9 @@ const Workzone = () => {
 					chat_session_id: query?.sessionId,
 					dataset_id: utilReducer?.selectedDataSource?.id,
 					dataset_name: utilReducer?.selectedDataSource?.name,
-					query_id: chatStoreReducer?.activeQueryId
-				})
-			)
+					query_id: chatStoreReducer?.activeQueryId,
+				}),
+			);
 		}
 		setWorkspace((prevState) => ({
 			...prevState,
@@ -170,9 +175,12 @@ const Workzone = () => {
 				}));
 
 				const lastQueryPreviousAnswer = answers[answers.length - 1];
-				if(lastQueryPreviousAnswer && lastQueryPreviousAnswer?.status === "in_progress") {
+				if (
+					lastQueryPreviousAnswer &&
+					lastQueryPreviousAnswer?.status === 'in_progress'
+				) {
 					const lastQueryCurrentAnswer = res[res.length - 1];
-					if(lastQueryCurrentAnswer?.status === "done") {
+					if (lastQueryCurrentAnswer?.status === 'done') {
 						trackEvent(
 							EVENTS_ENUM.CHAT_MESSAGE_SENT,
 							EVENTS_REGISTRY.CHAT_MESSAGE_SENT,
@@ -181,17 +189,20 @@ const Workzone = () => {
 								query_id: lastQueryCurrentAnswer?.query_id,
 								dataset_id: lastQueryCurrentAnswer.dataSourceId,
 								dataset_name: resp?.datasource_name,
-								message_type: "ai",
-								message_source: "",
-								message_text: lastQueryCurrentAnswer?.answer?.clarification?.tool_data?.text,
-								is_clarification: !!lastQueryCurrentAnswer?.answer?.clarification,
+								message_type: 'ai',
+								message_source: '',
+								message_text:
+									lastQueryCurrentAnswer?.answer?.clarification
+										?.tool_data?.text,
+								is_clarification:
+									!!lastQueryCurrentAnswer?.answer?.clarification,
 								message_number: res.length * 2,
 								first_message_in_chat: false,
-							})
+							}),
 						);
 					}
 				}
-				
+
 				dispatch(
 					updateChatStoreProp([
 						{ key: 'queries', value: [...tempQueries] },
@@ -388,14 +399,21 @@ const Workzone = () => {
 						query_id: res?.query_id,
 						dataset_id: query.dataSourceId,
 						dataset_name: utilReducer?.selectedDataSource?.name,
-						message_type: "user",
-						message_source: "manual_input",
+						message_type: 'user',
+						message_source: 'manual_input',
 						message_text: prompt,
 						is_clarification: false,
 						message_number: 2 * answers.length + 1,
 						first_message_in_chat: false,
-					})
+					}),
 				);
+				sendChatSessionStartedEvent({
+					dataset_id: query.dataSourceId,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					start_method: 'manual_input',
+					chat_session_id: res?.session_id,
+					chat_session_type: 'old',
+				});
 				queryClient.invalidateQueries(['chat-history']);
 			});
 
@@ -425,25 +443,21 @@ const Workzone = () => {
 			dispatch(
 				updateChatStoreProp([{ key: 'queries', value: tempCurrentQueries }]),
 			);
-			createQuery(
-				{
-					child_no: parseInt(answer.child_no) + 1,
-					datasource_id: answer?.datasource_id,
-					parent_query_id: answer?.query_id,
-					query: tempPrompt,
-					session_id: answer?.session_id,
-					workspace_changes: workspaceChanges.apiConfig,
-					metadata: {
-						queries: answer?.metadata?.queries
-							.filter((query) => query?.text?.length > 0)
-							.map((item) => ({ query: item?.text })),
-						saved_query_reference:
-							answer?.metadata?.saved_query_reference,
-					},
-					type: answer?.type,
+			createQuery({
+				child_no: parseInt(answer.child_no) + 1,
+				datasource_id: answer?.datasource_id,
+				parent_query_id: answer?.query_id,
+				query: tempPrompt,
+				session_id: answer?.session_id,
+				workspace_changes: workspaceChanges.apiConfig,
+				metadata: {
+					queries: answer?.metadata?.queries
+						.filter((query) => query?.text?.length > 0)
+						.map((item) => ({ query: item?.text })),
+					saved_query_reference: answer?.metadata?.saved_query_reference,
 				},
-
-			).then((res) => {
+				type: answer?.type,
+			}).then((res) => {
 				const updatedQueries = tempCurrentQueries?.map((item) => {
 					if (item?.parentQueryId === res?.query_id) {
 						return { id: res.query_id, question: tempPrompt };
@@ -474,14 +488,22 @@ const Workzone = () => {
 						dataset_id: utilReducer?.selectedDataSource?.id,
 						dataset_name: utilReducer?.selectedDataSource?.name,
 						query_id: chatStoreReducer?.activeQueryId,
-						message_type: "user",
-						message_source: "regenerate_from_edit",
+						message_type: 'user',
+						message_source: 'regenerate_from_edit',
 						message_text: tempPrompt,
 						is_clarification: false,
 						message_number: chatStoreReducer?.queries?.length * 2 + 1,
 						first_message_in_chat: false,
-					})
+					}),
 				);
+				sendChatSessionStartedEvent({
+					dataset_id: utilReducer?.selectedDataSource?.id,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					start_method: 'regenerate_from_edit',
+					chat_session_id: query?.session_id,
+					chat_session_type: 'old',
+				});
+
 				queryClient.invalidateQueries(['chat-history']);
 			});
 
@@ -598,7 +620,7 @@ const Workzone = () => {
 								/>
 								{(workspace.show &&
 									chatStoreReducer?.activeQueryId === query?.id) ||
-									!chatStoreReducer?.activeQueryId
+								!chatStoreReducer?.activeQueryId
 									? 'Hide'
 									: 'Show'}{' '}
 								Workspace
@@ -759,7 +781,7 @@ const Workzone = () => {
 		}
 	}, [query]);
 
-	useEffect(() => { }, [utilReducer?.isGenerateReportModalOpen]);
+	useEffect(() => {}, [utilReducer?.isGenerateReportModalOpen]);
 
 	const showWorkSpace = () => {
 		const markerAnswer =
@@ -778,26 +800,71 @@ const Workzone = () => {
 		savedQueries: { enabled: true },
 	};
 
-	useEffect(() => {
-		const { sessionId, source } = query;
-		trackEvent(
-			EVENTS_ENUM.CHAT_SCREEN_LOADED,
-			EVENTS_REGISTRY.CHAT_SCREEN_LOADED,
-			() => ({
-				chat_session_id: sessionId,
-				dataset_id: utilReducer?.selectedDataSource?.id,
-				dataset_name: utilReducer?.selectedDataSource?.name,
-				source: source || "url",
-			})
-		);
-	}, [query]);
+	const newChatSources = ['pre_chat_screen'];
+
+	const getSessionType = (source) => {
+		if (newChatSources.includes(source)) {
+			return 'new';
+		} else {
+			return 'old';
+		}
+	};
 
 	useEffect(() => {
-		if(!dashboard?.showAdd) {
+		const { sessionId, source } = query;
+		if (
+			sessionId &&
+			utilReducer?.selectedDataSource?.id &&
+			utilReducer?.selectedDataSource?.name &&
+			!chatScreenLoadedRef?.current
+		) {
+			trackEvent(
+				EVENTS_ENUM.CHAT_SCREEN_LOADED,
+				EVENTS_REGISTRY.CHAT_SCREEN_LOADED,
+				() => ({
+					chat_session_id: sessionId,
+					dataset_id: utilReducer?.selectedDataSource?.id,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					source: source || 'url',
+					chat_session_type: getSessionType(source),
+				}),
+			);
+			chatScreenLoadedRef.current = true;
+		}
+	}, [query, utilReducer]);
+
+	useEffect(() => {
+		if (!dashboard?.showAdd) {
 			setNewDashboardIds([]);
 		}
 	}, [dashboard?.showAdd]);
-	
+
+	useEffect(() => {
+		const { sessionId, source } = query;
+		if (sessionId) {
+			const prevChatSessionStartedEventData = getLocalStorage(
+				CHAT_SESSION_STARTED_EVENT_DATA_KEY,
+			);
+			if (
+				prevChatSessionStartedEventData &&
+				prevChatSessionStartedEventData.sessionId === sessionId
+			) {
+				return;
+			}
+			const chatSessionStartedEventData = {
+				sessionId,
+				isEventSent: false,
+			};
+			if (newChatSources.includes(source)) {
+				chatSessionStartedEventData.isEventSent = true;
+			}
+			setLocalStorage(
+				CHAT_SESSION_STARTED_EVENT_DATA_KEY,
+				chatSessionStartedEventData,
+			);
+		}
+	}, [query]);
+
 	return (
 		<div
 			className="grid grid-cols-12 gap-4 px-8 h-[90vh] w-full overflow-hidden"

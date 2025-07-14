@@ -58,7 +58,7 @@ export function DataTable({
 	setRowSelection,
 	FloatingBarContent,
 	selectedRow,
-	onSortingChange
+	onSortingChange,
 }) {
 	const { table } = useDataTable({
 		data,
@@ -73,9 +73,9 @@ export function DataTable({
 		rowSelection,
 		setRowSelection,
 		defaultSort,
-		onSortingChange
+		onSortingChange,
 	});
-	
+
 	return (
 		<div className="w-full space-y-2.5 overflow-auto">
 			<div className="text-primary100">
@@ -90,7 +90,7 @@ export function DataTable({
 											: flexRender(
 													header.column.columnDef.header,
 													header.getContext(),
-											  )}
+												)}
 									</TableHead>
 								))}
 							</TableRow>

@@ -85,7 +85,7 @@ const LoginForm = ({ onContinue, team }) => {
 					<input
 						required
 						id="password"
-						autoComplete='off'
+						autoComplete="off"
 						type={showPassword ? 'text' : 'password'}
 						{...register('password', { required: true })}
 						className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"

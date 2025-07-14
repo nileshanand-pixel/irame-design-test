@@ -22,15 +22,15 @@ const CoderComponent = ({ data }) => {
 					chat_session_id: query?.sessionId,
 					dataset_id: utilReducer?.selectedDataSource?.id,
 					dataset_name: utilReducer?.selectedDataSource?.name,
-					query_id: chatStoreReducer?.activeQueryId
-				})
-			)
+					query_id: chatStoreReducer?.activeQueryId,
+				}),
+			);
 		}
 
 		editor.onKeyDown(handleEdit);
 		editor.onDidPaste(handleEdit);
 	};
-	
+
 	return (
 		<div>
 			<Editor
@@ -39,7 +39,7 @@ const CoderComponent = ({ data }) => {
 				defaultLanguage="python"
 				defaultValue={data || '# no data'}
 				className="[&>.monaco-editor]:rounded-2xl bg-primary40"
-				options={{readOnly: true, readOnlyMessage: { value: 'Read Only' }}}
+				options={{ readOnly: true, readOnlyMessage: { value: 'Read Only' } }}
 				onMount={handleEditorDidMount}
 			/>
 		</div>

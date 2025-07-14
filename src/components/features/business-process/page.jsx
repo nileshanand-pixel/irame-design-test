@@ -66,7 +66,7 @@ const BusinessProcessPage = () => {
 		reactionText: 'your processes will appear here...',
 		ctaText: 'Create New Process',
 		ctaDisabled: true,
-		ctaClickHandler: () => { },
+		ctaClickHandler: () => {},
 		comingSoonText: 'Custom process creation coming soon...',
 	};
 

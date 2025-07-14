@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import DividerWithText from '@/components/elements/DividerWithText';
 import PropTypes from 'prop-types';
-import { getDataSources } from '@/components/features/configuration/service/configuration.service'; 
+import { getDataSources } from '@/components/features/configuration/service/configuration.service';
 import Spinner from '@/components/elements/loading/Spinner';
 import UploadDataSourceModal from './UploadDataSourceModal';
 import { set } from 'react-hook-form';

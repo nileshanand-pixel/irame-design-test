@@ -23,7 +23,6 @@ const CreateDashboardDialog = ({
 	isLoading,
 }) => {
 	const closeModal = () => {
-
 		setOpen(false);
 	};
 	return (
@@ -48,13 +47,13 @@ const CreateDashboardDialog = ({
 					/>
 				</div>
 				<DialogFooter className="flex justify-between w-full">
-					<Button 
-						variant="outline" 
+					<Button
+						variant="outline"
 						onClick={() => {
 							trackEvent(
 								EVENTS_ENUM.DASHBOARD_CREATE_NEW_CANCEL_CLICKED,
-								EVENTS_REGISTRY.DASHBOARD_CREATE_NEW_CANCEL_CLICKED
-							)
+								EVENTS_REGISTRY.DASHBOARD_CREATE_NEW_CANCEL_CLICKED,
+							);
 							closeModal();
 						}}
 					>

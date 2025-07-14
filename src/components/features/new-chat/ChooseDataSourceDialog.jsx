@@ -37,7 +37,7 @@ const ChooseDataSourceDialog = ({
 
 	const handleSelect = () => {
 		if (!selectedDataSource) return;
-		
+
 		const selectedDataSourceIndex = data?.findIndex(
 			(item) => item.datasource_id === selectedDataSource,
 		);
@@ -50,10 +50,12 @@ const ChooseDataSourceDialog = ({
 				total_datasets_shown: dataSources.length,
 				clicked_on: selectedDataSourceIndex + 1,
 				dataset_id: selectedDataSource,
-				dataset_name: selectedDataSourceData?.name
+				dataset_name: selectedDataSourceData?.name,
 			}),
 		);
-		navigate(`/app/new-chat/?step=3&dataSourceId=${selectedDataSource}&source=homepage`);
+		navigate(
+			`/app/new-chat/?step=3&dataSourceId=${selectedDataSource}&source=homepage`,
+		);
 		handleNextStep(3);
 		setOpen(false);
 	};
@@ -97,10 +99,10 @@ const ChooseDataSourceDialog = ({
 	}, [data]);
 
 	return (
-		<Dialog 
-			open={open} 
+		<Dialog
+			open={open}
 			onOpenChange={(value) => {
-				if(!value) {
+				if (!value) {
 					trackEvent(
 						EVENTS_ENUM.SELECT_FROM_LIBRARY_CROSS_CLICKED,
 						EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CROSS_CLICKED,
@@ -189,7 +191,7 @@ const ChooseDataSourceDialog = ({
 								EVENTS_ENUM.SELECT_FROM_LIBRARY_CANCEL_CLICKED,
 								EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CANCEL_CLICKED,
 							);
-							setOpen(false)
+							setOpen(false);
 						}}
 						variant="outline"
 						className="rounded-lg w-full"
@@ -198,7 +200,12 @@ const ChooseDataSourceDialog = ({
 					</Button>
 					<Button
 						onClick={() => handleSelect()}
-						disabled={!selectedDataSource || dataSourceFetch || !data || !data?.length}
+						disabled={
+							!selectedDataSource ||
+							dataSourceFetch ||
+							!data ||
+							!data?.length
+						}
 						className="rounded-lg w-full hover:bg-purple-100 hover:text-white hover:opacity-80"
 					>
 						Continue

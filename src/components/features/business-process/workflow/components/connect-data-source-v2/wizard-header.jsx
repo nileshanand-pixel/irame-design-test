@@ -31,7 +31,7 @@ export const WizardHeader = ({ setStep, currentStep }) => {
 					<Fragment key={step.number}>
 						<div
 							// onClick={() => handleStepSelection(step)}
-							className="flex cursor-pointer items-center"
+							className="flex cursor-default items-center"
 						>
 							<div
 								className={`

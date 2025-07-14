@@ -26,7 +26,7 @@ const TestRoute = () => {
 	const [step, setStep] = useState(0); // <-- Add this line
 
 	const handleSelection = (item) => {
-		console.log('Selected:', item);
+		// console.log('Selected:', item);
 	};
 
 	const options = [

@@ -174,7 +174,9 @@ export default function TabSheet({ open = true, onOpenChange, queryCardId }) {
 												) : (
 													<div className="w-full space-y-4">
 														{sources.map((source) => (
-															<SourceRow source={source}/>
+															<SourceRow
+																source={source}
+															/>
 														))}
 													</div>
 												)

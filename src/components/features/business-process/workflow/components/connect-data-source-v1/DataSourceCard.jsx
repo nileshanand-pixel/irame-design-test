@@ -150,9 +150,9 @@ const DataSourceCard = ({
 			)?.file_name;
 			setActiveTab(
 				firstValidFile ||
-				(dataPoints.some((file) => !file.file_name)
-					? 'additional-columns'
-					: null),
+					(dataPoints.some((file) => !file.file_name)
+						? 'additional-columns'
+						: null),
 			);
 		}
 	}, [dataPoints]);
@@ -283,10 +283,11 @@ const DataSourceCard = ({
 						<Button
 							key={file.file_name}
 							variant="outline"
-							className={`flex gap-2 items-center font-medium border-2 rounded-lg px-4 py-2 cursor-pointer min-w-fit max-w-[19.25rem] ${activeTab === file.file_name
-								? 'text-purple-100 border-purple-40 tabActiveBg'
-								: 'text-black/60 border-black/10'
-								}`}
+							className={`flex gap-2 items-center font-medium border-2 rounded-lg px-4 py-2 cursor-pointer min-w-fit max-w-[19.25rem] ${
+								activeTab === file.file_name
+									? 'text-purple-100 border-purple-40 tabActiveBg'
+									: 'text-black/60 border-black/10'
+							}`}
 							onClick={() => handleTabClick(file.file_name)}
 						>
 							<img
@@ -302,10 +303,11 @@ const DataSourceCard = ({
 					{additionalColumns.length > 0 && (
 						<Button
 							variant="outline"
-							className={`flex gap-2 items-center font-medium border-2 rounded-lg px-4 py-2 cursor-pointer min-w-fit max-w-[19.25rem] ${activeTab === 'additional-columns'
-								? 'text-purple-100 border-purple-40 tabActiveBg'
-								: 'text-black/60 border-black/10'
-								}`}
+							className={`flex gap-2 items-center font-medium border-2 rounded-lg px-4 py-2 cursor-pointer min-w-fit max-w-[19.25rem] ${
+								activeTab === 'additional-columns'
+									? 'text-purple-100 border-purple-40 tabActiveBg'
+									: 'text-black/60 border-black/10'
+							}`}
 							onClick={() => handleTabClick('additional-columns')}
 						>
 							<img
@@ -325,8 +327,8 @@ const DataSourceCard = ({
 							{(activeTab === 'additional-columns'
 								? additionalColumns.flatMap((file) => file.headers)
 								: validDataPoints.find(
-									(file) => file.file_name === activeTab,
-								)?.headers || []
+										(file) => file.file_name === activeTab,
+									)?.headers || []
 							).map((header) => (
 								<li
 									key={header.name}
@@ -471,19 +473,19 @@ const DataSourceCard = ({
 									{!['validating', 'NEED_CLARIFICATION'].includes(
 										validationStatus,
 									) && (
-											<Button
-												variant="outline"
-												className="rounded-lg bg-purple-8 font-medium border-none hover:bg-purple-4"
-												onClick={handleOpenModal}
-												disabled={
-													validationStatus === 'validating'
-												}
-											>
-												{selectedDatasourceId
-													? 'Try another data source'
-													: 'Connect Data Source'}
-											</Button>
-										)}
+										<Button
+											variant="outline"
+											className="rounded-lg bg-purple-8 font-medium border-none hover:bg-purple-4"
+											onClick={handleOpenModal}
+											disabled={
+												validationStatus === 'validating'
+											}
+										>
+											{selectedDatasourceId
+												? 'Try another data source'
+												: 'Connect Data Source'}
+										</Button>
+									)}
 								</div>
 							</div>
 						</CardHeader>

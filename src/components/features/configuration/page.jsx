@@ -233,11 +233,13 @@ const Configuration = () => {
 					dataset_id: response.datasource_id,
 					dataset_name: datasourceName,
 					is_description_filled: !!description,
-					total_dataset_size:
+					// size in mb
+					total_dataset_size: (
 						rowFiles?.reduce((total, file) => {
 							return total + (file.size || 0);
 						}, 0) /
-						(1024 * 1024),
+						(1024 * 1024)
+					).toFixed(2),
 				}),
 			);
 		} catch (error) {
@@ -322,15 +324,6 @@ const Configuration = () => {
 	};
 
 	const startChatting = (data) => {
-		trackEvent(
-			EVENTS_ENUM.EXISTING_DATASET_CLICKED,
-			EVENTS_REGISTRY.EXISTING_DATASET_CLICKED,
-			() => ({
-				dataset_id: data.datasource_id,
-				dataset_name: data.name,
-				source: search ? 'search' : 'select',
-			}),
-		);
 		dispatch(
 			updateUtilProp([
 				{
@@ -688,7 +681,20 @@ const Configuration = () => {
 								>
 									<p
 										className="text-primary80 font-medium w-3/4 flex cursor-pointer items-center"
-										onClick={() => startChatting(source)}
+										onClick={() => {
+											trackEvent(
+												EVENTS_ENUM.EXISTING_DATASET_CLICKED,
+												EVENTS_REGISTRY.EXISTING_DATASET_CLICKED,
+												() => ({
+													dataset_id: source.datasource_id,
+													dataset_name: source.name,
+													source: search
+														? 'search'
+														: 'select',
+												}),
+											);
+											startChatting(source);
+										}}
 									>
 										<img
 											src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"

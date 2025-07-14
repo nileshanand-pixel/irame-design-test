@@ -6,7 +6,7 @@ const ErrorFallback = ({ error, resetErrorBoundary }) => {
 	const { pathname, navigate } = useRouter();
 	const IMAGE_SRC = '/assets/bgs/error-boundary-image.png';
 
-	console.log(error.message)
+	console.log(error.message);
 
 	return (
 		<div className="flex items-center justify-center h-screen p-10 gap-4">

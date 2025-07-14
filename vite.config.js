@@ -17,8 +17,8 @@ const config = {
 		alias: {
 			'@': path.resolve(__dirname, './src'),
 		},
-	}
-}
+	},
+};
 
 if (isLocal) {
 	config.server = {
@@ -26,8 +26,7 @@ if (isLocal) {
 			key: fs.readFileSync(path.resolve(__dirname, 'localhost-key.pem')),
 			cert: fs.readFileSync(path.resolve(__dirname, 'localhost.pem')),
 		},
-	}
+	};
 }
 
 export default defineConfig(config);
-

@@ -50,8 +50,8 @@ const AddQueryToReportDialog = ({
 					query_id: chatStoreReducer?.activeQueryId,
 					report_id: report.report_id,
 					report_name: report.name,
-				})
-			)
+				}),
+			);
 			onSuccessCloseAll();
 		},
 		onError: () => toast.error('Failed to add query to report!'),

@@ -35,7 +35,7 @@ const ScrollList = ({ children }) => {
 	}, []);
 
 	const handleScroll = (e, direction) => {
-		if(e)e.stopPropagation();
+		if (e) e.stopPropagation();
 		if (containerRef.current) {
 			const scrollAmount =
 				direction === 'left'
@@ -51,7 +51,10 @@ const ScrollList = ({ children }) => {
 	return (
 		<div className="flex gap-4 items-center">
 			{canScrollLeft && (
-				<div className="cursor-pointer" onClick={(e) => handleScroll(e, 'left')}>
+				<div
+					className="cursor-pointer"
+					onClick={(e) => handleScroll(e, 'left')}
+				>
 					<i className="bi bi-caret-left border text-gray-500 border-black/10 rounded-full w-[32px] py-[8px] px-[4px]" />
 				</div>
 			)}

@@ -35,7 +35,7 @@ const ResponseCard = ({
 	const [isAddToReportOpen, setIsAddToReportOpen] = useState(false);
 	const { query } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
-	const { isDownloading, downloadS3File} = useS3File();
+	const { isDownloading, downloadS3File } = useS3File();
 
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
@@ -126,7 +126,7 @@ const ResponseCard = ({
 	};
 
 	useEffect(() => {
-		if(
+		if (
 			answerResp?.answer?.follow_up &&
 			showFollowup &&
 			!doingScience &&
@@ -140,9 +140,10 @@ const ResponseCard = ({
 					dataset_id: utilReducer?.selectedDataSource?.id,
 					dataset_name: utilReducer?.selectedDataSource?.name,
 					query_id: chatStoreReducer?.activeQueryId,
-					ques_count: answerResp?.answer?.follow_up?.tool_data?.questions?.length,
-				})
-			)
+					ques_count:
+						answerResp?.answer?.follow_up?.tool_data?.questions?.length,
+				}),
+			);
 		}
 	}, [answerResp, showFollowup, doingScience, isGraphLoading]);
 
@@ -201,38 +202,44 @@ const ResponseCard = ({
 										variant="outline"
 										className="text-muted-foreground cursor-pointer"
 										onClick={() => {
-											if(isDownloading) return;
+											if (isDownloading) return;
 
 											trackEvent(
 												EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
 												EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
 												() => ({
-													chat_session_id: query?.sessionId,
-													dataset_id: utilReducer?.selectedDataSource?.id,
-													dataset_name: utilReducer?.selectedDataSource?.name,
-													query_id: chatStoreReducer?.activeQueryId,
+													chat_session_id:
+														query?.sessionId,
+													dataset_id:
+														utilReducer
+															?.selectedDataSource?.id,
+													dataset_name:
+														utilReducer
+															?.selectedDataSource
+															?.name,
+													query_id:
+														chatStoreReducer?.activeQueryId,
 												}),
 											);
 
-											downloadS3File(dataFrameItem[1]?.tool_data?.csv_url);
+											downloadS3File(
+												dataFrameItem[1]?.tool_data?.csv_url,
+											);
 										}}
 									>
-										{
-											isDownloading ? (
-												<>
-														<span className="mr-2">
-															<CircularLoader size="md" />
-														</span>
-														Downloading...
-													</>
-											) : (
-												<>
-													<i className="bi-download mr-2"></i>
-													Download CSV
-												</>
-											)
-										}
-										
+										{isDownloading ? (
+											<>
+												<span className="mr-2">
+													<CircularLoader size="md" />
+												</span>
+												Downloading...
+											</>
+										) : (
+											<>
+												<i className="bi-download mr-2"></i>
+												Download CSV
+											</>
+										)}
 									</Button>
 								)}
 							<div className="flex gap-2">

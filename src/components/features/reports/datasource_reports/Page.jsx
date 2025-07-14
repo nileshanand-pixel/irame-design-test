@@ -3,7 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { getDatasourceReports, getSharedReports, getUserReports } from '../service/reports.service';
+import {
+	getDatasourceReports,
+	getSharedReports,
+	getUserReports,
+} from '../service/reports.service';
 import ReportCardSkeleton from '../components/ReportCardSkeleton';
 import ReportCard from '../components/ReportCard';
 import { useRouter } from '@/hooks/useRouter';
@@ -24,7 +28,11 @@ const ReportsInDatasource = () => {
 		queryKey: ['get-reports-by-datasource', query.datasourceId],
 		queryFn: () => getDatasourceReports(query.datasourceId),
 		refetchInterval: 10000,
-		enabled: !!(query.datasourceId && query.datasourceId !== 'shared' && query.datasourceId !== 'audit'),
+		enabled: !!(
+			query.datasourceId &&
+			query.datasourceId !== 'shared' &&
+			query.datasourceId !== 'audit'
+		),
 	});
 
 	const sharedReportsQuery = useQuery({
@@ -38,13 +46,17 @@ const ReportsInDatasource = () => {
 		queryKey: ['user-reports'],
 		queryFn: () => getUserReports(),
 		enabled: !!(query.datasourceId && query.datasourceId === 'audit'),
-	})
+	});
 
 	const datasourceQuery = useQuery({
 		queryKey: ['get-datasource', query.datasourceId],
 		queryFn: () => getDataSourceById(query.datasourceId),
 		refetchInterval: 10000,
-		enabled: !!(query.datasourceId && query.datasourceId !== 'shared' && query.datasourceId !== 'audit'),
+		enabled: !!(
+			query.datasourceId &&
+			query.datasourceId !== 'shared' &&
+			query.datasourceId !== 'audit'
+		),
 	});
 
 	const filteredList = useMemo(() => {
@@ -78,7 +90,7 @@ const ReportsInDatasource = () => {
 		reactionText: 'your report will be auto generated...',
 		ctaText: 'Create a Report',
 		ctaDisabled: true,
-		ctaClickHandler: () => { },
+		ctaClickHandler: () => {},
 		comingSoonText: 'Custom report feature coming soon...',
 	};
 

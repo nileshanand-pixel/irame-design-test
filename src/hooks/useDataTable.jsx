@@ -56,7 +56,7 @@ export const useDataTable = ({
 				}
 			: {}),
 		onSortingChange: onSortingChange,
-		_features: [SortingFixFeature]
+		_features: [SortingFixFeature],
 	};
 
 	if (enableRowSelection) {

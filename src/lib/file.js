@@ -8,7 +8,9 @@ import axiosClientV1 from './axios';
 
 export async function getFileMeta(file_url) {
 	try {
-		const response = await axiosClientV1.get("/files/file-metadata", { params: { file_url: file_url } });
+		const response = await axiosClientV1.get('/files/file-metadata', {
+			params: { file_url: file_url },
+		});
 		return { size: response?.data?.content_length || 0 };
 	} catch (err) {
 		console.error('Error fetching file metadata:', err);

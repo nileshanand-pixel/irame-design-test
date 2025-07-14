@@ -7,42 +7,36 @@ import { CustomIconDropdown } from './CustomIconDropdown';
 import { RISK_CATEGORIES_CONFIG } from '@/config/risks';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
 
-export const RiskTypesDropdown = ({
-    value,
-    riskLevel,
-    reportId,
-    reportCardId,
-}) => {
-    const [riskCategory, setRiskCategory] = useState(value);
-    const { isOwner } = useReportPermission();
-    
+export const RiskTypesDropdown = ({ value, riskLevel, reportId, reportCardId }) => {
+	const [riskCategory, setRiskCategory] = useState(value);
+	const { isOwner } = useReportPermission();
 
-    const updateMetadataMutation = useMutation({
-        mutationFn: updateReportMetadata,
-        onSuccess: () => {
-            queryClient.invalidateQueries(['report-details', reportId]);
-            toast.success('Query risks updated');
-        },
-        onError: () => toast.error('Failed to update query risks'),
-    });
+	const updateMetadataMutation = useMutation({
+		mutationFn: updateReportMetadata,
+		onSuccess: () => {
+			queryClient.invalidateQueries(['report-details', reportId]);
+			toast.success('Query risks updated');
+		},
+		onError: () => toast.error('Failed to update query risks'),
+	});
 
-    const handleRiskCategoryChange = (newCategory) => {
-        setRiskCategory(newCategory);
-        updateMetadataMutation.mutate({
-            reportId,
-            reportCardId,
-            riskLevel,
-            riskTypes: [newCategory],
-        });
-    };
+	const handleRiskCategoryChange = (newCategory) => {
+		setRiskCategory(newCategory);
+		updateMetadataMutation.mutate({
+			reportId,
+			reportCardId,
+			riskLevel,
+			riskTypes: [newCategory],
+		});
+	};
 
-    return (
-        <CustomIconDropdown
-            value={riskCategory}
-            onChange={handleRiskCategoryChange}
-            optionsConfig={RISK_CATEGORIES_CONFIG}
-            isLoading={updateMetadataMutation.isPending}
-            isDisabled={!isOwner}
-        />
-    );
+	return (
+		<CustomIconDropdown
+			value={riskCategory}
+			onChange={handleRiskCategoryChange}
+			optionsConfig={RISK_CATEGORIES_CONFIG}
+			isLoading={updateMetadataMutation.isPending}
+			isDisabled={!isOwner}
+		/>
+	);
 };

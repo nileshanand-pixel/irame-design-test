@@ -16,6 +16,7 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import useS3File from '@/hooks/useS3File';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
+import { toast } from 'sonner';
 
 const formatFileSize = (sizeInBytes) => {
 	if (sizeInBytes < 1024) return `${sizeInBytes} B`;
@@ -151,10 +152,11 @@ const DataCard = ({ data, form, setForm, addChangeForTracking }) => {
 		const downloadName =
 			file.filename === file.worksheet || !file.worksheet
 				? file.filename
-				: `${file.filename} (${file.worksheet})`;
+				: `${file.filename}(${file.worksheet}).csv`;
 
 		if (fileUrl) {
 			downloadS3File(fileUrl, downloadName);
+			toast.success('Your file has been added to download!');
 		}
 	};
 
