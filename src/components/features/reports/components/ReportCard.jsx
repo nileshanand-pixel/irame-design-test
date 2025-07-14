@@ -66,12 +66,14 @@ const ReportCard = ({ report }) => {
 					/>
 					{isHovered && (
 						<div className="absolute inset-0 bg-black rounded-md bg-opacity-20 flex items-center justify-center">
-							<button
-								className="bg-white text-black font-bold py-2 px-4 rounded"
-								onClick={handleDownload}
-							>
-								<i className="bi bi-download"></i>
-							</button>
+							{report.data.file_url && (
+								<button
+									className="bg-white text-black font-bold py-2 px-4 rounded"
+									onClick={handleDownload}
+								>
+									<i className="bi bi-download"></i>
+								</button>
+							)}
 						</div>
 					)}
 				</>
