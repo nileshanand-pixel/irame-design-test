@@ -530,6 +530,7 @@ const EVENTS_REGISTRY = {
 			'dataset_name',
 			'report_name',
 			'report_id',
+			'report_type',
 		],
 	},
 	DASHBOARD_SEARCHED: {

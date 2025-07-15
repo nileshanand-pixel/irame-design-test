@@ -50,6 +50,7 @@ const AddQueryToReportDialog = ({
 					query_id: chatStoreReducer?.activeQueryId,
 					report_id: report.report_id,
 					report_name: report.name,
+					report_type: 'old',
 				}),
 			);
 			onSuccessCloseAll();

@@ -15,7 +15,7 @@ import useAuth from '@/hooks/useAuth';
 import { getErrorAnalyticsProps, trackEvent, trackUser } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { grantType } from '@/config/auth.config';
-import { createSession } from '@/utils/session-manager';
+import { createOrUpdateUserSession } from '../user-session-manager/helper';
 
 const SignInSignUp = () => {
 	const navigate = useNavigate();
@@ -95,7 +95,7 @@ const SignInSignUp = () => {
 				}),
 			);
 			trackUser(authUserData);
-			createSession('/app/new-chat');
+			createOrUpdateUserSession('/app/new-chat');
 			navigate('/app/new-chat?source=login');
 		} catch (error) {
 			console.log(error);

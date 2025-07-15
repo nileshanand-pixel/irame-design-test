@@ -38,7 +38,6 @@ const Workzone = () => {
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const dispatch = useDispatch();
 	const { pathname, navigate, query } = useRouter();
-	const chatScreenLoadedRef = useRef(false);
 
 	const intervalRef = useRef();
 	const scrollRef = useRef(null);
@@ -812,11 +811,11 @@ const Workzone = () => {
 
 	useEffect(() => {
 		const { sessionId, source } = query;
+
 		if (
 			sessionId &&
 			utilReducer?.selectedDataSource?.id &&
-			utilReducer?.selectedDataSource?.name &&
-			!chatScreenLoadedRef?.current
+			utilReducer?.selectedDataSource?.name
 		) {
 			trackEvent(
 				EVENTS_ENUM.CHAT_SCREEN_LOADED,
@@ -829,7 +828,6 @@ const Workzone = () => {
 					chat_session_type: getSessionType(source),
 				}),
 			);
-			chatScreenLoadedRef.current = true;
 		}
 	}, [query, utilReducer]);
 

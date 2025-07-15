@@ -36,6 +36,15 @@ export const trackEvent = (
 	const mappedProperties = propertiesMapper(parameters || {});
 
 	const authUserDetails = JSON.parse(localStorage.getItem('userDetails'));
+
+	if (authUserDetails) {
+		// remove user's personal data from events.
+		const personalDataKeys = ['user_name', 'email', 'name'];
+		personalDataKeys.forEach((key) => {
+			delete authUserDetails[key];
+		});
+	}
+
 	const user_session_id = getCookie(USER_SESSION_ID);
 
 	const loggedInUserProperties = !!authUserDetails

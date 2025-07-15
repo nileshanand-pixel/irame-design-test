@@ -4,8 +4,8 @@ import AppRoutes from './routes';
 import { ThemeProvider } from './providers/ThemeProvider';
 import { useMemo } from 'react';
 import { initAnalytics } from './lib/mixpanel';
-import SessionManager from './components/features/session-manager';
 import useAuth from './hooks/useAuth';
+import UserSessionManager from './components/features/user-session-manager';
 
 export default function App() {
 	const { isAuthenticated, isLoading } = useAuth();
@@ -24,7 +24,7 @@ export default function App() {
 	}
 	return (
 		<AppProvider>
-			{!isLoading && isAuthenticated && <SessionManager />}
+			{!isLoading && isAuthenticated && <UserSessionManager />}
 			<ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
 				<AppRoutes />
 			</ThemeProvider>

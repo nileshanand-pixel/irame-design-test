@@ -16,6 +16,10 @@ import CustomSelect from '@/components/elements/CustomSelect';
 import { createReportAndAddQuery } from '../service/reports.service';
 import { RISK_CATEGORIES, RISK_LEVELS } from '@/config/risks';
 import { queryClient } from '@/lib/react-query';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { useRouter } from '@/hooks/useRouter';
+import { useSelector } from 'react-redux';
+import { trackEvent } from '@/lib/mixpanel';
 
 const AddQueryToNewReportDialog = ({
 	open,
@@ -27,12 +31,28 @@ const AddQueryToNewReportDialog = ({
 	const [reportDescription, setReportDescription] = useState('');
 	const [riskCategory, setRiskCategory] = useState('');
 	const [riskLevel, setRiskLevel] = useState('');
+	const { query } = useRouter();
+	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const mutation = useMutation({
 		mutationFn: (payload) => createReportAndAddQuery(payload),
 		onSuccess: () => {
 			toast.success('New report created and query added!');
 			queryClient.invalidateQueries(['user-reports']);
+			trackEvent(
+				EVENTS_ENUM.ADDED_ANALYSIS_TO_REPORT,
+				EVENTS_REGISTRY.ADDED_ANALYSIS_TO_REPORT,
+				() => ({
+					chat_session_id: query?.sessionId,
+					dataset_id: utilReducer?.selectedDataSource?.id,
+					dataset_name: utilReducer?.selectedDataSource?.name,
+					query_id: chatStoreReducer?.activeQueryId,
+					// report_id: report.report_id,
+					report_name: reportName.trim(),
+					report_type: 'new',
+				}),
+			);
 			onSuccessCloseAll();
 		},
 		onError: () => {
