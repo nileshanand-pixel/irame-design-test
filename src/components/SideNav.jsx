@@ -470,11 +470,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		...sessions.map((session) => ({
 			type: 'session',
 			data: session,
-			date: new Date(session.updated_at),
+			date: new Date(session.created_at),
 		})),
 		...businessProcesses.map((bp) => {
 			const workflowDates = bp.workflows.map((w) =>
-				new Date(w?.updated_at || w.created_at).getTime(),
+				new Date(w.created_at).getTime(),
 			);
 			const latestDate =
 				workflowDates.length > 0 ? Math.max(...workflowDates) : null;
