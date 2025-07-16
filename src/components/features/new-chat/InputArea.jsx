@@ -97,7 +97,8 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 				}
 			}, 20);
 		},
-		onError: (err) => {
+		onError: (err, variables) => {
+			setPrompt(variables); // restore the original prompt
 			toast.error(
 				'Something went wrong while enhancing prompt. please try again',
 			);
