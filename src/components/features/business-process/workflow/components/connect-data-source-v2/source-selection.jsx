@@ -50,6 +50,8 @@ const mergeUniqueById = (prev = [], next = []) => {
 	return Array.from(map.values());
 };
 
+const EXCEL_EXTENSIONS = ['xls', 'xlsx', 'xlsb', 'xlsm', 'excel'];
+
 // ---------------------------------------------------------------------------
 // 1. PARENT COMPONENT
 // ---------------------------------------------------------------------------
@@ -80,8 +82,10 @@ export const SourceSelection = ({
 	const hydrated = useRef(false);
 
 	/* ───────────────────────────── 1B. META FLAGS ─────────────────────────── */
-	const isPostRun = !!workflowRunDetails?.data?.file_mapping_ira;
 	const topLevelDatasourceId = workflowRunDetails?.datasource_id;
+
+	const [isInitiate, setIsInitiate] = useState(false);
+	const isPostRun = !!workflowRunDetails?.data?.file_mapping_ira;
 
 	/* ───────────────────────────── 2. UPLOADS ─────────────────────────────── */
 	const {
@@ -222,7 +226,11 @@ export const SourceSelection = ({
 	/* ---------------------------------------------------------------------
        6. HANDLERS
   --------------------------------------------------------------------- */
-	const handleFileUpload = (fileList) => addFiles(fileList);
+	const handleFileUpload = (fileList) => {
+		setIsInitiate(true); // Switch to initiate mode
+		hydrated.current = false; // Reset hydration
+		addFiles(fileList);
+	};
 
 	const handleDeleteFile = (fileId) => {
 		setAvailableFiles((prev) => {
@@ -242,6 +250,7 @@ export const SourceSelection = ({
 			}
 			return updated;
 		});
+		removeUploadedFile(fileId);
 
 		// purge file from mapping by id
 		setFileMapping((prev) => {
@@ -338,9 +347,10 @@ export const SourceSelection = ({
 			file_name: f.name,
 			datasource_id: f.datasource_id,
 		}));
+		// console.log(raw_files);
 
 		const raw_excel_files = availableFiles
-			.filter((f) => ['xls', 'xlsx, xlsb, xlsm'].includes(f.type))
+			.filter((f) => EXCEL_EXTENSIONS.includes(f.type))
 			.map((f) => ({
 				file_id: f.id,
 				file_url: f.file_url,
@@ -357,14 +367,17 @@ export const SourceSelection = ({
 			}));
 		});
 
-		const mappedFileIds = new Set(
-			Object.values(csv_files)
+		const mappedFileIds = new Set([
+			...Object.values(csv_files)
 				.flat()
 				.map((f) => f.file_id),
-		);
+			...raw_excel_files.map((f) => f.file_id),
+		]);
 
-		const filteredRawFiles = raw_files.filter((f) =>
-			mappedFileIds.has(f.file_id),
+		// console.log(mappedFileIds);
+
+		const filteredRawFiles = raw_files.filter(
+			(f) => mappedFileIds.has(f.file_id) && f.file_url,
 		);
 
 		return {
@@ -383,12 +396,12 @@ export const SourceSelection = ({
   --------------------------------------------------------------------- */
 	const mutation = useMutation({
 		mutationFn: ({ workflowId, payload }) =>
-			isPostRun
-				? restartWorkflowCheckV2(workflowId, workflowRunId, payload)
-				: initiateWorkflowCheckV2(workflowId, payload),
+			isInitiate
+				? initiateWorkflowCheckV2(workflowId, payload)
+				: restartWorkflowCheckV2(workflowId, workflowRunId, payload),
 		onSuccess: (data) => {
 			toast.success(
-				`Workflow check ${isPostRun ? 're-initiated' : 'initiated'}`,
+				`Workflow check ${isInitiate ? 'initiated' : 're-initiated'}`,
 			);
 			queryClient.invalidateQueries(['workflow-runs', workflowId]);
 			if (data?.external_id) {
@@ -458,7 +471,9 @@ export const SourceSelection = ({
 			{/* --- SELECTED FILES PANEL --- */}
 			{availableFiles.length > 0 && (
 				<SelectedFilesPanel
-					files={availableFiles}
+					files={availableFiles.filter(
+						(f) => !EXCEL_EXTENSIONS.includes(f.type),
+					)}
 					onDelete={handleDeleteFile}
 					progress={uploadProgress}
 				/>
@@ -467,7 +482,9 @@ export const SourceSelection = ({
 			{/* --- REQUIRED MAPPING TABLE --- */}
 			<RequiredMappingTable
 				requiredFiles={requiredWithSelection}
-				files={availableFiles}
+				files={availableFiles.filter(
+					(f) => !EXCEL_EXTENSIONS.includes(f.type),
+				)}
 				onToggle={(id, name, fileIds) =>
 					handleToggleMapping(id, name, fileIds)
 				}
@@ -732,18 +749,18 @@ const FileBadge = ({ file }) => {
 					<h4 className="font-medium truncate">{file.name}</h4>
 				</Hint>
 				<div className="flex text-sm text-gray-500">
-					<span>
-						{file.size < 1024 * 1024
-							? `${(file.size / 1024).toFixed(1)} KB`
-							: `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
-					</span>
-					<>
-						<span className="mx-2">•</span>
+					{file.size > 0 && (
 						<span>
-							{file.timestamp ||
-								new Date(file.lastModified).toLocaleString()}
+							{file.size < 1024 * 1024
+								? `${(file.size / 1024).toFixed(1)} KB`
+								: `${(file.size / (1024 * 1024)).toFixed(1)} MB`}
 						</span>
-					</>
+					)}
+					<span className="mx-2">•</span>
+					<span>
+						{file.timestamp ||
+							new Date(file.lastModified).toLocaleString()}
+					</span>
 				</div>
 				{file.status === 'error' && (
 					<p className="text-red-500 text-sm flex items-center mt-1">
@@ -804,6 +821,8 @@ const MappingPicker = ({ rf, files, onToggle }) => {
 	const options = [...files].map((f) => ({
 		label: f.name,
 		value: f.id,
+		disabled: EXCEL_EXTENSIONS.includes(f.type),
+		hidden: EXCEL_EXTENSIONS.includes(f.type),
 	}));
 
 	// Gather errors directly from selectedFiles

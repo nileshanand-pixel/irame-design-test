@@ -111,3 +111,14 @@ export const updateDataSource = async (id, data) => {
 
 	return response.data;
 };
+
+export const parseExcel = async (data) => {
+	const response = await axiosClientV1.get(`/files/parse-excel`, {
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		params: data,
+	});
+
+	return response.data;
+};

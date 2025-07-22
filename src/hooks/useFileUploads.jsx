@@ -1,10 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { uploadFile } from '@/components/features/configuration/service/configuration.service';
+import {
+	parseExcel,
+	uploadFile,
+} from '@/components/features/configuration/service/configuration.service';
 import * as XLSX from 'xlsx'; // npm install xlsx
 import { v4 as uuidv4 } from 'uuid'; // <-- Add this import
+import { toast } from 'sonner';
 
 const MAX_CONCURRENT_UPLOADS = 5;
+
+/**
+ *
+ * cases
+ * upload 1 excel file
+ * upload multiple excel file
+ * upload multi csv + multi excel file
+ */
 
 export function useFileUploads({ excelToCsv = false } = {}) {
 	const [files, setFiles] = useState([]);
@@ -37,33 +49,89 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 
 			setIsProcessingExcel(excelFiles.length > 0);
 
-			// 1. For each Excel file, start upload and conversion in parallel,
-			//    but only queue CSVs after both are done.
-			await Promise.all(
-				excelFiles.map(async (file) => {
-					if (files.some((f) => f.name === file.name)) return; // prevent duplicates
+			// Process Excel files sequentially instead of in parallel
+			try {
+				for (const file of excelFiles) {
+					if (files.some((f) => f.name === file.name)) continue; // prevent duplicates
 					hasExcel = true;
 
-					// Start both upload and conversion
-					const uploadPromise = uploadSingleFile(file, { hidden: true });
-					const conversionPromise = handleExcelToCsv(file);
+					// Start upload and wait for it to complete
+					const fileId = uuidv4();
+					file.id = fileId;
+					const uploadResult = await uploadSingleFile(file, {
+						hidden: true,
+					});
 
-					// Wait for both to finish
-					const [csvFilesFromExcel] = await Promise.all([
-						conversionPromise,
-						uploadPromise,
-					]);
+					// Fetch worksheet names from the API
+					const parsedData = await parseExcel({
+						file_name: file.name,
+						file_id: fileId,
+						file_url: uploadResult?.url,
+					});
+
+					// Create CSV file objects from worksheets
+					const csvFilesFromExcel = parsedData?.worksheets.map(
+						(worksheet) => {
+							// Create a virtual CSV file object for each worksheet
+							return {
+								name: `${file.name.replace(/\.[^.]+$/, '')}_${worksheet.worksheet_name}.csv`,
+								status: 'ready', // Set as ready since they don't need to be uploaded
+								id:
+									worksheet.worksheet_id ||
+									`${fileId}_${worksheet.worksheet_name}`,
+								size: 0, // Virtual file has no size
+								type: 'text/csv',
+								isFromExcel: true,
+								originalExcelFile: file.name,
+								worksheet_name: worksheet.worksheet_name,
+							};
+						},
+					);
 
 					csvFilesFromExcel.forEach((csvFile) => {
-						const fileWithStatus = Object.assign(csvFile, {
-							status: 'uploading',
-						});
-						newFiles.push(fileWithStatus);
-						csvFiles.push(fileWithStatus);
-						newProgress[csvFile.name] = 0;
+						newFiles.push(csvFile); // Already has status 'ready'
+						newProgress[csvFile.name] = 100; // Set progress to 100% since they're ready
 					});
-				}),
-			);
+
+					newFiles.push({
+						name: file.name,
+						status: 'ready',
+						id: fileId,
+						size: file.size,
+						type: 'excel',
+						isFromExcel: false,
+						file_url: uploadResult?.url,
+						originalExcelFile: file.name,
+						worksheet_name: null,
+					});
+					newProgress[file.name] = 100;
+				}
+			} catch (err) {
+				// Reset states if any error occurs
+				setIsProcessingExcel(false);
+				setFiles((prev) =>
+					prev.filter((f) => !excelFiles.some((ef) => ef.name === f.name)),
+				);
+				setProgress((prev) => {
+					const updated = { ...prev };
+					excelFiles.forEach((file) => {
+						delete updated[file.name];
+					});
+					return updated;
+				});
+				setUploadQueue((prev) =>
+					prev.filter((f) => !excelFiles.some((ef) => ef.name === f.name)),
+				);
+				setUploadedMetadata((prev) => {
+					const updated = { ...prev };
+					excelFiles.forEach((file) => {
+						delete updated[file.name];
+					});
+					return updated;
+				});
+				toast.error('Excel upload or parsing failed:', err);
+				return;
+			}
 
 			// 2. Add direct CSV files to upload queue/UI
 			for (const file of csvFiles) {
@@ -88,7 +156,7 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 	// Helper: Convert Excel to CSV per sheet, check encoding
 	const handleExcelToCsv = async (excelFile) => {
 		const arrayBuffer = await excelFile.arrayBuffer();
-		const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+		const workbook = XLSX.read(arrayBuffer, { type: 'array', sheets });
 
 		// Encoding check (very basic, for demo)
 		const encoding = detectExcelEncoding(arrayBuffer);
@@ -119,34 +187,50 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 	};
 
 	const removeFile = useCallback(
-		(fileName) => {
-			if (cancelTokens[fileName]) {
-				cancelTokens[fileName].cancel(`User removed ${fileName} mid-upload`);
+		(identifier) => {
+			// Find file by id or name
+			const fileToRemove = files.find(
+				(file) => file.id === identifier || file.name === identifier,
+			);
+			if (!fileToRemove) return;
+
+			const { name, id } = fileToRemove;
+
+			// Cancel upload if in progress
+			if (cancelTokens[name]) {
+				cancelTokens[name].cancel(`User removed ${name} mid-upload`);
 			}
-			setFiles((prev) => prev.filter((file) => file.name !== fileName));
+
+			setFiles((prev) =>
+				prev.filter((file) => file.id !== id && file.name !== name),
+			);
 			setProgress((prev) => {
 				const updated = { ...prev };
-				delete updated[fileName];
+				delete updated[name];
 				return updated;
 			});
 			setCancelTokens((prev) => {
 				const updated = { ...prev };
-				delete updated[fileName];
+				delete updated[name];
 				return updated;
 			});
-			setUploadQueue((prev) => prev.filter((file) => file.name !== fileName));
+			setUploadQueue((prev) =>
+				prev.filter((file) => file.id !== id && file.name !== name),
+			);
 			setUploadedMetadata((prev) => {
 				const updated = { ...prev };
-				delete updated[fileName];
+				delete updated[id];
+				delete updated[name];
 				return updated;
 			});
 		},
-		[cancelTokens],
+		[files, cancelTokens],
 	);
 
 	const uploadFilesInBatches = useCallback(async () => {
 		while (uploadQueue.length > 0 && uploadingCount < MAX_CONCURRENT_UPLOADS) {
 			const file = uploadQueue.shift();
+			if (file.status === 'ready') return;
 			setUploadQueue([...uploadQueue]);
 			setUploadingCount((count) => count + 1);
 
@@ -182,10 +266,12 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 				...prev,
 				[file.id]: { ...data, id: file.id, type: file.type },
 			}));
+			return Promise.resolve(data);
 		} catch (err) {
 			if (!axios.isCancel(err)) {
 				setProgress((prev) => ({ ...prev, [file.name]: 0 }));
 			}
+			return Promise.reject(err);
 		}
 	};
 
