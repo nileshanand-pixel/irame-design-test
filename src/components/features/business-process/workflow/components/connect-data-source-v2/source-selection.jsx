@@ -421,12 +421,13 @@ export const SourceSelection = ({
   --------------------------------------------------------------------- */
 	const mutation = useMutation({
 		mutationFn: ({ workflowId, payload }) =>
-			isInitiate
-				? initiateWorkflowCheckV2(workflowId, payload)
-				: restartWorkflowCheckV2(workflowId, workflowRunId, payload),
+			!isInitiate && isPostRun
+				? restartWorkflowCheckV2(workflowId, workflowRunId, payload)
+				: initiateWorkflowCheckV2(workflowId, payload),
+
 		onSuccess: (data) => {
 			toast.success(
-				`Workflow check ${isInitiate ? 'initiated' : 're-initiated'}`,
+				`Workflow check ${!isInitiate && isPostRun ? 're-initiated' : 'initiated'}`,
 			);
 			queryClient.invalidateQueries(['workflow-runs', workflowId]);
 			if (data?.external_id) {
