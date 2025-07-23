@@ -49,12 +49,12 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 
 			setIsProcessingExcel(excelFiles.length > 0);
 
-			// Process Excel files sequentially instead of in parallel
-			try {
-				for (const file of excelFiles) {
-					if (files.some((f) => f.name === file.name)) continue; // prevent duplicates
-					hasExcel = true;
+			// Process Excel files sequentially, with try/catch per file
+			for (const file of excelFiles) {
+				if (files.some((f) => f.name === file.name)) continue; // prevent duplicates
+				hasExcel = true;
 
+				try {
 					// Start upload and wait for it to complete
 					const fileId = uuidv4();
 					file.id = fileId;
@@ -71,26 +71,23 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 
 					// Create CSV file objects from worksheets
 					const csvFilesFromExcel = parsedData?.worksheets.map(
-						(worksheet) => {
-							// Create a virtual CSV file object for each worksheet
-							return {
-								name: `${file.name.replace(/\.[^.]+$/, '')}_${worksheet.worksheet_name}.csv`,
-								status: 'ready', // Set as ready since they don't need to be uploaded
-								id:
-									worksheet.worksheet_id ||
-									`${fileId}_${worksheet.worksheet_name}`,
-								size: 0, // Virtual file has no size
-								type: 'text/csv',
-								isFromExcel: true,
-								originalExcelFile: file.name,
-								worksheet_name: worksheet.worksheet_name,
-							};
-						},
+						(worksheet) => ({
+							name: `${file.name.replace(/\.[^.]+$/, '')}_${worksheet.worksheet_name}.csv`,
+							status: 'ready',
+							id:
+								worksheet.worksheet_id ||
+								`${fileId}_${worksheet.worksheet_name}`,
+							size: 0,
+							type: 'text/csv',
+							isFromExcel: true,
+							originalExcelFile: file.name,
+							worksheet_name: worksheet.worksheet_name,
+						}),
 					);
 
 					csvFilesFromExcel.forEach((csvFile) => {
-						newFiles.push(csvFile); // Already has status 'ready'
-						newProgress[csvFile.name] = 100; // Set progress to 100% since they're ready
+						newFiles.push(csvFile);
+						newProgress[csvFile.name] = 100;
 					});
 
 					newFiles.push({
@@ -105,32 +102,26 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 						worksheet_name: null,
 					});
 					newProgress[file.name] = 100;
+				} catch (err) {
+					// Reset states for this file only
+					setFiles((prev) => prev.filter((f) => f.name !== file.name));
+					setProgress((prev) => {
+						const updated = { ...prev };
+						delete updated[file.name];
+						return updated;
+					});
+					setUploadQueue((prev) =>
+						prev.filter((f) => f.name !== file.name),
+					);
+					setUploadedMetadata((prev) => {
+						const updated = { ...prev };
+						delete updated[file.name];
+						return updated;
+					});
+					toast.error(
+						`Excel upload or parsing failed for ${file.name}: ${err}`,
+					);
 				}
-			} catch (err) {
-				// Reset states if any error occurs
-				setIsProcessingExcel(false);
-				setFiles((prev) =>
-					prev.filter((f) => !excelFiles.some((ef) => ef.name === f.name)),
-				);
-				setProgress((prev) => {
-					const updated = { ...prev };
-					excelFiles.forEach((file) => {
-						delete updated[file.name];
-					});
-					return updated;
-				});
-				setUploadQueue((prev) =>
-					prev.filter((f) => !excelFiles.some((ef) => ef.name === f.name)),
-				);
-				setUploadedMetadata((prev) => {
-					const updated = { ...prev };
-					excelFiles.forEach((file) => {
-						delete updated[file.name];
-					});
-					return updated;
-				});
-				toast.error('Excel upload or parsing failed:', err);
-				return;
 			}
 
 			// 2. Add direct CSV files to upload queue/UI
@@ -147,7 +138,10 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 
 			setFiles((prev) => [...prev, ...newFiles]);
 			setProgress((prev) => ({ ...prev, ...newProgress }));
-			setUploadQueue((prev) => [...prev, ...newFiles]);
+			setUploadQueue((prev) => [
+				...prev,
+				...newFiles.filter((f) => f.type !== 'excel'),
+			]);
 			if (hasExcel) setIsProcessingExcel(false);
 		},
 		[files, excelToCsv],
@@ -230,8 +224,8 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 	const uploadFilesInBatches = useCallback(async () => {
 		while (uploadQueue.length > 0 && uploadingCount < MAX_CONCURRENT_UPLOADS) {
 			const file = uploadQueue.shift();
-			if (file.status === 'ready') return;
 			setUploadQueue([...uploadQueue]);
+			if (file.status === 'ready') return;
 			setUploadingCount((count) => count + 1);
 
 			uploadSingleFile(file)

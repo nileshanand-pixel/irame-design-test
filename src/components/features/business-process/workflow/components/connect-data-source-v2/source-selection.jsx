@@ -50,6 +50,25 @@ const mergeUniqueById = (prev = [], next = []) => {
 	return Array.from(map.values());
 };
 
+const getFileType = (file) => {
+	let type = (file.type || 'csv').toLowerCase();
+	if (file.metadata && typeof file.metadata === 'object') {
+		const metaKeys = Object.keys(file.metadata.files || {});
+		// If only one file and its name ends with .csv, treat as CSV
+		if (metaKeys.length === 1 && metaKeys[0].toLowerCase().endsWith('.csv')) {
+			type = 'csv';
+		}
+	}
+
+	return type;
+};
+
+const getFileName = (file) => {
+	return file.filename === file.worksheet || !file.worksheet
+		? file.filename
+		: `${file.filename} (${file.worksheet})`;
+};
+
 const EXCEL_EXTENSIONS = ['xls', 'xlsx', 'xlsb', 'xlsm', 'excel'];
 
 // ---------------------------------------------------------------------------
@@ -157,12 +176,16 @@ export const SourceSelection = ({
 
 			// A. flatten files from AI datasource
 			const aiFiles = await Promise.all(
-				aiDatasource.processed_files?.files?.map(async (f) => {
+				(aiDatasource.processed_files?.files ?? []).map(async (f) => {
 					const fileMeta = await getFileMeta(f.url);
+
+					// Determine type based on metadata
+					const fileType = getFileType(f);
+
 					return {
 						id: f.id,
-						name: f.filename,
-						type: (f.type || 'csv').toLowerCase(),
+						name: getFileName(f),
+						type: fileType,
 						file_url: f.url,
 						size: fileMeta.size,
 						timestamp: new Date(
@@ -171,7 +194,7 @@ export const SourceSelection = ({
 						datasource_id: topLevelDatasourceId,
 						status: 'ready',
 					};
-				}) ?? [],
+				}),
 			);
 
 			// B. availableFiles ← hydrated
@@ -318,11 +341,13 @@ export const SourceSelection = ({
 		const dsFiles = await Promise.all(
 			files.map(async (file) => {
 				const meta = await getFileMeta(file.url);
+				const fileType = getFileType(file);
+
 				return {
 					id: file.id,
-					name: file.filename,
+					name: getFileName(file),
 					size: meta.size,
-					type: (file.type || 'csv').toLowerCase(),
+					type: fileType,
 					file_url: file.url,
 					datasource_id: dsId,
 					timestamp: ds.updated_at
@@ -617,6 +642,26 @@ const DataSourcePanel = ({
 			? [...new Set(processed.files.map((f) => f.type || 'csv'))]
 			: [];
 
+	const hasCSV = (processed) =>
+		processed?.files?.some((f) => getFileType(f)?.toLowerCase() === 'csv');
+
+	// Sort data sources: prioritize ones with CSV files, then by creation date
+	const sortedDataSources = [...dataSources].sort((a, b) => {
+		const aHasCSV = hasCSV(a.processed_files);
+		const bHasCSV = hasCSV(b.processed_files);
+
+		// Primary sort: CSV availability (true comes before false)
+		if (aHasCSV !== bHasCSV) {
+			return aHasCSV ? -1 : 1;
+		}
+
+		// Secondary sort: created_at/updated_at (newest first)
+		const aTime = a.created_at || a.updated_at || 0;
+		const bTime = b.created_at || b.updated_at || 0;
+
+		return new Date(bTime) - new Date(aTime);
+	});
+
 	return (
 		<>
 			<input
@@ -637,21 +682,31 @@ const DataSourcePanel = ({
 					<div className="h-32 flex items-center justify-center text-red-400">
 						Failed to fetch data sources
 					</div>
-				) : dataSources.length === 0 ? (
+				) : sortedDataSources.length === 0 ? (
 					<div className="h-32 flex items-center justify-center text-gray-400">
 						No matches
 					</div>
 				) : (
-					dataSources.map((ds) => {
+					sortedDataSources.map((ds) => {
 						const id = ds.datasource_id || ds.id;
 						const types = fileTypes(ds.processed_files);
+						const csvFilePresent = hasCSV(ds.processed_files);
+
 						return (
 							<div
 								key={id}
-								className={`flex items-center justify-between p-4 border-b hover:bg-gray-50 cursor-pointer ${
-									selectedIds.includes(id) ? 'bg-purple-50' : ''
-								}`}
-								onClick={() => onSelectDataSource(id)}
+								className={`flex items-center justify-between p-4 border-b ${
+									csvFilePresent
+										? 'hover:bg-gray-50 cursor-pointer'
+										: 'bg-gray-100 cursor-not-allowed opacity-60'
+								} ${selectedIds.includes(id) && csvFilePresent ? 'bg-purple-50' : ''}`}
+								disabled={!csvFilePresent}
+								onClick={() =>
+									csvFilePresent && onSelectDataSource(id)
+								}
+								style={
+									csvFilePresent ? {} : { pointerEvents: 'none' }
+								}
 							>
 								<div className="flex items-center">
 									<Database
@@ -668,11 +723,16 @@ const DataSourcePanel = ({
 													).toLocaleString()
 												: 'N/A'}
 										</p>
+										{!csvFilePresent && (
+											<p className="text-red-500 text-xs mt-1">
+												No valid files present to map
+											</p>
+										)}
 									</div>
 								</div>
 
 								<div className="flex items-center">
-									{selectedIds.includes(id) && (
+									{selectedIds.includes(id) && csvFilePresent && (
 										<CheckCircle
 											size={18}
 											className="text-green-500 mr-2"
