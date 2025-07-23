@@ -11,6 +11,7 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getSupportedGraphs } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
+import { RESPONSE_CARD_VIEWS } from '@/constants/chat.constant';
 
 const GraphComponent = ({
 	data,
@@ -18,7 +19,7 @@ const GraphComponent = ({
 	setIsGraphLoading,
 	showTable,
 	queryId,
-	tab = 'Tabular View',
+	tab = RESPONSE_CARD_VIEWS.TABULAR_VIEW,
 }) => {
 	const [loadedData, setLoadedData] = useState([]);
 	const [columns, setColumns] = useState([]);
@@ -80,7 +81,6 @@ const GraphComponent = ({
 			chatStoreReducer?.activateGraphOnLast &&
 			chatStoreReducer?.activeQueryId === queryId
 		) {
-			setActiveTab('Graphical View');
 			dispatch(
 				updateChatStoreProp([
 					{
@@ -118,14 +118,14 @@ const GraphComponent = ({
 			) : (
 				<>
 					<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
-						{['Tabular View', 'Graphical View'].map((item, indx) => (
+						{Object.values(RESPONSE_CARD_VIEWS).map((item, indx) => (
 							<li
 								key={`${queryId}_${indx}`}
 								className={`!pb-0 ${
 									activeTab === item ? 'active-tab' : 'default-tab'
 								}`}
 								onClick={() => {
-									if (item === 'Tabular View') {
+									if (item === RESPONSE_CARD_VIEWS.TABULAR_VIEW) {
 										trackEvent(
 											EVENTS_ENUM.TABULAR_VIEW_TAB_CLICKED,
 											EVENTS_REGISTRY.TABULAR_VIEW_TAB_CLICKED,
@@ -141,7 +141,9 @@ const GraphComponent = ({
 													chatStoreReducer?.activeQueryId,
 											}),
 										);
-									} else if (item === 'Graphical View') {
+									} else if (
+										item === RESPONSE_CARD_VIEWS.GRAPHICAL_VIEW
+									) {
 										trackEvent(
 											EVENTS_ENUM.GRAPHICAL_VIEW_TAB_CLICKED,
 											EVENTS_REGISTRY.GRAPHICAL_VIEW_TAB_CLICKED,
@@ -165,7 +167,7 @@ const GraphComponent = ({
 							</li>
 						))}
 					</ul>
-					{activeTab === 'Graphical View' && (
+					{activeTab === RESPONSE_CARD_VIEWS.GRAPHICAL_VIEW && (
 						<>
 							<ScrollList>
 								{supportedGraphsData?.map((graph, index) => (
@@ -221,7 +223,7 @@ const GraphComponent = ({
 							</div>
 						</>
 					)}
-					{activeTab === 'Tabular View' && (
+					{activeTab === RESPONSE_CARD_VIEWS.TABULAR_VIEW && (
 						<div className="rounded-3xl border w-full overflow-x-scroll border-primary4 bg-purple-4 p-4 mt-2">
 							<div className="bg-white rounded-3xl py-2">
 								<TableComponent

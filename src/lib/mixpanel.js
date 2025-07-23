@@ -37,21 +37,15 @@ export const trackEvent = (
 
 	const authUserDetails = JSON.parse(localStorage.getItem('userDetails'));
 
-	if (authUserDetails) {
-		// remove user's personal data from events.
-		const personalDataKeys = ['user_name', 'email', 'name'];
-		personalDataKeys.forEach((key) => {
-			delete authUserDetails[key];
-		});
-	}
-
 	const user_session_id = getCookie(USER_SESSION_ID);
 
 	const loggedInUserProperties = !!authUserDetails
 		? {
-				...authUserDetails,
-				enterprise_id: authUserDetails?.team_id,
-				enterprise_name: authUserDetails?.team_name,
+				team_id: authUserDetails?.team_id,
+				team_name: authUserDetails?.team_name,
+				user_id: authUserDetails?.user_id,
+				enterprise_id: authUserDetails?.tenant_id,
+				enterprise_name: authUserDetails?.tenant_name,
 				user_session_id,
 			}
 		: {};
@@ -81,8 +75,10 @@ export const trackUser = (userDetails) => {
 	mixpanel.identify(userDetails.user_id);
 	mixpanel.people.set({
 		user_id: userDetails.user_id,
-		enterprise_name: userDetails.team_name,
-		enterprise_id: userDetails.team_id,
+		team_id: userDetails.team_id,
+		team_name: userDetails.team_name,
+		enterprise_id: userDetails.tenant_id,
+		enterprise_name: userDetails.tenant_name,
 	});
 };
 

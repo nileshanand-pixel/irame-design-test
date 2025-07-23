@@ -172,11 +172,6 @@ const ResponseCard = ({
 								setIsGraphLoading={setIsGraphLoading}
 								showTable={showTable}
 								queryId={answerResp?.query_id}
-								tab={
-									answerResp?.status === 'done'
-										? 'Graphical View'
-										: 'Tabular View'
-								}
 							/>
 						</div>
 					)}

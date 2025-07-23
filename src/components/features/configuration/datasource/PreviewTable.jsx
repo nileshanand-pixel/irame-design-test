@@ -13,7 +13,14 @@ import TableLoader from '@/components/elements/loading/TableLoader';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
-const PreviewTable = ({ data, form, setForm, width = '200px', datasetData }) => {
+const PreviewTable = ({
+	data,
+	form,
+	setForm,
+	width = '200px',
+	datasetData,
+	addChangeForTracking,
+}) => {
 	const [columns, setColumns] = useState(data.columns);
 	const [previewData, setPreviewData] = useState([]);
 	const [editColumnIndex, setEditColumnIndex] = useState(null);

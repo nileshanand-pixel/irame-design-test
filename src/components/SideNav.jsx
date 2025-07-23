@@ -33,6 +33,7 @@ import Tag from './elements/Tag';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
 import { useSessionId } from '@/hooks/use-session-id';
+import { queryClient } from '@/lib/react-query';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -176,7 +177,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const handleDeleteChatSession = async (
 		e,
 		sessionId,
-		threadTypeForTracking,
+		threadType,
 		workflowIdForTracking,
 	) => {
 		e.stopPropagation();
@@ -190,7 +191,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				EVENTS_ENUM.SIDE_BAR_CHAT_DELETED,
 				EVENTS_REGISTRY.SIDE_BAR_CHAT_DELETED,
 				() => ({
-					type: threadTypeForTracking,
+					type: threadType,
 					chat_session_id: sessionId,
 					workflow_id: workflowIdForTracking,
 				}),
@@ -198,6 +199,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			dispatch(
 				updateUtilProp([{ key: 'sessionHistory', value: updatedList }]),
 			);
+			if (threadType === 'workflow') {
+				queryClient.invalidateQueries(['get-business-processes-home-page']);
+			} else {
+				queryClient.invalidateQueries(['chat-history']);
+			}
 		} catch (error) {}
 	};
 

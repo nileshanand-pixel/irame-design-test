@@ -21,6 +21,8 @@ export default function QueryList({ reportDetails, pdfMode }) {
 				(a, b) => a.order_no - b.order_no,
 			);
 			setCards(sorted);
+		} else {
+			setCards([]);
 		}
 	}, [reportDetails]);
 

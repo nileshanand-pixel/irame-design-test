@@ -283,6 +283,7 @@ const Configuration = () => {
 			);
 			dispatch(updateUtilProp([{ key: 'dataSources', value: updatedList }]));
 			setDataSources(updatedList);
+			queryClient.invalidateQueries(['data-sources']);
 		} catch (error) {
 			trackEvent(
 				EVENTS_ENUM.DATASET_DELETION_FAILED,

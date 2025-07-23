@@ -15,6 +15,10 @@
 				{
 					"key": "Strict-Transport-Security",
 					"value": "max-age=300"
+				},
+				{
+					"key": "Cache-Control",
+					"value": "no-store"
 				}
 			]
 		}

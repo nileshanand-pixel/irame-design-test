@@ -6,6 +6,7 @@ import { Button } from '../ui/button';
 import { GraphCategoryFilter } from './GraphCategoryFilter';
 import { debounce } from 'lodash';
 import { cn, getChartType } from '@/lib/utils';
+import useS3File from '@/hooks/useS3File';
 
 const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 	const chartRef = useRef(null);
@@ -21,6 +22,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 	});
 
 	const handle = useFullScreenHandle();
+	const { createS3File } = useS3File();
 
 	// Color array and helper functions remain the same
 	const colors = [
@@ -152,7 +154,8 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 		const fetchData = async () => {
 			if (graph.type && graph.x_axis && graph.y_axis && graph.csv_url) {
 				try {
-					const csvData = await d3.csv(graph.csv_url);
+					const csvUrl = await createS3File(graph.csv_url);
+					const csvData = await d3.csv(csvUrl);
 					setBaseData(csvData);
 				} catch (error) {
 					console.error('Error loading CSV data:', error);
@@ -207,14 +210,13 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 			const ctx = document.getElementById(
 				`canvas_${identifierKey}_${graph.id}`,
 			);
-			const isPieChart = graph.type.toLowerCase() === 'pie' || 'doughnut';
-			const tempLoadedData = handle.active
-				? loadedData
-				: loadedData.slice(0, Math.min(21, loadedData.length));
+			const isPieChart = ['pie', 'doughnut'].includes(
+				graph.type.toLowerCase(),
+			);
 
 			const finalDataObj = isPieChart
-				? getCircularChartDatasets(tempLoadedData)
-				: getAxialChartDatasets(tempLoadedData, graph.y_axis);
+				? getCircularChartDatasets(loadedData)
+				: getAxialChartDatasets(loadedData, graph.y_axis);
 
 			const chartType = getChartType(graph);
 
