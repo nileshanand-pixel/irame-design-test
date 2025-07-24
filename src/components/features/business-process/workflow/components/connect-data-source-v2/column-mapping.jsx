@@ -111,6 +111,7 @@ export const ColumnMapping = ({
 	const [columnMappings, setColumnMappings] = useState({}); // initialised below
 	const [openFileId, setOpenFileId] = useState(null);
 	const [openCombobox, setOpenCombobox] = useState(null);
+	const [searchQuery, setSearchQuery] = useState('');
 
 	/* seed columnMappings from backend once we have uploadedFiles */
 	useEffect(() => {
@@ -451,6 +452,12 @@ export const ColumnMapping = ({
 																	<CommandInput
 																		placeholder="Search column..."
 																		className="h-9"
+																		value={
+																			searchQuery
+																		}
+																		onValueChange={
+																			setSearchQuery
+																		}
 																	/>
 																	<CommandList>
 																		<CommandEmpty>
@@ -458,51 +465,62 @@ export const ColumnMapping = ({
 																			found.
 																		</CommandEmpty>
 																		<CommandGroup>
-																			{file.headers.map(
-																				(
-																					h,
-																				) => (
-																					<CommandItem
-																						key={
-																							h.colId
-																						}
-																						value={JSON.stringify(
-																							h,
-																						)}
-																						onSelect={(
-																							val,
-																						) => {
-																							handleMappingChange(
-																								file.backendColumns,
-																								file.fileId,
-																								reqCol.name,
-																								val ===
-																									selectVal
-																									? ''
-																									: val,
-																							);
-																							setOpen(
-																								false,
-																							);
-																						}}
-																					>
-																						{
-																							h.name
-																						}
-																						<Check
-																							className={cn(
-																								'ml-auto size-4 text-purple-100',
-																								selectVal ===
-																									JSON.stringify(
-																										h,
-																									)
-																									? 'opacity-100'
-																									: 'opacity-0',
+																			{file.headers
+																				.filter(
+																					(
+																						h,
+																					) =>
+																						h.name
+																							.toLowerCase()
+																							.includes(
+																								searchQuery.toLowerCase(),
+																							),
+																				)
+																				.map(
+																					(
+																						h,
+																					) => (
+																						<CommandItem
+																							key={
+																								h.colId
+																							}
+																							value={JSON.stringify(
+																								h,
 																							)}
-																						/>
-																					</CommandItem>
-																				),
-																			)}
+																							onSelect={(
+																								val,
+																							) => {
+																								handleMappingChange(
+																									file.backendColumns,
+																									file.fileId,
+																									reqCol.name,
+																									val ===
+																										selectVal
+																										? ''
+																										: val,
+																								);
+																								setOpen(
+																									false,
+																								);
+																							}}
+																						>
+																							{
+																								h.name
+																							}
+																							<Check
+																								className={cn(
+																									'ml-auto size-4 text-purple-100',
+																									selectVal ===
+																										JSON.stringify(
+																											h,
+																										)
+																										? 'opacity-100'
+																										: 'opacity-0',
+																								)}
+																							/>
+																						</CommandItem>
+																					),
+																				)}
 																		</CommandGroup>
 																	</CommandList>
 																</Command>
