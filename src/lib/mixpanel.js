@@ -14,6 +14,21 @@ const tokens = {
 	prod: import.meta.env.VITE_MIXPANEL_TOKEN_PROD,
 };
 
+const getScreenInfo = () => {
+	const width = window.innerWidth;
+	const height = window.innerHeight;
+	const screenInfo = {
+		viewportWidth: width,
+		viewportHeight: height,
+		actualScreenWidth: Math.round((width * devicePixelRatio) / 2),
+		actualScreenHeight: Math.round((height * devicePixelRatio) / 2),
+		browserZoomLevel: Math.round((devicePixelRatio / 2) * 100),
+		devicePixelRatio: Number(devicePixelRatio.toFixed(2)),
+	};
+
+	return screenInfo;
+};
+
 export const initAnalytics = () => {
 	if (import.meta.env.VITE_MIXPANEL_DISABLED === 'true') return;
 
@@ -49,6 +64,7 @@ export const trackEvent = (
 				user_session_id,
 			}
 		: {};
+	const screenInfo = getScreenInfo();
 
 	if (!!authUserDetails) {
 		const first_event_in_user_session = getLocalStorage(
@@ -65,6 +81,8 @@ export const trackEvent = (
 		...mappedProperties, // build event custom parameters
 		env,
 		...loggedInUserProperties,
+		...screenInfo,
+		screenInfo,
 	};
 
 	mixpanel.track(eventName, finalProperties);
