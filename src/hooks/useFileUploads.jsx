@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import {
 	parseExcel,
@@ -27,8 +27,11 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 	const [uploadedMetadata, setUploadedMetadata] = useState({});
 	const [isProcessingExcel, setIsProcessingExcel] = useState(false);
 
-	const isAllFilesUploaded =
-		files.length > 0 && files.every((file) => progress[file.name] === 100);
+	const isAllFilesUploaded = useMemo(() => {
+		return (
+			files.length > 0 && files.every((file) => progress[file.name] === 100)
+		);
+	}, [files, progress]);
 
 	const addFiles = useCallback(
 		async (fileList) => {
@@ -45,14 +48,12 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 
 			const newFiles = [];
 			const newProgress = {};
-			let hasExcel = false;
 
 			setIsProcessingExcel(excelFiles.length > 0);
 
 			// Process Excel files sequentially, with try/catch per file
 			for (const file of excelFiles) {
 				if (files.some((f) => f.name === file.name)) continue; // prevent duplicates
-				hasExcel = true;
 
 				try {
 					// Start upload and wait for it to complete
@@ -136,13 +137,15 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 				newProgress[file.name] = 0;
 			}
 
-			setFiles((prev) => [...prev, ...newFiles]);
-			setProgress((prev) => ({ ...prev, ...newProgress }));
-			setUploadQueue((prev) => [
-				...prev,
-				...newFiles.filter((f) => f.type !== 'excel'),
-			]);
-			if (hasExcel) setIsProcessingExcel(false);
+			if (newFiles.length > 0) {
+				setFiles((prev) => [...prev, ...newFiles]);
+				setProgress((prev) => ({ ...prev, ...newProgress }));
+				setUploadQueue((prev) => [
+					...prev,
+					...newFiles.filter((f) => f.type !== 'excel'),
+				]);
+			}
+			setIsProcessingExcel(false);
 		},
 		[files, excelToCsv],
 	);

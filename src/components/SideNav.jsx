@@ -559,7 +559,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				{bottomMenuList?.map((menu, key) => (
 					<div key={key} className="space-y-2">
 						{menu?.items?.map((option, optionKey) => {
-							const isActive = activeTab === option.link;
+							const isActive = activeTab === option.link.split('?')[0];
 							return (
 								<Hint
 									label={option.text}
