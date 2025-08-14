@@ -31,14 +31,14 @@ export default function ImagePreview({
 	return (
 		<div className="relative inline-flex">
 			{isCreatingS3File ? (
-				<div className="h-[100px] w-[150px] flex justify-center items-center gap-2 border rounded-md cursor-pointer text-sm">
+				<div className="h-[6.25rem] w-[9.375rem] flex justify-center items-center gap-2 border rounded-md cursor-pointer text-sm">
 					<CircularLoader size="sm" />
 					<span>Loading...</span>
 				</div>
 			) : (
 				<img
 					src={signedUrl || url || URL.createObjectURL(file)}
-					className="h-[100px] w-auto rounded-md cursor-pointer"
+					className="h-[6.25rem] w-auto rounded-md cursor-pointer"
 					onClick={() => setIsPreviewOpen((prev) => !prev)}
 					onError={handleError}
 				/>
@@ -49,12 +49,12 @@ export default function ImagePreview({
 					className="absolute top-0 right-0 translate-x-[50%] translate-y-[-50%] cursor-pointer bg-[#fff] rounded-full z-[10]"
 					onClick={() => handleCancel(file.name)}
 				>
-					<XCircle size={20} color="#26064A99" />
+					<XCircle className="size-5" color="#26064A99" />
 				</div>
 			)}
 
 			{showProgress && progress <= 99 ? (
-				<div className="absolute bottom-0 left-0 h-[1px] w-full rounded-lg overflow-hidden">
+				<div className="absolute bottom-0 left-0 h-[0.0625rem] w-full rounded-lg overflow-hidden">
 					<div
 						className="h-full bg-purple-100 rounded-lg"
 						style={{

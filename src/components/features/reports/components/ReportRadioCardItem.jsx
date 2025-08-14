@@ -41,7 +41,7 @@ const ReportRadioCardItem = ({
 				className={cn(
 					'rounded-full border-2',
 					'border-gray-400',
-					'data-[state=checked]:border-[5.4px]',
+					'data-[state=checked]:border-[0.33rem]',
 					'data-[state=checked]:border-purple-100',
 					'transition-all duration-200 ease-in-out',
 				)}

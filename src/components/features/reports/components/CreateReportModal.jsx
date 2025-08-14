@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { closeModal } from '@/redux/reducer/modalReducer';
 import { Label } from '@/components/ui/label';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Loader2 } from 'lucide-react'; // assuming you're using lucide-react for icons
 import { createReport } from '../service/reports.service';
 import { queryClient } from '@/lib/react-query';

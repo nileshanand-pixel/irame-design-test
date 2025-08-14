@@ -1,5 +1,5 @@
 import axiosClientV1 from '@/lib/axios';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 export const getUserDashboard = async () => {
 	const response = await axiosClientV1.get(`/dashboards`, {

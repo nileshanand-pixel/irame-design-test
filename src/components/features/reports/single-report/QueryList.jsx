@@ -4,7 +4,7 @@ import { QueryCard } from './QueryCard';
 import { DotsSixVertical } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
 import { updateReportCardOrder } from '../service/reports.service';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
 import { useReportId } from '../hooks/useReportId';
@@ -69,9 +69,7 @@ export default function QueryList({ reportDetails, pdfMode }) {
 	};
 
 	return (
-		<div
-			className={cn('mt-8  overflow-x-hidden w-full', pdfMode ? '' : '-ml-6')}
-		>
+		<div className={'mt-8 overflow-x-hidden w-full'}>
 			{pdfMode ? (
 				<div className="flex flex-col space-y-8">
 					{cards.map((card) => (
@@ -115,7 +113,7 @@ export default function QueryList({ reportDetails, pdfMode }) {
 															'cursor-not-allowed',
 													)}
 												>
-													<DotsSixVertical size={20} />
+													<DotsSixVertical className="size-5" />
 												</div>
 												<div className="flex-1 overflow-x-hidden">
 													<QueryCard

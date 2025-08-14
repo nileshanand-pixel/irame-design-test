@@ -131,8 +131,8 @@ const DashboardDetailsPage = () => {
 	}, [query, dashboardDetailsQuery.data]);
 
 	return (
-		<div className="w-full h-full px-8 " ref={elementRef}>
-			<div className="w-full flex flex-col justify-between mt-2 ">
+		<div className="w-full h-full px-8" ref={elementRef}>
+			<div className="w-full flex flex-col justify-between mt-2">
 				<div className="w-fit flex items-end gap-2 relative">
 					<h2
 						className="text-2xl font-semibold text-primary80 cursor-pointer"
@@ -149,7 +149,7 @@ const DashboardDetailsPage = () => {
 				<div className="flex gap-4 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]">
 					<div
 						className={cn(
-							'grid gap-4 my-6 w-full h-[78vh] h-sm:h-[80vh] h-lg:h-[85vh] h-xl:h-[90vh] overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
+							'grid gap-4 my-6 w-full h-[82vh] overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]',
 							selectedItem ? 'grid-cols-1' : 'grid-cols-2',
 						)}
 					>
@@ -157,7 +157,7 @@ const DashboardDetailsPage = () => {
 					</div>
 					<div
 						className={cn(
-							'min-w-[400px] max-w-[400px] mt-6 h-[78vh] h-sm:h-[80vh] h-lg:h-[85vh] h-xl:h-[90vh] p-4 bg-white border-l border-primary8 rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] transform',
+							'min-w-[25rem] max-w-[25rem] mt-6 h-[82vh] p-4 bg-white border-l border-primary8 rounded-3xl transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] transform',
 							selectedItem
 								? 'opacity-100 translate-x-0'
 								: 'opacity-0 translate-x-full w-0 min-w-0 p-0 border-l-0',
@@ -167,7 +167,7 @@ const DashboardDetailsPage = () => {
 							<>
 								<div className="flex justify-between h-[5%] items-center">
 									<h2 className="text-xl font-semibold text-primary80 flex items-center">
-										<span className="material-symbols-outlined me-2">
+										<span className="material-symbols-outlined text-2xl mr-2">
 											query_stats
 										</span>
 										Summary
@@ -191,7 +191,7 @@ const DashboardDetailsPage = () => {
 											setSelectedItem(null);
 										}}
 									>
-										<span className="material-symbols-outlined">
+										<span className="material-symbols-outlined text-2xl">
 											close
 										</span>
 									</button>
@@ -285,7 +285,7 @@ const DashboardDetailsPage = () => {
 													);
 												}}
 											>
-												<span className="material-icons-outlined me-2">
+												<span className="material-icons-outlined text-2xl me-2">
 													auto_awesome
 												</span>
 												IRA

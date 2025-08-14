@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useNavigate } from 'react-router-dom';
 import { getReports } from '@/components/features/reports/service/reports.service';
 import useAuth from '@/hooks/useAuth';
@@ -32,28 +32,32 @@ const GlobalPollReports = () => {
 						correspondingPrevReport?.status === 'in_progress' &&
 						currentReport?.status === 'done'
 					) {
-						toast(`Report "${currentReport.name}" is now done!`, {
-							duration: 30000,
-							action: (
-								<Button
-									onClick={() => {
-										navigate('/app/reports/');
-										trackEvent(
-											EVENTS_ENUM.VIEW_RE,
-											EVENTS_REGISTRY.VIEW_DASHBOARD_CLICKED,
-											() => ({
-												report_id: currentReport?.report_id,
-												name: currentReport?.name,
-												from: 'snack-bar',
-											}),
-										);
-									}}
-									className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
-								>
-									View Reports
-								</Button>
-							),
-						});
+						toast.success(
+							`Report "${currentReport.name}" is now done!`,
+							{
+								duration: 30000,
+								action: (
+									<Button
+										onClick={() => {
+											navigate('/app/reports/');
+											trackEvent(
+												EVENTS_ENUM.VIEW_RE,
+												EVENTS_REGISTRY.VIEW_DASHBOARD_CLICKED,
+												() => ({
+													report_id:
+														currentReport?.report_id,
+													name: currentReport?.name,
+													from: 'snack-bar',
+												}),
+											);
+										}}
+										className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+									>
+										View Reports
+									</Button>
+								),
+							},
+						);
 					}
 				});
 

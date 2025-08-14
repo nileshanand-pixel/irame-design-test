@@ -46,7 +46,7 @@ export const WizardHeader = ({ setStep, currentStep }) => {
 								`}
 							>
 								{currentStep > step.number ? (
-									<CheckIcon size={16} />
+									<CheckIcon className="size-4" />
 								) : (
 									<span>{step.number}</span>
 								)}
@@ -63,7 +63,7 @@ export const WizardHeader = ({ setStep, currentStep }) => {
 						</div>
 						{index < steps.length - 1 && (
 							<div
-								className={`flex-1 mx-4 h-[2px] ${
+								className={`flex-1 mx-4 h-[0.125rem] ${
 									currentStep > index + 1
 										? 'bg-[#6A12CD]'
 										: 'bg-gray-200'

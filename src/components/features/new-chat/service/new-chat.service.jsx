@@ -1,8 +1,8 @@
 import axiosClientV1 from '@/lib/axios';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import axios from 'axios';
 import FormData from 'form-data';
-import { promptMap } from '@/config/enhance-prompt';
+import { DEFAULT_ENHANCE_MODE, rolesConfig } from '@/config/enhance-prompt';
 
 export const fetchSuggestions = async (dataSourceId) => {
 	const response = await axiosClientV1.get(
@@ -145,12 +145,15 @@ export const deleteTemplate = async (templateId) => {
 	}
 };
 
-export const enhancePrompt = async (userInput, mode = 'analyst') => {
+export const enhancePrompt = async (userInput, mode = DEFAULT_ENHANCE_MODE) => {
 	try {
 		const data = new FormData();
 		data.append('user_input', userInput);
 		const userMode = localStorage.getItem('prompt-role');
-		data.append('base_instruction', promptMap[userMode] || promptMap[mode]);
+		data.append(
+			'base_instruction',
+			rolesConfig[userMode]?.prompt || rolesConfig[mode]?.prompt,
+		);
 
 		const config = {
 			method: 'post',
@@ -160,8 +163,6 @@ export const enhancePrompt = async (userInput, mode = 'analyst') => {
 		};
 
 		const response = await axios.request(config);
-		// setTimeout(() => {}, 2000)
-		// return "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
 		return response.data;
 	} catch (error) {
 		console.log(error);

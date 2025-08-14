@@ -17,6 +17,7 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
 import { useSelector } from 'react-redux';
+import { cn } from '@/lib/utils';
 
 const Workspace = ({
 	handleTabClick,
@@ -78,7 +79,7 @@ const Workspace = ({
 			return [...Array(4)].map((_, index) => (
 				<Skeleton
 					key={index}
-					className="h-4 w-[150px] space-x-2 mr-2 bg-purple-8 rounded-lg mb-1"
+					className="h-4 w-[9.375rem] space-x-2 mr-2 bg-purple-8 rounded-lg mb-1"
 				/>
 			));
 		}
@@ -104,17 +105,20 @@ const Workspace = ({
 		!editDisabled && workspaceHasChanges && answerResp?.type !== 'workflow';
 
 	return (
-		<div className="rounded-2xl my-6 flex-1 w-full h-full overflow-hidden relative">
-			<ul className="ghost-tabs relative col-span-12 mb-4 inline-flex w-full border-b border-black-10">
+		<div className="rounded-2xl mt-3 flex-1 w-full h-full overflow-hidden relative flex flex-col gap-4">
+			<ul className="ghost-tabs relative inline-flex w-full border-b border-black-10 shrink-0">
 				{renderTabs()}
 			</ul>
 			{!isLoading ? (
 				<div
-					className={`w-full ${showRegenerateAction ? 'h-[95%]' : 'h-[98%]'} overflow-y-auto`}
+					className={cn(
+						'overflow-y-auto h-full',
+						showRegenerateAction && 'mb-[4rem]',
+					)}
 				>
 					{renderedComponent}
 					{showRegenerateAction && (
-						<div className="my-2 flex gap-4 w-full absolute bottom-10">
+						<div className="my-2 flex gap-4 w-full absolute bottom-1">
 							<Button
 								className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80 w-full"
 								onClick={() => {
@@ -157,7 +161,7 @@ const Workspace = ({
 						<Skeleton className="h-5 w-[50%] bg-purple-8" />
 						<Skeleton className="h-5 w-[90%] bg-purple-8" />
 					</div>
-					<Skeleton className="h-[125px] w-[250px] rounded-xl bg-purple-8" />
+					<Skeleton className="h-[7.8rem] w-[15.625rem] rounded-xl bg-purple-8" />
 				</div>
 			)}
 		</div>

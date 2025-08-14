@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { CaretUp, Chats } from '@phosphor-icons/react/dist/ssr';
 
 export default function CommentHeading({
@@ -13,7 +14,7 @@ export default function CommentHeading({
 		<div className="p-2 flex justify-between items-center">
 			<div className="flex items-center gap-2">
 				<span>
-					<Chats size={24} color="#666" />
+					<Chats color="#666" className="size-6" />
 				</span>
 				<span className="text-sm font-semibold">Comments</span>
 				<span className="text-xs">
@@ -22,10 +23,9 @@ export default function CommentHeading({
 			</div>
 			<div className="cursor-pointer" onClick={handleClick}>
 				<CaretUp
-					size={20}
 					color="#666"
 					weight="bold"
-					className={arrowClassName}
+					className={cn(arrowClassName, 'size-5')}
 				/>
 			</div>
 		</div>

@@ -10,17 +10,17 @@ const DataSourceCard = ({ data }) => {
 					`/app/reports/datasources/report?datasourceId=${data.datasource_id}`,
 				)
 			}
-			className={`flex gap-2 cursor-pointer p-4 border rounded-2xl border-primary10 ${data.datasource_id === 'shared' && 'bg-primary2'} hover:bg-gray-100`}
+			className={`flex gap-4 cursor-pointer p-4 border rounded-2xl border-primary10 ${data.datasource_id === 'shared' && 'bg-primary2'} hover:bg-gray-100`}
 		>
 			<img
 				src="https://d2vkmtgu2mxkyq.cloudfront.net/folder_image_icon.png"
 				alt="folder icon"
-				className="mr-2 w-[3.81rem]"
+				className="w-[3.81rem]"
 			/>
-			<div className="flex flex-col gap-2 mr-4">
-				<span className="text-sm font-semibold truncate w-40 md:max-w-40 xl:max-w-52 xl:pr-8 text-primary80">
+			<div className="w-[calc(100%-4.81rem)] flex flex-col gap-2">
+				<div className="w-full text-sm font-semibold truncate text-primary80">
 					{data?.datasource_name}
-				</span>
+				</div>
 				<div className="px-2 py-0.5 w-fit rounded-2xl text-secondary-textPurple bg-secondary-lightPurple">
 					{data?.report_count || 0} Reports
 				</div>

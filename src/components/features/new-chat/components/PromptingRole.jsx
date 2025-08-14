@@ -51,7 +51,7 @@ function PromptingRole() {
 				</div>
 
 				<div className="flex flex-grow gap-2 items-stretch">
-					<div className="w-2/5">
+					<div className="w-1/2">
 						{Object.entries(rolesConfig).map(([key, role]) =>
 							role.enabled ? (
 								<DropdownMenuItem
@@ -72,7 +72,7 @@ function PromptingRole() {
 						)}
 					</div>
 
-					<div className="border w-1/2 rounded-md px-2 text-primary60 bg-purple-4 flex-1">
+					<div className="border w-auto rounded-md px-2 text-primary60 bg-purple-4 flex-1">
 						<span className="text-xs">{shownDescription}</span>
 					</div>
 				</div>

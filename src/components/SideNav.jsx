@@ -277,12 +277,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			>
 				<div
 					className={cn(
-						'flex items-center max-w-[200px] truncate',
+						'flex items-center max-w-[12.5rem] truncate',
 						isEditing === session.session_id ? '' : ' px-2 py-1',
 					)}
 				>
 					{showSpinner ? (
-						<GradientSpinner tailwindBg="bg-[#E6D7F7]" width="15" />
+						<GradientSpinner tailwindBg="bg-[#E6D7F7]" width="1" />
 					) : (
 						<img
 							src={sessionIconUrl}
@@ -306,7 +306,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<i
-							className="bi-three-dots-vertical ms-3 me-3 items-end hover:bg-purple-4 rounded-[4px] py-1"
+							className="bi-three-dots-vertical ms-3 me-3 items-end hover:bg-purple-4 rounded-[0.25rem] py-1"
 							onClick={(e) => e.stopPropagation()}
 						></i>
 					</DropdownMenuTrigger>
@@ -365,7 +365,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				</div>
 
 				{isExpanded && (
-					<div className="ml-4 border-l-2 border-gray-300 rounded-sm pl-2 space-y-1">
+					<div className="ml-4 border-l-[0.25rem] border-gray-300 rounded-sm pl-2 space-y-1">
 						{bp.workflows.map((workflow) => renderWorkflow(workflow))}
 					</div>
 				)}
@@ -423,7 +423,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				<div className="flex items-center gap-3 flex-1 min-w-0 pl-3">
 					<div className="size-5 flex items-center justify-center shrink-0">
 						{showSpinner ? (
-							<GradientSpinner tailwindBg="bg-[#E6D7F7]" width="15" />
+							<GradientSpinner tailwindBg="bg-[#E6D7F7]" width="1" />
 						) : (
 							<img
 								src="https://d2vkmtgu2mxkyq.cloudfront.net/workflow_icon.svg"
@@ -514,7 +514,9 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	return (
 		<div
 			className={`fixed flex flex-col h-screen ${
-				isSideNavOpen ? 'w-[270px] min-w-[270px]' : 'w-[72px] min-w-[72px]'
+				isSideNavOpen
+					? 'w-[16rem] min-w-[16rem]'
+					: 'w-[4.5rem] min-w-[4.5rem]'
 			} border-r bg-purple-8`}
 		>
 			{/* SideNav Expand Collapse | Hamburger */}
@@ -540,7 +542,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						onClick={askIra}
 						className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
 							isSideNavOpen
-								? 'rounded-[200px] px-5 py-3'
+								? 'rounded-[12.5rem] px-5 py-3'
 								: 'rounded-full px-2 mx-auto py-2'
 						} bg-purple-4`}
 					>
@@ -583,7 +585,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 									>
 										<img
 											src={option.icon}
-											className={`${isActive ? 'text-purple-100' : ''} size-[22px]`}
+											className={`${isActive ? 'text-purple-100' : ''} size-[1.375rem]`}
 											style={{ strokeWidth: '2' }}
 										/>
 										{isSideNavOpen && (

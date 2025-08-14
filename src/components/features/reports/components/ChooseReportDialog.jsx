@@ -50,7 +50,7 @@ export default function ChooseReportDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
-			<DialogContent className="sm:max-w-lg rounded-lg p-4 bg-white shadow-lg">
+			<DialogContent className="max-w-lg rounded-lg p-4 bg-white shadow-lg">
 				<DialogHeader>
 					<div className="flex gap-4 items-center">
 						<img

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { updateReportStatus } from '../service/reports.service';
 import { queryClient } from '@/lib/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { REPORT_STATUS_CONFIG } from '@/config/report';
 import { useReportId } from '../hooks/useReportId';

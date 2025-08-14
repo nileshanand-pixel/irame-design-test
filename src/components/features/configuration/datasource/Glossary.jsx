@@ -107,9 +107,9 @@ const Glossary = ({ data, setForm, form, addChangeForTracking }) => {
 			{localForm.map((glossary, index) => (
 				<div
 					key={index}
-					className="flex flex-col md:flex-row gap-4 items-start justify-center"
+					className="flex flex-row gap-4 items-start justify-center"
 				>
-					<div className="w-full md:w-1/4 flex flex-col gap-2">
+					<div className="w-1/4 flex flex-col gap-2">
 						<Label>Term</Label>
 						<div className="flex justify-between items-center">
 							<textarea
@@ -136,7 +136,7 @@ const Glossary = ({ data, setForm, form, addChangeForTracking }) => {
 						<div className="flex flex-row-reverse  text-purple-80">
 							<span
 								onClick={() => deleteGlossary(index)}
-								className="material-symbols-outlined cursor-pointer"
+								className="material-symbols-outlined cursor-pointer text-2xl"
 							>
 								delete
 							</span>

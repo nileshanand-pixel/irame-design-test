@@ -6,7 +6,7 @@ import {
 } from '../service/dashboard.service';
 import { useRouter } from '@/hooks/useRouter';
 import InputText from '@/components/elements/InputText';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/react-query';
@@ -99,8 +99,12 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 			}
 		>
 			<div className="flex gap-6">
-				<div className="bg-purple-4 w-[100px]  rounded-xl flex items-center justify-center pt-1.5">
-					<img src={graphPlaceholder} alt="graph-placeholder" />
+				<div className="bg-purple-4 w-[6.25rem] rounded-xl flex items-center justify-center pt-1.5">
+					<img
+						src={graphPlaceholder}
+						alt="graph-placeholder"
+						className="w-[4.56rem] h-[3.125rem]"
+					/>
 				</div>
 				<div className="flex flex-col">
 					{isEditing ? (
@@ -131,7 +135,7 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 			</div>
 			<div className="flex items-start justify-start gap-1">
 				<span
-					className="material-symbols-outlined text-primary100 cursor-pointer hover:bg-purple-4 rounded-full p-2"
+					className="material-symbols-outlined text-primary100 cursor-pointer hover:bg-purple-4 rounded-full p-2 text-2xl"
 					onClick={(e) => {
 						e.stopPropagation();
 						if (!isEditing) {
@@ -152,7 +156,7 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 					) : (
 						<img
 							src={`https://d2vkmtgu2mxkyq.cloudfront.net/pencil.svg`}
-							className="me-1 size-6"
+							className=" size-6"
 							alt="edit-pencil"
 						/>
 					)}

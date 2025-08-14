@@ -28,11 +28,11 @@ export const CustomDropdown = ({
 					<Button
 						size="sm"
 						variant={isDisabled ? 'noninteractive' : 'transparent'}
-						className={`flex items-center gap-2 rounded-full w-full sm:w-auto justify-between sm:justify-start ${selectedOption.bgClass} ${selectedOption.textClass}`}
+						className={`flex items-center gap-2 rounded-full w-auto justify-start ${selectedOption.bgClass} ${selectedOption.textClass}`}
 					>
 						<div className="flex items-center gap-2">
 							{isLoading ? (
-								<Loader2 className="animate-spin" size={16} />
+								<Loader2 className="animate-spin size-4" />
 							) : (
 								variant === 'dot' && (
 									<span
@@ -43,7 +43,7 @@ export const CustomDropdown = ({
 							<span className="font-medium">
 								{selectedOption.label}
 							</span>
-							{!isDisabled && <ChevronDown size={16} />}
+							{!isDisabled && <ChevronDown className="size-4" />}
 						</div>
 					</Button>
 				</div>

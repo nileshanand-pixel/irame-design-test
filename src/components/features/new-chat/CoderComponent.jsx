@@ -2,10 +2,11 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
 import { trackEvent } from '@/lib/mixpanel';
 import { Editor } from '@monaco-editor/react';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 const CoderComponent = ({ data }) => {
+	const [fontSize, setFontSize] = useState(0);
 	const editorRef = useRef(null);
 	const { query } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -31,18 +32,39 @@ const CoderComponent = ({ data }) => {
 		editor.onDidPaste(handleEdit);
 	};
 
+	useEffect(() => {
+		function handleResize() {
+			setFontSize(
+				parseFloat(
+					window.getComputedStyle(document.documentElement).fontSize,
+				),
+			);
+		}
+		window.addEventListener('resize', handleResize);
+		handleResize();
+
+		return () => {
+			window.removeEventListener('resize', handleResize);
+		};
+	}, []);
+
 	return (
-		<div>
-			<Editor
-				height="68vh"
-				theme="vs-dark"
-				defaultLanguage="python"
-				defaultValue={data || '# no data'}
-				className="[&>.monaco-editor]:rounded-2xl bg-primary40"
-				options={{ readOnly: true, readOnlyMessage: { value: 'Read Only' } }}
-				onMount={handleEditorDidMount}
-			/>
-		</div>
+		<Editor
+			height="100%"
+			theme="vs-dark"
+			defaultLanguage="python"
+			defaultValue={data || '# no data'}
+			className="[&>.monaco-editor]:rounded-2xl bg-primary40 h-full"
+			options={{
+				readOnly: true,
+				readOnlyMessage: { value: 'Read Only' },
+				fontSize,
+				renderMiniMap: 'None',
+				glyphMargin: false,
+				minimap: { enabled: false },
+			}}
+			onMount={handleEditorDidMount}
+		/>
 	);
 };
 

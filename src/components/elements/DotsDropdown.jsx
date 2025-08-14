@@ -12,7 +12,7 @@ const DotsDropdown = ({ options, align = 'end' }) => {
 		<DropdownMenu className="relative">
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" size="icon" className=" h-9 w-6">
-					<span className="material-symbols-outlined text-primary100 cursor-pointer ">
+					<span className="material-symbols-outlined text-primary100 cursor-pointer text-2xl">
 						more_vert
 					</span>
 					<span className="sr-only">Open menu</span>

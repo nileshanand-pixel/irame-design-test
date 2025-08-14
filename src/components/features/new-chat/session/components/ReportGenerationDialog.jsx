@@ -17,7 +17,7 @@ import {
 import { useRouter } from '@/hooks/useRouter';
 import ReportCardSkeleton from './ReportCardSkeletion';
 import { useSelector } from 'react-redux';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const ReportGenerationDialog = React.memo(({ open, setOpen, closeModal }) => {
 	const { query } = useRouter();

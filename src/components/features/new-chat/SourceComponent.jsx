@@ -172,8 +172,7 @@ const SourceComponent = ({
 						<div className="flex items-center gap-2">
 							<img
 								src={getFileIcon(file?.filename)}
-								width={20}
-								height={20}
+								className="size-5"
 							/>
 							<h3 className="text-primary60 font-semibold">
 								{file?.filename || 'File'}

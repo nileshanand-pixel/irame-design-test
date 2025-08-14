@@ -9,7 +9,7 @@ import {
 } from '../service/configuration.service';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { queryClient } from '@/lib/react-query';
 import DataSourceSkeleton from './DatasourceSkeleton';
 import BackdropLoader from '@/components/elements/loading/BackDropLoader';
@@ -240,7 +240,7 @@ const DataSource = () => {
 				<div className="flex flex-row-reverse p-2 bg-primary4 hover:bg-primary8 rounded-md text-purple-80">
 					<span
 						onClick={handleDeleteDatasource}
-						className="material-symbols-outlined cursor-pointer"
+						className="material-symbols-outlined cursor-pointer text-xl"
 					>
 						delete
 					</span>
@@ -295,11 +295,11 @@ const DataSource = () => {
 	}, [datasourceQuery.isSuccess, datasourceQuery.data]);
 
 	return (
-		<div className="w-full px-8 relative h-full grid grid-cols-1 pt-2">
+		<div className="w-full px-8 relative h-full pt-2">
 			{(editMutation.isPending || deleteMutation.isPending) && (
 				<BackdropLoader />
 			)}
-			<div className="text-primary80 gap-2">
+			<div className="text-primary80 gap-2 mb-4">
 				<span
 					className="text-2xl font-semibold cursor-pointer"
 					onClick={() =>
@@ -317,7 +317,7 @@ const DataSource = () => {
 			{datasourceQuery.isLoading || !form ? (
 				<DataSourceSkeleton color="#E0E0E0" />
 			) : (
-				<div className="border rounded-3xl  py-6 px-6 col-span-12 shadow-1xl h-[80vh]">
+				<div className="border rounded-3xl py-6 px-6 shadow-1xl h-[80vh]">
 					{/* Header */}
 					<div className="flex justify-between w-full">
 						<div className="flex items-center text-[#26064ACC]">
@@ -366,7 +366,7 @@ const DataSource = () => {
 					</div>
 
 					{/* Tab Content */}
-					<div className="mt-2 h-3/4 sm:h-5/6">{renderTabContent()}</div>
+					<div className="mt-2 h-5/6">{renderTabContent()}</div>
 				</div>
 			)}
 		</div>

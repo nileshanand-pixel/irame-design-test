@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { updateVisibleGraphs } from '../service/reports.service';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -91,7 +91,7 @@ export const AddGraphModal = ({ open, reportCardId, graphs = [], onClose }) => {
 							id="select-all"
 							checked={allSelected}
 							onCheckedChange={handleSelectAll}
-							className="h-[18px] w-[18px] text-black/40 border-2 rounded-sm border-black/40 data-[state=checked]:border-purple-100 data-[state=checked]:bg-purple-100"
+							className="h-[1.125rem] w-[1.125rem] text-black/40 border-2 rounded-sm border-black/40 data-[state=checked]:border-purple-100 data-[state=checked]:bg-purple-100"
 						/>
 						<Label
 							htmlFor="select-all"
@@ -104,7 +104,7 @@ export const AddGraphModal = ({ open, reportCardId, graphs = [], onClose }) => {
 						</Label>
 					</div>
 
-					<div className="grid grid-cols-1 md:grid-cols-2 bg-purple-4 px-4 py-4 border border-primary4 rounded-xl gap-6">
+					<div className="grid grid-cols-2 bg-purple-4 px-4 py-4 border border-primary4 rounded-xl gap-6">
 						{graphs.map((graph, index) => (
 							<div className="flex flex-col" key={graph.id}>
 								<div className="flex items-center gap-2 mb-3">
@@ -114,7 +114,7 @@ export const AddGraphModal = ({ open, reportCardId, graphs = [], onClose }) => {
 										onCheckedChange={(checked) =>
 											handleSelectGraph(graph.id, checked)
 										}
-										className="h-[18px] w-[18px] text-black/40 border-2 rounded-sm border-black/40 data-[state=checked]:border-purple-100 data-[state=checked]:bg-purple-100"
+										className="h-[1.125rem] w-[1.125rem] text-black/40 border-2 rounded-sm border-black/40 data-[state=checked]:border-purple-100 data-[state=checked]:bg-purple-100"
 									/>
 									<Label
 										htmlFor={`graph-${graph.id}`}
@@ -127,7 +127,7 @@ export const AddGraphModal = ({ open, reportCardId, graphs = [], onClose }) => {
 									graph={{
 										...graph,
 									}}
-									aspect="aspect-video md:aspect-[4/3]"
+									aspect="aspect-[4/3]"
 									identifierKey={reportCardId}
 								/>
 							</div>

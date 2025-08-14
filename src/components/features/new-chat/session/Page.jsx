@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import ResponseCard from '../ResponseCard';
 import ira from '@/assets/icons/ira_icon.svg';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import Workspace from '../Workspace';
 import AddQueryToDashboard from '../AddQueryToDashboard';
 import CreateDashboardDialog from '../../dashboard/components/CreateDashboardDialog';
@@ -578,8 +578,6 @@ const Workzone = () => {
 		return queries?.map((query, key) => {
 			const answerElem = answers.find((item) => item.query_id === query.id);
 			const hasClarification = !!answerElem?.answer?.clarification;
-			const hasIraGeneratedGraph = !!answerElem?.answer?.graph;
-			!hasIraGeneratedGraph && answerElem?.status !== 'done';
 			const currentDoingScience =
 				doingScience.find((loadingObj) => loadingObj.queryId === query?.id)
 					?.status || !!query?.parentQueryId;
@@ -603,7 +601,7 @@ const Workzone = () => {
 							prompt={query?.question}
 						/>
 					</div>
-					<div className="mt-10 flex items-center space-x-2">
+					<div className="mt-4 flex items-center space-x-2">
 						<img src={ira} alt="ira" className="size-10" />
 						{showWorkspaceToggle && (
 							<Button
@@ -615,7 +613,7 @@ const Workzone = () => {
 							>
 								<img
 									src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
-									className="me-1"
+									className="me-1 size-5"
 								/>
 								{(workspace.show &&
 									chatStoreReducer?.activeQueryId === query?.id) ||
@@ -628,8 +626,8 @@ const Workzone = () => {
 						{hasClarification && <Clarification />}
 					</div>
 
-					<div className={cn('mt-8', currentDoingScience ? 'mb-16' : '')}>
-						<div className="ml-12 my-10">
+					<div className={cn(currentDoingScience ? 'mb-16' : '')}>
+						<div className="ml-12 my-4">
 							{currentDoingScience && (
 								<QueueStatus
 									text={answerElem?.status_text || 'Doing Science'}
@@ -864,12 +862,9 @@ const Workzone = () => {
 	}, [query]);
 
 	return (
-		<div
-			className="grid grid-cols-12 gap-4 px-8 h-[90vh] w-full overflow-hidden"
-			style={{ maxHeight: '90vh' }}
-		>
+		<div className="grid grid-cols-12 gap-4 px-8 w-full overflow-hidden pb-4">
 			<div
-				className={`${showWorkSpace() ? 'col-span-12 lg:col-span-8' : 'col-span-12 mx-32'} border rounded-2xl shadow-1xl flex flex-col h-full overflow-hidden`}
+				className={`${showWorkSpace() ? 'col-span-8' : 'col-span-12 mx-32'} border rounded-2xl shadow-1xl flex flex-col h-full overflow-hidden`}
 			>
 				<div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
 					{renderConversation()}
@@ -893,7 +888,7 @@ const Workzone = () => {
 					editDisabled={inputDisabled}
 					regenerator={handleRegenerateResponse}
 				>
-					<div className="col-span-12 lg:col-span-4 border rounded-3xl shadow-1xl flex flex-col h-full overflow-y-auto p-4">
+					<div className="col-span-4 border rounded-3xl shadow-1xl flex flex-col h-full overflow-y-auto p-4">
 						<div className="flex justify-between items-center mb-4">
 							<div className="flex items-center gap-1">
 								<img

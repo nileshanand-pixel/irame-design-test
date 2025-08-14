@@ -15,7 +15,7 @@ import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 import InputArea from './InputArea';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { queryClient } from '@/lib/react-query';
 
 const NewChat = () => {
@@ -340,57 +340,46 @@ const NewChat = () => {
 	}, [utilReducer?.dataSources, utilReducer?.resetChat]);
 
 	return (
-		<>
-			{
-				<div className="flex justify-center pt-5 xl:pt-10">
-					<div className="flex flex-col w-[51.875rem] relative">
-						<div className="align-left w-full">
-							<h1
-								className="text-2xl lg:text-3xl leading-[24px] lg:leading-[36px] font-semibold align-left"
-								style={gradientText}
-							>{`${welcomeTypography?.headingLine1} ${value?.user_name}`}</h1>
-							<h2 className="text-5xl leading-[60px] font-semibold text-primary20">
-								{completedSteps.includes(2) ||
-								completedSteps.includes(3)
-									? welcomeTypography?.headingLine2_2
-									: welcomeTypography?.headingLine2}
-							</h2>
-							<ul className="relative mt-2 xl:mt-4 mb-3 inline-flex gap-2">
-								{[1, 2, 3]?.map((items, indx) => {
-									return (
-										<>
-											<li
-												key={indx}
-												className={[
-													`h-2 w-14 rounded-3xl `,
-													showProgress(items),
-												].join(' ')}
-												onClick={() => {}}
-											></li>
-										</>
-									);
-								})}
-							</ul>
-						</div>
-						<div className="mt-[1rem]  overflow-auto w-full">
-							{renderComponent()}
-						</div>
-						{completedSteps.includes(2) || completedSteps.includes(3) ? (
-							<div className="fixed bottom-1 flex flex-col items-center justify-center !w-[51.875rem] max-h-[30rem] overflow-x-scroll z-20">
-								<InputArea
-									config={config}
-									onAppendQuery={handleCreateSession}
-								/>
-								<p className="text-xs text-primary40 font-normal">
-									Irame.ai may display inaccurate info, including
-									about people, so double-check its responses.
-								</p>
-							</div>
-						) : null}
-					</div>
+		<div className="flex flex-col relative w-[70%] pt-10">
+			<div className="">
+				<h1 className="text-3xl font-semibold" style={gradientText}>
+					{`${welcomeTypography?.headingLine1} ${value?.user_name}`}
+				</h1>
+				<h2 className="text-5xl leading-[3.75rem] font-semibold text-primary20">
+					{completedSteps.includes(2) || completedSteps.includes(3)
+						? welcomeTypography?.headingLine2_2
+						: welcomeTypography?.headingLine2}
+				</h2>
+				<ul className="relative mt-4 mb-3 inline-flex gap-2">
+					{[1, 2, 3]?.map((items, indx) => {
+						return (
+							<>
+								<li
+									key={indx}
+									className={[
+										`h-2 w-14 rounded-3xl `,
+										showProgress(items),
+									].join(' ')}
+									onClick={() => {}}
+								></li>
+							</>
+						);
+					})}
+				</ul>
+			</div>
+			<div className="mt-[1rem]  overflow-auto w-full">
+				{renderComponent()}
+			</div>
+			{completedSteps.includes(2) || completedSteps.includes(3) ? (
+				<div className="absolute w-full bottom-1 flex flex-col items-center justify-center overflow-x-scroll z-20">
+					<InputArea config={config} onAppendQuery={handleCreateSession} />
+					<p className="text-xs text-primary40 font-normal">
+						Irame.ai may display inaccurate info, including about people,
+						so double-check its responses.
+					</p>
 				</div>
-			}
-		</>
+			) : null}
+		</div>
 	);
 };
 

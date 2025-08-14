@@ -3,7 +3,6 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import SessionHistoryPanel from './components/SessionHistoryPanel';
 import { WorkflowPageSkeleton } from './components/WorkflowPageSkeleton';
@@ -18,6 +17,7 @@ import WorkflowDetails from './components/WorkflowDetails';
 import DataSourceCard from './components/connect-data-source-v1/DataSourceCard';
 import WorkflowPlan from './components/WorkflowPlan';
 import { queryClient } from '@/lib/react-query';
+import { toast } from '@/lib/toast';
 
 export default function WorkflowPage() {
 	const { businessProcessId, workflowId } = useParams();

@@ -87,7 +87,7 @@ const Header = () => {
 		{
 			title: (
 				<>
-					<RocketIcon width={16} height={16} className="mr-2" />
+					<RocketIcon className="mr-2 size-4" />
 					Get Started
 				</>
 			),
@@ -96,7 +96,7 @@ const Header = () => {
 		{
 			title: (
 				<>
-					<ReaderIcon width={16} height={16} className="mr-2" />
+					<ReaderIcon className="mr-2 size-4" />
 					Terms of Use
 				</>
 			),
@@ -105,7 +105,7 @@ const Header = () => {
 		{
 			title: (
 				<>
-					<LockClosedIcon width={16} height={16} className="mr-2" />
+					<LockClosedIcon className="mr-2 size-4" />
 					Privacy Policy
 				</>
 			),
@@ -145,16 +145,17 @@ const Header = () => {
 	return (
 		<header
 			className={cn(
-				'flex justify-between items-center h-[64px] px-5 text-lg text-primary100',
+				'flex justify-between items-center py-2 px-5 text-lg text-primary100 shrink-0',
 				pathname.includes('/dashboard') ? 'bg-gray-muted' : 'bg-white',
 			)}
 		>
-			<div className="flex gap-6">
+			<div className="flex gap-6 items-center">
 				{showDataSourceName ? (
-					<div className="mb-4 flex gap-2 items-center rounded-lg px-3 py-2 bg-purple-10 text-primary80 text-sm font-medium w-fit truncate">
+					<div className="flex gap-2 items-center rounded-lg px-3 py-2 bg-purple-10 text-primary80 text-sm font-medium w-fit truncate">
 						<img
 							src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
 							alt="edit-prompt"
+							className="size-[1.25rem]"
 						/>
 						{utilReducer?.selectedDataSource?.name}
 						<span className="relative flex size-3 ">
@@ -163,9 +164,7 @@ const Header = () => {
 						</span>
 					</div>
 				) : (
-					<span className="font-medium text-lg leading-[21.78px]">
-						{'Irame.ai'}
-					</span>
+					<span className="font-medium text-lg">{'Irame.ai'}</span>
 				)}
 				{/* {renderGenerateSessionReport()} */}
 			</div>

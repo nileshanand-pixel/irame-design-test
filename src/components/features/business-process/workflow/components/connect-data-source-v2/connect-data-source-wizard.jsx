@@ -79,7 +79,7 @@ export const ConnectDataSourceWizard = ({ onClose, runDetails, csvFiles }) => {
 
 	return (
 		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto p-4">
-			<div className="bg-white rounded-lg shadow-lg w-full max-w-[65%] xl:max-w-[55%] flex flex-col max-h-[75vh] ">
+			<div className="bg-white rounded-lg shadow-lg w-full max-w-[55%] flex flex-col max-h-[75vh] ">
 				<div className="flex justify-between items-center p-6 border-b">
 					<h2 className="text-xl font-semibold">Connect Data Source</h2>
 					<button
@@ -87,7 +87,7 @@ export const ConnectDataSourceWizard = ({ onClose, runDetails, csvFiles }) => {
 						className="text-gray-500 hover:text-gray-700"
 						aria-label="Close"
 					>
-						<X size={20} />
+						<X className="size-5" />
 					</button>
 				</div>
 				<WizardHeader setStep={setCurrentStep} currentStep={currentStep} />

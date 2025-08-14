@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 export default function UserProfileIcon({
 	userName,
 	userEmail,
-	fontSize = 'text-[8px]',
+	fontSize = 'text-[0.5rem]',
 	width = 'w-6',
 	height = 'h-6',
 }) {

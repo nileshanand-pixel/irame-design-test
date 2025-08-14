@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateReportCardStatus } from '../service/reports.service';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useReportId } from '../hooks/useReportId';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { REPORT_QUERY_CARD_STATUS_CONFIG } from '@/config/risks';

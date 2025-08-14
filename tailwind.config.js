@@ -17,6 +17,13 @@ module.exports = {
 			},
 		},
 		extend: {
+			borderWidth: {
+				DEFAULT: '0.0625rem', // This will override the default `border` shorthand
+				1: '0.0625rem', // 1px => 0.0625rem
+				2: '0.125rem', // 2px => 0.125rem
+				4: '0.25rem', // 4px => 0.25rem
+				8: '0.5rem', // 8px => 0.5rem
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

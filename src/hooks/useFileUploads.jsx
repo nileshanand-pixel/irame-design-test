@@ -6,7 +6,7 @@ import {
 } from '@/components/features/configuration/service/configuration.service';
 import * as XLSX from 'xlsx'; // npm install xlsx
 import { v4 as uuidv4 } from 'uuid'; // <-- Add this import
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const MAX_CONCURRENT_UPLOADS = 5;
 

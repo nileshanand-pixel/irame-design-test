@@ -17,7 +17,7 @@ export default function App() {
 	if (isMobileOnly) {
 		console.log('Not supported');
 		return (
-			<div className="flex items-center justify-center w-full h-100vh">
+			<div className="flex items-center justify-center w-full h-100vh text-6xl">
 				Not supported for mobile devices yet
 			</div>
 		);

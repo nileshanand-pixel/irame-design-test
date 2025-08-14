@@ -15,6 +15,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 	const [baseData, setBaseData] = useState([]);
 	const [loadedData, setLoadedData] = useState([]);
 	const [isGraphLoading, setIsGraphLoading] = useState(true);
+	const [fontSize, setFontSize] = useState(0);
 	const [categoryData, setCategoryData] = useState({
 		options: [],
 		label: '',
@@ -101,7 +102,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 					display: true,
 					text: graph.x_axis || 'X Axis',
 					font: {
-						size: '14px',
+						size: 0.875 * fontSize,
 						weight: 'bold',
 					},
 				},
@@ -205,6 +206,24 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 	}, [baseData]);
 
 	useEffect(() => {
+		function handleResize() {
+			setFontSize(
+				parseFloat(
+					window.getComputedStyle(document.documentElement).fontSize,
+				),
+			);
+		}
+		window.addEventListener('resize', handleResize);
+		handleResize();
+
+		return () => {
+			window.removeEventListener('resize', handleResize);
+		};
+	}, []);
+
+	console.log(fontSize, 'font size'); // Debugging line, can be removed later
+
+	useEffect(() => {
 		if (loadedData.length > 0) {
 			if (chartRef.current) chartRef.current.destroy();
 			const ctx = document.getElementById(
@@ -220,6 +239,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 
 			const chartType = getChartType(graph);
 
+			console.log(finalDataObj, 'finalDataObj', chartType); // Debugging line, can be removed later
 			chartRef.current = new Chart(ctx, {
 				type: chartType,
 				data: {
@@ -243,22 +263,34 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 							display: true,
 							text: graph.title || 'Data plot',
 							font: {
-								size: handle.active ? 14 : 12,
+								size: handle.active
+									? 1.5 * fontSize
+									: 1.25 * fontSize,
+								lineHeight: 1,
 								weight: 'bold',
 							},
 							position: 'top',
+							padding: {
+								top: 0.625 * fontSize,
+								bottom: 0,
+							},
 						},
 						legend: {
 							align: handle.active || isPieChart ? 'end' : 'center',
-							position: 'top',
 							labels: {
-								boxWidth: 12,
+								boxWidth: 0.75 * fontSize,
 								font: {
-									size: 10,
+									size: 0.625 * fontSize,
 								},
 							},
 						},
 						tooltip: {
+							bodyFont: {
+								size: fontSize,
+							},
+							titleFont: {
+								size: fontSize * 1.25,
+							},
 							callbacks: {
 								title: function (context) {
 									const index = context[0].dataIndex;
@@ -279,7 +311,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 							beginAtZero: true,
 							ticks: {
 								font: {
-									size: 10,
+									size: 0.625 * fontSize,
 								},
 							},
 						},
@@ -287,7 +319,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 							...finalDataObj.scales?.x,
 							ticks: {
 								font: {
-									size: 10,
+									size: 0.625 * fontSize,
 								},
 							},
 						},
@@ -299,7 +331,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 		return () => {
 			if (chartRef.current) chartRef.current.destroy();
 		};
-	}, [loadedData, graph, identifierKey, handle.active]);
+	}, [loadedData, graph, identifierKey, handle.active, fontSize]);
 
 	return (
 		<div className="bg-white rounded-xl p-2">
@@ -336,7 +368,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 					<FullScreen handle={handle}>
 						<div
 							className={cn(
-								'relative  w-full min-w-[300px] transition-all duration-300 ease-out',
+								'relative  w-full min-w-[18.75rem] transition-all duration-300 ease-out',
 								!handle.active && aspect,
 								handle.active && 'w-full h-full',
 							)}
@@ -345,7 +377,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 								id={`canvas_${identifierKey}_${graph.id}`}
 								style={{
 									backgroundColor: 'white',
-									padding: handle.active ? '32px' : '0',
+									padding: handle.active ? '2rem' : '0',
 									borderRadius: '1rem',
 									transition: 'all 0.05s ease-out',
 								}}

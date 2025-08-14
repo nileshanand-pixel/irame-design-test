@@ -14,7 +14,7 @@ import { BoxArrowDown, FilePdf, Trash } from '@phosphor-icons/react';
 import { ReportStatusDropdown } from './ReportStatusDropdown';
 import { updateReportStoreProp } from '@/redux/reducer/reportReducer';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 export default function ReportHeader({ report, onDownload }) {
 	const [status, setStatus] = useState(report.status);
@@ -117,8 +117,7 @@ export default function ReportHeader({ report, onDownload }) {
 					onChange={setStatus}
 				/>
 
-				{/* Full controls on ≥lg */}
-				<div className="hidden text-purple-dusty-purple items-center gap-2 lg:flex">
+				<div className="text-purple-dusty-purple items-center gap-2 flex">
 					{visibleActions.map(
 						({
 							id,
@@ -151,7 +150,7 @@ export default function ReportHeader({ report, onDownload }) {
 				</div>
 
 				{/* Condensed controls <lg */}
-				<div className="lg:hidden text-black/60">
+				{/* <div className="lg:hidden text-black/60">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button size="icon" variant="ghost">
@@ -168,7 +167,7 @@ export default function ReportHeader({ report, onDownload }) {
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
-				</div>
+				</div> */}
 			</div>
 		</header>
 	);

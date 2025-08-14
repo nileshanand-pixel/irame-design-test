@@ -25,7 +25,7 @@ export default function Breadcrumb({ reportName }) {
 			<p
 				className={clsx(
 					'min-w-0 truncate cursor-auto font-medium text-primary80',
-					'text-lg sm:text-xl lg:text-2xl',
+					'text-2xl',
 				)}
 				title={reportName}
 			>

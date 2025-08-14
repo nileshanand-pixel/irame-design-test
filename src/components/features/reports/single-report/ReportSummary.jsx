@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import GradientSpinner from '@/components/elements/loading/GradientSpinner';
 import { generateReportSummary, getReportSummary } from '../service/reports.service';
 import { useReportId } from '../hooks/useReportId';
@@ -118,7 +118,7 @@ export default function ReportSummary() {
 	}, [status, fullText]);
 
 	return (
-		<div className="w-full py-8 pr-6">
+		<div className="py-8">
 			<div className="flex items-center justify-between">
 				<h1 className="text-2xl font-semibold text-primary80">
 					Report Summary
@@ -130,7 +130,7 @@ export default function ReportSummary() {
 						className="px-6 gap-2 text-purple-100 font-semibold"
 						disabled
 					>
-						<GradientSpinner tailwindBg="bg-[#E6D7F7]" width="15" />
+						<GradientSpinner tailwindBg="bg-[#E6D7F7]" width="1" />
 						Generating Summary…
 					</Button>
 				) : shouldHideButton ? null : (

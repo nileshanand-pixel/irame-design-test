@@ -59,9 +59,11 @@ const ActionButton = forwardRef(({ icon, title, onClick, rightIcon }, ref) => (
 		className="w-full text-left p-2 rounded-md flex items-center space-x-2 hover:bg-[#6A12CD0A]"
 		ref={ref}
 	>
-		<span className="material-symbols-outlined">{icon}</span>
+		<span className="material-symbols-outlined text-2xl">{icon}</span>
 		<span>{title}</span>
-		{rightIcon && <span className="material-symbols-outlined">{rightIcon}</span>}
+		{rightIcon && (
+			<span className="material-symbols-outlined text-2xl">{rightIcon}</span>
+		)}
 	</button>
 ));
 
@@ -70,8 +72,10 @@ const SavedQueryBtn = ({ onClick, title, onDelete, onEdit }) => (
 		onClick={onClick}
 		className="w-full text-left p-2 rounded-md flex items-center justify-between group hover:bg-[#6A12CD0A]"
 	>
-		<div className="flex gap-2">
-			<span className="material-symbols-outlined">format_list_bulleted</span>
+		<div className="flex gap-2 items-center">
+			<span className="material-symbols-outlined text-2xl">
+				format_list_bulleted
+			</span>
 			<span>{title}</span>
 		</div>
 		<div
@@ -79,13 +83,13 @@ const SavedQueryBtn = ({ onClick, title, onDelete, onEdit }) => (
 			onClick={(e) => e.stopPropagation()}
 		>
 			<span
-				className="material-symbols-outlined hover:text-[#26064ab0]"
+				className="material-symbols-outlined hover:text-[#26064ab0] text-2xl"
 				onClick={onDelete}
 			>
 				delete
 			</span>
 			<span
-				className="material-symbols-outlined hover:text-[#26064ab0]"
+				className="material-symbols-outlined hover:text-[#26064ab0] text-2xl"
 				onClick={onEdit}
 			>
 				edit
@@ -110,12 +114,12 @@ const SavedQueriesSecondaryModal = ({
 	handleTemplateSelect,
 }) => {
 	return (
-		<div className="flex flex-col gap-2 max-h-[200px] min-w-[285px]">
-			<h3 className="text-xs font-semibold text-[#26064A99] h-[16px]">
+		<div className="flex flex-col gap-2 max-h-[12.5rem] min-w-[17.8rem]">
+			<h3 className="text-xs font-semibold text-[#26064A99] h-4 shrink-0">
 				Saved Queries
 			</h3>
 
-			<div className="overflow-scroll h-[calc(100%-28px)]">
+			<div className="overflow-scroll h-full">
 				{templatesData && templatesData?.saved_queries?.length !== 0 ? (
 					<div>
 						{templatesData?.saved_queries?.map((data) => {
@@ -137,7 +141,7 @@ const SavedQueriesSecondaryModal = ({
 						})}
 					</div>
 				) : (
-					<div className="h-[50px] flex items-center justify-center text-sm text-gray-700">
+					<div className="h-[3.125rem] flex items-center justify-center text-sm text-gray-700">
 						No Saved Queries!
 					</div>
 				)}
@@ -202,7 +206,7 @@ const MoreActionsModal = forwardRef(
 		};
 
 		return (
-			<div className="inline-flex items-end gap-[2px]">
+			<div className="inline-flex items-end gap-[0.125rem]">
 				<div className="top-0 left-4 w-fit my-1 ml-2 shadow-lg border border-[#26064A14] bg-white rounded-lg mt-1 z-40">
 					<div className="p-2">
 						<h3 className="text-xs font-semibold text-[#26064A99] mb-2">

@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { toast } from 'sonner';
 import { ensureCleanup } from '@/components/features/login/service/auth.service';
 import { serviceUrlMap } from '@/config/url.config';
 

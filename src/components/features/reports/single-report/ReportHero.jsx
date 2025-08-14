@@ -23,8 +23,8 @@ const ReportHero = ({ reportDetails }) => {
 	const readTime = calculateReadTime(allText);
 
 	return (
-		<div className="w-full overflow-x-hidden space-y-2">
-			<h1 className="text-2xl md:text-3xl lg:text-4xl break-words font-semibold text-primary100">
+		<div className="overflow-x-hidden space-y-2">
+			<h1 className="text-4xl break-words font-semibold text-primary100">
 				{upperFirst(title)}
 			</h1>
 

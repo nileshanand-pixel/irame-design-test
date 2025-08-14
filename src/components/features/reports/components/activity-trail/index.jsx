@@ -25,7 +25,7 @@ export default function ActivityTrail() {
 						{activities?.activity_trail?.length === 0
 							? 'No activity'
 							: activities?.activity_trail?.map((activity) => (
-									<div className="flex gap-[6px] items-center">
+									<div className="flex gap-[0.375rem] items-center">
 										<UserProfileIcon
 											userName={activity.user}
 											userEmail={activity.email}

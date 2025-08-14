@@ -7,7 +7,7 @@ const TableComponent = ({ data, columns, onSortingChange }) => {
 	}
 
 	return (
-		<div className="flex flex-col h-[45rem] overflow-auto">
+		<div className="flex flex-col max-h-[45rem] overflow-auto">
 			<DataTable
 				columns={columns}
 				data={data}

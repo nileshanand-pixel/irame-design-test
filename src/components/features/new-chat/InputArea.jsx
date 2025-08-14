@@ -26,6 +26,14 @@ const autoResize = (e, prompt, maxHeight = 150) => {
 	e.target.style.height = `${clampedHeight}px`;
 };
 
+const autoResizeSimpleInput = (inputRef, prompt, maxHeight = 150) => {
+	if (!prompt) return;
+	inputRef.current.style.height = 'auto';
+	const newHeight = inputRef.current.scrollHeight;
+	const clampedHeight = newHeight > maxHeight ? maxHeight : newHeight;
+	inputRef.current.style.height = `${clampedHeight}px`;
+};
+
 const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	const [prompt, setPrompt] = useState('');
 	const [showModal, setShowModal] = useState(false);
@@ -382,7 +390,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 									]),
 								)
 							}
-							className="outline-none text-xs xl:text-sm 2xl:text-base rounded-xl bg-transparent border-none px-2 py-1 flex-1 resize-none overflow-y-auto max-h-32"
+							className="outline-none text-base rounded-xl bg-transparent border-none px-2 py-0 flex-1 resize-none overflow-y-auto max-h-32"
 							value={query.text}
 							onChange={(e) =>
 								handleQueryChange(query.id, e.target.value)
@@ -411,6 +419,10 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 		</div>
 	);
 
+	useEffect(() => {
+		autoResizeSimpleInput(simpleInputRef, prompt, prompt ? 300 : 50);
+	}, [prompt]);
+
 	const renderSimpleMode = () => (
 		<Textarea
 			rows={1}
@@ -423,10 +435,9 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 				utilReducer?.isSideNavOpen &&
 				dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]))
 			}
-			className="border-0 text-xs xl:text-sm 2xl:text-base outline-none rounded-xl bg-transparent w-full pr-6 resize-none overflow-y-auto show-scrollbar max-h-32"
+			className="border-0 text-sm outline-none rounded-xl bg-transparent w-full pr-6 resize-none overflow-y-auto show-scrollbar max-h-32"
 			value={prompt || ''}
 			onChange={handlePromptChange}
-			onInput={(e) => autoResize(e, prompt, prompt ? 300 : 50)}
 			onKeyDown={handleSingleKeyDown}
 			disabled={disabled}
 			ref={simpleInputRef}

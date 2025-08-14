@@ -96,7 +96,7 @@ const PlannerComponent = ({
 	};
 
 	return (
-		<div className="my-4 w-full pr-4 max-h-[80%] overflow-y-auto space-y-4">
+		<div className="my-4 w-full pr-4 overflow-y-auto space-y-4">
 			{segments.length > 0 ? (
 				segments.map((segment, index) => (
 					<div
@@ -158,7 +158,7 @@ const PlannerComponent = ({
 						<Skeleton className="h-5 w-[50%] bg-purple-8" />
 						<Skeleton className="h-5 w-[90%] bg-purple-8" />
 					</div>
-					<Skeleton className="h-[125px] w-[250px] rounded-xl bg-purple-8" />
+					<Skeleton className="h-[7.8rem] w-[15.625rem] rounded-xl bg-purple-8" />
 				</div>
 			)}
 		</div>

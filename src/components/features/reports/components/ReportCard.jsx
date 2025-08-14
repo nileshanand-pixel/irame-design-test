@@ -83,7 +83,7 @@ const ReportCard = ({ report }) => {
 
 	return (
 		<div
-			className={`rounded-lg hover:border px-4 pt-4 pb-2 ${report?.datasource_name ? 'min-h-[330px]' : 'min-h-[280px]'} w-full bg-purple-4 hover:bg-purple-8 text-[#26064ACC]`}
+			className={`rounded-lg hover:border px-4 pt-4 pb-2 ${report?.datasource_name ? 'min-h-[20.625rem]' : 'min-h-[17.5rem]'} w-full bg-purple-4 hover:bg-purple-8 text-[#26064ACC]`}
 			onClick={() =>
 				report?.type === 'user_generated' &&
 				navigate('/app/reports/' + report?.report_id)

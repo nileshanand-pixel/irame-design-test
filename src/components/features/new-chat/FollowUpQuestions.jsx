@@ -114,14 +114,14 @@ const FollowUpQuestions = ({
 	return (
 		<div
 			onClick={handlePrompt}
-			className="relative text-primary80 bg-white  border-b py-4 border-gray-200 cursor-pointer  w-full "
+			className="relative text-primary80 bg-white  border-b py-3 border-gray-200 cursor-pointer  w-full "
 		>
 			<div className="flex items-center justify-between gap-4">
 				<img
 					src={`https://d2vkmtgu2mxkyq.cloudfront.net/followup_questions.svg`}
-					className="size-12"
+					className="size-10"
 				/>
-				<div className=" flex-1 text-base font-medium  pr-4">{question}</div>
+				<div className=" flex-1 text-sm font-medium pr-4">{question}</div>
 
 				<Button
 					onClick={(e) => {
@@ -129,10 +129,10 @@ const FollowUpQuestions = ({
 						handlePrompt();
 					}}
 					variant="outline"
-					className="flex-shrink-0 p-2 outline-none border-none hover:bg-gray-100 rounded-full transition-colors"
+					className="flex-shrink-0 -mt-2 p-2 outline-none border-none hover:bg-gray-100 rounded-full transition-colors"
 					aria-label="Send question"
 				>
-					<span class="material-symbols-outlined">send</span>
+					<span class="material-symbols-outlined text-xl">send</span>
 				</Button>
 			</div>
 		</div>

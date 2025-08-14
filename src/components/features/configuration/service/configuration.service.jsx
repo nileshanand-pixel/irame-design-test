@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import axiosClientV1 from '@/lib/axios';
 
 export const getPresignedUrl = async (fileName) => {

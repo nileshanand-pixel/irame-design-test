@@ -23,7 +23,7 @@ const WorkflowCard = ({ workflow }) => {
 
 	return (
 		<Card
-			className={`mb-4 ${cardClass}  hover:bg-[#F9F6FD]/80 border-primary16/0 hover:border-primary16 border-[1.5px] cursor-pointer`}
+			className={`mb-4 ${cardClass}  hover:bg-[#F9F6FD]/80 border-primary16/0 hover:border-primary16 border-[0.093rem] cursor-pointer`}
 			onClick={() => handleCardClick(workflow.external_id)}
 		>
 			<CardContent className="p-4">
@@ -43,7 +43,7 @@ const WorkflowCard = ({ workflow }) => {
 								<Badge
 									key={index}
 									variant="outline"
-									className={`px-2 py-[2px] text-xs font-medium ${badgeClass} border-none`}
+									className={`px-2 py-[0.125rem] text-xs font-medium ${badgeClass} border-none`}
 								>
 									{upperFirst(tag)}
 								</Badge>

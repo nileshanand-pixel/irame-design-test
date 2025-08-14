@@ -88,14 +88,14 @@ const ReportFolders = () => {
 	};
 
 	return (
-		<div className="w-full ml-8  h-full flex flex-col overflow-hidden">
-			<div className="flex-none w-full flex pr-8 justify-between mt-2 ">
-				<h2 className="text-2xl font-semibold text-primary80 ">Reports</h2>
+		<div className="w-full px-8 h-full flex flex-col gap-6 overflow-hidden">
+			<div className="flex-none flex justify-between mt-2">
+				<h2 className="text-2xl font-semibold text-primary80">Reports</h2>
 				<div className="flex items-center gap-4">
 					<div
 						className={cn(
 							'flex items-center border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300',
-							{ 'w-[300px]': isFocused, 'w-[118px]': !isFocused },
+							{ 'w-[18.75rem]': isFocused, 'w-[7.375]': !isFocused },
 						)}
 					>
 						<i className="bi-search text-primary40 me-2"></i>
@@ -121,9 +121,9 @@ const ReportFolders = () => {
 				</div>
 			</div>
 
-			<div className="mt-6 pr-8 flex-1 overflow-y-auto">
+			<div className="flex-1 overflow-y-auto">
 				{datasourcesQuery.isLoading ? (
-					<div className=" w-full grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-2 pb-6">
+					<div className="w-full grid grid-cols-3 gap-6 mt-2 pb-6">
 						{Array.from({ length: 16 }).map((_, i) => (
 							<DataSourceCardSkeleton key={i} />
 						))}
@@ -131,7 +131,7 @@ const ReportFolders = () => {
 				) : datasources.length === 0 ? (
 					<EmptyState config={emptyStateConfig} />
 				) : filteredList.length > 0 ? (
-					<div className="w-full overflow-y-auto mt-2 bg-white grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
+					<div className="overflow-y-auto mt-2 bg-white grid grid-cols-3 gap-6 pb-6">
 						{filteredList.map((item) => (
 							<DataSourceCard key={item.datasource_id} data={item} />
 						))}

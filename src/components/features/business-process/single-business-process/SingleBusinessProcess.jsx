@@ -21,7 +21,7 @@ const SearchBar = ({ search, setSearch, isFocused, setIsFocused }) => (
 	<div
 		className={cn(
 			'flex items-center border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300',
-			{ 'w-[300px]': isFocused, 'w-[180px]': !isFocused },
+			{ 'w-[18.75rem]': isFocused, 'w-[11.25rem]': !isFocused },
 		)}
 	>
 		<i className="bi-search text-primary40 me-2"></i>
@@ -142,7 +142,7 @@ const SingleBusinessProcessPage = () => {
 								</>
 							)}
 						</div>
-						<div className="flex flex-col sm:flex-row justify-between gap-4">
+						<div className="flex flex-row justify-between gap-4">
 							<SearchBar
 								search={search}
 								setSearch={setSearch}

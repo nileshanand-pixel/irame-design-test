@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useDispatch, useSelector } from 'react-redux';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { Input } from '@/components/ui/input';
 import { editTemplate, saveTemplate } from '../../new-chat/service/new-chat.service';
@@ -38,7 +38,7 @@ const SaveEditTemplateModal = React.memo(
 
 		const isValidData = () => {
 			if (templateName.trim() === '') {
-				toast("Template name can't be empty!");
+				toast.error("Template name can't be empty!");
 				return false;
 			}
 
@@ -46,7 +46,7 @@ const SaveEditTemplateModal = React.memo(
 				(query) => query?.text?.trim() === '',
 			);
 			if (isEmptryQueryPresent) {
-				toast("Query can't be empty!");
+				toast.error("Query can't be empty!");
 				return false;
 			}
 			return true;
@@ -183,13 +183,14 @@ const SaveEditTemplateModal = React.memo(
 
 		return (
 			<Dialog open={open} onOpenChange={closeModal}>
-				<DialogContent className="sm:max-w-[500px]">
+				<DialogContent className="max-w-[40%]">
 					<DialogHeader className="border-b pb-3">
 						<div className="flex gap-6 items-center">
 							<div>
 								<img
 									src="https://d2vkmtgu2mxkyq.cloudfront.net/save-edit-template-dialog-icon.svg"
 									alt="icon"
+									className="size-14"
 								/>
 							</div>
 							<div className="flex flex-col gap-2">
@@ -226,7 +227,7 @@ const SaveEditTemplateModal = React.memo(
 						</div>
 					</div>
 
-					<div className="flex flex-col gap-2 rounded-lg max-h-[296px] w-full overflow-y-scroll">
+					<div className="flex flex-col gap-2 rounded-lg max-h-[40vh] w-full overflow-y-scroll">
 						{queries.map((query, index) => (
 							<div
 								key={query.id}

@@ -2,7 +2,7 @@ import axiosClientV1 from '@/lib/axios';
 import { resetCookies } from '@/lib/cookies';
 import { resetAllStores } from '@/redux/GlobalStore';
 import { untrackUser } from '@/lib/mixpanel';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { grantType } from '@/config/auth.config';
 
 export const ensureCleanup = async () => {

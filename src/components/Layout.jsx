@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import GlobalPollReports from './features/reports/components/GlobalPollReports';
 import { pdfjs } from 'react-pdf';
-import useBreakpoint from '@/hooks/useBreakpoint';
 import Modals from './Modals';
 import FreshdeskWidget from './features/freshdesk/FreshdeskWidget';
 import { CHAT_SESSION_STARTED_EVENT_DATA_KEY } from '@/constants/chat.constant';
@@ -22,7 +21,6 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 const Layout = ({ children }) => {
 	const utilReducer = useSelector((state) => state.utilReducer);
-	const breakPoint = useBreakpoint();
 	const dispatch = useDispatch();
 	const { pathname, query } = useRouter();
 
@@ -39,12 +37,6 @@ const Layout = ({ children }) => {
 			]),
 		);
 	};
-
-	useEffect(() => {
-		if (['xs', 'sm', 'md'].includes(breakPoint) && utilReducer.isSideNavOpen) {
-			toggleSideNav();
-		}
-	}, [breakPoint, utilReducer?.isSideNavOpen]);
 
 	useMemo(() => {
 		if (!pathname.includes('/app/new-chat')) {
@@ -69,14 +61,14 @@ const Layout = ({ children }) => {
 				isSideNavOpen={utilReducer?.isSideNavOpen}
 			/>
 			<main
-				className={`grid w-full ${
-					utilReducer?.isSideNavOpen ? 'pl-[270px]' : 'pl-[72px]'
+				className={`flex flex-col w-full h-full ${
+					utilReducer?.isSideNavOpen ? 'pl-[16rem]' : 'pl-[4.5rem]'
 				} `}
 			>
 				<Header />
 				<div
 					className={cn(
-						'pt-0 px-0 flex bg-gray-300 justify-center h-[calc(100vh-64px)] overflow-x-hidden w-full',
+						'h-full pt-0 flex bg-gray-300 justify-center overflow-x-hidden w-full',
 						pathname.includes('/dashboard')
 							? 'bg-gray-muted'
 							: 'bg-white',

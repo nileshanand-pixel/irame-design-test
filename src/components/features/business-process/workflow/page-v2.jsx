@@ -3,7 +3,6 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import SessionHistoryPanel from './components/SessionHistoryPanel';
 import { WorkflowPageSkeleton } from './components/WorkflowPageSkeleton';
@@ -18,6 +17,7 @@ import WorkflowDetails from './components/WorkflowDetails';
 import DataSourceCard from './components/connect-data-source-v2/data-source-card';
 import WorkflowPlan from './components/WorkflowPlan';
 import { queryClient } from '@/lib/react-query';
+import { toast } from '@/lib/toast';
 
 export default function WorkflowPageV2() {
 	const { businessProcessId, workflowId } = useParams();
@@ -83,8 +83,8 @@ export default function WorkflowPageV2() {
 		return <WorkflowPageSkeleton />;
 	}
 
-	const mainContentClasses = `h-[calc(100vh-64px)] overflow-x-scroll ${
-		sidebarOpen ? 'md:w-full' : 'w-full lg:w-3/5 md:mx-auto'
+	const mainContentClasses = `h-[calc(100vh-4rem)] overflow-x-scroll ${
+		sidebarOpen ? 'w-full' : 'w-3/5 mx-auto'
 	} transition-all duration-300 ${
 		runWorkFlowMutation.isPending ? 'overflow-y-hidden' : 'overflow-y-auto'
 	}`;
@@ -97,7 +97,7 @@ export default function WorkflowPageV2() {
 				<PanelGroup direction="horizontal" className="w-full h-full">
 					<Panel defaultSize={60} minSize={40}>
 						<div
-							className={`h-full bg-white relative p-4 flex flex-col min-h-full ${
+							className={` h-full bg-white relative p-4 flex flex-col min-h-full ${
 								runWorkFlowMutation.isPending
 									? 'overflow-y-hidden'
 									: 'overflow-auto'

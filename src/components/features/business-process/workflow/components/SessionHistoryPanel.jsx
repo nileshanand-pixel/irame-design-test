@@ -99,7 +99,7 @@ const SessionHistoryPanel = ({ onClose }) => {
 				</h2>
 				<span
 					onClick={onClose}
-					className="material-symbols-outlined text-black/40 cursor-pointer"
+					className="material-symbols-outlined text-black/40 cursor-pointer text-2xl"
 				>
 					close
 				</span>
@@ -151,7 +151,7 @@ const SessionHistoryPanel = ({ onClose }) => {
 											{sessionUrl}
 										</span>
 										{linkActive && (
-											<span className="material-symbols-outlined text-primary80 ml-1">
+											<span className="material-symbols-outlined text-primary80 ml-1 text-xl">
 												open_in_new
 											</span>
 										)}

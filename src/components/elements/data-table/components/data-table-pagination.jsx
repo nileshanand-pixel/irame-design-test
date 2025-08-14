@@ -29,12 +29,12 @@ export function DataTablePagination({
 	pageSizeOptions = [10, 20, 30, 40, 50],
 }) {
 	return (
-		<div className="flex w-full flex-col items-center justify-end gap-4 overflow-auto px-2 py-1 sm:flex-row sm:gap-8">
+		<div className="flex w-full items-center justify-end overflow-auto px-2 py-1 flex-row gap-8">
 			{/* <div className="flex-1 whitespace-nowrap text-sm text-muted-foreground">
 				{table.getFilteredSelectedRowModel().rows.length} of{' '}
 				{table.getFilteredRowModel().rows.length} row(s) selected.
 			</div> */}
-			<div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
+			<div className="flex items-center flex-row gap-8">
 				<div className="flex items-center space-x-2">
 					<p className="whitespace-nowrap text-sm font-medium">
 						Rows per page
@@ -45,7 +45,7 @@ export function DataTablePagination({
 							table.setPageSize(Number(value));
 						}}
 					>
-						<SelectTrigger className="h-8 w-[70px]">
+						<SelectTrigger className="h-8 w-[4.365rem]">
 							<SelectValue
 								placeholder={table.getState().pagination.pageSize}
 							/>

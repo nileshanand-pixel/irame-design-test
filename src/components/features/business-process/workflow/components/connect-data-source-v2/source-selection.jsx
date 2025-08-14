@@ -17,7 +17,6 @@ import {
 	CheckCircle,
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 // UI / hooks
 import { useDropzone } from 'react-dropzone';
@@ -42,6 +41,7 @@ import { useWorkflowRunId } from '../../../hooks/use-workflow-run-id';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useBusinessProcessId } from '../../../hooks/use-business-process-id';
+import { toast } from '@/lib/toast';
 
 // ---------------------  generic helpers  ------------------------------
 const mergeUniqueById = (prev = [], next = []) => {
@@ -459,10 +459,7 @@ export const SourceSelection = ({
 			<div className="p-6 relative h-60 top-1/2">
 				<div className="absolute  inset-0  flex items-center justify-center z-10">
 					<div className="flex flex-col items-center">
-						<Loader
-							size={40}
-							className="text-[#6A12CD] animate-spin mb-4"
-						/>
+						<Loader className="text-[#6A12CD] animate-spin mb-4 size-10" />
 						<p className="text-lg font-medium text-purple-700">
 							Validating files...
 						</p>
@@ -608,7 +605,7 @@ const UploadPanel = ({ onUpload, isProcessingExcel }) => {
 			}`}
 		>
 			<input {...getInputProps()} />
-			<Upload className="mx-auto text-gray-400 mb-2" size={32} />
+			<Upload className="mx-auto text-gray-400 mb-2 size-8" />
 			<p className="text-gray-600 mb-4">
 				{isDragActive ? 'Drop files here…' : 'Drag & drop CSV / XLSX / XLS'}
 			</p>
@@ -618,7 +615,7 @@ const UploadPanel = ({ onUpload, isProcessingExcel }) => {
 
 			{isProcessingExcel && (
 				<div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
-					<Loader size={32} className="text-[#6A12CD] animate-spin" />
+					<Loader className="text-[#6A12CD] animate-spin size-8" />
 					<span className="ml-2 text-[#6A12CD] font-medium">
 						Processing…
 					</span>
@@ -710,10 +707,7 @@ const DataSourcePanel = ({
 								}
 							>
 								<div className="flex items-center">
-									<Database
-										size={20}
-										className="text-[#6A12CD] mr-3"
-									/>
+									<Database className="text-[#6A12CD] mr-3 size-5" />
 									<div>
 										<h3 className="font-medium">{ds.name}</h3>
 										<p className="text-sm text-gray-500">
@@ -734,10 +728,7 @@ const DataSourcePanel = ({
 
 								<div className="flex items-center">
 									{selectedIds.includes(id) && csvFilePresent && (
-										<CheckCircle
-											size={18}
-											className="text-green-500 mr-2"
-										/>
+										<CheckCircle className="text-green-500 mr-2 size-[1.125rem]" />
 									)}
 									{types.map((t) => (
 										<span
@@ -773,7 +764,7 @@ const SelectedFilesPanel = ({ files, onDelete, progress }) => (
 							onClick={() => onDelete(f.id)}
 							className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 ml-4"
 						>
-							<Trash2 size={16} />
+							<Trash2 className="size-4" />
 						</button>
 					</div>
 
@@ -906,14 +897,14 @@ const MappingPicker = ({ rf, files, onToggle }) => {
 
 			{missing && (
 				<p className="text-red-500 text-sm flex items-center mt-1">
-					<AlertTriangle size={14} className="mr-1" /> Required file must
-					be selected
+					<AlertTriangle className="mr-1 size-[0.875rem]" /> Required file
+					must be selected
 				</p>
 			)}
 
 			{errors.length === 1 && (
 				<p className="text-red-500 text-sm flex items-center mt-1">
-					<AlertTriangle size={16} className="mr-1" /> {errors[0].error}
+					<AlertTriangle className="mr-1 size-4" /> {errors[0].error}
 				</p>
 			)}
 
@@ -921,7 +912,7 @@ const MappingPicker = ({ rf, files, onToggle }) => {
 				<div className="flex items-center space-x-2 mt-1">
 					{errors.map(({ fileName, error }, idx) => (
 						<span key={idx} className="group relative">
-							<AlertTriangle size={16} className="text-red-500" />
+							<AlertTriangle className="text-red-500 size-4" />
 							<span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-max bg-slate-600 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none z-10 whitespace-nowrap">
 								<strong>{fileName}</strong>: {error}
 							</span>
@@ -951,7 +942,7 @@ const FooterButtons = ({
 			onClick={onValidate}
 			disabled={!isAllDone || isValidating || hasErrors}
 		>
-			{isValidating && <Loader size={16} className="mr-2 animate-spin" />}{' '}
+			{isValidating && <Loader className="mr-2 animate-spin size-4" />}{' '}
 			Validate
 		</Button>
 	</div>

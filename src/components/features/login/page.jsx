@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useRouter } from '@/hooks/useRouter';
 import LoginForm from './LoginForm';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import {
 	authUserDetails,
 	login,
@@ -231,12 +231,12 @@ const SignInSignUp = () => {
 			</h1>
 			<div className="flex items-center justify-center relative">
 				<div
-					className="relative w-[480px] px-10 rounded-3xl border-[1.4px] h-[704px] flex justify-center flex-col form-bg"
+					className="relative w-[30rem] px-10 rounded-3xl border-[0.0875rem] h-[44rem] flex justify-center flex-col form-bg"
 					style={bgStyles}
 				>
 					<div className="z-10">
 						<div className="mb-8">
-							<h1 className="text-primary100 text-[28px] leading-10 font-bold">
+							<h1 className="text-primary100 text-[1.75rem] leading-10 font-bold">
 								Let's Start
 							</h1>
 							<p className="text-sm text-primary100 font-normal">
@@ -261,7 +261,7 @@ const SignInSignUp = () => {
 										value={team}
 										onChange={(e) => setTeam(e.target.value)}
 										placeholder="Enter your team name"
-										className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+										className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
 									/>
 								</div>
 							)}
@@ -279,8 +279,8 @@ const SignInSignUp = () => {
 				<div
 					className="absolute -top-8  bg-custom-gradient left-[25%]"
 					style={{
-						width: '218px',
-						height: '218px',
+						width: '13.625rem',
+						height: '13.625rem',
 						borderRadius: '50%',
 						zIndex: 1,
 					}}
@@ -289,8 +289,8 @@ const SignInSignUp = () => {
 				<div
 					className="absolute -bottom-8 right-[27%] bg-custom-gradient"
 					style={{
-						width: '218px',
-						height: '218px',
+						width: '13.625rem',
+						height: '13.625rem',
 						borderRadius: '50%',
 						zIndex: 1,
 					}}

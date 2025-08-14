@@ -10,7 +10,7 @@ import BusinessProcessPageSkeleton from './BusinessProcessPageSkeleton';
 import BusinessProcessCard from './BusinessProcessCard';
 
 const SearchBar = ({ value, onChange }) => (
-	<div className="flex items-center bg-white border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300 w-[300px]">
+	<div className="flex items-center bg-white border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300 w-[18.75rem]">
 		<i className="bi-search text-primary40 me-2"></i>
 		<Input
 			placeholder="Search"
@@ -82,7 +82,7 @@ const BusinessProcessPage = () => {
 			</header>
 
 			<section className="max-w-full flex-1 border-2 mb-4 border-primary8 bg-misc-offWhite shadow-1xl rounded-lg">
-				<div className="p-4 mt-2 flex flex-col sm:flex-row justify-between gap-4">
+				<div className="p-4 mt-2 flex flex-row justify-between gap-4">
 					<SearchBar
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
@@ -95,13 +95,13 @@ const BusinessProcessPage = () => {
 					</Button> */}
 				</div>
 
-				<div className="px-4 py-2 mb-4 overflow-y-auto max-h-[calc(100vh-270px)]">
+				<div className="px-4 py-2 mb-4 overflow-y-auto max-h-[calc(100vh-16.875rem)]">
 					{isLoading ? (
 						<BusinessProcessPageSkeleton />
 					) : processes.length === 0 ? (
 						<EmptyStateWrapper config={emptyStateConfig} />
 					) : filteredProcesses.length > 0 ? (
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+						<div className="grid grid-cols-3 gap-4">
 							{filteredProcesses.map((process) => (
 								<BusinessProcessCard
 									key={process.external_id}

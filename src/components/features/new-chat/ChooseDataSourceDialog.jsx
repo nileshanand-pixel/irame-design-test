@@ -111,14 +111,14 @@ const ChooseDataSourceDialog = ({
 				setOpen(value);
 			}}
 		>
-			<DialogContent className="sm:max-w-[525px] ">
+			<DialogContent className="max-w-[40%] ">
 				<DialogHeader className="border-b pb-3">
-					<DialogTitle>Choose Data Source</DialogTitle>
+					<DialogTitle className="">Choose Data Source</DialogTitle>
 					<DialogDescription>
 						You can always change it later from the data source page
 					</DialogDescription>
 				</DialogHeader>
-				<div className="space-y-2 max-h-[30rem] overflow-auto">
+				<div className="space-y-2 max-h-[50vh] overflow-auto">
 					{dataSourceFetch && dataSources.length <= 0 ? (
 						<div className="flex items-center justify-center">
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
@@ -176,7 +176,7 @@ const ChooseDataSourceDialog = ({
 								className="text-xs flex gap-2"
 								size="sm"
 							>
-								<span class="material-symbols-outlined ">
+								<span class="material-symbols-outlined text-2xl">
 									database_upload
 								</span>
 								Upload new dataset

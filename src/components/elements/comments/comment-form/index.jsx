@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import AutoGrowingTextarea from '../../auto-growing-textarea';
 import EmojiSelector from '../../emoji-selector';
 import UserProfileIcon from '../../user-profile-icon';
@@ -14,6 +13,7 @@ import FilePreview from '../../file-preview';
 import { isImageFile } from '@/utils/file';
 import ImagePreview from '../../image-preview';
 import { Smiley } from '@phosphor-icons/react/dist/ssr';
+import { toast } from '@/lib/toast';
 
 export default function CommentForm({
 	commetsAdder,
@@ -116,7 +116,7 @@ export default function CommentForm({
 
 	return (
 		<form
-			className={`bg-[#FAF5FF] p-3 flex flex-col gap-[10px] rounded-b-lg ${!isCommentSectionOpen && 'rounded-t-lg'}`}
+			className={`bg-[#FAF5FF] p-3 flex flex-col gap-[0.625rem] rounded-b-lg ${!isCommentSectionOpen && 'rounded-t-lg'}`}
 		>
 			<div className="flex flex-col gap-3 rounded-b-lg">
 				<div className="flex gap-2 items-center">
@@ -144,9 +144,8 @@ export default function CommentForm({
 					<FilePicker
 						trigger={
 							<Paperclip
-								size={24}
 								color="rgba(153, 153, 153, 0.80)"
-								className="cursor-pointer"
+								className="cursor-pointer size-6"
 							/>
 						}
 						onFileSelect={handleFileSelect}
@@ -154,7 +153,10 @@ export default function CommentForm({
 
 					<EmojiSelector
 						trigger={
-							<Smiley size={24} color="rgba(153, 153, 153, 0.80)" />
+							<Smiley
+								className="size-6 cursor-pointer"
+								color="rgba(153, 153, 153, 0.80)"
+							/>
 						}
 						onSelect={handleEmojiSelect}
 					/>

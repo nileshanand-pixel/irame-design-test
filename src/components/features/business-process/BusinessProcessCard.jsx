@@ -19,7 +19,7 @@ const BusinessProcessCard = ({ process, onClick }) => {
 		>
 			<CardHeader>
 				<div className="flex text-primary100 gap-2">
-					<span className="material-symbols-outlined w-fit rounded-lg bg-white p-2 border border-primary10">
+					<span className="material-symbols-outlined rounded-lg bg-white p-2 border border-primary10 text-3xl">
 						family_history
 					</span>
 				</div>
@@ -30,7 +30,7 @@ const BusinessProcessCard = ({ process, onClick }) => {
 						{upperFirst(process.name)}
 					</CardTitle>
 					<span
-						className="material-symbols-outlined text-primary60 cursor-pointer"
+						className="material-symbols-outlined text-primary60 cursor-pointer text-2xl"
 						onClick={handleCaretClick}
 					>
 						{isExpanded ? 'expand_less' : 'expand_more'}
@@ -60,7 +60,7 @@ const BusinessProcessCard = ({ process, onClick }) => {
 								key={workflow.external_id}
 								className=" flex items-start gap-2 text-primary60 text-sm py-1 rounded"
 							>
-								<span className="material-symbols-outlined rotate-180 text-primary40 ">
+								<span className="material-symbols-outlined rotate-180 text-primary40 text-2xl">
 									reply
 								</span>
 								<span className="font-medium">
@@ -71,7 +71,7 @@ const BusinessProcessCard = ({ process, onClick }) => {
 					</div>
 				) : (
 					<div className="flex text-primary60 items-center gap-2 text-sm mt-4">
-						<span className="material-symbols-outlined rotate-180 text-primary40 ">
+						<span className="material-symbols-outlined rotate-180 text-primary40 text-2xl">
 							reply
 						</span>
 						<span>

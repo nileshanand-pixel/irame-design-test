@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Check, AlertTriangle, Loader } from 'lucide-react';
-import { toast, Toaster } from 'sonner';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getDataSourceById } from '@/components/features/configuration/service/configuration.service';
 import { cn } from '@/lib/utils';
@@ -23,6 +22,7 @@ import FillButton from '@/components/elements/fill-button';
 import { useNavigate } from 'react-router-dom';
 import { useBusinessProcessId } from '../../../hooks/use-business-process-id';
 import upperFirst from 'lodash.upperfirst';
+import { toast } from '@/lib/toast';
 
 /** ---------- helpers that don’t hit React state ---------- **/
 
@@ -276,7 +276,7 @@ export const ColumnMapping = ({
 		return (
 			<div className="flex items-center justify-center h-64 text-lg font-medium">
 				<div className="flex flex-col items-center">
-					<Loader size={40} className="text-[#6A12CD] animate-spin mb-4" />
+					<Loader className="text-[#6A12CD] animate-spin mb-4 size-10" />
 					<p className="text-lg font-medium text-purple-700">
 						Mapping Columns...
 					</p>
@@ -354,9 +354,9 @@ export const ColumnMapping = ({
 										</span>
 									)}
 									{isOpen ? (
-										<ChevronUp size={20} />
+										<ChevronUp className="size-5" />
 									) : (
-										<ChevronDown size={20} />
+										<ChevronDown className="size-5" />
 									)}
 								</div>
 							</div>
@@ -366,10 +366,7 @@ export const ColumnMapping = ({
 								<div className="bg-white px-6 py-4">
 									{file.headers.length === 0 ? (
 										<div className="text-yellow-600 flex items-center">
-											<AlertTriangle
-												className="mr-2"
-												size={18}
-											/>
+											<AlertTriangle className="mr-2 size-[1.125rem]" />
 											No headers detected for{' '}
 											<b>{file.fileName}</b>
 										</div>
@@ -554,28 +551,19 @@ export const ColumnMapping = ({
 													<div className="md:col-span-3 flex text-sm justify-end">
 														{status === 'mapped' && (
 															<span className="inline-flex items-center text-green-600">
-																<Check
-																	size={16}
-																	className="mr-1"
-																/>
+																<Check className="mr-1 size-4" />
 																Valid
 															</span>
 														)}
 														{status === 'mismatch' && (
 															<span className="inline-flex items-center text-amber-800">
-																<AlertTriangle
-																	size={16}
-																	className="mr-1"
-																/>
+																<AlertTriangle className="mr-1 size-4" />
 																Mismatch
 															</span>
 														)}
 														{status === 'missing' && (
 															<span className="inline-flex  items-center text-red-500">
-																<AlertTriangle
-																	size={12}
-																	className="mr-1"
-																/>
+																<AlertTriangle className="mr-1 size-3" />
 																Missing
 															</span>
 														)}
@@ -622,7 +610,7 @@ export const ColumnMapping = ({
 							className="flex items-center gap-2"
 						>
 							{clarifyWorkFlowMutation.isPending && (
-								<Loader size={16} className="animate-spin" />
+								<Loader className="animate-spin size-4" />
 							)}
 							Next
 						</Button>

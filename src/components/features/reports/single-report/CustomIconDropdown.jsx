@@ -27,20 +27,20 @@ export const CustomIconDropdown = ({
 					<Button
 						size="sm"
 						variant={isDisabled ? 'noninteractive' : 'transparent'}
-						className={`flex items-center justify-between sm:justify-start gap-2 rounded-full w-full sm:w-auto ${selectedOption.bgClass} ${selectedOption.textClass}`}
+						className={`flex items-center justify-start gap-2 rounded-full w-auto ${selectedOption.bgClass} ${selectedOption.textClass}`}
 					>
 						<div className="flex items-center gap-2">
 							{isLoading ? (
-								<Loader2 className="animate-spin" size={16} />
+								<Loader2 className="animate-spin size-4" />
 							) : (
 								selectedOption.icon && (
-									<selectedOption.icon size={16} />
+									<selectedOption.icon className="size-4" />
 								)
 							)}
 							<span className="font-medium">
 								{selectedOption.label}
 							</span>
-							{!isDisabled && <ChevronDown size={16} />}
+							{!isDisabled && <ChevronDown className="size-4" />}
 						</div>
 					</Button>
 				</div>
@@ -57,7 +57,7 @@ export const CustomIconDropdown = ({
 							onClick={() => onChange(key)}
 							className="flex items-center gap-2 px-3 py-2 text-primary80 font-semibold"
 						>
-							{option.icon && <option.icon size={16} />}
+							{option.icon && <option.icon className="size-4" />}
 							<span>{option.label}</span>
 						</DropdownMenuItem>
 					))}

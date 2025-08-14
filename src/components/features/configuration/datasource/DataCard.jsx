@@ -16,7 +16,7 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import useS3File from '@/hooks/useS3File';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const formatFileSize = (sizeInBytes) => {
 	if (sizeInBytes < 1024) return `${sizeInBytes} B`;
@@ -228,7 +228,7 @@ const DataCard = ({ data, form, setForm, addChangeForTracking }) => {
 						data?.intent?.map((useCase, index) => (
 							<span
 								key={useCase}
-								className="text-sm font-normal px-3 py-1.5 rounded-[30px] cursor-default hover:bg-purple-8 bg-purple-8 text-purple-100 border-[1.2px] border-primary"
+								className="text-sm font-normal px-3 py-1.5 rounded-[30px] cursor-default hover:bg-purple-8 bg-purple-8 text-purple-100 border-[0.075rem] border-primary"
 							>
 								{
 									intentMap.find((item) => item.value === useCase)
@@ -284,7 +284,7 @@ const DataCard = ({ data, form, setForm, addChangeForTracking }) => {
 										}`}
 									></i>
 									{isDownloading ? (
-										<CircularLoader className="size-[18px]" />
+										<CircularLoader className="size-[1.125rem]" />
 									) : (
 										<i
 											onClick={(e) =>

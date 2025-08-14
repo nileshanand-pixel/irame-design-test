@@ -95,8 +95,8 @@ const ReportsInDatasource = () => {
 	};
 
 	return (
-		<div className="flex flex-col w-full h-full ">
-			<div className="w-full px-8 flex flex-none justify-between mt-2 ">
+		<div className="flex flex-col w-full h-full px-8">
+			<div className="w-full flex flex-none justify-between mt-2">
 				<div className=" flex items-end text-primary80 gap-2">
 					<div
 						className="text-2xl font-semibold cursor-pointer"
@@ -129,7 +129,10 @@ const ReportsInDatasource = () => {
 					<div
 						className={cn(
 							'flex items-center border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300',
-							{ 'w-[300px]': isFocused, 'w-[118px]': !isFocused },
+							{
+								'w-[18.75rem]': isFocused,
+								'w-[7.375rem]': !isFocused,
+							},
 						)}
 					>
 						<i className="bi-search text-primary40 me-2"></i>
@@ -155,9 +158,9 @@ const ReportsInDatasource = () => {
 				</div>
 			</div>
 
-			<div className="flex-1 px-8 overflow-y-auto">
+			<div className="flex-1 overflow-y-auto">
 				{reportsQuery.isLoading ? (
-					<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-6 pb-6">
+					<div className="grid gap-6 grid-cols-3 mt-6 pb-6">
 						{Array.from({ length: 16 }).map((i) => (
 							<ReportCardSkeleton key={i} />
 						))}
@@ -165,7 +168,7 @@ const ReportsInDatasource = () => {
 				) : reports.length === 0 ? (
 					<EmptyState config={emptyStateConfig} />
 				) : filteredList.length > 0 ? (
-					<div className="w-full mt-6 bg-white grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 pb-6  gap-6">
+					<div className="w-full mt-6 bg-white grid grid-cols-4 pb-6 gap-6">
 						{filteredList.map((item) => (
 							<ReportCard key={item.report_id} report={item} />
 						))}

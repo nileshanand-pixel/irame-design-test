@@ -10,7 +10,7 @@ import { ReportPermissionProvider } from '@/contexts/ReportPermissionContext';
 import ReportSummary from './ReportSummary';
 import axios from 'axios';
 import axiosClientV1 from '@/lib/axios';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import ActivityTrail from '../components/activity-trail';
 import ReportComments from '../components/report-comments';
 
@@ -94,7 +94,7 @@ const SingleReportPage = () => {
 				</div>
 				<div
 					ref={printRef}
-					className="flex-1 lg:px-[120px] md:px-20 sm:px-10 py-8 overflow-y-auto"
+					className="flex-1 px-[7.5rem] py-8 overflow-y-auto"
 				>
 					<ReportHero reportDetails={reportDetails} />
 					<ReportSummary />

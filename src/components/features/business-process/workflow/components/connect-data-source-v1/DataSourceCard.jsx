@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import upperFirst from 'lodash.upperfirst';
-import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +30,7 @@ import { getFileIcon } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
 import WorkFlowDataSourceCardSkeleton from './WorkFlowDataSourceCardSkeleton';
 import { getFileMeta } from '@/lib/file';
+import { toast } from '@/lib/toast';
 
 const gradientStyle = {
 	background: `

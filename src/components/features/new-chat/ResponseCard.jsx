@@ -152,7 +152,7 @@ const ResponseCard = ({
 			{(safeHTML || (mainItems && mainItems.length > 0)) && (
 				<div className="mt-4 mx-12">
 					{safeHTML && (
-						<div className="mb-8 bg-purple-4 p-4 rounded-tl-md rounded-e-xl rounded-bl-xl">
+						<div className="max-w-[98%] mb-4 bg-purple-4 p-4 rounded-tl-md rounded-e-xl rounded-bl-xl">
 							<p
 								className="text-primary80 font-medium"
 								style={{ whiteSpace: 'pre-wrap' }}
@@ -190,7 +190,7 @@ const ResponseCard = ({
 
 					{/* Common CTA Container */}
 					{(graphDataItem || dataFrameItem) && (
-						<div className="mt-6 mb-14 flex justify-between">
+						<div className="my-4 flex justify-between">
 							{dataFrameItem &&
 								dataFrameItem[1]?.tool_data?.csv_url && (
 									<Button
@@ -271,7 +271,7 @@ const ResponseCard = ({
 						<div className="mt-2 mb-2 font-semibold text-xl text-primary80 pb-4 border-b border-primary10 ">
 							Related Questions
 						</div>
-						<div className=" flex flex-col gap-2 mx-auto">
+						<div className=" flex flex-col mx-auto">
 							{answerResp?.answer?.follow_up?.tool_data?.questions &&
 								Array.isArray(
 									answerResp?.answer?.follow_up?.tool_data

@@ -5,6 +5,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useReportId } from '../hooks/useReportId';
 import SourceRow from './source-row';
+import sourcesIcon from '@/assets/icons/sources.svg';
 
 export default function TabSheet({ open = true, onOpenChange, queryCardId }) {
 	const reportId = useReportId();
@@ -25,73 +26,13 @@ export default function TabSheet({ open = true, onOpenChange, queryCardId }) {
 			label: 'Actual Sources',
 			description:
 				'Added sources from the report can be viewed and downloaded from here.',
-			icon: (
-				<svg
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<path
-						d="M12 2L2 7L12 12L22 7L12 2Z"
-						stroke="#6E56CF"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					/>
-					<path
-						d="M2 17L12 22L22 17"
-						stroke="#6E56CF"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					/>
-					<path
-						d="M2 12L12 17L22 12"
-						stroke="#6E56CF"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					/>
-				</svg>
-			),
+			icon: sourcesIcon,
 		},
 		{
 			key: 'attachments',
 			label: 'All Attachments',
 			description: 'View all attachments added to the report here.',
-			icon: (
-				<svg
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<path
-						d="M12 2L2 7L12 12L22 7L12 2Z"
-						stroke="#6E56CF"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					/>
-					<path
-						d="M2 17L12 22L22 17"
-						stroke="#6E56CF"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					/>
-					<path
-						d="M2 12L12 17L22 12"
-						stroke="#6E56CF"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					/>
-				</svg>
-			),
+			icon: sourcesIcon,
 		},
 	];
 
@@ -118,10 +59,10 @@ export default function TabSheet({ open = true, onOpenChange, queryCardId }) {
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent
-				className="w-full text-primary80 max-w-md md:max-w-xl p-0 border-l"
+				className="w-full text-primary80 max-w-2xl p-0 border-l"
 				side="right"
 			>
-				<div className="flex flex-col h-full">
+				<div className="h-full">
 					<div className="flex items-center justify-between ">
 						<Tabs
 							defaultValue={tabsConfig[0].key}
@@ -134,7 +75,7 @@ export default function TabSheet({ open = true, onOpenChange, queryCardId }) {
 									<TabsTrigger
 										key={key}
 										value={key}
-										className="data-[state=active]:border-b-[3px] data-[state=active]:rounded-sm ml-6 data-[state=active]:border-purple-100 data-[state=active]:shadow-none rounded-none py-2 font-medium text-base"
+										className="data-[state=active]:border-b-[0.18rem] data-[state=active]:rounded-sm ml-6 data-[state=active]:border-purple-100 data-[state=active]:shadow-none rounded-none py-2 font-medium text-base"
 									>
 										{label}
 									</TabsTrigger>
@@ -146,7 +87,7 @@ export default function TabSheet({ open = true, onOpenChange, queryCardId }) {
 									<div className="p-4">
 										<div className="flex items-center gap-4 mb-4">
 											<div className="bg-purple-50 p-4 rounded-full">
-												{icon}
+												<img src={icon} className="size-6" />
 											</div>
 											<div>
 												<h2 className="text-xl font-semibold ">

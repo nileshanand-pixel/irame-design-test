@@ -8,7 +8,7 @@ import DashboardCard from './components/DashboardCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from '@/hooks/useRouter';
 import CreateDashboardDialog from './components/CreateDashboardDialog';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import EmptyState from '@/components/elements/EmptyState';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
@@ -112,7 +112,10 @@ const Dashboard = () => {
 					<div
 						className={cn(
 							'flex items-center border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300',
-							{ 'w-[300px]': isFocused, 'w-[118px]': !isFocused },
+							{
+								'w-[18.75rem]': isFocused,
+								'w-[7.375rem]': !isFocused,
+							},
 						)}
 					>
 						<i className="bi-search text-primary40 me-2"></i>
@@ -148,8 +151,8 @@ const Dashboard = () => {
 						<div className="flex items-center space-x-4">
 							<Skeleton className="h-12 w-16 rounded-xl bg-purple-4" />
 							<div className="space-y-2">
-								<Skeleton className="h-4 w-[250px] bg-purple-4" />
-								<Skeleton className="h-4 w-[200px] bg-purple-4" />
+								<Skeleton className="h-4 w-[15.625rem] bg-purple-4" />
+								<Skeleton className="h-4 w-[12.5rem] bg-purple-4" />
 							</div>
 						</div>
 					</div>

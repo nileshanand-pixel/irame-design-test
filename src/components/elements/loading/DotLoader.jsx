@@ -6,7 +6,7 @@ import React from 'react';
 
  * @returns 
  */
-const DotLoader = ({ size = '4px' }) => {
+const DotLoader = ({ size = '0.25rem' }) => {
 	const circleClass = `my-12 rounded-full`;
 	const sizeStyle = { width: size, height: size };
 
@@ -33,7 +33,7 @@ const DotLoader = ({ size = '4px' }) => {
 	return (
 		<>
 			<style>{styles}</style>
-			<div className="flex ms-1 gap-[4px] justify-center">
+			<div className="flex ms-1 gap-1 justify-center">
 				<span
 					style={sizeStyle}
 					className={`animate-loader bg-[#26064ACC]  ${circleClass}`}

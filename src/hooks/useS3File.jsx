@@ -1,6 +1,6 @@
 import { createSignedUrlFromS3Url, downloadFile } from '@/utils/file';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 export default function useS3File() {
 	const [isDownloading, setIsDownloading] = useState(false);

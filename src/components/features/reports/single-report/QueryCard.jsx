@@ -20,7 +20,7 @@ import { deleteReportCard } from '../service/reports.service';
 import { Loader2, Eye, Copy } from 'lucide-react';
 import { getSupportedGraphs } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { RiskLevelDropdown } from './RiskLevelDropdown';
 import { Hint } from '@/components/Hint';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
@@ -63,21 +63,21 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 			type: 'item',
 			label: 'Update Annexures',
 			onClick: () => alert('implement update Annexures'),
-			icon: <Table size={20} />,
+			icon: <Table className="size-5" />,
 			show: false,
 		},
 		{
 			type: 'item',
 			label: 'Open Query ',
 			onClick: openQuery,
-			icon: <ArrowSquareOut size={20} />,
+			icon: <ArrowSquareOut className="size-5" />,
 			show: true,
 		},
 		{
 			type: 'item',
 			label: showGraphs ? 'Hide Graphs' : 'Show Graphs',
 			onClick: () => setShowGraphs((prev) => !prev),
-			icon: <Eye size={20} />,
+			icon: <Eye className="size-5" />,
 			show: false,
 		},
 		{
@@ -87,7 +87,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 				navigator.clipboard.writeText(card.external_id);
 				toast.success('Card ID copied to clipboard');
 			},
-			icon: <Copy size={20} />,
+			icon: <Copy className="size-5" />,
 			show: true,
 		},
 		{
@@ -104,16 +104,16 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 			icon: deleteMutation.isPending ? (
 				<Loader2 className="h-4 w-4 animate-spin" />
 			) : (
-				<Trash size={20} />
+				<Trash className="size-5" />
 			),
 			show: !!isOwner,
 		},
 	];
 
 	return (
-		<Card className=" rounded-xl px-5 py-4 border shadow-sm bg-[#f9f8ff]">
+		<Card className="rounded-xl px-5 py-4 border shadow-sm bg-[#f9f8ff]">
 			<CardHeader className="p-0">
-				<div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-2">
+				<div className="flex flex-row flex-wrap items-center gap-3 mb-2">
 					<Badge
 						variant="outline"
 						className="px-3 py-2 font-semibold border-none rounded-full text-primary80 bg-purple-4"
@@ -144,8 +144,8 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 					</div>
 				</div>
 
-				<div className="flex  flex-col sm:flex-row sm:items-center sm:justify-between gap-16 border-b border-gray-200 pb-2 min-w-0">
-					<CardTitle className="flex items-center gap-1 p-0 overflow-x-hidden text-base sm:text-lg md:text-xl lg:text-2xl font-medium lg:font-semibold text-primary80">
+				<div className="flex flex-row items-center justify-between gap-16 border-b border-gray-200 pb-2 min-w-0">
+					<CardTitle className="flex items-center gap-1 p-0 overflow-x-hidden text-xl font-semibold text-primary80">
 						<span className="truncate">
 							{card?.title ?? 'Prescriptive analysis of this report'}
 						</span>
@@ -173,7 +173,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 									className="text-gray-500 hover:text-gray-700"
 									onClick={() => setShowAddGraph(true)}
 								>
-									<ChartLineUp size={18} className="sm:size-20" />
+									<ChartLineUp className="size-6" />
 								</Button>
 							</Tooltip>
 							<Tooltip
@@ -200,10 +200,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 									{isDownloading ? (
 										<CircularLoader size="sm" />
 									) : (
-										<BoxArrowDown
-											size={18}
-											className="sm:size-20"
-										/>
+										<BoxArrowDown size={18} className="size-6" />
 									)}
 								</Button>
 							</Tooltip>

@@ -70,7 +70,7 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 
 	return (
 		<div
-			className={`border flex flex-col border-dashed border-purple-24 bg-purple-2 py-6 rounded-2xl justify-center
+			className={` flex flex-col border-dashed border-2 border-purple-24 bg-purple-2 py-6 rounded-2xl justify-center
 			`}
 		>
 			<div className="flex flex-col w-full justify-center items-center gap-1 text-center ">
@@ -104,15 +104,15 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 				text="OR"
 				className="!w-3/5 mx-auto mt-6 mb-4 text-primary2"
 			/>
-			<div className="flex flex-col w-full gap-2 px-4">
+			<div className="flex flex-col gap-2 px-4">
 				<p className="text-sm text-primary80 font-medium">
 					Recent Data Source
 				</p>
-				<div className="grid sm:grid-cols-1 text-primary80  w-full md:grid-cols-2 lg:grid-cols-3 gap-6">
+				<div className="grid grid-cols-3 text-primary80 gap-6">
 					{filteredList.length ? (
 						filteredList.map((source, index) => (
 							<div
-								className="flex justify-between items-center bg-purple-4 p-4 rounded-lg gap-4 cursor-pointer hover:bg-purple-8 transition-colors "
+								className="bg-purple-4 p-4 rounded-lg gap-4 cursor-pointer hover:bg-purple-8 transition-colors "
 								key={source.datasource_id}
 								onClick={() =>
 									handleDataSourceClick(source, index + 1)
@@ -125,7 +125,7 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 										className="mr-2 size-6 text-primary40"
 									/>
 									<div className="flex flex-col items-start">
-										<p className="text-base max-w-[200px] truncate text-ellipsis">
+										<p className="text-base max-w-[12.5rem] truncate text-ellipsis">
 											{upperFirst(source.name)}
 										</p>
 										<span className="text-primary40 text-xs">

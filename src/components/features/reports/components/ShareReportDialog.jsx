@@ -13,7 +13,7 @@ import AccessDropdown from './AccessDropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getReportAccessDetails, shareReport } from '../service/reports.service';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import AccessSkeletonList from './AccessSkeleton';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';

@@ -9,7 +9,6 @@ import {
 	getDataSources,
 	uploadFile,
 } from './service/configuration.service';
-import { toast } from 'sonner';
 import { v4 as uuid } from 'uuid';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
@@ -30,6 +29,7 @@ import dayjs from 'dayjs';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getFileType } from '@/utils/file';
+import { toast } from '@/lib/toast';
 
 const Configuration = () => {
 	const [files, setFiles] = useState([]);
@@ -473,7 +473,7 @@ const Configuration = () => {
 	};
 
 	return (
-		<div className="flex flex-col gap-4  w-full h-full">
+		<div className="flex flex-col gap-4 w-full h-full">
 			{/* Upload Section */}
 			<div className="px-8 flex-none mt-2">
 				<div className="text-primary80 gap-2">
@@ -482,14 +482,14 @@ const Configuration = () => {
 						/ Connect New Dataset
 					</span>
 				</div>
-				<div className="border rounded-3xl py-4 px-6 mt-6  col-span-12 shadow-1xl h-fit">
+				<div className="border rounded-3xl py-4 px-6 mt-6 col-span-12 shadow-1xl h-fit">
 					{isLoading && (
 						<div>
 							{' '}
 							<BackdropLoader />
 						</div>
 					)}
-					<div className="flex sm:flex-row flex-col gap-4 justify-between sm:items-center">
+					<div className="flex flex-row gap-4 justify-between items-center">
 						<div>
 							<h3 className="text-primary80 font-semibold text-xl">
 								Connect New Dataset
@@ -549,7 +549,7 @@ const Configuration = () => {
 													dataSourceIntent.includes(
 														useCase.value,
 													)
-														? 'bg-purple-8 text-purple-100 border-[1.2px] border-primary'
+														? 'bg-purple-8 text-purple-100 border-[0.075rem] border-primary'
 														: ''
 												}`}
 											>
@@ -631,11 +631,11 @@ const Configuration = () => {
 			{/* Right Section Manage Data Source */}
 			<div
 				className={cn(
-					'border flex flex-col rounded-3xl py-4 mx-8  col-span-12 shadow-1xl flex-1 mb-4 ',
+					'border flex flex-col rounded-3xl py-4 mx-8 col-span-12 shadow-1xl flex-1 mb-4',
 					!showForm && 'overflow-y-hidden',
 				)}
 			>
-				<div className="flex flex-none px-8 sm:flex-row flex-col gap-4 justify-between sm:items-center mb-4 pb-4">
+				<div className="flex flex-none px-8 flex-row gap-4 justify-between items-center mb-4 pb-4">
 					<div>
 						<h3 className="text-primary80 font-semibold text-xl">
 							Choose from Existing Dataset
@@ -649,8 +649,8 @@ const Configuration = () => {
 						className={cn(
 							'flex items-center border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300',
 							{
-								'sm:w-[300px] w-4/5 ': isFocused,
-								'w-4/5 sm:w-[180px]': !isFocused,
+								'w-[18.75rem]': isFocused,
+								'w-[11.25rem]': !isFocused,
 							},
 						)}
 					>
@@ -673,7 +673,7 @@ const Configuration = () => {
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>
 					)}
-					<div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					<div className="grid grid-cols-3 gap-6">
 						{filteredList.length > 0 &&
 							filteredList.map((source) => (
 								<div
@@ -749,7 +749,7 @@ const Configuration = () => {
 					</div>
 					{(!filteredList || filteredList.length === 0) && (
 						<p className="text-primary40 flex flex-col  justify-center items-center">
-							<span className="material-symbols-outlined  text-primary10 text-[75px]">
+							<span className="material-symbols-outlined  text-primary10 text-[4.68rem]">
 								database
 							</span>
 

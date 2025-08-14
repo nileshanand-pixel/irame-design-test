@@ -17,7 +17,7 @@ import {
 import { useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from '@/hooks/useRouter';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
@@ -59,7 +59,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 							: 'old',
 					}),
 				);
-				toast('Query added to dashboard successfully', {
+				toast.success('Query added to dashboard successfully', {
 					duration: 5000,
 					action: (
 						<Button
@@ -121,7 +121,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 	// console.log(filteredList, "filteredList");
 	return (
 		<Dialog open={open} onOpenChange={closeModal}>
-			<DialogContent className="sm:max-w-[500px] ">
+			<DialogContent className="max-w-[31.25rem] ">
 				<DialogHeader className="border-b pb-3">
 					<DialogTitle>Choose Dashboard</DialogTitle>
 					<DialogDescription>
@@ -154,7 +154,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 								onClick={() => setSelectedDashboard(dashboard)}
 							>
 								<div className="flex items-center gap-2 w-full">
-									<div className="bg-purple-4 w-[100px] h-16 rounded-xl flex items-center justify-center pt-1.5">
+									<div className="bg-purple-4 w-[6.25rem] h-16 rounded-xl flex items-center justify-center pt-1.5">
 										<img
 											src={graphPlaceholder}
 											alt="graph-placeholder"
@@ -174,7 +174,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 								selectedDashboard.dashboard_id ===
 									dashboard.dashboard_id ? (
 									<Button variant="icon" size="sm" className="">
-										<span className="material-icons-outlined text-purple-100">
+										<span className="material-icons-outlined text-purple-100 text-2xl">
 											radio_button_checked
 										</span>
 									</Button>

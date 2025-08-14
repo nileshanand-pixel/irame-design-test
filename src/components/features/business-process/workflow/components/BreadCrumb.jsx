@@ -11,14 +11,12 @@ const Breadcrumb = ({ items }) => {
 						{item.path ? (
 							<h1
 								onClick={() => navigate(item.path)}
-								className="text-xl lg:text-2xl min-w-4 font-medium cursor-pointer truncate"
+								className="text-2xl min-w-4 font-medium cursor-pointer truncate"
 							>
 								{item.label}
 							</h1>
 						) : (
-							<span className=" text-xs md:text-sm shrink-0">
-								{item.label}
-							</span>
+							<span className="text-sm shrink-0">{item.label}</span>
 						)}
 						{index < items.length - 1 && <span>/</span>}
 					</React.Fragment>

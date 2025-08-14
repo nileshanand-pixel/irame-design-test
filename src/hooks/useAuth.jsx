@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { authUserDetails } from '@/components/features/login/service/auth.service';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const useAuth = () => {
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
