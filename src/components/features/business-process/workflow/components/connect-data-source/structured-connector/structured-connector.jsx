@@ -62,10 +62,10 @@ const StructuredConnector = ({ workflow }) => {
 	// if(runId && !runDetails)
 
 	return (
-		<div className="space-y-6 h-full flex flex-col">
+		<div className="space-y-6 h-full flex flex-col min-h-0">
 			{/* Show loading state or stepper navigation */}
 
-			<div className="px-8 pt-5">
+			<div className="px-8 pt-5 flex-shrink-0">
 				<StepperNav
 					stepper={stepper}
 					steps={steps}
@@ -73,18 +73,27 @@ const StructuredConnector = ({ workflow }) => {
 				/>
 			</div>
 
-			<div className="space-y-4 flex-1">
+			<div className="flex-1 min-h-0">
 				{isProcessing ? (
 					<div className="flex items-center justify-center py-4 flex-1">
 						<div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
 						<span className="ml-2">Processing your data...</span>
 					</div>
 				) : (
-					stepper.switch({
-						upload_files: () => <UploadFilesStep stepper={stepper} />,
-						map_files: () => <FileMappingStep stepper={stepper} />,
-						map_columns: () => <ColumnMappingStep stepper={stepper} />,
-					})
+					<div className="h-full">
+						{stepper.switch({
+							upload_files: () => (
+								<UploadFilesStep
+									requiredFiles={workflow?.data?.required_files}
+									stepper={stepper}
+								/>
+							),
+							map_files: () => <FileMappingStep stepper={stepper} />,
+							map_columns: () => (
+								<ColumnMappingStep stepper={stepper} />
+							),
+						})}
+					</div>
 				)}
 			</div>
 		</div>
