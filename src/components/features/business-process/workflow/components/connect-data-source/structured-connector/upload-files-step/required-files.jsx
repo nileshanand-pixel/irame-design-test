@@ -75,7 +75,7 @@ const RequiredFiles = ({ requiredFiles }) => {
 							</div>
 						))}
 						{remainingCount > 0 && (
-							<HoverCard>
+							<HoverCard closeDelay={100} openDelay={50}>
 								<HoverCardTrigger asChild>
 									<div className="cursor-pointer text-xs text-[#344054] bg-[#F2F4F7] px-2 py-1 rounded-full">
 										+{remainingCount} files
