@@ -81,9 +81,9 @@ const StructuredConnector = ({ workflow }) => {
 					</div>
 				) : (
 					stepper.switch({
-						upload_files: () => <UploadFilesStep />,
-						map_files: () => <FileMappingStep />,
-						map_columns: () => <ColumnMappingStep />,
+						upload_files: () => <UploadFilesStep stepper={stepper} />,
+						map_files: () => <FileMappingStep stepper={stepper} />,
+						map_columns: () => <ColumnMappingStep stepper={stepper} />,
 					})
 				)}
 			</div>
