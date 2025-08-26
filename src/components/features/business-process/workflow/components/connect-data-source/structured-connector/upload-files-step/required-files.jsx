@@ -82,33 +82,31 @@ const RequiredFiles = ({ requiredFiles }) => {
 									</div>
 								</HoverCardTrigger>
 								<HoverCardContent className="w-80 p-0" align="start">
-									<div className="max-h-80 overflow-y-auto p-2">
+									<div className="max-h-80 overflow-y-auto show-scrollbar p-2">
 										<h4 className="text-sm font-medium text-slate-700 mb-2 px-2">
 											Remaining Files
 										</h4>
 										<div className="space-y-2">
-											{remainingFiles
-												.slice(0, 10)
-												.map((file, index) => (
-													<div
-														key={index}
-														className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-md"
-													>
-														<span className="text-sm font-medium text-slate-800">
-															{file.name}
-														</span>
-														<span className="text-xs text-[#344054] bg-[#F2F4F7] px-2 py-1 rounded-full">
-															{file.label}
-														</span>
-													</div>
-												))}
+											{remainingFiles.map((file, index) => (
+												<div
+													key={index}
+													className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-md"
+												>
+													<span className="text-sm font-medium text-slate-800">
+														{file.name}
+													</span>
+													<span className="text-xs text-[#344054] bg-[#F2F4F7] px-2 py-1 rounded-full">
+														{file.label}
+													</span>
+												</div>
+											))}
 										</div>
-										{remainingFiles.length > 10 && (
+										{/* {remainingFiles.length > 10 && (
 											<div className="text-xs text-slate-500 mt-2 px-2">
 												+{remainingFiles.length - 10} more
 												files
 											</div>
-										)}
+										)} */}
 									</div>
 								</HoverCardContent>
 							</HoverCard>
