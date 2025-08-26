@@ -1,17 +1,23 @@
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useWorkflowId } from '../../../hooks/useWorkflowId';
 import { useBusinessProcessId } from '../../../hooks/use-business-process-id';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getWorkflowDetails } from '../../../service/workflow.service';
+import UnstructuredConnector from './unstructured-connector';
+import StructuredConnector from './structured-connector';
+import HybridConnector from './hybrid-connector';
 
 export const ConnectDatasourceModal = ({ open, setOpen }) => {
-	const workFlowId = useWorkflowId();
+	const workflowId = useWorkflowId();
 	const businessProcessId = useBusinessProcessId();
 	const navigate = useNavigate();
+
+	const { data: workflowDetails, isLoading: isWorkflowLoading } = useQuery({
+		queryKey: ['workflow-details', workflowId],
+		queryFn: () => getWorkflowDetails(workflowId),
+		enabled: Boolean(workflowId),
+	});
 
 	const handleOpenChange = (isOpen) => {
 		setOpen(isOpen);
@@ -19,6 +25,21 @@ export const ConnectDatasourceModal = ({ open, setOpen }) => {
 			navigate(
 				`/app/business-process/${businessProcessId}/workflows/${workFlowId}`,
 			);
+		}
+	};
+
+	const workflowType = workflowDetails?.type?.toUpperCase() || 'STRUCTURED';
+
+	const renderSwitcher = () => {
+		switch (workflowType) {
+			case 'STRUCTURED':
+				return <StructuredConnector />;
+			case 'UNSTRUCTURED':
+				return <UnstructuredConnector />;
+			case 'HYBRID':
+				return <HybridConnector />;
+			default:
+				return null;
 		}
 	};
 
@@ -30,7 +51,7 @@ export const ConnectDatasourceModal = ({ open, setOpen }) => {
 						Connect Data Source
 					</h2>
 				</div>
-				{/* Implement Switcher Here */}
+				{renderSwitcher()}
 			</DialogContent>
 		</Dialog>
 	);
