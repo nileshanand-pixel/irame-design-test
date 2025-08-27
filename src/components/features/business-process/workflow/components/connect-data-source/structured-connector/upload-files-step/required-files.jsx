@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { ChevronDown, ChevronUp, File, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useBreakpoint from '@/hooks/useBreakpoint';
 import {
@@ -13,6 +13,7 @@ const RequiredFiles = ({ requiredFiles }) => {
 
 	const breakpoint = useBreakpoint();
 
+	// TODO: remove this once actual descriptions starts coming
 	const generateDescription = (fileName, fileType) => {
 		if (fileType === 'Excel') {
 			return 'Contains data records and business information for analysis and reporting.';
@@ -21,12 +22,14 @@ const RequiredFiles = ({ requiredFiles }) => {
 		}
 	};
 
+	// TODO: remove this repeat logic as this was put for testing the stuff, also remove the naming
 	// Combine all files from csv_files and pdf_files
 	const repeatFiles = (files, label) =>
 		Array(25)
 			.fill(0)
 			.flatMap(() =>
 				(files || []).map((file) => ({
+					// name: file.file_name + file.file_name + file.file_name + file.file_name,
 					name: file.file_name,
 					label,
 					description:
@@ -60,16 +63,16 @@ const RequiredFiles = ({ requiredFiles }) => {
 
 			return (
 				<div className="px-4 py-4">
-					<div className="flex flex-wrap items-center gap-6 text-primary100">
+					<div className="flex flex-wrap  items-center gap-6 text-primary100">
 						{visibleFiles.map((file, index) => (
 							<div
 								key={index}
-								className="flex items-center gap-2 border border-[#F0F1F3] p-2 rounded-lg"
+								className="flex max-w-[25%] px-2 py-3 items-center gap-2 border border-[#F0F1F3] rounded-lg"
 							>
-								<span className="text-sm font-medium">
+								<span className="text-sm truncate font-medium">
 									{file.name}
 								</span>
-								<span className="text-xs text-[#344054] bg-[#F2F4F7] px-2 py-1 rounded-full">
+								<span className="text-xs text-[#344054] bg-[#F2F4F7] px-2 py-0.5 rounded-full">
 									{file.label}
 								</span>
 							</div>
@@ -122,17 +125,17 @@ const RequiredFiles = ({ requiredFiles }) => {
 					{allFiles.map((file, index) => (
 						<div
 							key={index}
-							className="border border-slate-200 rounded-lg p-4 bg-white space-y-2"
+							className="border border-slate-200 rounded-lg px-3 py-2 bg-white space-y-1"
 						>
-							<div className="flex items-start justify-between">
-								<h4 className="text-sm font-semibold text-slate-800 leading-tight">
+							<div className="flex items-start space-x-4">
+								<h4 className="text-sm  text-primary100">
 									{file.name}
 								</h4>
-								<span className="text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded ml-2 flex-shrink-0">
+								<span className="text-xs text-[#344054] bg-[#F2F4F7] px-2 py-0.5 rounded-full">
 									{file.label}
 								</span>
 							</div>
-							<p className="text-xs text-slate-500 leading-relaxed">
+							<p className="text-xs font-light text-[#6B7280]">
 								{file.description}
 							</p>
 						</div>
@@ -143,12 +146,12 @@ const RequiredFiles = ({ requiredFiles }) => {
 	};
 
 	return (
-		<div className="border border-[rgba(0,0,0,0.1)] rounded-lg bg-white">
+		<div className="border border-black/10 rounded-lg bg-white">
 			{/* Header */}
-			<div className="flex items-center justify-between px-4 py-2 border-b border-[rgba(0,0,0,0.1)]">
+			<div className="flex items-center justify-between px-4 py-2 border-b border-black/10">
 				<div className="flex items-center gap-2">
-					<FileText className="w-5 h-5 text-gray-600" />
-					<h3 className="text-base font-medium text-gray-900">
+					<File className="size-6" />
+					<h3 className="text-base font-medium text-primary100">
 						Required Files
 					</h3>
 				</div>
@@ -160,9 +163,9 @@ const RequiredFiles = ({ requiredFiles }) => {
 				>
 					{isExpanded ? 'Click to Collapse' : 'Click to Expand'}
 					{isExpanded ? (
-						<ChevronUp className="w-4 h-4" />
+						<ChevronUp className="size-6" />
 					) : (
-						<ChevronDown className="w-4 h-4" />
+						<ChevronDown className="size-6" />
 					)}
 				</Button>
 			</div>
