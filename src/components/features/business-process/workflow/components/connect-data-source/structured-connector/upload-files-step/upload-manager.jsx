@@ -81,7 +81,7 @@ export const UploadManager = () => {
 	};
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-4  h-full">
 			{uploadedFiles.length > 0 ? (
 				<>
 					<input

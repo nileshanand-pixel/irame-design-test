@@ -86,19 +86,19 @@ const RequiredFiles = ({ requiredFiles }) => {
 								</HoverCardTrigger>
 								<HoverCardContent className="w-80 p-0" align="start">
 									<div className="max-h-80 overflow-y-auto show-scrollbar p-2">
-										<h4 className="text-sm font-medium text-slate-700 mb-2 px-2">
+										<h4 className="text-md text-purple-100 font-medium  mb-2 px-2">
 											Remaining Files
 										</h4>
 										<div className="space-y-2">
 											{remainingFiles.map((file, index) => (
 												<div
 													key={index}
-													className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-md"
+													className="flex items-center justify-between p-2 text-primary100 hover:bg-slate-50 rounded-md"
 												>
-													<span className="text-sm font-medium text-slate-800">
+													<span className="text-sm truncate font-medium">
 														{file.name}
 													</span>
-													<span className="text-xs text-[#344054] bg-[#F2F4F7] px-2 py-1 rounded-full">
+													<span className="text-xs text-[#344054] bg-[#F2F4F7] px-2 py-0.5 rounded-full">
 														{file.label}
 													</span>
 												</div>
@@ -135,7 +135,7 @@ const RequiredFiles = ({ requiredFiles }) => {
 									{file.label}
 								</span>
 							</div>
-							<p className="text-xs font-light text-[#6B7280]">
+							<p className="text-xs  text-[#6B7280]">
 								{file.description}
 							</p>
 						</div>
