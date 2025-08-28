@@ -3,7 +3,11 @@ import { useDropzone } from 'react-dropzone';
 import { UploadActions } from './upload-actions';
 import { CloudArrowUp } from '@phosphor-icons/react';
 
-export const DropZone = ({ onFilesAdded, onChooseExisting }) => {
+export const DropZone = ({
+	onFilesAdded,
+	onChooseExisting,
+	selectedDataSources,
+}) => {
 	const onDrop = useCallback(
 		(acceptedFiles) => {
 			onFilesAdded?.(acceptedFiles);
@@ -19,7 +23,11 @@ export const DropZone = ({ onFilesAdded, onChooseExisting }) => {
 	return (
 		<div className="bg-white rounded-lg px-6 py-8">
 			<div className="flex justify-start mb-4">
-				<UploadActions onUpload={open} onChooseExisting={onChooseExisting} />
+				<UploadActions
+					onUpload={open}
+					onChooseExisting={onChooseExisting}
+					selectedDataSources={selectedDataSources}
+				/>
 			</div>
 			<div
 				{...getRootProps()}

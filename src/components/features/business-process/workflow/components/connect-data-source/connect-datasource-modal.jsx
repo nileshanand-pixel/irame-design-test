@@ -44,7 +44,11 @@ export const ConnectDatasourceModal = ({ open, setOpen }) => {
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={handleOpenChange}>
+		<Dialog
+			open={open}
+			onEscapeKeyDown={(e) => e.preventDefault()}
+			onOpenChange={handleOpenChange}
+		>
 			<DialogContent className="max-w-[90%] border p-0 flex flex-col sm:max-h-[90vh] h-[90vh] rounded-lg overflow-hidden gap-0">
 				<div className="flex items-center justify-between px-6 py-4 border-b border-[#e5e7eb] bg-white">
 					<h2 className="text-lg font-semibold text-primary100">

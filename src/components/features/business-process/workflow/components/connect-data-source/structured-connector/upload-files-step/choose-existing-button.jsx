@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChooseExistingModal } from './choose-existing-modal';
 
-export function ChooseExistingButton({ onChooseExisting }) {
+export function ChooseExistingButton({ onChooseExisting, selectedDataSources }) {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	return (
@@ -41,6 +41,7 @@ export function ChooseExistingButton({ onChooseExisting }) {
 				open={isModalOpen}
 				setOpen={setIsModalOpen}
 				onChooseExisting={onChooseExisting}
+				selectedDataSources={selectedDataSources}
 			/>
 		</>
 	);

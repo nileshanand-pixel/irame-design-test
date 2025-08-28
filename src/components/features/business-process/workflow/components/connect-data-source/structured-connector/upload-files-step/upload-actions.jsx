@@ -2,7 +2,11 @@ import { Button } from '@/components/ui/button';
 import { Upload } from '@phosphor-icons/react';
 import { ChooseExistingButton } from './choose-existing-button';
 
-export const UploadActions = ({ onUpload, onChooseExisting }) => {
+export const UploadActions = ({
+	onUpload,
+	onChooseExisting,
+	selectedDataSources,
+}) => {
 	return (
 		<div className="flex items-center gap-3">
 			<Button
@@ -15,7 +19,10 @@ export const UploadActions = ({ onUpload, onChooseExisting }) => {
 				<Upload weight="bold" className="w-5 h-5" />
 				<span>Upload</span>
 			</Button>
-			<ChooseExistingButton onChooseExisting={onChooseExisting} />
+			<ChooseExistingButton
+				onChooseExisting={onChooseExisting}
+				selectedDataSources={selectedDataSources}
+			/>
 		</div>
 	);
 };

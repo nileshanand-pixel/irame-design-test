@@ -1,6 +1,12 @@
 import { UploadActions } from './upload-actions';
 
-export const FilesList = ({ files, onUpload, onChooseExisting, onDelete }) => {
+export const FilesList = ({
+	files,
+	onUpload,
+	onChooseExisting,
+	onDelete,
+	selectedDataSources,
+}) => {
 	const processed = files.length;
 	const total = files.length;
 
@@ -36,44 +42,64 @@ export const FilesList = ({ files, onUpload, onChooseExisting, onDelete }) => {
 				<UploadActions
 					onUpload={onUpload}
 					onChooseExisting={onChooseExisting}
+					selectedDataSources={selectedDataSources}
 				/>
 			</div>
 			<div className="px-4 py-4 flex flex-col gap-4">
-				{files.map((file, idx) => (
-					<div
-						key={file.name + idx}
-						className="flex items-center bg-white shadow-sm border border-gray-200 rounded-lg px-6 py-4"
-					>
-						<input
-							type="checkbox"
-							className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary mr-4"
-							disabled
-						/>
-						<span className="flex-1 truncate text-gray-900 font-medium">
-							{file.name}
-						</span>
-						<button
-							type="button"
-							className="ml-2 p-1 rounded hover:bg-red-100 text-red-500"
-							onClick={() => onDelete?.(file)}
-							aria-label="Delete file"
+				{files.map((file, idx) => {
+					// Determine if file is from a data source (has datasource info)
+					const isDataSourceFile =
+						!!file.datasource_id || !!file.datasourceName;
+					const dataSourceName =
+						file.datasourceName ||
+						file.datasource_name ||
+						(isDataSourceFile &&
+							selectedDataSources?.find(
+								(ds) => ds.datasource_id === file.datasource_id,
+							)?.name);
+					return (
+						<div
+							key={file.name + idx}
+							className={`flex items-center shadow-sm border rounded-lg px-6 py-4 ${isDataSourceFile ? 'bg-purple-50 border-purple-200' : 'bg-white border-gray-200'}`}
 						>
-							<svg
-								className="w-6 h-6"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								viewBox="0 0 24 24"
+							<input
+								type="checkbox"
+								className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary mr-4"
+								disabled
+							/>
+							<div className="flex-1 min-w-0">
+								<span className="truncate text-gray-900 font-medium block">
+									{file.name || file.filename}
+								</span>
+								{isDataSourceFile && dataSourceName && (
+									<span className="inline-block mt-1 text-xs font-semibold text-purple-700  rounded px-2 py-0.5 align-middle">
+										{dataSourceName}
+									</span>
+								)}
+							</div>
+							<button
+								type="button"
+								className="ml-2 p-1 rounded hover:bg-red-100 text-red-500"
+								onClick={() => onDelete?.(file)}
+								aria-label="Delete file"
 							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="M6 18L18 6M6 6l12 12"
-								/>
-							</svg>
-						</button>
-					</div>
-				))}
+								<svg
+									className="w-6 h-6"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									viewBox="0 0 24 24"
+								>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										d="M6 18L18 6M6 6l12 12"
+									/>
+								</svg>
+							</button>
+						</div>
+					);
+				})}
 			</div>
 		</div>
 	);
