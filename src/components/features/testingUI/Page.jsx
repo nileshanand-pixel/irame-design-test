@@ -3,6 +3,7 @@ import QueryDisplay from '../new-chat/session/components/QueryDisplay';
 import { Button } from '@/components/ui/button';
 import ComboBoxOnFire from './ComboBoxOnFire';
 import axios from 'axios';
+import { toast } from '@/lib/toast';
 
 const TestRoute = () => {
 	const [bulkPrompt, setBulkPrompt] = useState([
@@ -98,6 +99,12 @@ const TestRoute = () => {
 
 	return (
 		<div className="w-full p-20 flex flex-col items-center">
+			<button onClick={() => toast.success('success toast')}>
+				Show success toast
+			</button>
+			<button onClick={() => toast.error('error toast')}>
+				Show error toast
+			</button>
 			{step > 0 && (
 				<QueryDisplay
 					className="w-full"

@@ -9,7 +9,7 @@
 }
 
 .Toastify__toast {
-  border: 0.0825rem solid black;
+  /* border: 0.1rem solid black; */
 }
 
 .Toastify__close-button {
@@ -23,7 +23,11 @@
   height: 1rem;
 }
 
-.Toastify__toast-icon {
-  margin-inline-end: 0.625rem;
-  width: 1.375rem;
+.Toastify__toast-icon  {
+  margin: 0px;
+
+  svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
 }

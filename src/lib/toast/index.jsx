@@ -27,7 +27,6 @@ const ToastComponent = ({ message, action }) => {
 export const toast = {
 	success: (message, { action, ...config } = {}) => {
 		return notify.success(<ToastComponent message={message} action={action} />, {
-			icon: false,
 			closeButton: false,
 			...config,
 		});

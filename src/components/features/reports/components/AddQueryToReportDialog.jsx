@@ -21,6 +21,7 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const AddQueryToReportDialog = ({
 	open,
@@ -34,12 +35,26 @@ const AddQueryToReportDialog = ({
 	const { query } = useRouter();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const navigate = useNavigate();
 
 	const mutation = useMutation({
 		mutationFn: (payload) => addQueryToExistingReport(payload),
 		onSuccess: () => {
 			queryClient.invalidateQueries(['report-details', report.report_id]);
-			toast.success('Query added to report successfully!');
+			toast.success('Query added to report successfully!', {
+				action: (
+					<div className="flex flex-col gap-4">
+						<Button
+							className="bg-primary font-medium text-white w-fit"
+							onClick={() =>
+								navigate(`/app/reports/${report.report_id}`)
+							}
+						>
+							View Report
+						</Button>
+					</div>
+				),
+			});
 			trackEvent(
 				EVENTS_ENUM.ADDED_ANALYSIS_TO_REPORT,
 				EVENTS_REGISTRY.ADDED_ANALYSIS_TO_REPORT,

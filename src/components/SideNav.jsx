@@ -25,7 +25,10 @@ import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import GradientSpinner from './elements/loading/GradientSpinner';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
-import { getRecentWorkflowsRunsHomePage } from './features/business-process/service/workflow.service';
+import {
+	deleteRunningWorkflow,
+	getRecentWorkflowsRunsHomePage,
+} from './features/business-process/service/workflow.service';
 import upperFirst from 'lodash.upperfirst';
 import { resetAllStores } from '@/redux/GlobalStore';
 import { Hint } from './Hint';
@@ -174,12 +177,13 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		);
 	};
 
-	const handleDeleteChatSession = async (
-		e,
-		sessionId,
-		threadType,
-		workflowIdForTracking,
-	) => {
+	const handleRedirectionAfterDeletion = (threadSessionId, threadWorkflowId) => {
+		if (sessionId === threadSessionId || pathname.includes(threadWorkflowId)) {
+			navigate('/app/new-chat');
+		}
+	};
+
+	const handleDeleteChatSession = async (e, sessionId, threadType, workflowId) => {
 		e.stopPropagation();
 		try {
 			const updatedList = utilReducer?.sessionHistory.filter(
@@ -193,7 +197,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				() => ({
 					type: threadType,
 					chat_session_id: sessionId,
-					workflow_id: workflowIdForTracking,
+					workflow_id: workflowId,
 				}),
 			);
 			dispatch(
@@ -204,6 +208,32 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			} else {
 				queryClient.invalidateQueries(['chat-history']);
 			}
+
+			handleRedirectionAfterDeletion(sessionId, workflowId);
+		} catch (error) {}
+	};
+
+	const handleRunningWorkflowDeletion = async (
+		e,
+		sessionId,
+		workflowId,
+		runId,
+	) => {
+		e.stopPropagation();
+		try {
+			if (!confirm('Are you sure you want to delete this session?')) return;
+			await deleteRunningWorkflow(runId);
+			trackEvent(
+				EVENTS_ENUM.SIDE_BAR_CHAT_DELETED,
+				EVENTS_REGISTRY.SIDE_BAR_CHAT_DELETED,
+				() => ({
+					type: 'workflow',
+					chat_session_id: sessionId,
+					workflow_id: workflowId,
+				}),
+			);
+			queryClient.invalidateQueries(['get-business-processes-home-page']);
+			handleRedirectionAfterDeletion(sessionId, workflowId);
 		} catch (error) {}
 	};
 
@@ -450,15 +480,23 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						<DropdownMenuContent align="start" className="min-w-[120px]">
 							<DropdownMenuItem
 								className="text-primary80 font-medium hover:!bg-purple-2 focus:bg-purple-2"
-								onClick={(e) =>
-									handleDeleteChatSession(
-										e,
-										workflow.session_id,
-										'workflow',
-										workflow.workflow_check_id,
-									)
-								}
-								disabled
+								onClick={(e) => {
+									if (showSpinner) {
+										handleRunningWorkflowDeletion(
+											e,
+											workflow.session_id,
+											workflow.workflow_check_id,
+											workflow.external_id,
+										);
+									} else {
+										handleDeleteChatSession(
+											e,
+											workflow.session_id,
+											'workflow',
+											workflow.workflow_check_id,
+										);
+									}
+								}}
 							>
 								<i className="bi-trash me-2 text-primary80" />
 								Delete

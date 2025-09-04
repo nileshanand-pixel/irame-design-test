@@ -20,6 +20,7 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
 import { useSelector } from 'react-redux';
 import { trackEvent } from '@/lib/mixpanel';
+import { useNavigate } from 'react-router-dom';
 
 const AddQueryToNewReportDialog = ({
 	open,
@@ -34,11 +35,26 @@ const AddQueryToNewReportDialog = ({
 	const { query } = useRouter();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const navigate = useNavigate();
 
 	const mutation = useMutation({
 		mutationFn: (payload) => createReportAndAddQuery(payload),
-		onSuccess: () => {
-			toast.success('New report created and query added!');
+		onSuccess: (response) => {
+			toast.success('New report created and query added!', {
+				action: (
+					<div className="flex flex-col gap-4">
+						<Button
+							className="bg-primary font-medium text-white w-fit"
+							onClick={() =>
+								navigate(`/app/reports/${response.report_id}`)
+							}
+						>
+							View Report
+						</Button>
+					</div>
+				),
+			});
+
 			queryClient.invalidateQueries(['user-reports']);
 			trackEvent(
 				EVENTS_ENUM.ADDED_ANALYSIS_TO_REPORT,
@@ -53,8 +69,15 @@ const AddQueryToNewReportDialog = ({
 					report_type: 'new',
 				}),
 			);
+
+			setReportName('');
+			setReportDescription('');
+			setRiskCategory('');
+			setRiskLevel('');
+
 			onSuccessCloseAll();
 		},
+
 		onError: () => {
 			toast.error('Failed to create report!');
 		},

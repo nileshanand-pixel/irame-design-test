@@ -1,4 +1,5 @@
 import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
+import { toast } from '@/lib/toast';
 
 export const getBusinessProcesses = async () => {
 	const response = await axiosClientV1.get(`/business-processes`, {
@@ -121,4 +122,21 @@ export const clarifyWorkFlowRunV2 = async (workflowCheckId, workflowRunId, data)
 		},
 	);
 	return response.data;
+};
+
+export const deleteRunningWorkflow = async (runId) => {
+	try {
+		const response = await axiosClientV2.delete(
+			`/workflow-checks/runs/${runId}`,
+			{
+				headers: {},
+			},
+		);
+		toast.success('Session deleted successfully');
+
+		return response.data;
+	} catch (error) {
+		toast.error('Failed to delete session');
+		throw error;
+	}
 };
