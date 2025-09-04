@@ -3,63 +3,109 @@ import { uploadFile } from '@/components/features/configuration/service/configur
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
-export function useFileUploadsV2() {
+export function useFileUploadsV2(options = {}) {
+	const { isDuplicateUploadAllowed = false } = options;
 	const [files, setFiles] = useState([]);
 	const [progress, setProgress] = useState({});
 	const [uploadQueue, setUploadQueue] = useState([]);
 	const [uploadedMetadata, setUploadedMetadata] = useState({});
 	const [cancelTokens, setCancelTokens] = useState({});
+	const [error, setError] = useState(null);
 
 	const isAllFilesUploaded =
 		files.length > 0 && files.every((file) => progress[file.name] === 100);
 
 	const addFiles = useCallback(
 		(fileList) => {
+			setError(null);
 			const newFiles = [];
 			const newProgress = {};
-
 			const filesArr = Array.from(fileList);
 
 			filesArr.forEach((file) => {
-				if (files.some((f) => f.name === file.name)) return;
+				let baseName = file.name;
+				let ext = '';
+				const dotIdx = file.name.lastIndexOf('.');
+				if (dotIdx !== -1) {
+					baseName = file.name.substring(0, dotIdx);
+					ext = file.name.substring(dotIdx);
+				}
+
+				let finalName = file.name;
+				let duplicateCount = 1;
+				let isDuplicate = files.some((f) => f.name === finalName);
+
+				if (isDuplicate) {
+					if (!isDuplicateUploadAllowed) {
+						setError(`Can't upload duplicate files: ${file.name}`);
+						return;
+					} else {
+						// Find a unique name by appending _01, _02, etc.
+						do {
+							finalName = `${baseName}_${String(duplicateCount).padStart(2, '0')}${ext}`;
+							duplicateCount++;
+							isDuplicate =
+								files.some((f) => f.name === finalName) ||
+								newFiles.some((f) => f.name === finalName);
+						} while (isDuplicate);
+					}
+				}
 
 				const fileId = uuidv4();
-				const fileWithStatus = Object.assign(file, {
-					status: 'uploading',
-					id: fileId,
-				});
+				const fileWithStatus = Object.assign(
+					new File([file], finalName, { type: file.type }),
+					{
+						status: 'uploading',
+						id: fileId,
+					},
+				);
 				newFiles.push(fileWithStatus);
-				newProgress[file.name] = 0;
+				newProgress[finalName] = 0;
 			});
 
+			if (newFiles.length === 0) return;
 			setFiles((prev) => [...prev, ...newFiles]);
 			setProgress((prev) => ({ ...prev, ...newProgress }));
 			setUploadQueue((prev) => [...prev, ...newFiles]);
 		},
-		[files],
+		[files, isDuplicateUploadAllowed],
 	);
 
 	const removeFile = useCallback(
 		(fileName) => {
-			if (cancelTokens[fileName]) {
-				cancelTokens[fileName].cancel(`User removed ${fileName} mid-upload`);
-			}
-			setFiles((prev) => prev.filter((file) => file.name !== fileName));
-			setProgress((prev) => {
-				const updated = { ...prev };
-				delete updated[fileName];
-				return updated;
-			});
-			setCancelTokens((prev) => {
-				const updated = { ...prev };
-				delete updated[fileName];
-				return updated;
-			});
-			setUploadQueue((prev) => prev.filter((file) => file.name !== fileName));
-			setUploadedMetadata((prev) => {
-				const updated = { ...prev };
-				delete updated[fileName];
-				return updated;
+			// Find the file object to get its id
+			setFiles((prevFiles) => {
+				const fileToRemove = prevFiles.find(
+					(file) => file.name === fileName,
+				);
+				const fileId = fileToRemove ? fileToRemove.id : null;
+
+				if (cancelTokens[fileName]) {
+					cancelTokens[fileName].cancel(
+						`User removed ${fileName} mid-upload`,
+					);
+				}
+
+				setProgress((prev) => {
+					const updated = { ...prev };
+					delete updated[fileName];
+					return updated;
+				});
+				setCancelTokens((prev) => {
+					const updated = { ...prev };
+					delete updated[fileName];
+					return updated;
+				});
+				setUploadQueue((prev) =>
+					prev.filter((file) => file.name !== fileName),
+				);
+				setUploadedMetadata((prev) => {
+					const updated = { ...prev };
+					if (fileId) delete updated[fileId];
+					return updated;
+				});
+
+				return prevFiles.filter((file) => file.name !== fileName);
 			});
 		},
 		[cancelTokens],
@@ -140,5 +186,7 @@ export function useFileUploadsV2() {
 		uploadedMetadata,
 		resetUploads,
 		isAllFilesUploaded,
+		error,
+		setError,
 	};
 }

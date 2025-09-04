@@ -2,6 +2,7 @@ import InputText from '@/components/elements/InputText';
 import { Input } from '@/components/ui/input';
 import { cn, formatFileSize, getFileIcon } from '@/lib/utils';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useFileUploadsV2 } from '@/hooks/useFileUploadsV2';
 import { Button } from '@/components/ui/button';
 import {
 	createNewDtaSource,
@@ -32,9 +33,24 @@ import { getFileType } from '@/utils/file';
 import { toast } from '@/lib/toast';
 
 const Configuration = () => {
-	const [files, setFiles] = useState([]);
-	const [rowFiles, setRowFiles] = useState([]);
-	const [progress, setProgress] = useState({});
+	const {
+		files,
+		progress,
+		addFiles,
+		removeFile,
+		uploadedMetadata,
+		resetUploads,
+		isAllFilesUploaded,
+		error,
+		setError,
+	} = useFileUploadsV2({ isDuplicateUploadAllowed: true });
+	// Show toast if duplicate upload error occurs
+	useEffect(() => {
+		if (error) {
+			toast.error(error);
+			setError(null);
+		}
+	}, [error, setError]);
 	const [datasourceName, setDatasourceName] = useState('');
 	const [description, setDescription] = useState('');
 	const [formErrors, setFormErrors] = useState({});
@@ -63,19 +79,13 @@ const Configuration = () => {
 				file_name: file.name,
 			}),
 		);
-		let tempArr = [...files];
-		tempArr = tempArr.filter((tempFile) => {
-			if (tempFile.name !== file.name) return true;
-		});
-		setFiles(tempArr);
-		setRowFiles((prevRowFiles) => {
-			return prevRowFiles.filter((tempFile) => file.name !== tempFile.name);
-		});
-		setProgress((prevProgress) => {
-			let tempProgress = { ...prevProgress };
-			delete tempProgress[file.name];
-			return tempProgress;
-		});
+		// If this is the last file, reset uploads after removal
+		if (files.length === 1) {
+			removeFile(file.name);
+			resetUploads();
+		} else {
+			removeFile(file.name);
+		}
 		setFormErrors({});
 	};
 
@@ -96,93 +106,9 @@ const Configuration = () => {
 				}));
 			}
 			if (!e.target.files.length) return;
-			const selectedFiles = Array.from(e.target.files);
-			setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
-			setRowFiles((prevRowFiles) => [...prevRowFiles, ...selectedFiles]);
-			setProgress((prevProgress) => {
-				const progessState = {};
-				selectedFiles.forEach((file) => {
-					progessState[file.name] = 0;
-				});
-				return { ...prevProgress, ...progessState };
-			});
+			addFiles(e.target.files);
 		} catch (error) {
 			console.log(error);
-		}
-	};
-
-	const uploadFileHelper = async () => {
-		try {
-			const filesToUpload = files.filter((file) => !file.url); // Filter out files with a URL
-
-			if (filesToUpload.length === 0) {
-				return;
-			}
-
-			const uploadPromises = filesToUpload.map((file) =>
-				uploadFile(file, setProgress),
-			);
-
-			const uploadResults = await Promise.allSettled(uploadPromises);
-
-			const uploadedData = uploadResults
-				.filter((result) => result.status === 'fulfilled')
-				.map((result) => result.value);
-
-			const failedUploads = uploadResults
-				.map((result, idx) => {
-					if (result.status === 'rejected') {
-						return { file: filesToUpload[idx], error: result.reason };
-					}
-					return false;
-				})
-				.filter((result) => !!result);
-
-			const newFiles = files.map((file) => {
-				const uploadedFile = uploadedData.find(
-					(data) => data.name === file.name,
-				);
-				return {
-					...file,
-					url: uploadedFile ? uploadedFile.url : file.url || '',
-					name: uploadedFile ? uploadedFile.name : file.name,
-					type: getFileType(file) || file.type,
-				};
-			});
-
-			if (failedUploads.length > 0) {
-				trackEvent(
-					EVENTS_ENUM.UPLOAD_DATASET_FAILED,
-					EVENTS_REGISTRY.UPLOAD_DATASET_FAILED,
-					() => ({
-						files_count: filesToUpload.length,
-						files_type: failedUploads.map((fileData) =>
-							getFileType(fileData.file),
-						),
-						files_failed_count: failedUploads.length,
-						...getErrorAnalyticsProps(failedUploads?.[0]?.error),
-					}),
-				);
-				toast.error('Some files failed to upload');
-				setFiles([]);
-				setRowFiles([]);
-			} else {
-				trackEvent(
-					EVENTS_ENUM.UPLOAD_DATASET_SUCCESSFUL,
-					EVENTS_REGISTRY.UPLOAD_DATASET_SUCCESSFUL,
-					() => ({
-						files_count: newFiles.length,
-						files_type: newFiles.map((file) => file.type),
-					}),
-				);
-				toast.success('Files uploaded successfully');
-				setFiles(newFiles);
-			}
-		} catch (error) {
-			toast.error('Error uploading files');
-			console.error('Error uploading files', error);
-			setFiles([]);
-			setRowFiles([]);
 		}
 	};
 
@@ -200,15 +126,16 @@ const Configuration = () => {
 		);
 		setIsLoading(true);
 
+		// Use uploadedMetadata for raw_files
+		const rawFilesArr = Object.values(uploadedMetadata || {});
 		const data = {
 			name: datasourceName,
-			raw_files:
-				Array.isArray(files) &&
-				files.map((file) => ({
-					file_name: file.name || file.file_name,
-					file_id: uuid(),
-					file_url: file.url || file.file_url,
-				})),
+			raw_files: rawFilesArr.map((file) => ({
+				file_name: file.name || file.file_name,
+				file_id: file.id || uuid(),
+				file_url: file.url || file.file_url,
+				type: file.type,
+			})),
 			description,
 			intent: [...dataSourceIntent],
 		};
@@ -221,8 +148,8 @@ const Configuration = () => {
 			});
 			toast.success('Data source created successfully');
 			startChatting(response);
-			setProgress({});
 			setIsLoading(false);
+			resetUploads();
 			trackEvent(
 				EVENTS_ENUM.SAVE_DATASET_SUCCESSFUL,
 				EVENTS_REGISTRY.SAVE_DATASET_SUCCESSFUL,
@@ -235,7 +162,7 @@ const Configuration = () => {
 					is_description_filled: !!description,
 					// size in mb
 					total_dataset_size: (
-						rowFiles?.reduce((total, file) => {
+						files?.reduce((total, file) => {
 							return total + (file.size || 0);
 						}, 0) /
 						(1024 * 1024)
@@ -252,7 +179,7 @@ const Configuration = () => {
 					files_count: files.length,
 					files_type: files.map((file) => file.type),
 					total_dataset_size:
-						rowFiles?.reduce((total, file) => {
+						files?.reduce((total, file) => {
 							return total + (file.size || 0);
 						}, 0) /
 						(1024 * 1024),
@@ -296,14 +223,6 @@ const Configuration = () => {
 				}),
 			);
 		}
-	};
-
-	const isAllFilesUploaded = () => {
-		let filesPresent = Array.isArray(files) && files.length > 0;
-		if (!filesPresent) return true;
-		if (files.every((item) => item.file_url)) return true;
-		if (Object.keys(progress).length === 0) return false;
-		return Object.values(progress).every((value) => value === 100);
 	};
 
 	const fetchDataSources = async () => {
@@ -362,12 +281,11 @@ const Configuration = () => {
 
 	useEffect(() => {
 		if (files.length) {
-			uploadFileHelper();
 			setShowForm(true);
 		} else {
 			setShowForm(false);
 		}
-	}, [files.length, isLoading]);
+	}, [files.length]);
 
 	useEffect(() => {
 		setFormErrors((prev) => ({
@@ -397,7 +315,7 @@ const Configuration = () => {
 				EVENTS_REGISTRY.UPLOAD_MORE_CLICKED,
 			);
 		}
-		if (!isAllFilesUploaded() || isLoading) return;
+		// if (!isAllFilesUploaded() || isLoading) return;
 		inputRef.current.click();
 	};
 
@@ -413,7 +331,7 @@ const Configuration = () => {
 			<div className="flex gap-2 items-center">
 				<Button
 					className={` w-full ${uploadButtonObj.bgCss} rounded-lg ${
-						!isAllFilesUploaded() || isLoading
+						isLoading
 							? 'cursor-not-allowed opacity-80'
 							: 'cursor-pointer'
 					}`}
@@ -434,7 +352,7 @@ const Configuration = () => {
 							createDataSource();
 						}}
 						disabled={
-							!isAllFilesUploaded() ||
+							!isAllFilesUploaded ||
 							isLoading ||
 							formErrors.datasourceName ||
 							!datasourceName
@@ -563,67 +481,68 @@ const Configuration = () => {
 					{/* Render Files and their progress */}
 					<div className="max-h-40 overflow-y-auto">
 						{Array.isArray(files) &&
-							files?.map((file, idx) => (
-								<div
-									className="px-4 py-2.5 z-10 bg-purple-4 rounded-lg mt-2"
-									key={file.name}
-								>
-									<div className="flex justify-between">
-										<div className="flex gap-2 items-center">
-											<img
-												src={getFileIcon(file?.name)}
-												alt="file-icon"
-												className="size-6"
-											/>
-											<div className="text-sm text-purple-100 flex">
-												{file.name || file.file_name}&nbsp;
-												{file.size ? (
-													<p className="text-sm font-medium text-primary80">{`(${formatFileSize(
-														file?.size,
-													)})`}</p>
+							files?.map((file, idx) => {
+								// Try to get uploaded metadata for this file (for url, id, etc.)
+								const uploadedMeta = uploadedMetadata[file.id];
+								const fileUrl = uploadedMeta?.url || file.url;
+								return (
+									<div
+										className="px-4 py-2.5 z-10 bg-purple-4 rounded-lg mt-2"
+										key={file.name}
+									>
+										<div className="flex justify-between">
+											<div className="flex gap-2 items-center">
+												<img
+													src={getFileIcon(file?.name)}
+													alt="file-icon"
+													className="size-6"
+												/>
+												<div className="text-sm text-purple-100 flex">
+													{file.name || file.file_name}
+													&nbsp;
+													{file.size ? (
+														<p className="text-sm font-medium text-primary80">{`(${formatFileSize(
+															file?.size,
+														)})`}</p>
+													) : null}
+												</div>
+											</div>
+											<div className="flex items-center text-sm font-medium">
+												{progress[file.name] < 100 ? (
+													<p className="mr-4">
+														uploading...
+													</p>
 												) : null}
+												{/* Download button can be added here if needed */}
+												{fileUrl && (
+													<div
+														onClick={(e) =>
+															handleRemoveFile(
+																e,
+																file,
+																idx,
+															)
+														}
+														className="text-md px-2 py-1 rounded-md bg-purple-8  hover:bg-purple-8 ml-2"
+													>
+														<i className="bi-x text-xl text-primary80  font-semibold cursor-pointer"></i>
+													</div>
+												)}
 											</div>
 										</div>
-										<div className="flex items-center text-sm font-medium">
-											{progress[file.name] < 100 ? (
-												<p className="mr-4">uploading...</p>
-											) : null}
-											{/* <div
-										onClick={() =>
-											window.open(file.file_url, '_blank')
-										}
-										className="text-md px-2 py-1 rounded-md bg-purple-8 hover:bg-purple-8"
-									>
-										<i className="bi-download text-lg text-primary80  font-semibold cursor-pointer "></i>
-									</div> */}
-											{file.url && (
+										{progress[file.name] <= 99 ? (
+											<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
 												<div
-													onClick={(e) =>
-														handleRemoveFile(
-															e,
-															file,
-															idx,
-														)
-													}
-													className="text-md px-2 py-1 rounded-md bg-purple-8  hover:bg-purple-8 ml-2"
-												>
-													<i className="bi-x text-xl text-primary80  font-semibold cursor-pointer"></i>
-												</div>
-											)}
-										</div>
+													className="h-full bg-purple-100"
+													style={{
+														width: `${progress[file.name]}%`,
+													}}
+												></div>
+											</div>
+										) : null}
 									</div>
-									{progress[file.name] <= 99 ? (
-										<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
-											<div
-												className="h-full bg-purple-100"
-												style={{
-													width: `${progress[file.name]}%`,
-												}}
-											></div>
-										</div>
-									) : null}
-								</div>
-							))}
+								);
+							})}
 					</div>
 				</div>
 			</div>
