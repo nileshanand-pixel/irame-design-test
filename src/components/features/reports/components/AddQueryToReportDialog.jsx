@@ -53,6 +53,8 @@ const AddQueryToReportDialog = ({
 					report_type: 'old',
 				}),
 			);
+			setRiskCategory('');
+			setRiskLevel('');
 			onSuccessCloseAll();
 		},
 		onError: () => toast.error('Failed to add query to report!'),
