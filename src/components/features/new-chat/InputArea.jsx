@@ -9,7 +9,7 @@ import {
 	getTemplates,
 } from './service/new-chat.service';
 import CHAT_CONSTANTS from '@/constants/chat.constant';
-import { chatCommandInitiator } from '@/lib/utils';
+import { chatCommandInitiator, cn } from '@/lib/utils';
 import MoreActionsModal from './MoreActionsModal';
 import SaveEditTemplateModal from '../reports/components/SaveEditTemplateModal';
 
@@ -264,7 +264,10 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	};
 
 	const handleSend = async () => {
-		if (enhancePromptMutation.isLoading && mode === 'single') {
+		if (
+			(enhancePromptMutation.isLoading && mode === 'single') ||
+			import.meta.env.VITE_QNA_DISABLED
+		) {
 			return;
 		}
 		await onAppendQuery(prompt, queries, savedQueryReference, mode);
@@ -439,7 +442,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 			value={prompt || ''}
 			onChange={handlePromptChange}
 			onKeyDown={handleSingleKeyDown}
-			disabled={disabled}
+			disabled={import.meta.env.VITE_QNA_DISABLED || disabled}
 			ref={simpleInputRef}
 		/>
 	);
@@ -492,7 +495,10 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 												disablePromptEnhancer &&
 												'cursor-not-allowed opacity-40'
 											}`}
-											disabled={disablePromptEnhancer}
+											disabled={
+												import.meta.env.VITE_QNA_DISABLED ||
+												disablePromptEnhancer
+											}
 										>
 											<img
 												src="https://d2vkmtgu2mxkyq.cloudfront.net/generate_ai.svg"
@@ -515,7 +521,11 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 									</span>
 								)}
 								<div
-									className="flex items-end gap-2 cursor-pointer"
+									className={cn(
+										'flex items-end gap-2 cursor-pointer',
+										import.meta.env.VITE_QNA_DISABLED &&
+											'cursor-not-allowed',
+									)}
 									onClick={handleSend}
 								>
 									<img

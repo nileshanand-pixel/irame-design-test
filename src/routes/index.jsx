@@ -46,7 +46,14 @@ const AppRoutes = () => {
 								<Route
 									path="new-chat/*"
 									element={
-										<ProtectedRoute element={<NewChat />} />
+										<ProtectedRoute
+											element={
+												import.meta.env
+													.VITE_QNA_DISABLED ? null : (
+													<NewChat />
+												)
+											}
+										/>
 									}
 								/>
 								<Route

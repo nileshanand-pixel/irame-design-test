@@ -920,9 +920,10 @@ const Workzone = () => {
 										chatStoreReducer?.activeQueryId,
 								) || answers?.[0]
 							}
-							canEdit={answers.every(
-								(item) => item?.status === 'done',
-							)}
+							canEdit={
+								!import.meta.env.VITE_QNA_DISABLED &&
+								answers.every((item) => item?.status === 'done')
+							}
 							setWorkspace={setWorkspace}
 						/>
 					</div>

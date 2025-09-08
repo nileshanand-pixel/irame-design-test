@@ -21,6 +21,7 @@ const ExcelFileContent = ({
 	setChangesets,
 	setEditedFileNames,
 	editedFileNames,
+	canEdit,
 }) => {
 	const { query } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -35,7 +36,7 @@ const ExcelFileContent = ({
 				}))}
 				defaultValue={selectedColumns[file?.id]}
 				onValueChange={(newSelectedColumns) => {
-					if (editDisabled) return;
+					if (!canEdit || editDisabled) return;
 					const newEditedFileNames = [...editedFileNames];
 					if (!newEditedFileNames.includes(file?.filename)) {
 						newEditedFileNames.push(file?.filename);
@@ -89,6 +90,7 @@ const SourceComponent = ({
 	datasourceId,
 	workspaceHasChanges,
 	setWorkspaceHasChanges,
+	canEdit,
 }) => {
 	const [selectedPDF, setSelectedPDF] = useState(null);
 	const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
@@ -195,6 +197,7 @@ const SourceComponent = ({
 								setChangesets={setChangesets}
 								setEditedFileNames={setEditedFileNames}
 								editedFileNames={editedFileNames}
+								canEdit={canEdit}
 							/>
 						)}
 					</div>

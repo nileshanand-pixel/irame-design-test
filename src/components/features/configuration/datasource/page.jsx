@@ -246,25 +246,27 @@ const DataSource = () => {
 					</span>
 				</div>
 
-				<Button
-					variant="outlined"
-					className="text-sm font-semibold text-purple-100 bg-purple-4 border-none hover:text-purple-100 hover:opacity-80 flex items-center"
-					onClick={() => {
-						trackEvent(
-							EVENTS_ENUM.DATASET_START_QUERING_CLICKED,
-							EVENTS_REGISTRY.DATASET_START_QUERING_CLICKED,
-							() => ({
-								dataset_id: datasourceQuery?.data?.datasource_id,
-								dataset_name: datasourceQuery?.data?.name,
-							}),
-						);
-						navigate(
-							`/app/new-chat/?step=3&dataSourceId=${query?.id}&source=configuration`,
-						);
-					}}
-				>
-					Start Querying
-				</Button>
+				{!import.meta.env.VITE_QNA_DISABLED && (
+					<Button
+						variant="outlined"
+						className="text-sm font-semibold text-purple-100 bg-purple-4 border-none hover:text-purple-100 hover:opacity-80 flex items-center"
+						onClick={() => {
+							trackEvent(
+								EVENTS_ENUM.DATASET_START_QUERING_CLICKED,
+								EVENTS_REGISTRY.DATASET_START_QUERING_CLICKED,
+								() => ({
+									dataset_id: datasourceQuery?.data?.datasource_id,
+									dataset_name: datasourceQuery?.data?.name,
+								}),
+							);
+							navigate(
+								`/app/new-chat/?step=3&dataSourceId=${query?.id}&source=configuration`,
+							);
+						}}
+					>
+						Start Querying
+					</Button>
+				)}
 				<Button
 					className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 					onClick={handleEditDataSource}
