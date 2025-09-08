@@ -568,7 +568,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			</div>
 
 			{/* Ask IRA Button */}
-			{!import.meta.env.VITE_QNA_DISABLED && (
+			{!(import.meta.env.VITE_QNA_DISABLED === 'true') && (
 				<div className="flex-none mt-6 mb-6 mx-4">
 					<Hint
 						label="Ask Ira"

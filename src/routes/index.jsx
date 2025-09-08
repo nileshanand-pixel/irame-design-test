@@ -48,8 +48,8 @@ const AppRoutes = () => {
 									element={
 										<ProtectedRoute
 											element={
-												import.meta.env
-													.VITE_QNA_DISABLED ? null : (
+												import.meta.env.VITE_QNA_DISABLED ===
+												'true' ? null : (
 													<NewChat />
 												)
 											}

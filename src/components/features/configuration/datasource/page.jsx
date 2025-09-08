@@ -246,7 +246,7 @@ const DataSource = () => {
 					</span>
 				</div>
 
-				{!import.meta.env.VITE_QNA_DISABLED && (
+				{!(import.meta.env.VITE_QNA_DISABLED === 'true') && (
 					<Button
 						variant="outlined"
 						className="text-sm font-semibold text-purple-100 bg-purple-4 border-none hover:text-purple-100 hover:opacity-80 flex items-center"

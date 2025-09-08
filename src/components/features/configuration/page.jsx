@@ -147,8 +147,7 @@ const Configuration = () => {
 				refetchInactive: true,
 			});
 			toast.success('Data source created successfully');
-			if (!import.meta.env.VITE_QNA_DISABLED) {
-				p;
+			if (!(import.meta.env.VITE_QNA_DISABLED === 'true')) {
 				startChatting(response);
 			}
 			setIsLoading(false);
@@ -616,7 +615,12 @@ const Configuration = () => {
 														: 'select',
 												}),
 											);
-											if (!import.meta.env.VITE_QNA_DISABLED) {
+											if (
+												!(
+													import.meta.env
+														.VITE_QNA_DISABLED === 'true'
+												)
+											) {
 												startChatting(source);
 											}
 										}}

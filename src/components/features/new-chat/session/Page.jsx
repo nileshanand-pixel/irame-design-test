@@ -921,7 +921,7 @@ const Workzone = () => {
 								) || answers?.[0]
 							}
 							canEdit={
-								!import.meta.env.VITE_QNA_DISABLED &&
+								!(import.meta.env.VITE_QNA_DISABLED === 'true') &&
 								answers.every((item) => item?.status === 'done')
 							}
 							setWorkspace={setWorkspace}

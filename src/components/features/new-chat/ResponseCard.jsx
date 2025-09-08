@@ -263,7 +263,7 @@ const ResponseCard = ({
 					)}
 				</div>
 			)}
-			{!import.meta.env.VITE_QNA_DISABLED &&
+			{!(import.meta.env.VITE_QNA_DISABLED === 'true') &&
 				answerResp?.answer?.follow_up &&
 				showFollowup &&
 				!doingScience &&

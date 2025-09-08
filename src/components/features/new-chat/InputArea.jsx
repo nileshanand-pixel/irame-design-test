@@ -266,7 +266,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	const handleSend = async () => {
 		if (
 			(enhancePromptMutation.isLoading && mode === 'single') ||
-			import.meta.env.VITE_QNA_DISABLED
+			import.meta.env.VITE_QNA_DISABLED === 'true'
 		) {
 			return;
 		}
@@ -442,7 +442,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 			value={prompt || ''}
 			onChange={handlePromptChange}
 			onKeyDown={handleSingleKeyDown}
-			disabled={import.meta.env.VITE_QNA_DISABLED || disabled}
+			disabled={import.meta.env.VITE_QNA_DISABLED === 'true' || disabled}
 			ref={simpleInputRef}
 		/>
 	);
@@ -496,8 +496,8 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 												'cursor-not-allowed opacity-40'
 											}`}
 											disabled={
-												import.meta.env.VITE_QNA_DISABLED ||
-												disablePromptEnhancer
+												import.meta.env.VITE_QNA_DISABLED ===
+													'true' || disablePromptEnhancer
 											}
 										>
 											<img
@@ -523,8 +523,8 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 								<div
 									className={cn(
 										'flex items-end gap-2 cursor-pointer',
-										import.meta.env.VITE_QNA_DISABLED &&
-											'cursor-not-allowed',
+										import.meta.env.VITE_QNA_DISABLED ===
+											'true' && 'cursor-not-allowed',
 									)}
 									onClick={handleSend}
 								>
