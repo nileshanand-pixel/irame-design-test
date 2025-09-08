@@ -24,11 +24,6 @@ export const formatFileSize = (size) => {
 	}
 };
 
-export const getRefreshToken = () => {
-	const token = Cookies.get('refresh_token');
-	return token;
-};
-
 export const getInitials = (user_name) => {
 	if (!user_name) return;
 	const words = user_name.split(' ');

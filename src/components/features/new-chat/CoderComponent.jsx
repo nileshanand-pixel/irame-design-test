@@ -1,3 +1,4 @@
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
 import { trackEvent } from '@/lib/mixpanel';
@@ -12,6 +13,7 @@ const CoderComponent = ({ data }) => {
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
+	const { data: datasourceData } = useDatasourceDetails();
 	const handleEditorDidMount = (editor) => {
 		editorRef.current = editor;
 
@@ -21,8 +23,8 @@ const CoderComponent = ({ data }) => {
 				EVENTS_REGISTRY.CODER_EDIT_ATTEMPTED,
 				() => ({
 					chat_session_id: query?.sessionId,
-					dataset_id: utilReducer?.selectedDataSource?.id,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_id: datasourceData?.datasource_id,
+					dataset_name: datasourceData?.name,
 					query_id: chatStoreReducer?.activeQueryId,
 				}),
 			);

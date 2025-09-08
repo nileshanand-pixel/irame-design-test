@@ -21,6 +21,7 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
 import { useSelector } from 'react-redux';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 import { useNavigate } from 'react-router-dom';
 
 const AddQueryToReportDialog = ({
@@ -36,6 +37,8 @@ const AddQueryToReportDialog = ({
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const navigate = useNavigate();
+
+	const { data: datasourceData } = useDatasourceDetails();
 
 	const mutation = useMutation({
 		mutationFn: (payload) => addQueryToExistingReport(payload),
@@ -60,8 +63,8 @@ const AddQueryToReportDialog = ({
 				EVENTS_REGISTRY.ADDED_ANALYSIS_TO_REPORT,
 				() => ({
 					chat_session_id: query?.sessionId,
-					dataset_id: utilReducer?.selectedDataSource?.id,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_id: datasourceData?.datasource_id,
+					dataset_name: datasourceData?.datasource_id,
 					query_id: chatStoreReducer?.activeQueryId,
 					report_id: report.report_id,
 					report_name: report.name,

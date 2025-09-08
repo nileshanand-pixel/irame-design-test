@@ -31,6 +31,7 @@ import { queryClient } from '@/lib/react-query';
 import WorkFlowDataSourceCardSkeleton from './WorkFlowDataSourceCardSkeleton';
 import { getFileMeta } from '@/lib/file';
 import { toast } from '@/lib/toast';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 const gradientStyle = {
 	background: `
@@ -82,10 +83,8 @@ const DataSourceCard = ({
 			runId && validationStatus !== 'NEED_CLARIFICATION' ? 5000 : false,
 	});
 
-	const datasourceQuery = useQuery({
-		queryKey: ['get-datasource-by-id', runDetails?.datasource_id],
-		queryFn: () => getDataSourceById(runDetails?.datasource_id),
-		enabled: !!runDetails?.datasource_id,
+	const datasourceQuery = useDatasourceDetails({
+		datsourceId: runDetails?.datasource_id,
 	});
 
 	// -------------------------- Mutations --------------------------

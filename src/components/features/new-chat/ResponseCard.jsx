@@ -15,6 +15,7 @@ import AddQueryFlow from '../reports/components/AddQueryFlow';
 import { useRouter } from '@/hooks/useRouter';
 import useS3File from '@/hooks/useS3File';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 const ResponseCard = ({
 	answerResp,
@@ -37,6 +38,7 @@ const ResponseCard = ({
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const { isDownloading, downloadS3File } = useS3File();
 
+	const { data: datasourceData } = useDatasourceDetails();
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
 			value?.tool_space === 'main' &&
@@ -93,8 +95,8 @@ const ResponseCard = ({
 			EVENTS_REGISTRY.ADD_TO_REPORT_CLICKED,
 			() => ({
 				chat_session_id: query?.sessionId,
-				dataset_id: utilReducer?.selectedDataSource?.id,
-				dataset_name: utilReducer?.selectedDataSource?.name,
+				dataset_id: datasourceData?.datasource_id,
+				dataset_name: datasourceData?.name,
 				query_id: chatStoreReducer?.activeQueryId,
 			}),
 		);
@@ -118,8 +120,8 @@ const ResponseCard = ({
 			EVENTS_REGISTRY.ADD_TO_DASHBOARD_CLICKED,
 			() => ({
 				chat_session_id: query?.sessionId,
-				dataset_id: utilReducer?.selectedDataSource?.id,
-				dataset_name: utilReducer?.selectedDataSource?.name,
+				dataset_id: datasourceData?.datasource_id,
+				dataset_name: datasourceData?.name,
 				query_id: chatStoreReducer?.activeQueryId,
 			}),
 		);
@@ -137,8 +139,8 @@ const ResponseCard = ({
 				EVENTS_REGISTRY.FOLLOW_UP_SUGGESTION_SHOWED,
 				() => ({
 					chat_session_id: query?.sessionId,
-					dataset_id: utilReducer?.selectedDataSource?.id,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_id: datasourceData?.datasource_id,
+					dataset_name: datasourceData?.name,
 					query_id: chatStoreReducer?.activeQueryId,
 					ques_count:
 						answerResp?.answer?.follow_up?.tool_data?.questions?.length,
@@ -206,12 +208,9 @@ const ResponseCard = ({
 													chat_session_id:
 														query?.sessionId,
 													dataset_id:
-														utilReducer
-															?.selectedDataSource?.id,
+														datasourceData?.datasource_id,
 													dataset_name:
-														utilReducer
-															?.selectedDataSource
-															?.name,
+														datasourceData?.name,
 													query_id:
 														chatStoreReducer?.activeQueryId,
 												}),

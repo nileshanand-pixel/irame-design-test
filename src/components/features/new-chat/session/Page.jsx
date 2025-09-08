@@ -1,7 +1,7 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useRouter } from '@/hooks/useRouter';
 import { cn, getInitials } from '@/lib/utils';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createQuery, getQueriesOfSession } from '../service/new-chat.service';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
@@ -24,13 +24,16 @@ import CHAT_CONSTANTS, {
 import QueryDisplay from './components/QueryDisplay';
 import Clarification from '../Clarification';
 import { WorkspaceEnum } from '../types/new-chat.enum';
-import InputArea from '../InputArea';
+// import InputArea from '../InputArea';
 import ReportGenerationDialog from './components/ReportGenerationDialog';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
 import AddQueryFlow from '../../reports/components/AddQueryFlow';
 import { getLocalStorage, setLocalStorage } from '@/utils/local-storage';
 import { sendChatSessionStartedEvent } from '@/utils/chat';
+import InputArea from '../components/input-area/input-area';
+import { isUnstructuredData } from '@/utils/datasource-utils';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -85,6 +88,14 @@ const Workzone = () => {
 		}
 	};
 
+	const { data: datasourceData } = useDatasourceDetails();
+	const { rawFiles } = useMemo(() => {
+		const ds = datasourceData;
+		return {
+			rawFiles: ds?.raw_files,
+		};
+	}, [datasourceData]);
+
 	const handleTabClick = (tab) => {
 		if (tab === 'planner') {
 			trackEvent(
@@ -92,8 +103,8 @@ const Workzone = () => {
 				EVENTS_REGISTRY.PLANNER_TAB_CLICKED,
 				() => ({
 					chat_session_id: query?.sessionId,
-					dataset_id: utilReducer?.selectedDataSource?.id,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_id: datasourceData?.datasource_id,
+					dataset_name: datasourceData?.name,
 					query_id: chatStoreReducer?.activeQueryId,
 				}),
 			);
@@ -103,8 +114,8 @@ const Workzone = () => {
 				EVENTS_REGISTRY.REFERENCE_TAB_CLICKED,
 				() => ({
 					chat_session_id: query?.sessionId,
-					dataset_id: utilReducer?.selectedDataSource?.id,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_id: datasourceData?.datasource_id,
+					dataset_name: datasourceData?.name,
 					query_id: chatStoreReducer?.activeQueryId,
 				}),
 			);
@@ -114,8 +125,8 @@ const Workzone = () => {
 				EVENTS_REGISTRY.CODER_TAB_CLICKED,
 				() => ({
 					chat_session_id: query?.sessionId,
-					dataset_id: utilReducer?.selectedDataSource?.id,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_id: datasourceData?.datasource_id,
+					dataset_name: datasourceData?.name,
 					query_id: chatStoreReducer?.activeQueryId,
 				}),
 			);
@@ -214,25 +225,6 @@ const Workzone = () => {
 						},
 					]),
 				);
-
-				if (
-					!utilReducer?.selectedDataSource?.name ||
-					!utilReducer?.selectedDataSource?.details
-				) {
-					dispatch(
-						updateUtilProp([
-							{
-								key: 'selectedDataSource',
-								value: {
-									...utilReducer?.selectedDataSource,
-									name: dataSourceName,
-									id: dataSourceId,
-									details: dataSourceDetails,
-								},
-							},
-						]),
-					);
-				}
 
 				setAnswers((prevAnswers) => {
 					return res.map((newAnswer) => {
@@ -397,7 +389,7 @@ const Workzone = () => {
 						chat_session_id: res?.session_id,
 						query_id: res?.query_id,
 						dataset_id: query.dataSourceId,
-						dataset_name: utilReducer?.selectedDataSource?.name,
+						dataset_name: datasourceData?.name,
 						message_type: 'user',
 						message_source: 'manual_input',
 						message_text: prompt,
@@ -408,7 +400,7 @@ const Workzone = () => {
 				);
 				sendChatSessionStartedEvent({
 					dataset_id: query.dataSourceId,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_name: datasourceData?.name,
 					start_method: 'manual_input',
 					chat_session_id: res?.session_id,
 					chat_session_type: 'old',
@@ -484,8 +476,8 @@ const Workzone = () => {
 					EVENTS_REGISTRY.CHAT_MESSAGE_SENT,
 					() => ({
 						chat_session_id: query?.sessionId,
-						dataset_id: utilReducer?.selectedDataSource?.id,
-						dataset_name: utilReducer?.selectedDataSource?.name,
+						dataset_id: datasourceData?.datasource_id,
+						dataset_name: datasourceData?.name,
 						query_id: chatStoreReducer?.activeQueryId,
 						message_type: 'user',
 						message_source: 'regenerate_from_edit',
@@ -496,8 +488,8 @@ const Workzone = () => {
 					}),
 				);
 				sendChatSessionStartedEvent({
-					dataset_id: utilReducer?.selectedDataSource?.id,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_id: datasourceData?.datasource_id,
+					dataset_name: datasourceData?.name,
 					start_method: 'regenerate_from_edit',
 					chat_session_id: query?.session_id,
 					chat_session_type: 'old',
@@ -581,6 +573,8 @@ const Workzone = () => {
 			const currentDoingScience =
 				doingScience.find((loadingObj) => loadingObj.queryId === query?.id)
 					?.status || !!query?.parentQueryId;
+			const isAllDocuments = isUnstructuredData(rawFiles);
+
 			const showWorkspaceToggle = !hasClarification;
 			return (
 				<div key={query.id} className="my-2 w-full">
@@ -610,6 +604,7 @@ const Workzone = () => {
 								onClick={() => {
 									toggleIra(query?.id);
 								}}
+								disabled={isAllDocuments}
 							>
 								<img
 									src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
@@ -778,7 +773,9 @@ const Workzone = () => {
 		}
 	}, [query]);
 
-	useEffect(() => {}, [utilReducer?.isGenerateReportModalOpen]);
+	// useEffect(() => {}, [utilReducer?.isGenerateReportModalOpen]);
+
+	// useEffect(() => {}, [processedFiles]);
 
 	const showWorkSpace = () => {
 		const markerAnswer =
@@ -786,7 +783,8 @@ const Workzone = () => {
 				(item) => item?.query_id === chatStoreReducer?.activeQueryId,
 			) || answers?.[0];
 		const hasClarification = !!markerAnswer?.answer?.clarification;
-		return workspace.show && !hasClarification;
+		const isAllDocuments = isUnstructuredData(rawFiles);
+		return workspace.show && !hasClarification && !isAllDocuments;
 	};
 
 	const config = {
@@ -810,24 +808,20 @@ const Workzone = () => {
 	useEffect(() => {
 		const { sessionId, source } = query;
 
-		if (
-			sessionId &&
-			utilReducer?.selectedDataSource?.id &&
-			utilReducer?.selectedDataSource?.name
-		) {
+		if (sessionId && datasourceData?.datasource_id && datasourceData?.name) {
 			trackEvent(
 				EVENTS_ENUM.CHAT_SCREEN_LOADED,
 				EVENTS_REGISTRY.CHAT_SCREEN_LOADED,
 				() => ({
 					chat_session_id: sessionId,
-					dataset_id: utilReducer?.selectedDataSource?.id,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_id: datasourceData?.datasource_id,
+					dataset_name: datasourceData?.name,
 					source: source || 'url',
 					chat_session_type: getSessionType(source),
 				}),
 			);
 		}
-	}, [query, utilReducer]);
+	}, [query, datasourceData]);
 
 	useEffect(() => {
 		if (!dashboard?.showAdd) {

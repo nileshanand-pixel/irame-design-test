@@ -44,7 +44,7 @@ const DataSourceCard = ({ requiredFiles }) => {
 			['COMPLETED', 'FAILED'].includes(runDetails.status)
 		) {
 			navigate(
-				`/app/new-chat/session/?sessionId=${runDetails.session_id}&source=workflow`,
+				`/app/new-chat/session/?sessionId=${runDetails.session_id}&source=workflow&dataSourceId=${runDetails.datasource_id}`,
 			);
 		}
 	}, [runDetails]);

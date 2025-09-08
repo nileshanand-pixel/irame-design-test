@@ -119,11 +119,12 @@ const SessionHistoryPanel = ({ onClose }) => {
 					<div className="divide-y text-black/60">
 						{runs.map((item) => {
 							const linkActive = isLinkActive(item.status);
-							const sessionUrl = `${window.location.origin}/app/new-chat/session/?sessionId=${item.session_id}&source=workflow`;
+							const sessionUrl = `${window.location.origin}/app/new-chat/session/?sessionId=${item.session_id}&source=workflow&dataSourceId=${item.datasource_id}`;
 
 							// Determine if this row is the selected one
 							const isSelected = currentRunId === item.external_id;
 
+							console.log(item, 'item harsh');
 							return (
 								<div
 									key={item.external_id}

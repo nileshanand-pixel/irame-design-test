@@ -12,6 +12,7 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getSupportedGraphs } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import { RESPONSE_CARD_VIEWS } from '@/constants/chat.constant';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 const GraphComponent = ({
 	data,
@@ -39,6 +40,7 @@ const GraphComponent = ({
 		supportedGraphsData?.[0]?.id || null,
 	);
 
+	const { data: datasourceData } = useDatasourceDetails();
 	function generateColumns(keys) {
 		return keys?.map((key) => {
 			let headerTitle = key.replace(/_/g, ' ').toUpperCase();
@@ -98,8 +100,8 @@ const GraphComponent = ({
 			EVENTS_REGISTRY.TABLE_VIEW_CHANGED,
 			() => ({
 				chat_session_id: query?.sessionId,
-				dataset_id: utilReducer?.selectedDataSource?.id,
-				dataset_name: utilReducer?.selectedDataSource?.name,
+				dataset_id: datasourceData?.datasource_id,
+				dataset_name: datasourceData?.name,
 				query_id: chatStoreReducer?.activeQueryId,
 				change_type: 'sorting',
 			}),
@@ -132,11 +134,8 @@ const GraphComponent = ({
 											() => ({
 												chat_session_id: query?.sessionId,
 												dataset_id:
-													utilReducer?.selectedDataSource
-														?.id,
-												dataset_name:
-													utilReducer?.selectedDataSource
-														?.name,
+													datasourceData?.datasource_id,
+												dataset_name: datasourceData?.name,
 												query_id:
 													chatStoreReducer?.activeQueryId,
 											}),
@@ -150,11 +149,8 @@ const GraphComponent = ({
 											() => ({
 												chat_session_id: query?.sessionId,
 												dataset_id:
-													utilReducer?.selectedDataSource
-														?.id,
-												dataset_name:
-													utilReducer?.selectedDataSource
-														?.name,
+													datasourceData?.datasource_id,
+												dataset_name: datasourceData?.name,
 												query_id:
 													chatStoreReducer?.activeQueryId,
 											}),
@@ -187,12 +183,9 @@ const GraphComponent = ({
 													chat_session_id:
 														query?.sessionId,
 													dataset_id:
-														utilReducer
-															?.selectedDataSource?.id,
+														datasourceData?.datasource_id,
 													dataset_name:
-														utilReducer
-															?.selectedDataSource
-															?.name,
+														datasourceData?.name,
 													query_id:
 														chatStoreReducer?.activeQueryId,
 													graph_id: graph.id,

@@ -65,14 +65,6 @@ const ChooseDataSourceDialog = ({
 			(item) => item.datasource_id === dataSourceId,
 		)?.name;
 		if (!dsName) return;
-		dispatch(
-			updateUtilProp([
-				{
-					key: 'selectedDataSource',
-					value: { id: dataSourceId, name: dsName },
-				},
-			]),
-		);
 		// setValue((prev) => {
 		// 	return {
 		// 		...prev,

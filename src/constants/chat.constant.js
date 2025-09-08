@@ -1,5 +1,8 @@
 const CHAT_CONSTANTS = {
-	IRA_INPUT_PLACEHOLDER: 'Enter a prompt, or press ‘/’ for multiple prompts...',
+	// IRA_INPUT_PLACEHOLDER: 'Enter a prompt, or press ‘/’ for multiple prompts...',
+	// TODO: Remove below and add above after template mode is fixed
+	IRA_INPUT_PLACEHOLDER: 'Enter your prompt here',
+
 	IRA_GENERATING_RESPONSE: 'Generating response, wait for magic...',
 };
 

@@ -95,6 +95,7 @@
 	body {
 		font-family: 'Inter', sans-serif !important;
 	}
+
 	html {
 		font-size: 0.9vw;
 	}
@@ -128,56 +129,44 @@
 	}
 
 	.light {
-		background: -moz-linear-gradient(
-			-45deg,
-			#6a12cd 0%,
-			#6a12cd 40%,
-			#ffffff 50%,
-			#6a12cd 60%,
-			#6a12cd 100%
-		);
-		background: -webkit-gradient(
-			linear,
-			left top,
-			right bottom,
-			color-stop(0%, #6a12cd),
-			color-stop(40%, #6a12cd),
-			color-stop(50%, #ffffff),
-			color-stop(60%, #6a12cd),
-			color-stop(100%, #6a12cd)
-		);
-		background: -webkit-linear-gradient(
-			-45deg,
-			#6a12cd 0%,
-			#6a12cd 40%,
-			#ffffff 50%,
-			#6a12cd 60%,
-			#6a12cd 100%
-		);
-		background: -o-linear-gradient(
-			-45deg,
-			#6a12cd 0%,
-			#6a12cd 40%,
-			#ffffff 50%,
-			#6a12cd 60%,
-			#6a12cd 100%
-		);
-		background: -ms-linear-gradient(
-			-45deg,
-			#6a12cd 0%,
-			#6a12cd 40%,
-			#ffffff 50%,
-			#6a12cd 60%,
-			#6a12cd 100%
-		);
-		background: linear-gradient(
-			115deg,
-			#6a12cd 0%,
-			#6a12cd 40%,
-			#ffffff 50%,
-			#6a12cd 60%,
-			#6a12cd 100%
-		);
+		background: -moz-linear-gradient(-45deg,
+				#6a12cd 0%,
+				#6a12cd 40%,
+				#ffffff 50%,
+				#6a12cd 60%,
+				#6a12cd 100%);
+		background: -webkit-gradient(linear,
+				left top,
+				right bottom,
+				color-stop(0%, #6a12cd),
+				color-stop(40%, #6a12cd),
+				color-stop(50%, #ffffff),
+				color-stop(60%, #6a12cd),
+				color-stop(100%, #6a12cd));
+		background: -webkit-linear-gradient(-45deg,
+				#6a12cd 0%,
+				#6a12cd 40%,
+				#ffffff 50%,
+				#6a12cd 60%,
+				#6a12cd 100%);
+		background: -o-linear-gradient(-45deg,
+				#6a12cd 0%,
+				#6a12cd 40%,
+				#ffffff 50%,
+				#6a12cd 60%,
+				#6a12cd 100%);
+		background: -ms-linear-gradient(-45deg,
+				#6a12cd 0%,
+				#6a12cd 40%,
+				#ffffff 50%,
+				#6a12cd 60%,
+				#6a12cd 100%);
+		background: linear-gradient(115deg,
+				#6a12cd 0%,
+				#6a12cd 40%,
+				#ffffff 50%,
+				#6a12cd 60%,
+				#6a12cd 100%);
 		filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#4600F2', endColorstr='#4600F2', GradientType=1);
 		background-repeat: no-repeat;
 		background-position: 0px;
@@ -223,16 +212,12 @@
 
 	.form-bg {
 		background:
-			linear-gradient(
-				0deg,
+			linear-gradient(0deg,
 				rgba(106, 18, 205, 0.02),
-				rgba(106, 18, 205, 0.02)
-			),
-			linear-gradient(
-				180deg,
+				rgba(106, 18, 205, 0.02)),
+			linear-gradient(180deg,
 				rgba(255, 255, 255, 0.4) 1.14%,
-				rgba(255, 255, 255, 0.16) 98.72%
-			);
+				rgba(255, 255, 255, 0.16) 98.72%);
 	}
 
 	.tabActiveBg {
@@ -267,11 +252,9 @@
 		border-radius: 100px;
 		animation: rotation 2.5s linear 0s infinite;
 
-		background: linear-gradient(
-			var(--gradient-angle),
-			rgba(106, 18, 205, 1),
-			rgba(106, 18, 205, 0)
-		);
+		background: linear-gradient(var(--gradient-angle),
+				rgba(106, 18, 205, 1),
+				rgba(106, 18, 205, 0));
 	}
 
 	.darkSoul-button2 {
@@ -620,6 +603,10 @@
 		white-space: pre-wrap;
 	}
 
+	.sidenav-transition {
+		transition: all 0.3s ease-in-out;
+	}
+	
 	@-webkit-keyframes spinner-fade {
 		0% {
 			background-color: rgba(38, 6, 74, 1);

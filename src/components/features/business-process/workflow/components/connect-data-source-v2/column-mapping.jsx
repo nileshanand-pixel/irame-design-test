@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { useBusinessProcessId } from '../../../hooks/use-business-process-id';
 import upperFirst from 'lodash.upperfirst';
 import { toast } from '@/lib/toast';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 /** ---------- helpers that don’t hit React state ---------- **/
 
@@ -74,18 +75,17 @@ export const ColumnMapping = ({
 	const runId = useWorkflowRunId();
 	const businessProcessId = useBusinessProcessId(); // not used here, but left untouched
 	const navigate = useNavigate();
+
 	const {
 		data: aiDatasource,
 		isLoading: isAiDsLoading,
 		refetch,
-	} = useQuery({
-		queryKey: ['datasource-by-id', workflowRunDetails?.datasource_id],
-		queryFn: () =>
-			!!workflowRunDetails?.datasource_id
-				? getDataSourceById(workflowRunDetails?.datasource_id)
-				: null,
-		refetchInterval: ({ state }) => {
-			return state?.data?.status === 'active' ? false : 2000;
+	} = useDatasourceDetails({
+		datasourceId: workflowRunDetails?.datasource_id,
+		queryOptions: {
+			refetchInterval: ({ state }) => {
+				return state?.data?.status === 'active' ? false : 2000;
+			},
 		},
 	});
 
@@ -256,7 +256,7 @@ export const ColumnMapping = ({
 	const handleComplete = async () => {
 		onNext();
 		navigate(
-			`/app/new-chat/session/?sessionId=${workflowRunDetails.session_id}&source=workflow`,
+			`/app/new-chat/session/?sessionId=${workflowRunDetails.session_id}&source=workflow&datasourceId=${workflowRunDetails.datasource_id}`,
 		);
 	};
 

@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 const plannerTitles = [
 	'Question Interpretation',
@@ -41,6 +42,7 @@ const PlannerComponent = ({
 		);
 	};
 
+	const { data: datasourceData } = useDatasourceDetails();
 	// Initialize segments from data
 	useEffect(() => {
 		if (!workspaceHasChanges) setInitialSegments();
@@ -79,8 +81,8 @@ const PlannerComponent = ({
 			EVENTS_REGISTRY.PLANNER_EDITED,
 			() => ({
 				chat_session_id: query.sessionId,
-				dataset_id: utilReducer?.selectedDataSource?.id,
-				dataset_name: utilReducer?.selectedDataSource?.name,
+				dataset_id: datasourceData?.datasource_id,
+				dataset_name: datasourceData?.name,
 				query_id: chatStoreReducer?.activeQueryId,
 				type_change: [
 					...editRef.current.innerHTML.matchAll(/<b>(.*?)<\/b>/g),

@@ -61,7 +61,7 @@ const Layout = ({ children }) => {
 				isSideNavOpen={utilReducer?.isSideNavOpen}
 			/>
 			<main
-				className={`flex flex-col w-full h-full ${
+				className={`flex flex-col w-full h-full sidenav-transition ${
 					utilReducer?.isSideNavOpen ? 'pl-[16rem]' : 'pl-[4.5rem]'
 				} `}
 			>

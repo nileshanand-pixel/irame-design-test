@@ -46,8 +46,9 @@ export default function WorkflowPageV2() {
 			queryClient.invalidateQueries(['workflow-runs', workflowId]);
 			queryClient.invalidateQueries(['workflow-run-details', runId]);
 			const data = await getWorkflowRunDetails(workflowId, runId);
+			console.log(data, 'data harsh');
 			navigate(
-				`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow`,
+				`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow&dataSourceId=${data.datasource_id}`,
 			);
 		},
 		onError: (err) => {

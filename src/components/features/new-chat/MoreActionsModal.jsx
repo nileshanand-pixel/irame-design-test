@@ -1,7 +1,7 @@
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { EVENTS_ENUM } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useEffect, useRef } from 'react';
 
 // Action components
 const QueryInBulk = forwardRef(({ onClick }, ref) => (
@@ -120,9 +120,9 @@ const SavedQueriesSecondaryModal = ({
 			</h3>
 
 			<div className="overflow-scroll h-full">
-				{templatesData && templatesData?.saved_queries?.length !== 0 ? (
+				{templatesData && templatesData?.length !== 0 ? (
 					<div>
-						{templatesData?.saved_queries?.map((data) => {
+						{templatesData?.map((data) => {
 							return (
 								<SavedQueryBtn
 									key={data?.external_id}
@@ -190,7 +190,7 @@ const MoreActionsModal = forwardRef(
 			)?.[0]?.component;
 
 			return (
-				<div className="my-1 shadow-lg border border-[#26064A14] bg-white rounded-lg z-10">
+				<div className="my-1 shadow-md border border-[#26064A14] bg-white rounded-lg z-10">
 					<div className="p-2">
 						{MainComponent && (
 							<MainComponent
@@ -207,7 +207,7 @@ const MoreActionsModal = forwardRef(
 
 		return (
 			<div className="inline-flex items-end gap-[0.125rem]">
-				<div className="top-0 left-4 w-fit my-1 ml-2 shadow-lg border border-[#26064A14] bg-white rounded-lg mt-1 z-40">
+				<div className="top-0 left-4 w-fit my-1 ml-2 shadow-md border border-[#26064A14] bg-white rounded-lg mt-1 z-40">
 					<div className="p-2">
 						<h3 className="text-xs font-semibold text-[#26064A99] mb-2">
 							More Actions

@@ -39,14 +39,6 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 				clicked_on: clickedOn,
 			}),
 		);
-		dispatch(
-			updateUtilProp([
-				{
-					key: 'selectedDataSource',
-					value: { id: data.datasource_id, name: data.name },
-				},
-			]),
-		);
 		navigate(
 			`/app/new-chat/?step=3&dataSourceId=${data?.datasource_id}&source=homepage`,
 		);

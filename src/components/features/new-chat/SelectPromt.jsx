@@ -68,7 +68,7 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 			};
 			createQuerySession(payload).then((res) => {
 				navigate(
-					`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen`,
+					`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen&dataSourceId=${query.dataSourceId}`,
 				);
 				(dispatch(
 					updateChatStoreProp([

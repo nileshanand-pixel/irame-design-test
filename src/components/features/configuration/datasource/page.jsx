@@ -16,6 +16,8 @@ import BackdropLoader from '@/components/elements/loading/BackDropLoader';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { areStringObjectsEqual } from '@/utils/common';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import { getDatasourceDetailsQueryKey } from '@/api/datasource/datasource.query-key';
 
 const tabs = [
 	{ name: 'Data Card', component: DataCard },
@@ -29,10 +31,8 @@ const DataSource = () => {
 	const [selectedTab, setSelectedTab] = useState(tabs[0].name);
 	const [changesForTracking, setChangesForTracking] = useState([]);
 
-	const datasourceQuery = useQuery({
-		queryKey: ['get-datasource-by-id', query?.id],
-		queryFn: () => getDataSourceById(query?.id),
-		enabled: !!query?.id,
+	const datasourceQuery = useDatasourceDetails({
+		datasourceId: query?.id,
 	});
 
 	const deleteMutation = useMutation({
@@ -72,7 +72,7 @@ const DataSource = () => {
 		onSuccess: () => {
 			toast.success('Dataset updated successfully');
 			// Invalidate and refetch to force fresh data
-			queryClient.invalidateQueries(['get-datasource-by-id', query?.id]);
+			queryClient.invalidateQueries(getDatasourceDetailsQueryKey(query?.id));
 			const eventProperties = {
 				dataset_id: datasourceQuery?.data?.datasource_id,
 				dataset_name: datasourceQuery?.data?.name,

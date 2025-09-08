@@ -54,7 +54,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 	});
 
 	const openQuery = () => {
-		const url = `${window.location.origin}/app/new-chat/session/?sessionId=${card.session_id}&queryId=${card.query_id}&source=report`;
+		const url = `${window.location.origin}/app/new-chat/session/?sessionId=${card.session_id}&queryId=${card.query_id}&source=report&dataSourceId=${card.datasource_id}`;
 		window.open(url, '_blank');
 	};
 

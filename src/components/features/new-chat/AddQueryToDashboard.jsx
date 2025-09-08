@@ -23,6 +23,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 	const [dashboards, setDashboards] = useState([]);
@@ -38,6 +39,8 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 		queryFn: () => getUserDashboard(),
 	});
 
+	const { data: datasourceData } = useDatasourceDetails();
+
 	const handleAddQueryToDashboard = () => {
 		setIsLoading(true);
 		createDashboardContent(selectedDashboard.dashboard_id, {
@@ -49,8 +52,8 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 					EVENTS_REGISTRY.ADDED_ANALYSIS_TO_DASHBOARD,
 					() => ({
 						chat_session_id: query?.sessionId,
-						dataset_id: utilReducer?.selectedDataSource?.id,
-						dataset_name: utilReducer?.selectedDataSource?.name,
+						dataset_id: datasourceData?.datasource_id,
+						dataset_name: datasourceData?.name,
 						query_id: chatStoreReducer?.activeQueryId,
 						dashboard_id: res?.dashboard_id,
 						dashboard_name: selectedDashboard?.title,
@@ -72,10 +75,8 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 									EVENTS_REGISTRY.VIEW_DASHBOARD_CLICKED,
 									() => ({
 										chat_session_id: query?.sessionId,
-										dataset_id:
-											utilReducer?.selectedDataSource?.id,
-										dataset_name:
-											utilReducer?.selectedDataSource?.name,
+										dataset_id: datasourceData?.datasource_id,
+										dataset_name: datasourceData?.name,
 										query_id: chatStoreReducer?.activeQueryId,
 										dashboard_id: res?.dashboard_id,
 										dashboard_name: selectedDashboard?.title,

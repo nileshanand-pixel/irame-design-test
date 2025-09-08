@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 const ExcelFileContent = ({
 	file,
@@ -26,6 +27,7 @@ const ExcelFileContent = ({
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
+	const { data: datasourceData } = useDatasourceDetails();
 	return (
 		<div className="flex flex-wrap gap-2 mt-4 rounded-lg py-2.5">
 			<MultiSelect
@@ -48,8 +50,8 @@ const ExcelFileContent = ({
 						() => ({
 							edited_file_names: newEditedFileNames,
 							chat_session_id: query?.sessionId,
-							dataset_id: utilReducer?.selectedDataSource?.id,
-							dataset_name: utilReducer?.selectedDataSource?.name,
+							dataset_id: datasourceData?.datasource_id,
+							dataset_name: datasourceData?.name,
 							query_id: chatStoreReducer?.activeQueryId,
 						}),
 					);
@@ -111,13 +113,7 @@ const SourceComponent = ({
 			? JSON.parse(data?.tool_data)
 			: data?.tool_data;
 
-	const { data: datasourceData, isLoading } = useQuery({
-		queryKey: ['get-single-datasource', datasourceId],
-		queryFn: () => fetchDatasource(datasourceId),
-		enabled: !!datasourceId,
-		refetchOnWindowFocus: false,
-		retry: false,
-	});
+	const { data: datasourceData, isLoading } = useDatasourceDetails();
 
 	async function fetchDatasource(datasourceId) {
 		try {

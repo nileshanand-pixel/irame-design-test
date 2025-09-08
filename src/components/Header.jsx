@@ -20,6 +20,9 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { LockClosedIcon } from '@radix-ui/react-icons';
 import { ReaderIcon } from '@radix-ui/react-icons';
 import { RocketIcon } from '@radix-ui/react-icons';
+import { useDatasourceId } from '@/hooks/use-datasource-id';
+import useDataSourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import { data } from 'autoprefixer';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
@@ -35,6 +38,8 @@ const Header = () => {
 			</Avatar>
 		);
 	};
+
+	const { data: datasourceDetails } = useDataSourceDetails();
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -53,8 +58,7 @@ const Header = () => {
 		fetchData();
 	}, []);
 
-	const showDataSourceName =
-		utilReducer?.selectedDataSource?.name && pathname.includes('/new-chat');
+	const showDataSourceName = datasourceDetails && pathname.includes('/new-chat');
 
 	const openReportGenerateModal = () => {
 		dispatch(
@@ -142,6 +146,7 @@ const Header = () => {
 			},
 		},
 	];
+
 	return (
 		<header
 			className={cn(
@@ -157,7 +162,7 @@ const Header = () => {
 							alt="edit-prompt"
 							className="size-[1.25rem]"
 						/>
-						{utilReducer?.selectedDataSource?.name}
+						{datasourceDetails?.name}
 						<span className="relative flex size-3 ">
 							<span className="absolute inline-flex h-full w-full rounded-full bg-green-500"></span>
 							<span className="animate-ping relative inline-flex rounded-full size-3 bg-green-500"></span>

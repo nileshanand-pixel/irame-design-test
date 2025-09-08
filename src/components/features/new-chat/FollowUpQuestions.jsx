@@ -9,6 +9,7 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { queryClient } from '@/lib/react-query';
 import { sendChatSessionStartedEvent } from '@/utils/chat';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 const FollowUpQuestions = ({
 	question,
@@ -23,6 +24,7 @@ const FollowUpQuestions = ({
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const utilReducer = useSelector((state) => state.utilReducer);
 
+	const { data: datasourceData } = useDatasourceDetails();
 	const handlePrompt = () => {
 		try {
 			trackEvent(
@@ -30,8 +32,8 @@ const FollowUpQuestions = ({
 				EVENTS_REGISTRY.CLICKED_FOLLOW_UP_SUGGESTION,
 				() => ({
 					chat_session_id: query?.sessionId,
-					dataset_id: utilReducer?.selectedDataSource?.id,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_id: datasourceData?.datasource_id,
+					dataset_name: datasourceData?.name,
 					query_id: chatStoreReducer?.activeQueryId,
 					question: question,
 					clicked_on: index + 1,
@@ -79,8 +81,8 @@ const FollowUpQuestions = ({
 					EVENTS_REGISTRY.CHAT_MESSAGE_SENT,
 					() => ({
 						chat_session_id: query?.sessionId,
-						dataset_id: utilReducer?.selectedDataSource?.id,
-						dataset_name: utilReducer?.selectedDataSource?.name,
+						dataset_id: datasourceData?.datasource_id,
+						dataset_name: datasourceData?.name,
 						query_id: chatStoreReducer?.activeQueryId,
 						message_type: 'user',
 						message_source: 'follow_up',
@@ -92,8 +94,8 @@ const FollowUpQuestions = ({
 				);
 
 				sendChatSessionStartedEvent({
-					dataset_id: utilReducer?.selectedDataSource?.id,
-					dataset_name: utilReducer?.selectedDataSource?.name,
+					dataset_id: datasourceData?.datasource_id,
+					dataset_name: datasourceData?.name,
 					start_method: 'follow_up',
 					chat_session_id: query?.session_id,
 					chat_session_type: 'old',

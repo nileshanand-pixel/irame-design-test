@@ -31,6 +31,7 @@ import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getFileType } from '@/utils/file';
 import { toast } from '@/lib/toast';
+import DismissibleBanner from '@/components/elements/dismissible-banner';
 
 const Configuration = () => {
 	const {
@@ -244,14 +245,6 @@ const Configuration = () => {
 	};
 
 	const startChatting = (data) => {
-		dispatch(
-			updateUtilProp([
-				{
-					key: 'selectedDataSource',
-					value: { id: data.datasource_id, name: data.name },
-				},
-			]),
-		);
 		navigate(
 			`/app/new-chat/?step=3&dataSourceId=${data.datasource_id}&source=configuration`,
 		);
@@ -391,7 +384,9 @@ const Configuration = () => {
 	};
 
 	return (
-		<div className="flex flex-col gap-4 w-full h-full">
+		<div className="flex flex-col gap-4  w-full h-full">
+			{/* Dismissible Banner */}
+
 			{/* Upload Section */}
 			<div className="px-8 flex-none mt-2">
 				<div className="text-primary80 gap-2">
@@ -400,7 +395,14 @@ const Configuration = () => {
 						/ Connect New Dataset
 					</span>
 				</div>
-				<div className="border rounded-3xl py-4 px-6 mt-6 col-span-12 shadow-1xl h-fit">
+				<div className=" mt-2">
+					<DismissibleBanner
+						id="talk-to-documents"
+						title="Talk to your documents!"
+						description="Click 'Upload Dataset' and add your documents (PDFs) to get started"
+					/>
+				</div>
+				<div className="border rounded-3xl py-4 px-6 mt-6  col-span-12 shadow-1xl h-fit">
 					{isLoading && (
 						<div>
 							{' '}
@@ -413,7 +415,14 @@ const Configuration = () => {
 								Connect New Dataset
 							</h3>
 							<p className="text-primary40 text-sm">
-								Securely upload your dataset
+								Securely upload your dataset.
+								<span className="ml-1 text-primary30 text-xs">
+									Upload{' '}
+									<span className="font-semibold text-primary60">
+										one type of file
+									</span>{' '}
+									(.xlsx/.xlsb/.csv or .pdf) at a time.
+								</span>
 							</p>
 						</div>
 

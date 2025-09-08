@@ -149,9 +149,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const getChatHistory = (session) => {
 		if (sessionId === session.session_id) return;
 		dispatch(resetChatStore());
-		dispatch(updateUtilProp([{ key: 'selectedDataSource', value: {} }]));
 		navigate(
-			`/app/new-chat/session?sessionId=${session.session_id}&source=side_bar`,
+			`/app/new-chat/session?sessionId=${session.session_id}&source=side_bar&dataSourceId=${session.datasource_id}`,
 		);
 		dispatch(
 			updateChatStoreProp([
@@ -167,14 +166,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 		const datasourceId = session?.datasource_id;
 		const datasourceName = getChatHistoryDataSourceName(datasourceId);
-		dispatch(
-			updateUtilProp([
-				{
-					key: 'selectedDataSource',
-					value: { id: datasourceId, name: datasourceName },
-				},
-			]),
-		);
 	};
 
 	const handleRedirectionAfterDeletion = (threadSessionId, threadWorkflowId) => {
@@ -244,12 +235,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			EVENTS_REGISTRY.SIDE_BAR_ASK_IRA_CLICKED,
 		);
 		dispatch(resetChatStore());
-		dispatch(
-			updateUtilProp([
-				{ key: 'selectedDataSource', value: {} },
-				{ key: 'answerFromHistory', value: {} },
-			]),
-		);
+		dispatch(updateUtilProp([{ key: 'answerFromHistory', value: {} }]));
 		navigate('/app/new-chat?source=side_bar');
 	};
 
@@ -441,7 +427,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							]),
 						);
 						navigate(
-							`/app/new-chat/session/?sessionId=${workflow.session_id}&source=side_bar`,
+							`/app/new-chat/session/?sessionId=${workflow.session_id}&source=side_bar&dataSourceId=${workflow.datasource_id}`,
 						);
 					} else {
 						navigate(
@@ -551,7 +537,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	return (
 		<div
-			className={`fixed flex flex-col h-screen ${
+			className={`fixed flex flex-col h-screen sidenav-transition ${
 				isSideNavOpen
 					? 'w-[16rem] min-w-[16rem]'
 					: 'w-[4.5rem] min-w-[4.5rem]'

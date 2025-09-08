@@ -12,15 +12,21 @@ import { getDataSources } from '../configuration/service/configuration.service';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
-import InputArea from './InputArea';
+// import InputArea from './InputArea';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { toast } from '@/lib/toast';
 import { queryClient } from '@/lib/react-query';
+import { useDatasourceId } from '@/hooks/use-datasource-id';
+import { useMemo } from 'react';
+import InputArea from './components/input-area/input-area';
+import StepThreeContent from './components/step-three-content';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
 	const [dataSource] = useLocalStorage('dataSource');
+	const datasourceId = useDatasourceId();
 
 	const { query, params, navigate, pathname } = useRouter();
 
@@ -41,6 +47,7 @@ const NewChat = () => {
 	const [errors, setErrors] = useState({});
 	const preChatScreenLoadedRef = useRef(false);
 
+	const { data: datasourceData } = useDatasourceDetails();
 	const gradientText = {
 		backgroundImage:
 			'linear-gradient(270deg, rgba(106, 18, 205, 0.4), rgba(106, 18, 205, 0.8))',
@@ -101,7 +108,10 @@ const NewChat = () => {
 				return <AnalysisData />;
 			case 3:
 				return (
-					<SelectPrompt setPrompt={setPrompt} dataSources={dataSources} />
+					<StepThreeContent
+						setPrompt={setPrompt}
+						dataSources={dataSources}
+					/>
 				);
 			default:
 				return <div>Chat / Converse</div>;
@@ -142,7 +152,7 @@ const NewChat = () => {
 			createQuerySession(payload)
 				.then((res) => {
 					navigate(
-						`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen`,
+						`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen&dataSourceId=${query.dataSourceId}`,
 					);
 					dispatch(
 						updateChatStoreProp([
@@ -173,7 +183,7 @@ const NewChat = () => {
 						EVENTS_REGISTRY.CHAT_SESSION_STARTED,
 						() => ({
 							dataset_id: query.dataSourceId,
-							dataset_name: utilReducer?.selectedDataSource?.name,
+							dataset_name: datasourceData?.name,
 							start_method: 'manual_input',
 							chat_session_id: res?.session_id,
 							chat_session_type: 'new',
@@ -186,7 +196,7 @@ const NewChat = () => {
 							chat_session_id: res?.session_id,
 							query_id: res?.query_id,
 							dataset_id: query.dataSourceId,
-							dataset_name: utilReducer?.selectedDataSource?.name,
+							dataset_name: datasourceData?.name,
 							message_type: 'user',
 							message_source: 'manual_input',
 							message_text: prompt,
@@ -235,11 +245,20 @@ const NewChat = () => {
 		},
 	});
 
+	const findDataSourceById = useMemo(() => {
+		return (dataSourceId) => {
+			const datasets = dataSources || utilReducer?.dataSources;
+			return datasets?.find((ds) => ds.datasource_id === dataSourceId);
+		};
+	}, [dataSources, utilReducer?.dataSources]);
+
+	const processedFiles = useMemo(() => {
+		const ds = findDataSourceById(datasourceId);
+		return ds?.processed_files?.files || [];
+	}, [findDataSourceById, datasourceId]);
+
 	const getChatHistoryDataSourceName = (dataSourceId) => {
-		const datasets = dataSources || utilReducer?.dataSources;
-		const dataSource = datasets?.find(
-			(source) => source.datasource_id === dataSourceId,
-		);
+		const dataSource = findDataSourceById(dataSourceId);
 		return { id: dataSourceId, name: dataSource?.name };
 	};
 
@@ -293,7 +312,7 @@ const NewChat = () => {
 			setCompletedSteps((prev) => [...prev, parseInt(query.step)]);
 
 			if (query.step === '3') {
-				setCompletedSteps([1, 3]);
+				setCompletedSteps([1, 2, 3]);
 			}
 		} else {
 			setCompletedSteps([1]);
@@ -315,25 +334,6 @@ const NewChat = () => {
 	]);
 
 	useEffect(() => {
-		if (!utilReducer?.selectedDataSource && dataSource?.name) {
-			dispatch(
-				updateUtilProp([
-					{
-						key: 'selectedDataSource',
-						value: { id: query.dataSourceId, value: dataSource?.name },
-					},
-				]),
-			);
-		} else {
-			dispatch(
-				updateUtilProp([
-					{
-						key: 'selectedDataSource',
-						value: getChatHistoryDataSourceName(query.dataSourceId),
-					},
-				]),
-			);
-		}
 		if (utilReducer?.resetChat) {
 			setDoingScience(true);
 		}
@@ -367,11 +367,9 @@ const NewChat = () => {
 					})}
 				</ul>
 			</div>
-			<div className="mt-[1rem]  overflow-auto w-full">
-				{renderComponent()}
-			</div>
+			<div className="mt-[1rem] overflow-auto w-full">{renderComponent()}</div>
 			{completedSteps.includes(2) || completedSteps.includes(3) ? (
-				<div className="absolute w-full bottom-1 flex flex-col items-center justify-center overflow-x-scroll z-20">
+				<div className="mt-auto w-full flex flex-col items-center justify-center z-20">
 					<InputArea config={config} onAppendQuery={handleCreateSession} />
 					<p className="text-xs text-primary40 font-normal">
 						Irame.ai may display inaccurate info, including about people,

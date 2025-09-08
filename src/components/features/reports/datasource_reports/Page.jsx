@@ -16,6 +16,7 @@ import { getDataSourceById } from '../../configuration/service/configuration.ser
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDispatch } from 'react-redux';
 import { openModal } from '@/redux/reducer/modalReducer';
+import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 const ReportsInDatasource = () => {
 	const { query, navigate } = useRouter();
@@ -48,15 +49,15 @@ const ReportsInDatasource = () => {
 		enabled: !!(query.datasourceId && query.datasourceId === 'audit'),
 	});
 
-	const datasourceQuery = useQuery({
-		queryKey: ['get-datasource', query.datasourceId],
-		queryFn: () => getDataSourceById(query.datasourceId),
-		refetchInterval: 10000,
-		enabled: !!(
-			query.datasourceId &&
-			query.datasourceId !== 'shared' &&
-			query.datasourceId !== 'audit'
-		),
+	const datasourceQuery = useDatasourceDetails({
+		queryOptions: {
+			refetchInterval: 10000,
+			enabled: !!(
+				query.datasourceId &&
+				query.datasourceId !== 'shared' &&
+				query.datasourceId !== 'audit'
+			),
+		},
 	});
 
 	const filteredList = useMemo(() => {
