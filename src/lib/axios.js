@@ -1,26 +1,29 @@
 import axios from 'axios';
 import { ensureCleanup } from '@/components/features/login/service/auth.service';
 import { serviceUrlMap } from '@/config/url.config';
+import { STAGE_APP_TOKEN } from '@/config';
 
 let isLoggingOut = false;
+
+const headers = {
+	'Content-Type': 'application/json',
+};
+
+if (STAGE_APP_TOKEN) {
+	headers['x-app-token'] = STAGE_APP_TOKEN;
+}
 
 // Client for the data manager service v1
 const axiosClientV1 = axios.create({
 	baseURL: serviceUrlMap.DATA_MANAGER_SERVICE_V1,
-	headers: {
-		'Content-Type': 'application/json',
-		'x-app-token': 'e2bbb59e-d66f-4734-b034-cf6e8f3f8a4e',
-	},
+	headers: headers,
 	withCredentials: true,
 });
 
 // Client for the data manager service v2
 const axiosClientV2 = axios.create({
 	baseURL: serviceUrlMap.DATA_MANAGER_SERVICE_V2,
-	headers: {
-		'Content-Type': 'application/json',
-		'x-app-token': 'e2bbb59e-d66f-4734-b034-cf6e8f3f8a4e',
-	},
+	headers: headers,
 	withCredentials: true,
 });
 
