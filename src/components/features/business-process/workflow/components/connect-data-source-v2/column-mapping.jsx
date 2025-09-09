@@ -256,7 +256,7 @@ export const ColumnMapping = ({
 	const handleComplete = async () => {
 		onNext();
 		navigate(
-			`/app/new-chat/session/?sessionId=${workflowRunDetails.session_id}&source=workflow&datasourceId=${workflowRunDetails.datasource_id}`,
+			`/app/new-chat/session/?sessionId=${workflowRunDetails.session_id}&source=workflow&dataSourceId=${workflowRunDetails.datasource_id}`,
 		);
 	};
 

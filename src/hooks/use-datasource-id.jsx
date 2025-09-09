@@ -7,6 +7,12 @@ import { useSearchParams } from 'react-router-dom';
  */
 export const useDatasourceId = () => {
 	const [searchParams] = useSearchParams();
-	const datasourceId = searchParams.get('dataSourceId');
+	let datasourceId = null;
+	for (const [key, value] of searchParams.entries()) {
+		if (key.toLowerCase() === 'datasourceid') {
+			datasourceId = value;
+			break;
+		}
+	}
 	return datasourceId;
 };
