@@ -31,6 +31,7 @@ import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getFileType } from '@/utils/file';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import DismissibleBanner from '@/components/elements/dismissible-banner';
 
 const Configuration = () => {
@@ -171,6 +172,11 @@ const Configuration = () => {
 				}),
 			);
 		} catch (error) {
+			logError(error, {
+				feature: 'configuration',
+				action: 'create-datasource',
+				datasourceName,
+			});
 			toast.error('Error creating data source');
 			setIsLoading(false);
 			trackEvent(
@@ -213,6 +219,11 @@ const Configuration = () => {
 			setDataSources(updatedList);
 			queryClient.invalidateQueries(['data-sources']);
 		} catch (error) {
+			logError(error, {
+				feature: 'configuration',
+				action: 'delete-datasource',
+				dataSourceId,
+			});
 			trackEvent(
 				EVENTS_ENUM.DATASET_DELETION_FAILED,
 				EVENTS_REGISTRY.DATASET_DELETION_FAILED,

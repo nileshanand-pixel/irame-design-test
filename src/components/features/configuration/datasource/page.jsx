@@ -10,6 +10,7 @@ import {
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { queryClient } from '@/lib/react-query';
 import DataSourceSkeleton from './DatasourceSkeleton';
 import BackdropLoader from '@/components/elements/loading/BackDropLoader';
@@ -52,6 +53,11 @@ const DataSource = () => {
 			navigate('/app/configuration?source=configuration');
 		},
 		onError: (err) => {
+			logError(err, {
+				feature: 'configuration',
+				action: 'delete-datasource',
+				datasource_id: datasourceQuery?.data?.datasource_id,
+			});
 			trackEvent(
 				EVENTS_ENUM.DATASET_DELETION_FAILED,
 				EVENTS_REGISTRY.DATASET_DELETION_FAILED,
