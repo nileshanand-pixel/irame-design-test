@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { useMutation } from '@tanstack/react-query';
 
 import CustomSelect from '@/components/elements/CustomSelect';
@@ -75,7 +76,15 @@ const AddQueryToReportDialog = ({
 			setRiskLevel('');
 			onSuccessCloseAll();
 		},
-		onError: () => toast.error('Failed to add query to report!'),
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'add-query-to-report',
+				reportId: report?.report_id,
+				queryId,
+			});
+			toast.error('Failed to add query to report!');
+		},
 	});
 
 	const handleSubmit = () => {

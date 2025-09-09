@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getReportAccessDetails, shareReport } from '../service/reports.service';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import AccessSkeletonList from './AccessSkeleton';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
@@ -62,6 +63,11 @@ const ShareReportDialog = React.memo(() => {
 			handleClose();
 		},
 		onError: (err) => {
+			logError(err, {
+				feature: 'reports',
+				action: 'share-report',
+				reportId,
+			});
 			toast.error('Something went wrong while sharing report');
 		},
 	});

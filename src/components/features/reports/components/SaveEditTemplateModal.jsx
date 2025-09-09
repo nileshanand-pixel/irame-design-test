@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { useDispatch, useSelector } from 'react-redux';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { Input } from '@/components/ui/input';
 import { editTemplate, saveTemplate } from '../../new-chat/service/new-chat.service';
@@ -74,6 +75,10 @@ const SaveEditTemplateModal = React.memo(
 				closeModal();
 			},
 			onError: (err) => {
+				logError(err, {
+					feature: 'reports',
+					action: 'save-template',
+				});
 				console.log('Error Saving Template', err);
 				toast.error('Something went wrong while saving template');
 			},
@@ -101,6 +106,11 @@ const SaveEditTemplateModal = React.memo(
 				closeModal();
 			},
 			onError: (err) => {
+				logError(err, {
+					feature: 'reports',
+					action: 'update-template',
+					templateId: templateData?.id,
+				});
 				console.log('Error Updating Template', err);
 				toast.error('Something went wrong while updating template');
 			},
