@@ -1,3 +1,4 @@
+import { logError } from '@/lib/logger';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import * as d3 from 'd3';
@@ -47,6 +48,11 @@ const GraphCard = ({ data, isGraphLoading, setIsGraphLoading, selectedItem }) =>
 					setLoadedData(csvData);
 					setColumns(Object.keys(csvData[0]));
 				} catch (error) {
+					logError(error, {
+						feature: 'dashboard',
+						action: 'load-csv-data',
+						dashboard_content_id: data?.dashboard_content_id,
+					});
 					console.error('Error loading CSV data:', error);
 				} finally {
 					setIsGraphLoading(false);

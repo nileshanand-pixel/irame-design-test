@@ -1,5 +1,6 @@
 import axiosClientV1 from '@/lib/axios';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 
 export const getUserDashboard = async () => {
 	const response = await axiosClientV1.get(`/dashboards`, {
@@ -9,29 +10,17 @@ export const getUserDashboard = async () => {
 };
 
 export const deleteUserDashboard = async (id) => {
-	try {
-		const response = await axiosClientV1.delete(`/dashboards/${id}`, {
-			headers: {},
-		});
-		toast.success('Dashboard deleted successfully');
-		return response.data;
-	} catch (error) {
-		toast.error('Something went wrong while deleting dashboard');
-		throw error;
-	}
+	const response = await axiosClientV1.delete(`/dashboards/${id}`, {
+		headers: {},
+	});
+	return response.data;
 };
 
 export const getDashboardContent = async (id) => {
-	try {
-		const response = await axiosClientV1.get(`/dashboards/${id}/contents`, {
-			headers: {},
-		});
-
-		return response.data?.dashboard_content_list;
-	} catch (error) {
-		console.error('Error fetching dashboard content', error);
-		throw error;
-	}
+	const response = await axiosClientV1.get(`/dashboards/${id}/contents`, {
+		headers: {},
+	});
+	return response.data?.dashboard_content_list;
 };
 
 export const createDashboard = async (name) => {

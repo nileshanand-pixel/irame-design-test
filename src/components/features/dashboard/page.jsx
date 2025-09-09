@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { createDashboard, getUserDashboard } from './service/dashboard.service';
+import { logError } from '@/lib/logger';
 import DashboardCard from './components/DashboardCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from '@/hooks/useRouter';
@@ -57,6 +58,11 @@ const Dashboard = () => {
 		} catch (error) {
 			setIsLoading(false);
 			console.log('dashboard create error', error);
+			logError(error, {
+				feature: 'dashboard',
+				action: 'create-dashboard',
+				dashboardName,
+			});
 			toast.error('Something went wrong while creating dashboard');
 		}
 	};
