@@ -13,35 +13,11 @@ const RequiredFiles = ({ requiredFiles }) => {
 
 	const breakpoint = useBreakpoint();
 
-	// TODO: remove this once actual descriptions starts coming
-	const generateDescription = (fileName, fileType) => {
-		if (fileType === 'Excel') {
-			return 'Contains data records and business information for analysis and reporting.';
-		} else {
-			return 'Contains important documentation and reference materials.';
-		}
-	};
-
-	// TODO: remove this repeat logic as this was put for testing the stuff, also remove the naming
-	// Combine all files from csv_files and pdf_files
-	const repeatFiles = (files, label) =>
-		Array(25)
-			.fill(0)
-			.flatMap(() =>
-				(files || []).map((file) => ({
-					// name: file.file_name + file.file_name + file.file_name + file.file_name,
-					name: file.file_name,
-					label,
-					description:
-						file.description ||
-						generateDescription(file.file_name, label),
-				})),
-			);
-
-	const allFiles = [
-		...repeatFiles(requiredFiles?.csv_files, 'Excel'),
-		...repeatFiles(requiredFiles?.pdf_files, 'PDF'),
-	];
+	const allFiles = requiredFiles?.csv_files?.map((item) => ({
+		name: item.file_name,
+		label: 'Excel',
+		description: item.description,
+	}));
 
 	const toggleExpanded = () => {
 		setIsExpanded(!isExpanded);

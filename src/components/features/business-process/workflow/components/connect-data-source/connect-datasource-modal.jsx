@@ -28,11 +28,11 @@ export const ConnectDatasourceModal = ({ open, setOpen }) => {
 		}
 	};
 
-	const workflowType = workflowDetails?.type?.toUpperCase() || 'STRUCTURED';
+	const workflowType = workflowDetails?.data?.type?.toUpperCase() || 'STRUCTURED';
 
 	const renderSwitcher = () => {
 		switch (workflowType) {
-			case 'STRUCTURED':
+			case ('STRUCTURED', 'DYNAMIC'):
 				return <StructuredConnector workflow={workflowDetails} />;
 			case 'UNSTRUCTURED':
 				return <UnstructuredConnector workflow={workflowDetails} />;
