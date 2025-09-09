@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { deleteTemplate, getTemplates } from '../../../service/new-chat.service';
 
 export const useTemplates = () => {
@@ -34,6 +35,7 @@ export const useTemplates = () => {
 		},
 		onError: (err) => {
 			console.log('Error deleting Template', err);
+			logError(err, { feature: 'chat', action: 'delete-template' });
 			toast.error('Something went wrong while deleting template');
 		},
 	});

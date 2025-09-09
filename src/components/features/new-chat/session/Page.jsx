@@ -28,6 +28,7 @@ import { WorkspaceEnum } from '../types/new-chat.enum';
 import ReportGenerationDialog from './components/ReportGenerationDialog';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
+import { logError } from '@/lib/logger';
 import AddQueryFlow from '../../reports/components/AddQueryFlow';
 import { getLocalStorage, setLocalStorage } from '@/utils/local-storage';
 import { sendChatSessionStartedEvent } from '@/utils/chat';
@@ -297,6 +298,10 @@ const Workzone = () => {
 			})
 			.catch((error) => {
 				console.error('Error fetching session queries:', error);
+				logError(error, {
+					feature: 'chat',
+					action: 'fetch-session-queries',
+				});
 				resetDoingScience(false);
 				setIsGraphLoading(false);
 				setInputDisabled(false);
@@ -417,6 +422,7 @@ const Workzone = () => {
 			setPrompt('');
 		} catch (error) {
 			console.log(error);
+			logError(error, { feature: 'chat', action: 'append-query' });
 			setPrompt('');
 		} finally {
 			setInputDisabled(false);
@@ -506,6 +512,7 @@ const Workzone = () => {
 			}));
 		} catch (error) {
 			console.log(error);
+			logError(error, { feature: 'chat', action: 'regenerate-response' });
 		}
 	};
 
@@ -547,6 +554,7 @@ const Workzone = () => {
 		} catch (error) {
 			setDashboard((prev) => ({ ...prev, isCreating: false }));
 			console.log('dashboard create error', error);
+			logError(error, { feature: 'chat', action: 'create-dashboard' });
 			toast.error('Something went wrong while creating dashboard');
 		}
 	};

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { toast } from '@/lib/toast';
 import { chatCommandInitiator } from '@/lib/utils';
+import { logError } from '@/lib/logger';
 
 export const useInputHandlers = ({
 	prompt,
@@ -44,6 +45,7 @@ export const useInputHandlers = ({
 			setMode('single');
 		} catch (error) {
 			console.error('Error sending message:', error);
+			logError(error, { feature: 'chat', action: 'send-message' });
 			toast.error('Failed to send message. Please try again.');
 		}
 	}, [

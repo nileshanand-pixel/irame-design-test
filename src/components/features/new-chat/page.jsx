@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 // import InputArea from './InputArea';
 import { trackEvent } from '@/lib/mixpanel';
+import { logError } from '@/lib/logger';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { toast } from '@/lib/toast';
 import { queryClient } from '@/lib/react-query';
@@ -68,6 +69,7 @@ const NewChat = () => {
 			}
 		} catch (error) {
 			console.log(error);
+			logError(error, { feature: 'chat', action: 'show-progress' });
 		}
 	};
 
@@ -208,11 +210,13 @@ const NewChat = () => {
 					queryClient.invalidateQueries(['chat-history']);
 				})
 				.catch((error) => {
+					logError(error, { feature: 'chat', action: 'create-session' });
 					navigate('/app/new-chat?source=chat');
 					toast.error('Error Creating Session, Please Try Again');
 				});
 		} catch (error) {
 			console.log(error);
+			logError(error, { feature: 'chat', action: 'create-session' });
 		}
 	};
 
@@ -230,6 +234,7 @@ const NewChat = () => {
 			});
 		} catch (error) {
 			console.error('Error fetching user session:', error);
+			logError(error, { feature: 'chat', action: 'fetch-user-session' });
 		}
 	};
 

@@ -1,5 +1,6 @@
 import { useState, useLayoutEffect } from 'react';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 
 export const useModalManagement = (setMode) => {
 	const [showModal, setShowModal] = useState(false);
@@ -36,6 +37,7 @@ export const useModalManagement = (setMode) => {
 			resetSecondaryModalData();
 		} catch (error) {
 			console.error('Error handling action selection:', error);
+			logError(error, { feature: 'chat', action: 'modal-action' });
 			toast.error("Couldn't process that action. Please try again.");
 		}
 	};

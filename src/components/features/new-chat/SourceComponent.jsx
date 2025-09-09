@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
+import { logError } from '@/lib/logger';
 import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 const ExcelFileContent = ({
@@ -120,6 +121,7 @@ const SourceComponent = ({
 			return await getDataSourceById(datasourceId);
 		} catch (error) {
 			console.error('Error fetching data source:', error);
+			logError(error, { feature: 'chat', action: 'fetch-datasource' });
 		}
 	}
 
