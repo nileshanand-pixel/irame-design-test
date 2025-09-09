@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 import { loginWithGoogle } from '../services/auth.service';
+import { logError } from '@/lib/logger';
 
 export const useOAuthLogin = (data) => {
 	const navigate = useNavigate();
@@ -21,6 +22,7 @@ export const useOAuthLogin = (data) => {
 			navigate('/app/new-chat?source=login');
 		} catch (err) {
 			console.log(err);
+			logError(err, { feature: 'login', action: 'google-oauth' });
 			navigate('/');
 		}
 	};

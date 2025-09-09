@@ -13,6 +13,7 @@ import {
 import BoxLoader from '@/components/elements/loading/BoxLoader';
 import useAuth from '@/hooks/useAuth';
 import { getErrorAnalyticsProps, trackEvent, trackUser } from '@/lib/mixpanel';
+import { logError } from '@/lib/logger';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { grantType } from '@/config/auth.config';
 import { createOrUpdateUserSession } from '../user-session-manager/helper';
@@ -99,6 +100,7 @@ const SignInSignUp = () => {
 			navigate('/app/new-chat?source=login');
 		} catch (error) {
 			console.log(error);
+			logError(error, { feature: 'login', action: 'email-login' });
 			trackEvent(
 				EVENTS_ENUM.LOGIN_FAILURE,
 				EVENTS_REGISTRY.LOGIN_FAILURE,
@@ -158,6 +160,7 @@ const SignInSignUp = () => {
 			})
 			.catch((error) => {
 				console.error(error);
+				logError(error, { feature: 'login', action: 'google-login' });
 				const params = new URLSearchParams(window.location.search);
 				params.delete('code');
 				window.history.replaceState(
@@ -206,6 +209,11 @@ const SignInSignUp = () => {
 
 	useEffect(() => {
 		if (router.query?.error) {
+			logError(new Error('Login error from query param'), {
+				feature: 'login',
+				action: 'query-error',
+				extra: { error: router.query?.error },
+			});
 			toast.error('Something went wrong while logging in');
 		}
 	}, [router.query]);
