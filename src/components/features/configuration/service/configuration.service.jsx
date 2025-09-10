@@ -183,13 +183,39 @@ export const copyFiles = async (data, targetDatasourceId) => {
 
 export const removeFiles = async (fileIds, datasourceId) => {
 	try {
+		if (!fileIds || !fileIds.length) {
+			throw new Error('No file IDs provided for deletion');
+		}
+		if (!datasourceId) {
+			throw new Error('Datasource ID is required for file deletion');
+		}
+
 		const response = await axiosClientV1.delete(`/files/${datasourceId}`, {
 			headers: { 'Content-Type': 'application/json' },
 			data: fileIds,
 		});
+
+		// Check if the response indicates any failures
+		if (
+			response.data &&
+			response.data.errors &&
+			response.data.errors.length > 0
+		) {
+			const errorMessages = response.data.errors.join(', ');
+			throw new Error(`Some files could not be deleted: ${errorMessages}`);
+		}
+
 		return response.data;
 	} catch (error) {
 		console.error('Error removing files from datasource', error);
+		// Provide more specific error messages
+		if (error.response?.status === 404) {
+			throw new Error('Files or datasource not found');
+		} else if (error.response?.status === 403) {
+			throw new Error('Permission denied to delete files');
+		} else if (error.response?.status >= 500) {
+			throw new Error('Server error occurred while deleting files');
+		}
 		throw error;
 	}
 };

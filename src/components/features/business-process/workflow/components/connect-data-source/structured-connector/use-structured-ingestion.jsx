@@ -1,45 +1,3 @@
-// useDatasourceIngest.js
-// React + JavaScript (no TS). Production-lean orchestrator for datasource ingestion.
-// - Single hook manages: local uploads (concurrency-limited), add-to-datasource, datasource-level polling, hydration, deletes, and URL-based adds.
-// - Stages: uploading -> uploaded (ephemeral) -> processing -> success | error (terminal)
-// - Polling always by datasourceId via getDatasourceV2; auto-start when any `processing`, auto-stop when none.
-// - No retries; delete & re-add or reupload.
-//
-// === Usage (pseudocode) ===
-// const {
-//   items,
-//   countsByStatus,
-//   isPolling,
-//   hasUploading,
-//   addLocalFiles,
-//   startUploads,
-//   cancelUpload,
-//   deleteItems,
-//   addByUrls,
-//   removeSheets,
-//   hydrate,
-//   startPolling,
-//   stopPolling,
-//   reset,
-// } = useDatasourceIngest({
-//   datasourceId,
-//   adapters: {
-//     getDatasource: getDatasourceV2, // (datasourceId) => Promise<{ files: [...] }>
-//     addFilesToDatasource: addFiles, // (payload) => Promise<{ files: [{ external_id, file_name, status, error_message? }] }>
-//     deleteFiles: (fileIds) => Promise<any>, // treat 404 as success upstream if you like
-//     uploadFile: uploadFile, // (file, onProgress, cancelToken, datasourceId) => Promise<{ url, ... }>
-//   },
-//   pollIntervalMs: 2000,
-//   uploadConcurrency: 3,
-//   allowDuplicateNames: true,
-//   autoStartUploads: true,
-//   warnOnUnloadWhenUploading: true,
-//   autoAddAfterUpload: true,
-//   hydrateOnMount: true,
-// });
-//
-// Render a dumb table/list from `items` and wire these controls.
-
 import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -78,15 +36,14 @@ export function useDatasourceIngest({
 	} = adapters;
 	const { setUrlParam, toast } = methods || {};
 
-	// ===== Local state =====
-	const [items, setItems] = useState([]); // FileItem[]
-	const [uploadQueue, setUploadQueue] = useState([]); // array of item ids
+	const [items, setItems] = useState([]);
+	const [uploadQueue, setUploadQueue] = useState([]);
 	const [datasourceId, setDatasourceId] = useState(initialDatasourceId);
 	const [creatingDS, setCreatingDS] = useState(false);
 	const [selectedDataSources, setSelectedDataSources] = useState([]);
-	const cancelTokensRef = useRef({}); // { [itemId]: CancelTokenSource }
+	const cancelTokensRef = useRef({});
 
-	// ===== Datasource creation effect =====
+	// Datasource creation effect
 	useEffect(() => {
 		async function initDS() {
 			if (datasourceId || creatingDS || !createEmptyDatasource) return;
@@ -112,7 +69,6 @@ export function useDatasourceIngest({
 		initDS();
 	}, [datasourceId, creatingDS, createEmptyDatasource, setUrlParam, toast]);
 
-	// Derived
 	const countsByStatus = useMemo(() => {
 		const counts = {
 			uploading: 0,
@@ -134,7 +90,7 @@ export function useDatasourceIngest({
 		[items],
 	);
 
-	// ===== Before-unload guard (uploading only) =====
+	// Before-unload guard (uploading only)
 	useEffect(() => {
 		if (!warnOnUnloadWhenUploading) return;
 		const handler = (e) => {
@@ -147,7 +103,6 @@ export function useDatasourceIngest({
 		}
 	}, [hasUploading, warnOnUnloadWhenUploading]);
 
-	// ===== Helpers =====
 	const now = () => Date.now();
 
 	const upsertItems = useCallback((next) => {
@@ -160,7 +115,6 @@ export function useDatasourceIngest({
 	}, []);
 
 	const replaceItemsByServer = useCallback((serverFiles) => {
-		// Merge server truth. Keep local uploading entries intact.
 		setItems((prev) => {
 			const byServerId = new Map();
 			for (const f of serverFiles || []) {
@@ -196,7 +150,6 @@ export function useDatasourceIngest({
 			const out = [];
 			const seenServerIds = new Set(byServerId.keys());
 
-			// 1) Update existing items with server truth if they have serverId
 			for (const it of prev) {
 				if (it.serverId && byServerId.has(it.serverId)) {
 					const sv = byServerId.get(it.serverId);
@@ -206,23 +159,20 @@ export function useDatasourceIngest({
 						status: sv.status,
 						error: sv.error,
 						meta: { ...(it.meta || {}), ...(sv.meta || {}) },
-						// Preserve progress for files that were uploading
 						progress: sv.status === 'success' ? 100 : it.progress,
 						updatedAt: now(),
 					});
 				} else {
-					// Keep local-only items (e.g., uploading)
 					out.push(it);
 				}
 			}
 
-			// 2) Add any server items we didn't know about (e.g., pre-existing files)
 			for (const sid of seenServerIds) {
 				const already = out.find((x) => x.serverId === sid);
 				if (already) continue;
 				const sv = byServerId.get(sid);
 				out.push({
-					id: sid, // if no client id, use serverId
+					id: sid,
 					serverId: sid,
 					name: sv.name,
 					size: 0,
@@ -241,7 +191,7 @@ export function useDatasourceIngest({
 
 	const uniqueName = useCallback(
 		(name, existingNames) => {
-			if (!allowDuplicateNames) return name; // not used per your config, but kept for completeness
+			if (!allowDuplicateNames) return name;
 			if (!existingNames.has(name)) return name;
 			const dot = name.lastIndexOf('.');
 			const base = dot !== -1 ? name.slice(0, dot) : name;
@@ -257,21 +207,19 @@ export function useDatasourceIngest({
 		[allowDuplicateNames],
 	);
 
-	// ===== Hydration =====
+	// Hydration
 	const hydrate = useCallback(async () => {
 		if (!getDatasource || !datasourceId) return;
 		const ds = await getDatasource(datasourceId);
-		// Expect ds.files array
 		replaceItemsByServer(ds.files || []);
 	}, [datasourceId, getDatasource, replaceItemsByServer]);
 
 	useEffect(() => {
 		if (!hydrateOnMount || !datasourceId) return;
 		hydrate().catch(() => {});
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [datasourceId]);
 
-	// ===== Add local files =====
+	// Add local files
 	const addLocalFiles = useCallback(
 		(fileList) => {
 			if (!datasourceId) {
@@ -308,7 +256,6 @@ export function useDatasourceIngest({
 				return [...prev, ...itemsToAdd];
 			});
 
-			// Add to upload queue immediately with the real IDs
 			const newIds = newItems.map((item) => item.id);
 			setUploadQueue((prevQ) => [...prevQ, ...newIds]);
 
@@ -317,7 +264,7 @@ export function useDatasourceIngest({
 		[autoStartUploads, uniqueName, datasourceId, toast],
 	);
 
-	// ===== Upload worker (concurrency-limited) =====
+	// Upload worker (concurrency-limited)
 	const activeUploadsRef = useRef(0);
 	const queueRef = useRef([]);
 
@@ -361,7 +308,6 @@ export function useDatasourceIngest({
 		const nextId = queueRef.current[0];
 		if (!nextId) return;
 
-		// Pop from queue immediately to avoid double-start
 		setUploadQueue((q) => q.slice(1));
 		activeUploadsRef.current += 1;
 
@@ -380,15 +326,12 @@ export function useDatasourceIngest({
 				markProgress(nextId, pct);
 			};
 
-			// 1) Upload to S3 via provided adapter
 			uploadFile(item.meta.localFile, onProgress, source.token, datasourceId)
 				.then((uploadMeta) => {
-					// 2) Mark uploaded
 					markStatus(nextId, 'uploaded', {
 						progress: 100,
 						meta: { ...(item.meta || {}), ...(uploadMeta || {}) },
 					});
-					// 3) Auto add to datasource
 					if (!autoAddAfterUpload) return null;
 					const file_url = uploadMeta?.url || uploadMeta?.file_url;
 					if (!file_url)
@@ -399,7 +342,7 @@ export function useDatasourceIngest({
 					});
 				})
 				.then((addResp) => {
-					if (!addResp) return; // if autoAddAfterUpload=false
+					if (!addResp) return;
 					const f = Array.isArray(addResp.files) ? addResp.files[0] : null;
 					if (!f)
 						throw new Error(
@@ -419,8 +362,7 @@ export function useDatasourceIngest({
 					});
 				})
 				.catch((err) => {
-					if (axios.isCancel(err)) return; // user cancel
-					// Upload or add failure
+					if (axios.isCancel(err)) return;
 					const stage = (item.progress || 0) > 0 ? 'add' : 'upload';
 					markStatus(nextId, 'error', {
 						error: {
@@ -432,7 +374,6 @@ export function useDatasourceIngest({
 				.finally(() => {
 					delete cancelTokensRef.current[nextId];
 					activeUploadsRef.current -= 1;
-					// Kick off next
 					queueMicrotask(runNextUpload);
 				});
 
@@ -448,22 +389,19 @@ export function useDatasourceIngest({
 		markStatus,
 	]);
 
-	// Drive worker
 	useEffect(() => {
 		if (!autoStartUploads) return;
 		if (activeUploadsRef.current < uploadConcurrency && uploadQueue.length > 0) {
 			runNextUpload();
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [uploadQueue, uploadConcurrency, autoStartUploads]);
 
-	// Manual trigger for specific ids (optional)
 	const startUploads = useCallback((ids) => {
-		if (!ids || !ids.length) return; // normally autoStart handles new files
+		if (!ids || !ids.length) return;
 		setUploadQueue((q) => [...q, ...ids.filter((id) => !q.includes(id))]);
 	}, []);
 
-	// ===== Cancel/Remove (uploading only) =====
+	// Cancel/Remove (uploading only)
 	const cancelUpload = useCallback((id) => {
 		const src = cancelTokensRef.current[id];
 		if (src) src.cancel(`User cancelled ${id}`);
@@ -472,49 +410,111 @@ export function useDatasourceIngest({
 		setUploadQueue((q) => q.filter((x) => x !== id));
 	}, []);
 
-	// ===== Delete items (non-uploading). Bulk-safe except uploading which is ignored. =====
+	// Delete items (non-uploading)
 	const deleteItems = useCallback(
 		async (ids) => {
-			if (!ids || !ids.length) return;
+			console.log('deleteItems called with:', ids);
+			if (!ids || !ids.length)
+				return { success: false, error: 'No items to delete' };
+			if (!datasourceId)
+				return { success: false, error: 'No datasource ID available' };
+
 			const toDelete = [];
-			const uploadingSkipped = [];
+			const toCancel = [];
+			const itemsToRemove = [];
 
-			setItems((prev) => {
-				const map = new Map(prev.map((it) => [it.id, it]));
-				for (const id of ids) {
-					const it = map.get(id);
-					if (!it) continue;
-					if (it.status === 'uploading') {
-						uploadingSkipped.push(id);
-						continue;
+			// First pass: categorize items and collect what needs to be deleted
+			console.log('Current items:', items.length);
+			for (const id of ids) {
+				// Enhanced ID matching to handle all possible ID formats
+				const it = items.find(
+					(item) =>
+						item.id === id || item.serverId === id || item.name === id,
+				);
+				console.log('Found item for id', id, ':', it);
+				if (!it) continue;
+
+				if (it.status === 'uploading') {
+					// For uploading files, we need to cancel them
+					toCancel.push(it.id);
+				} else {
+					// For non-uploading files, prepare for deletion
+					itemsToRemove.push(it.id);
+					if (it.serverId) {
+						toDelete.push(it.serverId);
 					}
-					if (it.serverId) toDelete.push(it.serverId);
-				}
-				return prev;
-			});
-
-			if (toDelete.length && deleteFiles && datasourceId) {
-				try {
-					await deleteFiles(toDelete, datasourceId);
-				} catch (err) {
-					// If the backend bubbles mixed results, caller UI should reflect errors; for now, proceed best-effort.
-					// 404 semantics should be handled inside deleteFiles adapter or by backend.
 				}
 			}
 
-			// Remove locally for all non-uploading
-			setItems((prev) =>
-				prev.filter(
-					(it) => !ids.includes(it.id) || it.status === 'uploading',
-				),
-			);
-			// Note: uploading were intentionally skipped per product rule.
-			return { uploadingSkipped };
+			console.log('toCancel:', toCancel);
+			console.log('toDelete:', toDelete);
+			console.log('itemsToRemove:', itemsToRemove);
+
+			// Cancel uploading files first
+			for (const cancelId of toCancel) {
+				const src = cancelTokensRef.current[cancelId];
+				if (src) src.cancel(`User cancelled ${cancelId}`);
+				delete cancelTokensRef.current[cancelId];
+			}
+
+			let serverDeleteSuccess = true;
+			let serverError = null;
+
+			// Delete from server if we have items to delete
+			if (toDelete.length > 0 && deleteFiles) {
+				try {
+					console.log('Deleting from server:', toDelete);
+					await deleteFiles(toDelete, datasourceId);
+					console.log('Server deletion successful');
+				} catch (err) {
+					serverDeleteSuccess = false;
+					serverError =
+						err?.message || 'Failed to delete files from server';
+					console.error('Server delete failed:', err);
+				}
+			} else if (toDelete.length === 0) {
+				console.log('No server items to delete');
+			}
+
+			// Always update local state for cancelled items, and for deleted items only if server deletion was successful
+			const allIdsToRemove = [...toCancel];
+			if (serverDeleteSuccess) {
+				allIdsToRemove.push(...itemsToRemove);
+			}
+
+			console.log('Removing from local state:', allIdsToRemove);
+			if (allIdsToRemove.length > 0) {
+				setItems((prev) => {
+					const filtered = prev.filter(
+						(it) => !allIdsToRemove.includes(it.id),
+					);
+					console.log(
+						'Items before filter:',
+						prev.length,
+						'Items after filter:',
+						filtered.length,
+					);
+					return filtered;
+				});
+
+				// Remove from upload queue
+				setUploadQueue((q) => q.filter((id) => !toCancel.includes(id)));
+			}
+
+			const result = {
+				success: serverDeleteSuccess || toDelete.length === 0,
+				error: serverError,
+				cancelledCount: toCancel.length,
+				deletedCount: serverDeleteSuccess ? toDelete.length : 0,
+			};
+
+			console.log('deleteItems result:', result);
+			return result;
 		},
-		[deleteFiles, datasourceId],
+		[deleteFiles, datasourceId, items],
 	);
 
-	// ===== Add existing files from datasources (with success status) =====
+	// Add existing files from datasources (with success status)
 	const addExistingFiles = useCallback((selectedDS, files) => {
 		setSelectedDataSources(selectedDS);
 
@@ -526,7 +526,7 @@ export function useDatasourceIngest({
 				name: file.filename || file.file_name || file.name || 'unknown',
 				size: file.size || 0,
 				type: file.type || 'unknown',
-				status: 'success', // Add existing files as successful
+				status: 'success',
 				progress: 100,
 				meta: {
 					url: file.url,
@@ -558,7 +558,7 @@ export function useDatasourceIngest({
 		});
 	}, []);
 
-	// ===== Add by URLs (skip upload) =====
+	// Add by URLs (skip upload)
 	const addByUrls = useCallback(
 		async (urls) => {
 			if (!urls || !urls.length) return [];
@@ -601,7 +601,7 @@ export function useDatasourceIngest({
 		[addFilesToDatasource, datasourceId],
 	);
 
-	// ===== Polling =====
+	// Polling
 	const pollTimerRef = useRef(null);
 	const isPolling = !!pollTimerRef.current;
 
@@ -625,14 +625,13 @@ export function useDatasourceIngest({
 		}
 	}, []);
 
-	// Auto start/stop based on local processing presence
 	useEffect(() => {
 		if (hasProcessing) startPolling();
 		else stopPolling();
 		return () => {};
 	}, [hasProcessing, startPolling, stopPolling]);
 
-	// ===== Remove sheets (frontend-only for now) =====
+	// Remove sheets (frontend-only)
 	const removeSheets = useCallback((itemId, sheetIds) => {
 		if (!sheetIds || !sheetIds.length) return;
 		setItems((prev) =>
@@ -650,9 +649,8 @@ export function useDatasourceIngest({
 		);
 	}, []);
 
-	// ===== Reset =====
+	// Reset
 	const reset = useCallback(() => {
-		// Cancel all uploads
 		for (const id in cancelTokensRef.current) {
 			try {
 				cancelTokensRef.current[id]?.cancel('reset');
@@ -664,7 +662,6 @@ export function useDatasourceIngest({
 		setItems([]);
 	}, [stopPolling]);
 
-	// Cleanup on unmount
 	useEffect(
 		() => () => {
 			reset();
@@ -673,7 +670,6 @@ export function useDatasourceIngest({
 	);
 
 	return {
-		// state
 		items,
 		countsByStatus,
 		isPolling,
@@ -682,7 +678,6 @@ export function useDatasourceIngest({
 		datasourceId,
 		creatingDS,
 		selectedDataSources,
-		// controls
 		addLocalFiles,
 		startUploads,
 		cancelUpload,
