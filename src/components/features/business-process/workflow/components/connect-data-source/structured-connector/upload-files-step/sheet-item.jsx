@@ -15,12 +15,10 @@ export const SheetItem = ({
 	onDeleteSheet,
 	isDeleting = false,
 }) => {
+	// sheet.status = 'FAILED'
 	const getStatusIcon = () => {
 		if (sheet.status === 'FAILED' || sheet.status === 'ERROR') {
 			return <Warning weight="fill" className="w-4 h-4 text-red-500" />;
-		}
-		if (sheet.status === 'SUCCESS') {
-			return <CheckCircle weight="fill" className="w-4 h-4 text-green-500" />;
 		}
 		return null;
 	};
@@ -29,10 +27,7 @@ export const SheetItem = ({
 		if (sheet.status === 'FAILED' || sheet.status === 'ERROR') {
 			return 'Processing Failed';
 		}
-		if (sheet.status === 'SUCCESS') {
-			return 'Success';
-		}
-		return sheet.status || 'Unknown';
+		return '';
 	};
 
 	const handleDelete = () => {
@@ -74,10 +69,10 @@ export const SheetItem = ({
 	};
 
 	return (
-		<div className="flex items-center justify-between border-l-2 border-gray-100 pl-4 py-2 ml-4">
+		<div className="flex items-center justify-between border-l-2 border-gray-100 pl-2 py-2 ml-4">
 			<div className="flex items-center gap-3 flex-1">
-				<div className="w-8 h-8 flex items-center justify-center rounded-md border border-gray-300 bg-blue-50">
-					<span className="text-xs font-bold text-blue-600">SH</span>
+				<div className="w-fit px-2 py-1 flex items-center justify-center rounded-sm border border-gray-300 bg-blue-50">
+					<span className="text-xs  text-purple-80">EXCEL</span>
 				</div>
 
 				<div className="flex flex-1 justify-between items-center">

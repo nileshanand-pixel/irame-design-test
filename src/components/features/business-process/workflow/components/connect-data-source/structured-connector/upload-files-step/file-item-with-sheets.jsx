@@ -51,13 +51,13 @@ export const FileItemWithSheets = ({
 	const sheetCount = hasSheets ? file.meta.sheets.length : 0;
 
 	// Status colors and icons
-	const getStatusColor = () => {
-		if (isError) return 'text-red-500 bg-red-50 border-red-200';
-		if (isSuccess) return 'text-green-500 bg-green-50 border-green-200';
-		if (isProcessing) return 'text-blue-500 bg-blue-50 border-blue-200';
-		if (isUploading) return 'text-orange-500 bg-orange-50 border-orange-200';
-		return 'bg-white border-gray-200';
-	};
+	// const getStatusColor = () => {
+	// 	if (isError) return 'text-red-500 bg-red-50 border-red-200';
+	// 	if (isSuccess) return 'text-green-500 bg-green-50 border-green-200';
+	// 	if (isProcessing) return 'text-blue-500 bg-blue-50 border-blue-200';
+	// 	if (isUploading) return 'text-orange-500 bg-orange-50 border-orange-200';
+	// 	return 'bg-white border-gray-200';
+	// };
 
 	const getStatusIcon = () => {
 		if (isError)
