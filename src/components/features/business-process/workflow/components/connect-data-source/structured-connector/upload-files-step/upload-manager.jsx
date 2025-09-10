@@ -10,6 +10,8 @@ import {
 	addFiles,
 	removeFiles,
 	uploadFileWithProgress,
+	copyFiles,
+	removeSheets,
 } from '@/components/features/configuration/service/configuration.service';
 import { toast } from '@/lib/toast';
 
@@ -28,6 +30,7 @@ function setUrlParam(param, value) {
 export const UploadManager = () => {
 	const initialDatasourceId = getURLSearchParams().get(TEMP_DS_PARAM);
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
+	const [deletingSheets, setDeletingSheets] = useState(new Set());
 
 	const deleteFilesMutation = useMutation({
 		mutationFn: async (fileIds) => {
@@ -56,6 +59,7 @@ export const UploadManager = () => {
 			},
 			uploadFile: uploadFileWithProgress,
 			createEmptyDatasource,
+			copyFiles,
 		}),
 		[],
 	);
@@ -78,6 +82,8 @@ export const UploadManager = () => {
 		deleteItems,
 		addExistingFiles,
 		setSelectedDataSources,
+		copyFilesFromDataSources,
+		removeSheets: removeSheetsFrontend,
 	} = useDatasourceIngest({
 		initialDatasourceId,
 		adapters,
@@ -107,15 +113,71 @@ export const UploadManager = () => {
 		e.target.value = '';
 	};
 
-	const handleChooseExisting = (selectedDS) => {
-		const files = selectedDS.flatMap((ds) =>
-			(ds.processed_files?.files || []).map((file) => ({
-				...file,
-				datasource_id: ds.datasource_id,
-				datasource_name: ds.name,
-			})),
-		);
-		addExistingFiles(selectedDS, files);
+	const handleChooseExisting = async (selectedDS) => {
+		if (!datasourceId) {
+			toast.error('Upload session not ready');
+			return;
+		}
+
+		// Only copy datasources that are not already added
+		const notAddedDS = selectedDS.filter((ds) => !ds.added);
+		if (notAddedDS.length === 0) {
+			toast.info('All selected datasources already added');
+			return;
+		}
+
+		try {
+			// Use the hook's function to copy files
+			const result = await copyFilesFromDataSources(notAddedDS);
+
+			if (result && result?.duplicated_files?.length) {
+				// Mark copied datasources as added
+				const updatedSelected = selectedDS.map((ds) =>
+					notAddedDS.some((n) => n.datasource_id === ds.datasource_id)
+						? { ...ds, added: true }
+						: ds,
+				);
+				setSelectedDataSources(updatedSelected);
+
+				// Only add duplicated files, matching by original_file_id
+				const duplicatedFiles = result.duplicated_files.map((dup) => {
+					// Find the datasource containing the original file
+					const ds = updatedSelected.find(
+						(ds) =>
+							ds.datasource_id === dup.source_datasource_id &&
+							Array.isArray(ds.raw_files) &&
+							ds.raw_files.some(
+								(file) => file.id === dup.original_file_id,
+							),
+					);
+					const origFile =
+						ds?.raw_files?.find(
+							(file) => file.id === dup.original_file_id,
+						) || {};
+					return {
+						...origFile,
+						id: dup.new_file_id,
+						name: dup.file_name,
+						datasource_id: ds?.datasource_id,
+						datasource_name: ds?.name,
+					};
+				});
+
+				// Add to local state
+				addExistingFiles(updatedSelected, duplicatedFiles);
+
+				toast.success(
+					`Successfully added ${duplicatedFiles.length} file(s)`,
+				);
+			} else {
+				toast.error('Failed to copy files');
+			}
+		} catch (error) {
+			console.error('Error copying files:', error);
+			const errorMessage =
+				error.message || 'Failed to copy files from selected datasources';
+			toast.error(errorMessage);
+		}
 	};
 
 	const handleDelete = async (fileToDelete) => {
@@ -188,6 +250,68 @@ export const UploadManager = () => {
 		}
 	};
 
+	const handleDeleteSheet = async (file, sheet, isLastSheet) => {
+		const fileId = file.serverId || file.id;
+		const fileName = file.name || file.filename;
+		const sheetName = sheet.worksheet;
+
+		if (!fileId) {
+			toast.error('Unable to delete sheet - file ID not found');
+			return;
+		}
+
+		let confirmHeader, confirmDescription;
+		if (isLastSheet) {
+			confirmHeader = 'Delete last sheet?';
+			confirmDescription = `This is the last sheet in "${fileName}". Deleting it will also delete the entire file. This action is permanent and cannot be undone.`;
+		} else {
+			confirmHeader = 'Delete sheet?';
+			confirmDescription = `Are you sure you want to delete sheet "${sheetName}" from "${fileName}"? This action is permanent and cannot be undone.`;
+		}
+
+		const confirmed = await confirm({
+			header: confirmHeader,
+			description: confirmDescription,
+		});
+
+		if (!confirmed) return;
+
+		// Add sheet to deleting state
+		setDeletingSheets((prev) => new Set([...prev, sheet.id]));
+
+		try {
+			if (isLastSheet) {
+				// Delete the entire file if it's the last sheet
+				const result = await deleteItems([fileId]);
+				if (result?.success) {
+					toast.success(`File "${fileName}" deleted successfully`);
+				} else if (result?.error) {
+					toast.error(`Failed to delete file: ${result.error}`);
+				}
+			} else {
+				// Delete just the sheet
+				await removeSheets(fileId, [sheetName]);
+
+				// Update frontend state to remove the sheet
+				removeSheetsFrontend(fileId, [sheet.id]);
+
+				toast.success(`Sheet "${sheetName}" deleted successfully`);
+			}
+		} catch (error) {
+			console.error('Error deleting sheet:', error);
+			const errorMessage =
+				error.message || `Failed to delete sheet "${sheetName}"`;
+			toast.error(errorMessage);
+		} finally {
+			// Remove sheet from deleting state
+			setDeletingSheets((prev) => {
+				const newSet = new Set(prev);
+				newSet.delete(sheet.id);
+				return newSet;
+			});
+		}
+	};
+
 	const progress = useMemo(() => {
 		const progressMap = {};
 		items.forEach((item) => {
@@ -222,9 +346,11 @@ export const UploadManager = () => {
 						onUpload={handleFilesListUpload}
 						onDelete={handleDelete}
 						onBulkDelete={handleBulkDelete}
+						onDeleteSheet={handleDeleteSheet}
 						selectedDataSources={selectedDataSources}
 						onChooseExisting={handleChooseExisting}
 						creatingDS={creatingDS}
+						deletingSheets={deletingSheets}
 					/>
 				</>
 			) : (

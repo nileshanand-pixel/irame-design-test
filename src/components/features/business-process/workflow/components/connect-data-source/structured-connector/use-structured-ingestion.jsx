@@ -33,6 +33,7 @@ export function useDatasourceIngest({
 		deleteFiles,
 		uploadFile,
 		createEmptyDatasource,
+		copyFiles,
 	} = adapters;
 	const { setUrlParam, toast } = methods || {};
 
@@ -649,6 +650,44 @@ export function useDatasourceIngest({
 		);
 	}, []);
 
+	// Copy files from datasources
+	const copyFilesFromDataSources = useCallback(
+		async (selectedDS) => {
+			if (!copyFiles || !datasourceId) {
+				throw new Error('Copy files not available or no datasource ID');
+			}
+
+			// Prepare the payload for copyFiles API
+			const datasources = selectedDS
+				.map((ds) => ({
+					id: ds.datasource_id,
+					files: (ds.raw_files || []).map((file) => ({
+						file_id: file.file_id,
+					})),
+				}))
+				.filter((ds) => ds.files.length > 0); // Only include datasources that have files
+
+			if (datasources.length === 0) {
+				throw new Error('No files found in selected datasources');
+			}
+
+			const payload = { datasources };
+
+			// Call the copyFiles API
+			const result = await copyFiles(payload, datasourceId);
+
+			// Trigger hydration to refresh the datasource state
+			if (result && getDatasource) {
+				setTimeout(() => {
+					hydrate().catch(() => {});
+				}, 1000); // Small delay to allow backend processing
+			}
+
+			return result;
+		},
+		[copyFiles, datasourceId, getDatasource, hydrate],
+	);
+
 	// Reset
 	const reset = useCallback(() => {
 		for (const id in cancelTokensRef.current) {
@@ -686,6 +725,7 @@ export function useDatasourceIngest({
 		addExistingFiles,
 		setSelectedDataSources,
 		removeSheets,
+		copyFilesFromDataSources,
 		hydrate,
 		startPolling,
 		stopPolling,
