@@ -1,88 +1,124 @@
-import { useState } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { DropZone } from './drop-zone';
 import { FilesList } from './files-list';
+import { useDatasourceIngest } from '../use-structured-ingestion';
+import {
+	createEmptyDatasource,
+	getDatasourceV2,
+	addFiles,
+	removeFiles,
+	uploadFileWithProgress,
+} from '@/components/features/configuration/service/configuration.service';
+import { toast } from '@/lib/toast';
+
+// Helpers to read & write URL params without adding history entries.
+const getURLSearchParams = () => new URLSearchParams(window.location.search);
+const TEMP_DS_PARAM = 'datasource_id';
+
+function setUrlParam(param, value) {
+	const sp = getURLSearchParams();
+	if (value) sp.set(param, value);
+	else sp.delete(param);
+	const newUrl = `${window.location.pathname}?${sp.toString()}${window.location.hash}`;
+	window.history.replaceState({}, '', newUrl);
+}
 
 export const UploadManager = () => {
-	// All files shown in FilesList (each with all metadata, including file id, datasource id, etc.)
-	const [uploadedFiles, setUploadedFiles] = useState([]);
-	// Array of selected data source objects (each with all metadata and files)
-	const [selectedDataSources, setSelectedDataSources] = useState([]);
+	// Get initial datasourceId from URL
+	const initialDatasourceId = getURLSearchParams().get(TEMP_DS_PARAM);
 
-	// Add files (from upload)
-	const handleFilesAdded = (files) => {
-		const newFiles = files.map((file) => ({
-			name: file.name,
-			file,
-			// No datasource_id for uploaded files
-		}));
-		setUploadedFiles((prev) => [...prev, ...newFiles]);
+	// Adapters for the ingestion hook
+	const adapters = useMemo(
+		() => ({
+			getDatasource: getDatasourceV2,
+			addFilesToDatasource: addFiles,
+			deleteFiles: removeFiles,
+			uploadFile: uploadFileWithProgress,
+			createEmptyDatasource,
+		}),
+		[],
+	);
+
+	// Additional methods for the hook
+	const methods = useMemo(
+		() => ({
+			setUrlParam,
+			toast,
+		}),
+		[],
+	);
+
+	// Use the ingestion hook - it will handle everything including datasource creation
+	const {
+		items,
+		datasourceId,
+		creatingDS,
+		selectedDataSources,
+		addLocalFiles,
+		deleteItems,
+		addExistingFiles,
+		setSelectedDataSources,
+	} = useDatasourceIngest({
+		initialDatasourceId,
+		adapters,
+		methods,
+		pollIntervalMs: 2000,
+		uploadConcurrency: 3,
+		allowDuplicateNames: true,
+		autoStartUploads: true,
+		warnOnUnloadWhenUploading: true,
+		autoAddAfterUpload: true,
+		hydrateOnMount: true,
+	});
+
+	// Handle file input
+	const fileInputRef = useRef(null);
+	const handleFilesListUpload = () => {
+		if (!datasourceId) {
+			toast.error('Upload session not ready');
+			return;
+		}
+		fileInputRef.current?.click();
 	};
 
-	// 3.2.1. Implement onChooseExisting handler
+	const handleFilesListInput = (e) => {
+		const list = Array.from(e.target.files || []);
+		addLocalFiles(list);
+		e.target.value = '';
+	};
+
+	// Handle choosing existing datasources
 	const handleChooseExisting = (selectedDS) => {
-		// 3.2.2. Update selectedDataSources
-		setSelectedDataSources(selectedDS);
-		// 3.2.3. Flatten all files from selected data sources (with metadata) and add to uploadedFiles
-		const dsFiles = selectedDS.flatMap((ds) =>
+		const files = selectedDS.flatMap((ds) =>
 			(ds.processed_files?.files || []).map((file) => ({
 				...file,
 				datasource_id: ds.datasource_id,
 				datasource_name: ds.name,
 			})),
 		);
-		// 3.2.4. Remove files from unselected data sources
-		setUploadedFiles((prev) => {
-			// Remove all files that came from previously selected data sources
-			const prevDSIds = new Set(
-				selectedDataSources.map((ds) => ds.datasource_id),
-			);
-			const nonDSFiles = prev.filter(
-				(f) => !f.datasource_id || !prevDSIds.has(f.datasource_id),
-			);
-			return [...nonDSFiles, ...dsFiles];
-		});
+		addExistingFiles(selectedDS, files);
 	};
 
-	// 3.3.1. When a file is deleted, remove it from uploadedFiles
-	// 3.3.2. If no files remain for a data source, remove that data source from selectedDataSources
-	const handleDeleteFile = (fileToDelete) => {
-		setUploadedFiles((prev) => {
-			const newFiles = prev.filter((f) => f !== fileToDelete);
-			// If file was from a datasource, check if any files remain for that datasource
-			if (fileToDelete.datasource_id) {
-				const stillHasFiles = newFiles.some(
-					(f) => f.datasource_id === fileToDelete.datasource_id,
-				);
-				if (!stillHasFiles) {
-					setSelectedDataSources((dsArr) =>
-						dsArr.filter(
-							(ds) => ds.datasource_id !== fileToDelete.datasource_id,
-						),
-					);
-				}
+	// Handle delete - pass the item ID or the item itself
+	const handleDelete = (fileToDelete) => {
+		const itemId = fileToDelete.id || fileToDelete;
+		deleteItems([itemId]);
+	};
+
+	// Create progress object for backward compatibility
+	const progress = useMemo(() => {
+		const progressMap = {};
+		items.forEach((item) => {
+			if (item.progress !== undefined) {
+				progressMap[item.name] = item.progress;
 			}
-			return newFiles;
 		});
-	};
-
-	// Handler for UploadActions (open file dialog)
-	// We'll use a ref to trigger DropZone's open method from FilesList
-	// But for simplicity, we'll re-use DropZone's file input logic in both views
-	// So, we pass a handler to FilesList that opens a hidden file input
-
-	// Hidden file input for FilesList upload
-	const fileInputRef = useState(null);
-	const handleFilesListUpload = () => {
-		if (fileInputRef && fileInputRef.current) fileInputRef.current.click();
-	};
-	const handleFilesListInput = (e) => {
-		handleFilesAdded(Array.from(e.target.files));
-		e.target.value = '';
-	};
+		return progressMap;
+	}, [items]);
 
 	return (
-		<div className="space-y-4  h-full">
-			{uploadedFiles.length > 0 ? (
+		<div className="space-y-4 h-full">
+			{items.length > 0 ? (
 				<>
 					<input
 						type="file"
@@ -93,18 +129,22 @@ export const UploadManager = () => {
 						accept=".csv,.xlsx"
 					/>
 					<FilesList
-						files={uploadedFiles}
+						files={items}
+						progress={progress}
+						datasourceId={datasourceId}
 						onUpload={handleFilesListUpload}
-						onDelete={handleDeleteFile}
+						onDelete={handleDelete}
 						selectedDataSources={selectedDataSources}
 						onChooseExisting={handleChooseExisting}
+						creatingDS={creatingDS}
 					/>
 				</>
 			) : (
 				<DropZone
-					onFilesAdded={handleFilesAdded}
+					onFilesAdded={addLocalFiles}
 					selectedDataSources={selectedDataSources}
 					onChooseExisting={handleChooseExisting}
+					creatingDS={creatingDS}
 				/>
 			)}
 		</div>
