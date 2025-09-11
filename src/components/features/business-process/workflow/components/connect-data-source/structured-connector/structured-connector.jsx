@@ -88,7 +88,16 @@ const StructuredConnector = ({ workflow }) => {
 									stepper={stepper}
 								/>
 							),
-							map_files: () => <FileMappingStep stepper={stepper} />,
+							map_files: () => (
+								<FileMappingStep
+									stepper={stepper}
+									requiredFiles={
+										workflow?.data?.required_files?.csv_files ||
+										[]
+									}
+									workflowRunDetails={runDetails}
+								/>
+							),
 							map_columns: () => (
 								<ColumnMappingStep stepper={stepper} />
 							),
