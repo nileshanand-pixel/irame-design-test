@@ -11,6 +11,7 @@ export const ToastContainer = () => {
 			stacked={true}
 			position="bottom-right"
 			hideProgressBar={true}
+			closeButton={true}
 		/>
 	);
 };

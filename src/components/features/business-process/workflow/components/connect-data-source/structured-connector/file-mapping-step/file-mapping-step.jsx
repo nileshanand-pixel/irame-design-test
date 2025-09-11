@@ -2,14 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import {
-	ArrowRight,
-	Loader,
-	Trash2,
-	AlertTriangle,
-	CheckCircle,
-	Upload,
-} from 'lucide-react';
+import { Loader, AlertTriangle } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { queryClient } from '@/lib/react-query';
@@ -26,6 +19,7 @@ import {
 	initiateWorkflowCheckV2,
 	restartWorkflowCheckV2,
 } from '../../../../../service/workflow.service';
+import { ArrowRight } from '@phosphor-icons/react';
 
 // ---------------------  generic helpers  ------------------------------
 const getFileType = (file) => {
@@ -52,6 +46,7 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 	const [fileMapping, setFileMapping] = useState({});
 	const [isValidating, setIsValidating] = useState(false);
 	const hydrated = useRef(false);
+	// const postRunHydrated = useRef(false);
 
 	/* ───────────────────────────── META FLAGS ─────────────────────────── */
 	const isPostRun = !!workflowRunDetails?.data?.file_mapping_ira;
@@ -132,7 +127,9 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 		if (
 			!isPostRun ||
 			!workflowRunDetails?.data?.file_mapping_ira ||
-			!availableFiles.length
+			!availableFiles.length ||
+			!hydrated.current
+			// postRunHydrated.current // Prevent re-hydration
 		)
 			return;
 
@@ -152,6 +149,7 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 		});
 
 		setFileMapping(mapping);
+		// postRunHydrated.current = true; // Mark as hydrated
 	}, [isPostRun, workflowRunDetails, availableFiles]);
 
 	/* ───────────────────────────── DERIVED COMPUTATIONS ─────────────────── */
@@ -159,7 +157,7 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 		() =>
 			(requiredFiles || []).map((inp) => ({
 				...inp,
-				selectedFiles: fileMapping[inp.name] || [],
+				selectedFiles: fileMapping[inp.file_name] || [],
 			})),
 		[requiredFiles, fileMapping],
 	);
@@ -183,6 +181,7 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 	/* ───────────────────────────── HANDLERS ─────────────────────────── */
 	const handleToggleMapping = (inputId, inputName, fileIds) => {
 		// Build quick lookup for AI errors (post‑run)
+		console.log(inputName, fileIds);
 		const ira = workflowRunDetails?.data?.file_mapping_ira;
 		const errorLookup = {};
 		if (ira && ira.csv_files) {
@@ -223,21 +222,13 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 			csv_files[inputName] = files.map((f) => ({
 				file_id: f.id,
 				file_url: f.file_url,
-				file_name: f.name,
+				file_name: f.file_name,
 			}));
 		});
-
-		// Get all files that are mapped
-		const mappedFiles = Object.values(csv_files).flat();
-
-		const raw_files = mappedFiles.map((f) => ({
-			file_id: f.file_id,
-			file_url: f.file_url,
-			file_name: f.file_name,
-			datasource_id: datasourceId,
-		}));
+		console.log('MAPPING', fileMapping);
 
 		return {
+			datasource_id: datasourceId,
 			// datasource_payload: {
 			// 	raw_files,
 			// 	raw_excel_files: [], // No longer needed as Excel sheets are treated as CSV files
@@ -262,7 +253,7 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 			queryClient.invalidateQueries(['workflow-runs', workflowId]);
 			if (data?.external_id) {
 				navigate(
-					`/app/business-process/${businessProcessId}/workflows/${workflowId}?run_id=${data.external_id}`,
+					`/app/business-process/${businessProcessId}/workflows/${workflowId}?run_id=${data.external_id}&&datasource_id=${data.datasource_id}`,
 				);
 			}
 		},
@@ -351,8 +342,8 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 				/>
 			</div>
 
-			{/* Footer */}
-			<div className="border-t border-[#E5E7EB] bg-[#F3F4F680] px-8 py-4 flex items-center justify-between">
+			{/* Footer (updated UI as requested, handlers/intents preserved) */}
+			<div className="border border-t-[#E5E7EB] bg-[#F3F4F680] px-8 py-4 gap-4  flex flex-shrink-0 items-center justify-end">
 				<Button
 					variant="ghost"
 					className="font-semibold bg-[#FEFEFE] border border-primary10 text-primary80"
@@ -360,6 +351,7 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 				>
 					<span>Back</span>
 				</Button>
+
 				<Button
 					className="font-semibold"
 					onClick={handleValidate}
@@ -434,11 +426,12 @@ const MappingPicker = ({ rf, files, onToggle }) => {
 	// Gather errors directly from selectedFiles
 	const errors = rf.selectedFiles
 		.filter((f) => f.status === 'error')
-		.map((f) => ({ fileName: f.file_name, error: f.errorMessage }));
+		.map((f) => ({ fileName: f.name, error: f.errorMessage }));
 
 	return (
 		<>
 			<MultiSelect
+				key={`${rf.id}-${selectedValues.join(',')}`} // Force re-render when selection changes
 				options={options}
 				defaultValue={selectedValues}
 				maxCount={2}

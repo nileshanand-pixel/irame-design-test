@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
+import { useWorkflowRunId } from '@/components/features/business-process/hooks/use-workflow-run-id';
 
 const SERVER_TO_UI_STATUS = {
 	PROCESSING: 'processing',
@@ -36,10 +37,12 @@ export function useDatasourceIngest({
 		copyFiles,
 	} = adapters;
 	const { setUrlParam, toast } = methods || {};
+	const runId = useWorkflowRunId();
 
 	const [items, setItems] = useState([]);
 	const [uploadQueue, setUploadQueue] = useState([]);
 	const [datasourceId, setDatasourceId] = useState(initialDatasourceId);
+
 	const [creatingDS, setCreatingDS] = useState(false);
 	const [selectedDataSources, setSelectedDataSources] = useState([]);
 	const cancelTokensRef = useRef({});
@@ -47,7 +50,8 @@ export function useDatasourceIngest({
 	// Datasource creation effect
 	useEffect(() => {
 		async function initDS() {
-			if (datasourceId || creatingDS || !createEmptyDatasource) return;
+			if (runId || datasourceId || creatingDS || !createEmptyDatasource)
+				return;
 			try {
 				setCreatingDS(true);
 				const res = await createEmptyDatasource({

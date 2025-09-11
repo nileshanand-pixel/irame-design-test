@@ -30,6 +30,8 @@ const StructuredConnector = ({ workflow }) => {
 	const workflowId = useWorkflowId();
 	const baseStepper = useStepper();
 
+	console.log('Connector', runId, workflowId, baseStepper);
+
 	// Poll for run details directly in the component
 	const { data: runDetails, isLoading: isRunLoading } = useQuery({
 		queryKey: ['workflow-run-details', runId],
@@ -45,21 +47,17 @@ const StructuredConnector = ({ workflow }) => {
 		},
 	});
 
-	const stepper = useStructuredStepper(
-		baseStepper,
-		steps,
-		workflowId,
-		runId,
-		runDetails,
-	);
+	const stepper = useStructuredStepper(baseStepper, steps, runDetails);
 
 	const currentIndex = utils.getIndex(stepper.current.id);
 
-	// const isProcessing =
-	// 	runDetails?.status === 'IN_QUEUE' ||
-	// 	runDetails?.status === 'COLUMN_MAPPING_DONE';
-	const isProcessing = false;
+	const isProcessing =
+		runDetails?.status === 'IN_QUEUE' ||
+		runDetails?.status === 'COLUMN_MAPPING_DONE';
+	// const isProcessing = false;
 	// if(runId && !runDetails)
+
+	if (!stepper) return null;
 
 	return (
 		<div className="space-y-6 h-full flex flex-col min-h-0">

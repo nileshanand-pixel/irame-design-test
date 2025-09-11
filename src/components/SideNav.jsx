@@ -431,7 +431,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						);
 					} else {
 						navigate(
-							`/app/business-process/${workflow.business_process_id}/workflows/${workflow.workflow_check_id}?run_id=${workflow.external_id}`,
+							`/app/business-process/${workflow.business_process_id}/workflows/${workflow.workflow_check_id}?run_id=${workflow.external_id}&datasource_id=${workflow.datasource_id}`,
 						);
 					}
 				}}
