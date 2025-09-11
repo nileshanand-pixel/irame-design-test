@@ -14,20 +14,11 @@ import {
 	removeSheets,
 } from '@/components/features/configuration/service/configuration.service';
 import { toast } from '@/lib/toast';
+import { getURLSearchParams, setUrlParam } from '@/utils/url';
 
-// Helpers to read & write URL params without adding history entries.
-const getURLSearchParams = () => new URLSearchParams(window.location.search);
 const TEMP_DS_PARAM = 'datasource_id';
 
-function setUrlParam(param, value) {
-	const sp = getURLSearchParams();
-	if (value) sp.set(param, value);
-	else sp.delete(param);
-	const newUrl = `${window.location.pathname}?${sp.toString()}${window.location.hash}`;
-	window.history.replaceState({}, '', newUrl);
-}
-
-export const UploadManager = () => {
+export const UploadManager = ({ onManagerReady }) => {
 	const initialDatasourceId = getURLSearchParams().get(TEMP_DS_PARAM);
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 	const [deletingSheets, setDeletingSheets] = useState(new Set());
@@ -325,6 +316,18 @@ export const UploadManager = () => {
 	useEffect(() => {
 		// Debug: Log items structure when it changes
 	}, [items]);
+
+	// Expose manager state to parent component
+	useEffect(() => {
+		if (onManagerReady) {
+			onManagerReady({
+				items,
+				datasourceId,
+				creatingDS,
+				selectedDataSources,
+			});
+		}
+	}, [items, datasourceId, creatingDS, selectedDataSources, onManagerReady]);
 
 	return (
 		<div className="space-y-4 h-full">

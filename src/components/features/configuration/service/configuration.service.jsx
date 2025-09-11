@@ -143,6 +143,7 @@ export const createEmptyDatasource = async (data) => {
 
 export const getDatasourceV2 = async (datasourceId) => {
 	try {
+		console.log('reached here', datasourceId);
 		const response = await axiosClientV2.get(`datasources/${datasourceId}`, {
 			headers: { 'Content-Type': 'application/json' },
 		});
@@ -276,4 +277,18 @@ export const uploadFileWithProgress = async (
 		presigned_url,
 		file_url: url,
 	};
+};
+
+export const saveDatasourceV2 = async (datasourceId, data) => {
+	try {
+		const response = await axiosClientV2.post(
+			`datasources/${datasourceId}/save`,
+			data,
+			{ headers: { 'Content-Type': 'application/json' } },
+		);
+		return response.data;
+	} catch (error) {
+		console.error('Error saving datasource v2', error);
+		throw error;
+	}
 };

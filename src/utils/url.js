@@ -23,3 +23,12 @@ export const getEntryPointFromPageUrl = (pageUrl) => {
 export function removeQueryString(url) {
 	return url.split('?')[0];
 }
+
+export const getURLSearchParams = () => new URLSearchParams(window.location.search);
+export const setUrlParam = (param, value) => {
+	const sp = getURLSearchParams();
+	if (value) sp.set(param, value);
+	else sp.delete(param);
+	const newUrl = `${window.location.pathname}?${sp.toString()}${window.location.hash}`;
+	window.history.replaceState({}, '', newUrl);
+};
