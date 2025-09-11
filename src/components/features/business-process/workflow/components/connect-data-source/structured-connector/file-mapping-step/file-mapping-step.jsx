@@ -342,7 +342,7 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 			</div>
 
 			{/* Content */}
-			<div className="flex-1 px-8 py-6">
+			<div className="flex-1 px-8 py-6 overflow-y-auto">
 				{/* File Mapping Table */}
 				<RequiredMappingTable
 					requiredFiles={requiredWithSelection}
@@ -383,7 +383,7 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 const RequiredMappingTable = ({ requiredFiles, files, onToggle }) => (
 	<div className="mb-6">
 		<h3 className="font-medium mb-3">Required File Mapping</h3>
-		<div className="border rounded-md overflow-hidden">
+		<div className="border rounded-md ">
 			<table className="min-w-full divide-y divide-gray-200">
 				<thead className="bg-gray-50">
 					<tr>
@@ -395,27 +395,27 @@ const RequiredMappingTable = ({ requiredFiles, files, onToggle }) => (
 						</th>
 					</tr>
 				</thead>
-				<tbody className="bg-white divide-y divide-gray-200">
-					{requiredFiles.map((rf) => (
-						<tr key={rf.id}>
-							<td className="px-6 py-4">
-								<div className="text-sm font-medium text-gray-900">
-									{rf.file_name}
-								</div>
-								<div className="text-sm text-gray-500">
-									{rf.description}
-								</div>
-							</td>
-							<td className="px-6 py-4">
-								<MappingPicker
-									rf={rf}
-									files={files}
-									onToggle={onToggle}
-								/>
-							</td>
-						</tr>
-					))}
-				</tbody>
+				{/* <tbody className="bg-white divide-y divide-gray-200"> */}
+				{requiredFiles.map((rf) => (
+					<tr key={rf.id}>
+						<td className="px-6 py-4">
+							<div className="text-sm font-medium text-gray-900">
+								{rf.file_name}
+							</div>
+							<div className="text-sm text-gray-500">
+								{rf.description}
+							</div>
+						</td>
+						<td className="px-6 py-4">
+							<MappingPicker
+								rf={rf}
+								files={files}
+								onToggle={onToggle}
+							/>
+						</td>
+					</tr>
+				))}
+				{/* </tbody> */}
 			</table>
 		</div>
 	</div>
@@ -424,18 +424,12 @@ const RequiredMappingTable = ({ requiredFiles, files, onToggle }) => (
 const MappingPicker = ({ rf, files, onToggle }) => {
 	const missing = rf.selectedFiles.length === 0;
 	const selectedValues = rf.selectedFiles.map((f) => f.id);
-
-	// Memoize options to prevent re-creation on every render
-	const options = useMemo(
-		() =>
-			files.map((f) => ({
-				label: f.name,
-				value: f.id,
-				disabled: EXCEL_EXTENSIONS.includes(f.type),
-				hidden: EXCEL_EXTENSIONS.includes(f.type),
-			})),
-		[files],
-	);
+	const options = [...files].map((f) => ({
+		label: f.name,
+		value: f.id,
+		disabled: EXCEL_EXTENSIONS.includes(f.type),
+		hidden: EXCEL_EXTENSIONS.includes(f.type),
+	}));
 
 	// Gather errors directly from selectedFiles
 	const errors = rf.selectedFiles
