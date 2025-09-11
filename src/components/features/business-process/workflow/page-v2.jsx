@@ -51,7 +51,7 @@ export default function WorkflowPageV2() {
 			const data = await getWorkflowRunDetails(workflowId, runId);
 			console.log(data, 'data harsh');
 			navigate(
-				`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow&dataSourceId=${data.datasource_id}`,
+				`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow&datasource_id=${data.datasource_id}`,
 			);
 		},
 		onError: (err) => {

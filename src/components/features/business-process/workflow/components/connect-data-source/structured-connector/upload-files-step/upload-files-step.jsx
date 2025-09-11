@@ -7,12 +7,12 @@ import { UploadManager } from './upload-manager';
 import { saveDatasourceV2 } from '@/components/features/configuration/service/configuration.service';
 import { toast } from '@/lib/toast';
 import { useWorkflowId } from '@/components/features/business-process/hooks/useWorkflowId';
-import { useDatasourceId } from '@/hooks/use-datasource-id';
-import { setUrlParam } from '@/utils/url';
+import { useStructuredDatasourceId } from '../hooks/datasource-context';
 
 export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 	const workflowId = useWorkflowId();
-	const datasourceId = useDatasourceId();
+	const { datasourceId, updateDatasourceId, isReady } =
+		useStructuredDatasourceId();
 	const [uploadManagerRef, setUploadManagerRef] = useState(null);
 
 	// Save datasource mutation
@@ -23,11 +23,9 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 		onSuccess: (response) => {
 			toast.success('Datasource saved successfully');
 
-			// Check if datasource ID changed and update URL if needed
-			if (response?.datasource_id) {
-				if (datasourceId !== response.datasource_id) {
-					setUrlParam('datasource_id', response.datasource_id);
-				}
+			// Check if datasource ID changed and update it via context
+			if (response?.datasource_id && datasourceId !== response.datasource_id) {
+				updateDatasourceId(response.datasource_id);
 			}
 
 			// Move to next step
@@ -121,7 +119,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 			return;
 		}
 
-		if (!datasourceId) {
+		if (!datasourceId || !isReady) {
 			toast.error('No datasource available. Please upload files first.');
 			return;
 		}

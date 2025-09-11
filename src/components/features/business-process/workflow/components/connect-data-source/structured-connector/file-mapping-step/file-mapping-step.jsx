@@ -8,11 +8,11 @@ import { MultiSelect } from '@/components/ui/multi-select';
 import { queryClient } from '@/lib/react-query';
 
 // Hooks
-import { useDatasourceId } from '@/hooks/use-datasource-id';
+import { useStructuredDatasourceId } from '../hooks/datasource-context';
+import { useStructuredDatasourceDetails } from '../hooks/use-structured-datasource-details';
 import { useBusinessProcessId } from '@/components/features/business-process/hooks/use-business-process-id';
 import { useWorkflowRunId } from '@/components/features/business-process/hooks/use-workflow-run-id';
 import { useWorkflowId } from '@/components/features/business-process/hooks/useWorkflowId';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 // API services
 import {
@@ -36,7 +36,7 @@ const EXCEL_EXTENSIONS = ['xls', 'xlsx', 'xlsb', 'xlsm', 'excel', 'csv'];
 
 export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) => {
 	const navigate = useNavigate();
-	const datasourceId = useDatasourceId();
+	const { datasourceId, isReady } = useStructuredDatasourceId();
 	const workflowId = useWorkflowId();
 	const workflowRunId = useWorkflowRunId();
 	const businessProcessId = useBusinessProcessId();
@@ -53,15 +53,9 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 
 	/* ───────────────────────────── FETCH DATASOURCE ──────────────────── */
 	const { data: datasourceDetails, isLoading: isDatasourceLoading } =
-		useDatasourceDetails({
-			datasourceId,
-			queryOptions: {
-				enabled: !!datasourceId,
-			},
-			version: 'v2',
-		});
+		useStructuredDatasourceDetails();
 
-	console.log(datasourceDetails, 'Kuldeep');
+	console.log('Kuldeep', datasourceDetails, datasourceId);
 
 	/* ───────────────────────────── HYDRATE FILES ─────────────────────────── */
 	useEffect(() => {
@@ -283,7 +277,7 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 		);
 	}
 
-	if (!datasourceId) {
+	if (!datasourceId || !isReady) {
 		return (
 			<div className="flex flex-col h-full flex-1 gap-4">
 				<div className="flex-1 flex items-center justify-center">

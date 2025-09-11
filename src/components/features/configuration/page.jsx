@@ -246,7 +246,7 @@ const Configuration = () => {
 
 	const startChatting = (data) => {
 		navigate(
-			`/app/new-chat/?step=3&dataSourceId=${data.datasource_id}&source=configuration`,
+			`/app/new-chat/?step=3&datasource_id=${data.datasource_id}&source=configuration`,
 		);
 	};
 

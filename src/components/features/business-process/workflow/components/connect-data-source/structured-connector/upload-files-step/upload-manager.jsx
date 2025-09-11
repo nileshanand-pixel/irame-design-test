@@ -2,7 +2,7 @@ import { useState, useRef, useMemo, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { DropZone } from './drop-zone';
 import { FilesList } from './files-list';
-import { useDatasourceIngest } from '../use-structured-ingestion';
+import { useDatasourceIngest } from '../hooks/use-structured-ingestion';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
 import {
 	createEmptyDatasource,
@@ -14,12 +14,10 @@ import {
 	removeSheets,
 } from '@/components/features/configuration/service/configuration.service';
 import { toast } from '@/lib/toast';
-import { getURLSearchParams, setUrlParam } from '@/utils/url';
-
-const TEMP_DS_PARAM = 'datasource_id';
+import { useStructuredDatasourceId } from '../hooks/datasource-context';
 
 export const UploadManager = ({ onManagerReady }) => {
-	const initialDatasourceId = getURLSearchParams().get(TEMP_DS_PARAM);
+	const { datasourceId, isCreating, isReady } = useStructuredDatasourceId();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 	const [deletingSheets, setDeletingSheets] = useState(new Set());
 
@@ -57,7 +55,6 @@ export const UploadManager = ({ onManagerReady }) => {
 
 	const methods = useMemo(
 		() => ({
-			setUrlParam,
 			toast,
 		}),
 		[],
@@ -66,8 +63,6 @@ export const UploadManager = ({ onManagerReady }) => {
 	// Use the ingestion hook - handles datasource creation and file management
 	const {
 		items,
-		datasourceId,
-		creatingDS,
 		selectedDataSources,
 		addLocalFiles,
 		deleteItems,
@@ -76,7 +71,7 @@ export const UploadManager = ({ onManagerReady }) => {
 		copyFilesFromDataSources,
 		removeSheets: removeSheetsFrontend,
 	} = useDatasourceIngest({
-		initialDatasourceId,
+		initialDatasourceId: datasourceId,
 		adapters,
 		methods,
 		pollIntervalMs: 2000,
@@ -91,7 +86,7 @@ export const UploadManager = ({ onManagerReady }) => {
 	const fileInputRef = useRef(null);
 
 	const handleFilesListUpload = () => {
-		if (!datasourceId) {
+		if (!datasourceId || !isReady) {
 			toast.error('Upload session not ready');
 			return;
 		}
@@ -105,7 +100,7 @@ export const UploadManager = ({ onManagerReady }) => {
 	};
 
 	const handleChooseExisting = async (selectedDS) => {
-		if (!datasourceId) {
+		if (!datasourceId || !isReady) {
 			toast.error('Upload session not ready');
 			return;
 		}
@@ -323,11 +318,11 @@ export const UploadManager = ({ onManagerReady }) => {
 			onManagerReady({
 				items,
 				datasourceId,
-				creatingDS,
+				creatingDS: isCreating,
 				selectedDataSources,
 			});
 		}
-	}, [items, datasourceId, creatingDS, selectedDataSources, onManagerReady]);
+	}, [items, datasourceId, isCreating, selectedDataSources, onManagerReady]);
 
 	return (
 		<div className="space-y-4 h-full">
@@ -352,7 +347,7 @@ export const UploadManager = ({ onManagerReady }) => {
 						onDeleteSheet={handleDeleteSheet}
 						selectedDataSources={selectedDataSources}
 						onChooseExisting={handleChooseExisting}
-						creatingDS={creatingDS}
+						creatingDS={isCreating}
 						deletingSheets={deletingSheets}
 					/>
 				</>
@@ -361,7 +356,7 @@ export const UploadManager = ({ onManagerReady }) => {
 					onFilesAdded={addLocalFiles}
 					selectedDataSources={selectedDataSources}
 					onChooseExisting={handleChooseExisting}
-					creatingDS={creatingDS}
+					creatingDS={isCreating}
 				/>
 			)}
 		</div>

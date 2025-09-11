@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { defineStepper } from '@/components/elements/stepper';
 import { StepperNav } from '../stepper-nav';
-import { useStructuredStepper } from './use-structured-stepper';
+import { useStructuredStepper } from './hooks/use-structured-stepper';
 import { useWorkflowId } from '@/components/features/business-process/hooks/useWorkflowId';
 import { useWorkflowRunId } from '@/components/features/business-process/hooks/use-workflow-run-id';
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +9,10 @@ import { getWorkflowRunDetails } from '@/components/features/business-process/se
 import { UploadFilesStep } from './upload-files-step/upload-files-step';
 import { FileMappingStep } from './file-mapping-step/file-mapping-step';
 import { ColumnMappingStep } from './column-mapping-step/column-mapping-step';
+import {
+	DatasourceProvider,
+	useStructuredDatasourceId,
+} from './hooks/datasource-context';
 
 const { useStepper, steps, utils } = defineStepper(
 	{
@@ -26,11 +30,18 @@ const { useStepper, steps, utils } = defineStepper(
 );
 
 const StructuredConnector = ({ workflow }) => {
+	return (
+		<DatasourceProvider>
+			<StructuredConnectorContent workflow={workflow} />
+		</DatasourceProvider>
+	);
+};
+
+const StructuredConnectorContent = ({ workflow }) => {
 	const runId = useWorkflowRunId();
 	const workflowId = useWorkflowId();
 	const baseStepper = useStepper();
-
-	console.log('Connector', runId, workflowId, baseStepper);
+	const { isCreating, hasRunId } = useStructuredDatasourceId();
 
 	// Poll for run details directly in the component
 	const { data: runDetails, isLoading: isRunLoading } = useQuery({
@@ -58,6 +69,20 @@ const StructuredConnector = ({ workflow }) => {
 	// if(runId && !runDetails)
 
 	if (!stepper) return null;
+
+	// Show loading when creating datasource (only for new workflows, not runs)
+	if (isCreating && !hasRunId) {
+		return (
+			<div className="space-y-6 h-full flex flex-col min-h-0">
+				<div className="flex-1 flex items-center justify-center">
+					<div className="flex flex-col items-center">
+						<div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+						<span className="ml-2 mt-2">Initializing datasource...</span>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="space-y-6 h-full flex flex-col min-h-0">

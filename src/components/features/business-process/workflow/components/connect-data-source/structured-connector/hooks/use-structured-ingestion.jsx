@@ -47,32 +47,12 @@ export function useDatasourceIngest({
 	const [selectedDataSources, setSelectedDataSources] = useState([]);
 	const cancelTokensRef = useRef({});
 
-	// Datasource creation effect
+	// Sync datasource ID from initialDatasourceId
 	useEffect(() => {
-		async function initDS() {
-			if (runId || datasourceId || creatingDS || !createEmptyDatasource)
-				return;
-			try {
-				setCreatingDS(true);
-				const res = await createEmptyDatasource({
-					datasource_type: 'system_generated',
-				});
-				if (res?.datasource_id) {
-					setDatasourceId(res.datasource_id);
-					if (setUrlParam) {
-						setUrlParam('datasource_id', res.datasource_id);
-					}
-				}
-			} catch (e) {
-				if (toast) {
-					toast.error('Failed to initialize upload session');
-				}
-			} finally {
-				setCreatingDS(false);
-			}
+		if (initialDatasourceId && initialDatasourceId !== datasourceId) {
+			setDatasourceId(initialDatasourceId);
 		}
-		initDS();
-	}, [datasourceId, creatingDS, createEmptyDatasource, setUrlParam, toast]);
+	}, [initialDatasourceId, datasourceId]);
 
 	const countsByStatus = useMemo(() => {
 		const counts = {
@@ -719,7 +699,6 @@ export function useDatasourceIngest({
 		hasUploading,
 		allTerminal,
 		datasourceId,
-		creatingDS,
 		selectedDataSources,
 		addLocalFiles,
 		startUploads,

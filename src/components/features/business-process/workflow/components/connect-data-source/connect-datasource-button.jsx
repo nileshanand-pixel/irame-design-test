@@ -2,14 +2,16 @@ import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { ConnectDatasourceModal } from './connect-datasource-modal';
 import { useWorkflowRunId } from '../../../hooks/use-workflow-run-id';
+import { useDatasourceId } from '@/hooks/use-datasource-id';
 
 export default function ConnectDatasourceButton() {
 	const runId = useWorkflowRunId();
+	const datasourceId = useDatasourceId();
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	useEffect(() => {
-		if (runId) setIsModalOpen(true);
-	}, [runId]);
+		if (runId || datasourceId) setIsModalOpen(true);
+	}, [runId, datasourceId]);
 
 	return (
 		<>

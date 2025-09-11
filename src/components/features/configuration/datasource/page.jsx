@@ -259,7 +259,7 @@ const DataSource = () => {
 							}),
 						);
 						navigate(
-							`/app/new-chat/?step=3&dataSourceId=${query?.id}&source=configuration`,
+							`/app/new-chat/?step=3&datasource_id=${query?.id}&source=configuration`,
 						);
 					}}
 				>
