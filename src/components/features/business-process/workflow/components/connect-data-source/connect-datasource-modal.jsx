@@ -7,6 +7,7 @@ import { getWorkflowDetails } from '../../../service/workflow.service';
 import UnstructuredConnector from './unstructured-connector/unstructured-connector';
 import StructuredConnector from './structured-connector/structured-connector';
 import HybridConnector from './hybrid-connector/hybrid-connector';
+import { X } from 'lucide-react';
 
 export const ConnectDatasourceModal = ({ open, setOpen }) => {
 	const workflowId = useWorkflowId();
@@ -43,20 +44,31 @@ export const ConnectDatasourceModal = ({ open, setOpen }) => {
 		}
 	};
 
+	if (!open) {
+		return '';
+	}
+
 	return (
-		<Dialog
-			open={open}
-			onEscapeKeyDown={(e) => e.preventDefault()}
-			onOpenChange={handleOpenChange}
+		<div
+			className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto p-4"
+			onClick={() => handleOpenChange(false)}
 		>
-			<DialogContent className="max-w-[90%] border p-0 flex flex-col sm:max-h-[90vh] h-[90vh] rounded-lg overflow-hidden gap-0">
-				<div className="flex items-center justify-between px-6 py-4 border-b border-[#e5e7eb] bg-white">
-					<h2 className="text-lg font-semibold text-primary100">
-						Connect Data Source
-					</h2>
+			<div
+				className="bg-white rounded-lg shadow-lg w-full max-h-[90vh] h-[90vh] max-w-[90%] flex flex-col "
+				onClick={(e) => e.stopPropagation()}
+			>
+				<div className="flex justify-between items-center p-6 border-b">
+					<h2 className="text-xl font-semibold">Connect Data Source</h2>
+					<button
+						onClick={() => handleOpenChange(false)}
+						className="text-gray-500 hover:text-gray-700"
+						aria-label="Close"
+					>
+						<X className="size-5" />
+					</button>
 				</div>
 				<div className="flex-1 min-h-0">{renderSwitcher()}</div>
-			</DialogContent>
-		</Dialog>
+			</div>
+		</div>
 	);
 };
