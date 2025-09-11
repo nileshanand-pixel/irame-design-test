@@ -197,7 +197,7 @@ const Workzone = () => {
 							() => ({
 								chat_session_id: lastQueryCurrentAnswer?.session_id,
 								query_id: lastQueryCurrentAnswer?.query_id,
-								dataset_id: lastQueryCurrentAnswer.dataSourceId,
+								dataset_id: lastQueryCurrentAnswer?.datasource_id,
 								dataset_name: resp?.datasource_name,
 								message_type: 'ai',
 								message_source: '',
@@ -388,7 +388,7 @@ const Workzone = () => {
 					() => ({
 						chat_session_id: res?.session_id,
 						query_id: res?.query_id,
-						dataset_id: query.dataSourceId,
+						dataset_id: query.datasource_id,
 						dataset_name: datasourceData?.name,
 						message_type: 'user',
 						message_source: 'manual_input',
@@ -399,7 +399,7 @@ const Workzone = () => {
 					}),
 				);
 				sendChatSessionStartedEvent({
-					dataset_id: query.dataSourceId,
+					dataset_id: query.datasource_id,
 					dataset_name: datasourceData?.name,
 					start_method: 'manual_input',
 					chat_session_id: res?.session_id,
