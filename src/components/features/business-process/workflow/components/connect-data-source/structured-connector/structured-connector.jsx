@@ -2,10 +2,10 @@ import * as React from 'react';
 import { defineStepper } from '@/components/elements/stepper';
 import { StepperNav } from '../stepper-nav';
 import { useStructuredStepper } from './use-structured-stepper';
-import { useWorkflowId } from '../../../../hooks/useWorkflowId';
-import { useWorkflowRunId } from '../../../../hooks/use-workflow-run-id';
+import { useWorkflowId } from '@/components/features/business-process/hooks/useWorkflowId';
+import { useWorkflowRunId } from '@/components/features/business-process/hooks/use-workflow-run-id';
 import { useQuery } from '@tanstack/react-query';
-import { getWorkflowRunDetails } from '../../../../service/workflow.service';
+import { getWorkflowRunDetails } from '@/components/features/business-process/service/workflow.service';
 import { UploadFilesStep } from './upload-files-step/upload-files-step';
 import { FileMappingStep } from './file-mapping-step/file-mapping-step';
 import { ColumnMappingStep } from './column-mapping-step/column-mapping-step';
@@ -97,7 +97,14 @@ const StructuredConnector = ({ workflow }) => {
 								/>
 							),
 							map_columns: () => (
-								<ColumnMappingStep stepper={stepper} />
+								<ColumnMappingStep
+									stepper={stepper}
+									requiredFiles={
+										workflow?.data?.required_files?.csv_files ||
+										[]
+									}
+									workflowRunDetails={runDetails}
+								/>
 							),
 						})}
 					</div>

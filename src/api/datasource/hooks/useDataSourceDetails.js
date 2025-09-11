@@ -12,11 +12,10 @@ export default function useDatasourceDetails({
 	const id = datasourceId || useDatasourceId();
 
 	const queryFn = async (ctx) => {
-		console.log('CTX', ctx);
 		if (version === 'v1') {
-			return getDatasourceById(id);
+			return await getDatasourceById({ id });
 		}
-		return getDatasourceV2(id);
+		return await getDatasourceV2(id);
 	};
 
 	const data = useQuery({
