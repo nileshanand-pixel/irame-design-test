@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
-export const StepperNav = ({ stepper, steps, currentIndex }) => {
+export const StepperNav = ({ stepper, steps, currentIndex, disabled }) => {
 	return (
 		<nav aria-label="Steps" className="group flex-shrink-0">
 			<ol
@@ -37,7 +37,7 @@ export const StepperNav = ({ stepper, steps, currentIndex }) => {
 									// if (index - currentIndex >= 1) return;
 									stepper.goTo(step.id);
 								}}
-								disabled={index > currentIndex} // Disable future steps
+								disabled={disabled || index > currentIndex} // Disable future steps
 							>
 								{index + 1}
 							</Button>

@@ -91,6 +91,7 @@ const StructuredConnectorContent = ({ workflow }) => {
 					stepper={stepper}
 					steps={steps}
 					currentIndex={currentIndex}
+					disabled={isProcessing}
 				/>
 			</div>
 
