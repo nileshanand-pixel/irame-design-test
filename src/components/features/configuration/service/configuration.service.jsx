@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/lib/toast';
-import axiosClientV1 from '@/lib/axios';
+import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
 
 export const getPresignedUrl = async (fileName) => {
 	const response = await axiosClientV1.get(
@@ -57,6 +57,14 @@ export const uploadFile = async (file, setProgress, cancelToken = null) => {
 
 export const getDataSources = async (options) => {
 	const response = await axiosClientV1.get(`/datasources`, {
+		headers: {},
+	});
+
+	return response.data?.datasource_list;
+};
+
+export const getDataSourcesV2 = async (options) => {
+	const response = await axiosClientV2.get(`/datasources`, {
 		headers: {},
 	});
 

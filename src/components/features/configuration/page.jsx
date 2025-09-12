@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import {
 	createNewDtaSource,
 	deleteDataSource,
-	getDataSources,
+	getDataSourcesV2,
 	uploadFile,
 } from './service/configuration.service';
 import { v4 as uuid } from 'uuid';
@@ -32,8 +32,30 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getFileType } from '@/utils/file';
 import { toast } from '@/lib/toast';
 import DismissibleBanner from '@/components/elements/dismissible-banner';
+import { Info, Warning, WarningCircle } from '@phosphor-icons/react';
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { groupItemsByDate } from '@/utils/date-utils';
+
+const TABS = [
+	{
+		label: 'Uploaded',
+		description: 'These are the dataset uploaded by you for querying.',
+		type: 'user_generated',
+	},
+	{
+		label: 'System Generated',
+		description: 'These are the dataset uploaded by you for Workflows.',
+		type: 'system_generated',
+	},
+];
 
 const Configuration = () => {
+	const [selectedDatasourceTab, setSelectedDatasourceTab] = useState(TABS[0]);
 	const {
 		files,
 		progress,
@@ -52,6 +74,7 @@ const Configuration = () => {
 			setError(null);
 		}
 	}, [error, setError]);
+
 	const [datasourceName, setDatasourceName] = useState('');
 	const [description, setDescription] = useState('');
 	const [formErrors, setFormErrors] = useState({});
@@ -227,13 +250,20 @@ const Configuration = () => {
 	};
 
 	const fetchDataSources = async () => {
-		const data = await getDataSources();
+		console.log('fetching ds');
+		const data = await getDataSourcesV2();
 		return Array.isArray(data) ? data : [];
 	};
 
 	const { data, isLoading: isFetchingData } = useQuery({
-		queryKey: ['data-sources'],
+		queryKey: ['data-sources-v2'],
 		queryFn: fetchDataSources,
+		refetchInterval: (data) => {
+			// if(data?.state?.data?.some((ds) => ds.status === "processing")) {
+			// 	return 2000;
+			// }
+			// return false;
+		},
 	});
 
 	const handleSelectUseCase = (value) => {
@@ -382,6 +412,12 @@ const Configuration = () => {
 	const handleSearch = (e) => {
 		setSearch(e.target.value);
 	};
+	groupItemsByDate;
+
+	const currentDatasources = dataSources?.filter(
+		(ds) => ds?.processed_files?.datasource_type === selectedDatasourceTab?.type,
+	);
+	const { groupArray } = groupItemsByDate(currentDatasources, 'created_at');
 
 	return (
 		<div className="flex flex-col gap-4  w-full h-full">
@@ -595,96 +631,229 @@ const Configuration = () => {
 						/>
 					</div>
 				</div>
-				<div className="px-8 flex-1 space-y-2  overflow-y-auto">
-					{isFetchingData && (
-						<div className="flex items-center justify-center w-full">
-							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
-						</div>
-					)}
-					<div className="grid grid-cols-3 gap-6">
-						{filteredList.length > 0 &&
-							filteredList.map((source) => (
+
+				{isFetchingData ? (
+					<div className="flex items-center justify-center w-full">
+						<i className="bi-arrow-repeat animate-spin text-primary80"></i>
+					</div>
+				) : (
+					<div className="px-8 flex-1 space-y-2 overflow-y-auto flex flex-col gap-3">
+						<div className="flex border-b-2">
+							{TABS?.map((tab) => (
 								<div
-									className="flex justify-between items-center bg-purple-4 p-4 rounded-lg gap-4"
-									key={source.datasource_id}
+									className={cn(
+										'text-[#5F5F5F] pl-4 py-2 flex gap-2 items-center cursor-pointer',
+										selectedDatasourceTab?.label ===
+											tab?.label &&
+											'text-[#6A12CD] border-b-2 border-b-[#6A12CD]',
+									)}
+									key={tab.label}
+									onClick={() => setSelectedDatasourceTab(tab)}
 								>
-									<p
-										className="text-primary80 font-medium w-3/4 flex cursor-pointer items-center"
-										onClick={() => {
-											trackEvent(
-												EVENTS_ENUM.EXISTING_DATASET_CLICKED,
-												EVENTS_REGISTRY.EXISTING_DATASET_CLICKED,
-												() => ({
-													dataset_id: source.datasource_id,
-													dataset_name: source.name,
-													source: search
-														? 'search'
-														: 'select',
-												}),
-											);
-											startChatting(source);
-										}}
-									>
-										<img
-											src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
-											alt="database"
-											className="mr-2 size-6 text-primary40"
-										/>
-										<div className="flex flex-col">
-											<p className="text-base max-w-36 truncate text-ellipsis">
-												{upperFirst(source.name)}
-											</p>
-											<span className="text-primary40 text-xs">
-												{dayjs(source.created_at).format(
-													'MMM D, YYYY',
-												)}
-											</span>
-										</div>
-									</p>
-									<div className="flex gap-1 items-center">
-										<span
-											className="material-symbols-outlined text-xl text-primary40 cursor-pointer hover:bg-purple-4 rounded-md p-1"
-											onClick={() => {
-												navigate(
-													`datasource?id=${source.datasource_id}`,
-												);
-											}}
-										>
-											edit
-										</span>
-										<DropdownMenu>
-											<DropdownMenuTrigger>
-												<i className="bi-three-dots-vertical text-primary40 text-xl font-bold cursor-pointer hover:bg-purple-4 rounded-md p-1"></i>
-											</DropdownMenuTrigger>
-											<DropdownMenuContent align="start">
-												<DropdownMenuItem
-													className="text-primary80 font-medium hover:!bg-purple-4"
-													onClick={(e) =>
-														handleDeleteDataSource(
-															e,
-															source,
-														)
-													}
-												>
-													<i className="bi-trash me-2 text-primary80 font-medium"></i>
-													Delete
-												</DropdownMenuItem>
-											</DropdownMenuContent>
-										</DropdownMenu>
-									</div>
+									<span>{tab.label}</span>
+									<TooltipProvider delayDuration={0}>
+										<Tooltip>
+											<TooltipTrigger className="ms-2">
+												<Info className="size-5 text-[#5F5F5F]" />
+											</TooltipTrigger>
+											<TooltipContent className="bg-[#6D6D6D] text-white max-w-[11rem]">
+												{tab.description}
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
 								</div>
 							))}
-					</div>
-					{(!filteredList || filteredList.length === 0) && (
-						<p className="text-primary40 flex flex-col  justify-center items-center">
-							<span className="material-symbols-outlined  text-primary10 text-[4.68rem]">
-								database
-							</span>
+						</div>
 
-							<span>No data sources found</span>
-						</p>
-					)}
-				</div>
+						<div className="flex flex-col gap-3">
+							{groupArray?.map((group) => {
+								if (group.data?.length === 0) {
+									return null;
+								}
+								return (
+									<div
+										className="flex flex-col gap-2"
+										key={group.label}
+									>
+										<div>{group.label}</div>
+										<div className="grid grid-cols-3 gap-6">
+											{group?.data?.map((source) => {
+												const isFailed =
+													source?.status === 'failed';
+												const isProcessing =
+													source?.status === 'processing';
+												const preparingPercentage =
+													Math.floor(
+														(source.uploaded_count /
+															source.success_count) *
+															100,
+														2,
+													);
+
+												return (
+													<div
+														className={cn(
+															'flex justify-between items-center bg-purple-4 p-4 rounded-lg gap-4',
+															isFailed &&
+																'border border-[#DC262680] bg-[#fff]',
+															isProcessing &&
+																'bg-[#fff] border-2',
+														)}
+														key={source.datasource_id}
+													>
+														<p
+															className={cn(
+																'text-primary80 font-medium w-full flex items-center',
+																!isProcessing &&
+																	isFailed &&
+																	'cursor-pointer',
+															)}
+															onClick={() => {
+																if (
+																	isProcessing ||
+																	isFailed
+																)
+																	return;
+
+																trackEvent(
+																	EVENTS_ENUM.EXISTING_DATASET_CLICKED,
+																	EVENTS_REGISTRY.EXISTING_DATASET_CLICKED,
+																	() => ({
+																		dataset_id:
+																			source.datasource_id,
+																		dataset_name:
+																			source.name,
+																		source: search
+																			? 'search'
+																			: 'select',
+																	}),
+																);
+																startChatting(
+																	source,
+																);
+															}}
+														>
+															<img
+																src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
+																alt="database"
+																className="mr-2 size-6 text-primary40"
+															/>
+															<div className="w-full flex flex-col">
+																<p className="text-base max-w-36 truncate text-ellipsis">
+																	{upperFirst(
+																		source.name,
+																	)}
+																</p>
+
+																{(isFailed ||
+																	isProcessing) && (
+																	<div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden my-1">
+																		<div
+																			className={cn(
+																				'h-2 rounded-full transition-all duration-500',
+																				isFailed &&
+																					'bg-[#E52429]',
+																				isProcessing &&
+																					'bg-primary',
+																			)}
+																			style={{
+																				width: `${isFailed ? 100 : preparingPercentage}%`,
+																			}}
+																		/>
+																	</div>
+																)}
+																<div className="flex items-center justify-between text-xs text-primary40">
+																	<span>
+																		{!isFailed &&
+																			dayjs(
+																				source.created_at,
+																			).format(
+																				'MMM D, YYYY',
+																			)}
+																	</span>
+																	<span className="flex gap-1 items-center">
+																		{isFailed && (
+																			<>
+																				<WarningCircle className="size-4 text-[#DC2626]" />
+																				<span className=" text-[#DC2626]">
+																					Processing
+																					failed
+																				</span>
+																			</>
+																		)}
+																		{isProcessing &&
+																			`Preparing dataset ${preparingPercentage}%`}
+																	</span>
+																</div>
+															</div>
+														</p>
+														{!isFailed &&
+															!isProcessing && (
+																<div className="flex gap-1 items-center shrink-0">
+																	{/* <span
+																					className="material-symbols-outlined text-xl text-primary40 cursor-pointer hover:bg-purple-4 rounded-md p-1"
+																					onClick={() => {
+																						navigate(
+																							`datasource?id=${source.datasource_id}`,
+																						);
+																					}}
+																				>
+																					edit
+																				</span> */}
+																	<DropdownMenu>
+																		<DropdownMenuTrigger>
+																			<i className="bi-three-dots-vertical text-primary40 text-xl font-bold cursor-pointer hover:bg-purple-4 rounded-md p-1"></i>
+																		</DropdownMenuTrigger>
+																		<DropdownMenuContent align="start">
+																			<DropdownMenuItem
+																				className="text-primary80 font-medium hover:!bg-purple-4"
+																				onClick={(
+																					e,
+																				) =>
+																					handleDeleteDataSource(
+																						e,
+																						source,
+																					)
+																				}
+																			>
+																				<i className="bi-trash me-2 text-primary80 font-medium"></i>
+																				Delete
+																			</DropdownMenuItem>
+																			<DropdownMenuItem
+																				className="text-primary80 font-medium hover:!bg-purple-4"
+																				onClick={() => {
+																					navigate(
+																						`datasource?id=${source.datasource_id}`,
+																					);
+																				}}
+																			>
+																				<i className="bi-pencil me-2 text-primary80 font-medium"></i>
+																				Edit
+																			</DropdownMenuItem>
+																		</DropdownMenuContent>
+																	</DropdownMenu>
+																</div>
+															)}
+													</div>
+												);
+											})}
+										</div>
+									</div>
+								);
+							})}
+						</div>
+
+						{(!filteredList || filteredList.length === 0) && (
+							<p className="text-primary40 flex flex-col  justify-center items-center">
+								<span className="material-symbols-outlined  text-primary10 text-[4.68rem]">
+									database
+								</span>
+
+								<span>No data sources found</span>
+							</p>
+						)}
+					</div>
+				)}
 			</div>
 		</div>
 	);

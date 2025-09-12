@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 export function formatRelativeTime(date) {
 	const now = new Date();
 	const diffInSeconds = Math.floor((now - new Date(date)) / 1000);
@@ -29,3 +31,48 @@ export function formatRelativeTime(date) {
 	const diffInYears = Math.floor(diffInMonths / 12);
 	return `${diffInYears} year${diffInYears !== 1 ? 's' : ''} ago`;
 }
+
+export const groupItemsByDate = (items, dateKey) => {
+	const today = [];
+	const yesterday = [];
+	const last7Days = [];
+	const earlier = [];
+
+	items.forEach((item) => {
+		const itemDate = dayjs(item[dateKey]);
+		if (itemDate.isToday()) {
+			today.push(item);
+		} else if (itemDate.isYesterday()) {
+			yesterday.push(item);
+		} else if (itemDate.isAfter(dayjs().subtract(7, 'day'))) {
+			last7Days.push(item);
+		} else {
+			earlier.push(item);
+		}
+	});
+
+	return {
+		today,
+		yesterday,
+		last7Days,
+		earlier,
+		groupArray: [
+			{
+				data: today,
+				label: 'Today',
+			},
+			{
+				data: yesterday,
+				label: 'Yesterday',
+			},
+			{
+				data: last7Days,
+				label: 'Last 7 days',
+			},
+			{
+				data: earlier,
+				label: 'Earlier',
+			},
+		],
+	};
+};
