@@ -33,8 +33,11 @@ export const StepperNav = ({ stepper, steps, currentIndex }) => {
 										? 'bg-[#E5E7EB] text-[#6B7280]'
 										: '',
 								)}
-								onClick={() => stepper.goTo(step.id)}
-								// disabled={index > currentIndex} // Disable future steps
+								onClick={() => {
+									// if (index - currentIndex >= 1) return;
+									stepper.goTo(step.id);
+								}}
+								disabled={index > currentIndex} // Disable future steps
 							>
 								{index + 1}
 							</Button>
