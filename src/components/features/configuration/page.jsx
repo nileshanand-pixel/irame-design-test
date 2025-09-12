@@ -40,6 +40,7 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { groupItemsByDate } from '@/utils/date-utils';
+import { X } from 'lucide-react';
 
 const TABS = [
 	{
@@ -342,46 +343,54 @@ const Configuration = () => {
 		inputRef.current.click();
 	};
 
+	const handleUploadCardClossClick = () => {
+		setShowForm(false);
+		resetUploads();
+	};
+
 	const renderUploadButtons = () => {
-		const zeroFiles = files.length === 0;
-		const uploadButtonObj = {
-			bgCss: zeroFiles
-				? 'hover:bg-purple-100 hover:text-white hover:opacity-80'
-				: 'bg-purple-8 hover:bg-purple-16 text-purple-100',
-			text: zeroFiles ? 'Upload Dataset' : 'Upload More',
-		};
 		return (
 			<div className="flex gap-2 items-center">
-				<Button
-					className={` w-full ${uploadButtonObj.bgCss} rounded-lg ${
-						isLoading
-							? 'cursor-not-allowed opacity-80'
-							: 'cursor-pointer'
-					}`}
-					onClick={handleInputClick}
-				>
-					<label
-						htmlFor="file-upload"
-						className=" block text-center cursor-pointer px-4"
-					>
-						{uploadButtonObj.text}
-					</label>
-				</Button>
+				{showForm ? (
+					<div className="flex gap-4">
+						<Button
+							className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+							onClick={() => {
+								createDataSource();
+							}}
+							disabled={
+								!isAllFilesUploaded ||
+								isLoading ||
+								formErrors.datasourceName ||
+								!datasourceName
+							}
+						>
+							Save Dataset
+						</Button>
 
-				{showForm && (
+						<Button
+							variant="outline"
+							className="!p-2"
+							onClick={handleUploadCardClossClick}
+						>
+							<X className="size-5" />
+						</Button>
+					</div>
+				) : (
 					<Button
-						className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
-						onClick={() => {
-							createDataSource();
-						}}
-						disabled={
-							!isAllFilesUploaded ||
-							isLoading ||
-							formErrors.datasourceName ||
-							!datasourceName
-						}
+						className={` w-full hover:bg-purple-100 hover:text-white hover:opacity-80 rounded-lg ${
+							isLoading
+								? 'cursor-not-allowed opacity-80'
+								: 'cursor-pointer'
+						}`}
+						onClick={handleInputClick}
 					>
-						Save Dataset
+						<label
+							htmlFor="file-upload"
+							className=" block text-center cursor-pointer px-4"
+						>
+							Upload Dataset
+						</label>
 					</Button>
 				)}
 
@@ -428,7 +437,7 @@ const Configuration = () => {
 				<div className="text-primary80 gap-2">
 					<span className="text-2xl font-semibold">Configuration</span>
 					<span className="text-sm font-medium">
-						/ Connect New Dataset
+						&gt; Connect New Dataset
 					</span>
 				</div>
 				<div className=" mt-2">
@@ -467,31 +476,26 @@ const Configuration = () => {
 
 					{showForm && (
 						<div className="mt-4 space-y-6 mb-10">
-							<InputText
-								placeholder="Enter name here"
-								label="Data Set Name"
-								value={datasourceName}
-								setValue={(e) => setDatasourceName(e)}
-								error={!!formErrors.datasourceName}
-								errorText={formErrors.datasourceName}
-								labelClassName="text-sm font-medium text-primary40"
-							/>
-
-							<div className="flex flex-col">
-								<label className="text-sm font-medium text-primary40 mb-2">
-									What do you want to do with this Data Set
-								</label>
-								<Textarea
-									placeholder="Add Description here"
-									className=" border rounded-md !focus:outline-none text-black/60 text-sm font-normal resize-none"
-									value={description}
-									onChange={(e) => setDescription(e.target.value)}
+							<div className="grid grid-cols-2 gap-4">
+								<InputText
+									placeholder="Enter name here"
+									label="Data Set Name"
+									value={datasourceName}
+									setValue={(e) => setDatasourceName(e)}
+									error={!!formErrors.datasourceName}
+									errorText={formErrors.datasourceName}
+									labelClassName="text-sm font-medium text-primary40"
 								/>
-								{formErrors.description && (
-									<p className="text-red-500 text-xs mt-1">
-										{formErrors.description}
-									</p>
-								)}
+
+								<InputText
+									placeholder="Add Description here"
+									label="What do you want to do with this Data Set"
+									value={description}
+									setValue={(e) => setDescription(e.target.value)}
+									error={!!formErrors.description}
+									errorText={formErrors.description}
+									labelClassName="text-sm font-medium text-primary40"
+								/>
 							</div>
 
 							<div>
@@ -599,7 +603,7 @@ const Configuration = () => {
 					!showForm && 'overflow-y-hidden',
 				)}
 			>
-				<div className="flex flex-none px-8 flex-row gap-4 justify-between items-center mb-4 pb-4">
+				<div className="flex flex-none px-8 flex-row gap-4 justify-between items-center pb-4">
 					<div>
 						<h3 className="text-primary80 font-semibold text-xl">
 							Choose from Existing Dataset
