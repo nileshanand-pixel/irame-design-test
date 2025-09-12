@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { useWorkflowRunId } from '@/components/features/business-process/hooks/use-workflow-run-id';
+import { getDatasourceV2 } from '@/components/features/configuration/service/configuration.service';
 
 const SERVER_TO_UI_STATUS = {
 	PROCESSING: 'processing',
@@ -195,7 +196,7 @@ export function useDatasourceIngest({
 	// Hydration
 	const hydrate = useCallback(async () => {
 		if (!getDatasource || !datasourceId) return;
-		const ds = await getDatasource(datasourceId);
+		const ds = await getDatasourceV2(datasourceId);
 		replaceItemsByServer(ds.files || []);
 	}, [datasourceId, getDatasource, replaceItemsByServer]);
 

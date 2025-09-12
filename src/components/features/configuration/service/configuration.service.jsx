@@ -292,3 +292,23 @@ export const saveDatasourceV2 = async (datasourceId, data) => {
 		throw error;
 	}
 };
+
+// Clone an existing (non-draft) datasource into a new temporary draft datasource
+// Payload shape expected:
+// {
+//   datasource_type: 'system_generated',
+//   datasources: [ { id: <existing_ds_id>, files: [{ file_id }] } ]
+// }
+export const uploadInitAndClone = async (data) => {
+	try {
+		const response = await axiosClientV1.post(
+			'/datasources/upload-init-and-clone',
+			data,
+			{ headers: { 'Content-Type': 'application/json' } },
+		);
+		return response.data;
+	} catch (error) {
+		console.error('Error cloning datasource', error);
+		throw error;
+	}
+};

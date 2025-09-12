@@ -8,11 +8,15 @@ import { saveDatasourceV2 } from '@/components/features/configuration/service/co
 import { toast } from '@/lib/toast';
 import { useWorkflowId } from '@/components/features/business-process/hooks/useWorkflowId';
 import { useStructuredDatasourceId } from '../hooks/datasource-context';
+import { useStructuredDatasourceDetails } from '../hooks/use-structured-datasource-details';
 
 export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 	const workflowId = useWorkflowId();
 	const { datasourceId, updateDatasourceId, isReady } =
 		useStructuredDatasourceId();
+	const { data: dsDetails } = useStructuredDatasourceDetails({
+		staleTime: 5000,
+	});
 	const [uploadManagerRef, setUploadManagerRef] = useState(null);
 
 	// Save datasource mutation
@@ -129,16 +133,16 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 			return;
 		}
 
-		// Prepare data for save API - only pass the workflow_check_id as required
-		const saveData = {
-			workflow_check_id: workflowId,
-		};
+		// If datasource already non-draft, skip save (already persisted) and advance
+		if (dsDetails?.status && dsDetails.status !== 'draft') {
+			stepper.next();
+			return;
+		}
 
-		// Call save API
-		saveDatasourceMutation.mutate({
-			datasourceId,
-			data: saveData,
-		});
+		// Prepare data for save API - only pass the workflow_check_id as required
+		const saveData = { workflow_check_id: workflowId };
+
+		saveDatasourceMutation.mutate({ datasourceId, data: saveData });
 	};
 
 	return (
