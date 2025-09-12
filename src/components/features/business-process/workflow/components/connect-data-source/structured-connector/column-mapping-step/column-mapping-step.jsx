@@ -25,6 +25,7 @@ import { queryClient } from '@/lib/react-query';
 import { useWorkflowId } from '@/components/features/business-process/hooks/useWorkflowId';
 import { useWorkflowRunId } from '@/components/features/business-process/hooks/use-workflow-run-id';
 import upperFirst from 'lodash.upperfirst';
+import { ArrowRight } from '@phosphor-icons/react';
 
 /** ---------- helpers that don't hit React state ---------- **/
 
@@ -349,14 +350,15 @@ export const ColumnMappingStep = ({
   ---------------------------------------------------------------- */
 	return (
 		<div className="flex flex-col h-full flex-1 gap-4">
-			{/* Header with progress */}
-			<div className="px-8 pt-4 flex-shrink-0">
+			{/* /* Header with progress */}
+			<div className="px-8 flex-shrink-0">
 				<div className="flex items-center justify-between mb-2">
 					<h3 className="font-medium text-lg">
 						<span>Column Mapping</span>
 					</h3>
-					<span className="text-xs font-medium">
-						{mappedUploaded}/{totalUploaded} files – {progressPct}%
+					<span className="text-sm text-[#6B7280] font-medium">
+						<span className="text-green-600">{mappedUploaded}</span>/
+						{totalUploaded} files mapped
 					</span>
 				</div>
 				<div className="w-full bg-gray-200 rounded-full">
@@ -385,17 +387,19 @@ export const ColumnMappingStep = ({
 								key={file.fileId}
 								className="border rounded-lg overflow-hidden mb-6"
 							>
-								{/* Panel header */}
 								<div
-									className="px-6 py-4 bg-gray-50 border-b flex items-center justify-between cursor-pointer"
+									className="px-4 py-[1.125rem]  border-b flex items-center justify-between cursor-pointer"
 									onClick={() =>
 										setOpenFileId(isOpen ? null : file.fileId)
 									}
 								>
 									<div className="truncate">
-										<h4 className="font-semibold truncate">
-											{upperFirst(file.requiredFileName)} (
-											{upperFirst(file.fileName)})
+										<h4 className="font-medium truncate">
+											{upperFirst(file.requiredFileName)}{' '}
+											<span className="text-[#6B7280] font-normal">
+												({upperFirst(file.fileName + '.csv')}
+												)
+											</span>
 										</h4>
 									</div>
 
@@ -714,6 +718,7 @@ export const ColumnMappingStep = ({
 							<Loader size={16} className="animate-spin mr-2" />
 						)}
 						<span>Continue</span>
+						<ArrowRight className="ml-1" weight="bold" />
 					</Button>
 				)}
 			</div>

@@ -55,11 +55,14 @@ const SessionHistoryPanel = ({ onClose }) => {
 		refetchInterval: 60000,
 	});
 
-	const handleRowClick = (externalId, linkActive, sessionUrl) => {
+	const handleRowClick = ({ runId, linkActive, sessionUrl, datasourceId }) => {
 		if (linkActive) {
 			window.open(sessionUrl, '_blank', 'noopener,noreferrer');
 		} else {
-			searchParams.set('run_id', externalId);
+			searchParams.set('run_id', runId);
+			if (datasourceId) {
+				searchParams.set('datasource_id', datasourceId);
+			}
 			navigate({
 				pathname: location.pathname,
 				search: searchParams.toString(),
@@ -132,11 +135,12 @@ const SessionHistoryPanel = ({ onClose }) => {
 										isSelected ? 'bg-purple-50' : ''
 									}`}
 									onClick={() =>
-										handleRowClick(
-											item.external_id,
+										handleRowClick({
+											runId: item.external_id,
 											linkActive,
 											sessionUrl,
-										)
+											datasourceId: item.datasource_id,
+										})
 									}
 								>
 									<div className="col-span-3">

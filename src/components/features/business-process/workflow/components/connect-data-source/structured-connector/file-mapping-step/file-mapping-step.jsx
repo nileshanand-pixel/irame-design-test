@@ -329,32 +329,22 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 
 	return (
 		<div className="flex flex-col h-full flex-1">
-			{/* Header */}
-			<div className="px-8 py-4 border-b border-gray-200">
-				<div className="flex items-center justify-between">
-					<div>
-						<h3 className="text-lg font-medium text-gray-900">
-							File Mapping
-						</h3>
-						<p className="text-sm text-gray-600 mt-1">
-							Map your uploaded files to the required inputs for this
-							workflow
-						</p>
-					</div>
-					<div className="flex items-center gap-4">
-						<div className="text-sm text-gray-600">
-							{mappedFilesCount}/{totalRequiredFiles} files mapped
-						</div>
-						<div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-							<div
-								className="h-full bg-[#6A12CD] transition-all duration-300"
-								style={{ width: `${progressPercentage}%` }}
-							/>
-						</div>
-						<span className="text-sm font-medium text-gray-900">
-							{progressPercentage}%
-						</span>
-					</div>
+			{/* Header with progress (matching ColumnMappingStep) */}
+			<div className="px-8 flex-shrink-0">
+				<div className="flex items-center justify-between mb-2">
+					<h3 className="font-medium text-lg">
+						<span>File Mapping</span>
+					</h3>
+					<span className="text-sm text-[#6B7280] font-medium">
+						<span className="text-green-600">{mappedFilesCount}</span>/
+						{totalRequiredFiles} files mapped
+					</span>
+				</div>
+				<div className="w-full bg-gray-200 rounded-full">
+					<div
+						className="bg-purple-100 h-2 rounded-full transition-all"
+						style={{ width: `${progressPercentage}%` }}
+					/>
 				</div>
 			</div>
 
@@ -409,40 +399,40 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 
 const RequiredMappingTable = ({ requiredFiles, files, onToggle }) => (
 	<div className="mb-6">
-		<h3 className="font-medium mb-3">Required File Mapping</h3>
+		{/* <h3 className="font-medium mb-3">Required File Mapping</h3> */}
 		<div className="border rounded-md ">
 			<table className="min-w-full divide-y divide-gray-200">
 				<thead className="bg-gray-50">
 					<tr>
 						<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-1/2">
-							Required File
+							Required Files
 						</th>
 						<th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-1/2">
-							Selected Files
+							Mapped Files
 						</th>
 					</tr>
 				</thead>
-				{/* <tbody className="bg-white divide-y divide-gray-200"> */}
-				{requiredFiles.map((rf) => (
-					<tr key={rf.id}>
-						<td className="px-6 py-4">
-							<div className="text-sm font-medium text-gray-900">
-								{rf.file_name}
-							</div>
-							<div className="text-sm text-gray-500">
-								{rf.description}
-							</div>
-						</td>
-						<td className="px-6 py-4">
-							<MappingPicker
-								rf={rf}
-								files={files}
-								onToggle={onToggle}
-							/>
-						</td>
-					</tr>
-				))}
-				{/* </tbody> */}
+				<tbody className="bg-white divide-y divide-gray-200">
+					{requiredFiles.map((rf) => (
+						<tr key={rf.id}>
+							<td className="px-6 py-4 ">
+								<div className="text-sm font-medium text-gray-900">
+									{rf.file_name}
+								</div>
+								<div className="text-sm text-gray-500">
+									{rf.description}
+								</div>
+							</td>
+							<td className="px-6 py-4">
+								<MappingPicker
+									rf={rf}
+									files={files}
+									onToggle={onToggle}
+								/>
+							</td>
+						</tr>
+					))}
+				</tbody>
 			</table>
 		</div>
 	</div>
