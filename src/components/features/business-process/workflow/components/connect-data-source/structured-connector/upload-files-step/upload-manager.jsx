@@ -87,7 +87,7 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 
 	const handleFilesListUpload = () => {
 		if (!datasourceId || !isReady) {
-			toast.error('Upload session not ready');
+			toast.error('Upload session not ready', { position: 'bottom-center' });
 			return;
 		}
 		fileInputRef.current?.click();
@@ -101,14 +101,16 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 
 	const handleChooseExisting = async (selectedDS) => {
 		if (!datasourceId || !isReady) {
-			toast.error('Upload session not ready');
+			toast.error('Upload session not ready', { position: 'bottom-center' });
 			return;
 		}
 
 		// Only copy datasources that are not already added
 		const notAddedDS = selectedDS.filter((ds) => !ds.added);
 		if (notAddedDS.length === 0) {
-			toast.info('All selected datasources already added');
+			toast.info('All selected datasources already added', {
+				position: 'bottom-center',
+			});
 			return;
 		}
 
@@ -154,15 +156,16 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 
 				toast.success(
 					`Successfully added ${duplicatedFiles.length} file(s)`,
+					{ position: 'bottom-center' },
 				);
 			} else {
-				toast.error('Failed to copy files');
+				toast.error('Failed to copy files', { position: 'bottom-center' });
 			}
 		} catch (error) {
 			console.error('Error copying files:', error);
 			const errorMessage =
 				error.message || 'Failed to copy files from selected datasources';
-			toast.error(errorMessage);
+			toast.error(errorMessage, { position: 'bottom-center' });
 		}
 	};
 
@@ -182,15 +185,21 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 			const result = await deleteItems([itemId]);
 			if (result?.success) {
 				if (result.cancelledCount > 0) {
-					toast.success('File upload cancelled and removed');
+					toast.success('File upload cancelled and removed', {
+						position: 'bottom-center',
+					});
 				} else if (result.deletedCount > 0) {
-					toast.success('File deleted successfully');
+					toast.success('File deleted successfully', {
+						position: 'bottom-center',
+					});
 				}
 			} else if (result?.error) {
-				toast.error(`Failed to delete file: ${result.error}`);
+				toast.error(`Failed to delete file: ${result.error}`, {
+					position: 'bottom-center',
+				});
 			}
 		} catch (error) {
-			toast.error('Failed to delete file');
+			toast.error('Failed to delete file', { position: 'bottom-center' });
 			console.error('Delete error:', error);
 		}
 	};
@@ -217,21 +226,26 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 				if (result.cancelledCount > 0 && result.deletedCount > 0) {
 					toast.success(
 						`${result.cancelledCount} uploads cancelled, ${result.deletedCount} files deleted`,
+						{ position: 'bottom-center' },
 					);
 				} else if (result.cancelledCount > 0) {
 					toast.success(
 						`${result.cancelledCount} file upload${result.cancelledCount > 1 ? 's' : ''} cancelled`,
+						{ position: 'bottom-center' },
 					);
 				} else if (result.deletedCount > 0) {
 					toast.success(
 						`${result.deletedCount} file${result.deletedCount > 1 ? 's' : ''} deleted successfully`,
+						{ position: 'bottom-center' },
 					);
 				}
 			} else if (result?.error) {
-				toast.error(`Failed to delete files: ${result.error}`);
+				toast.error(`Failed to delete files: ${result.error}`, {
+					position: 'bottom-center',
+				});
 			}
 		} catch (error) {
-			toast.error('Failed to delete files');
+			toast.error('Failed to delete files', { position: 'bottom-center' });
 			console.error('Bulk delete error:', error);
 		}
 	};
@@ -242,7 +256,9 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 		const sheetName = sheet.worksheet;
 
 		if (!fileId) {
-			toast.error('Unable to delete sheet - file ID not found');
+			toast.error('Unable to delete sheet - file ID not found', {
+				position: 'bottom-center',
+			});
 			return;
 		}
 
@@ -270,9 +286,13 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 				// Delete the entire file if it's the last sheet
 				const result = await deleteItems([fileId]);
 				if (result?.success) {
-					toast.success(`File "${fileName}" deleted successfully`);
+					toast.success(`File "${fileName}" deleted successfully`, {
+						position: 'bottom-center',
+					});
 				} else if (result?.error) {
-					toast.error(`Failed to delete file: ${result.error}`);
+					toast.error(`Failed to delete file: ${result.error}`, {
+						position: 'bottom-center',
+					});
 				}
 			} else {
 				// Delete just the sheet
@@ -281,13 +301,15 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 				// Update frontend state to remove the sheet
 				removeSheetsFrontend(fileId, [sheet.id]);
 
-				toast.success(`Sheet "${sheetName}" deleted successfully`);
+				toast.success(`Sheet "${sheetName}" deleted successfully`, {
+					position: 'bottom-center',
+				});
 			}
 		} catch (error) {
 			console.error('Error deleting sheet:', error);
 			const errorMessage =
 				error.message || `Failed to delete sheet "${sheetName}"`;
-			toast.error(errorMessage);
+			toast.error(errorMessage, { position: 'bottom-center' });
 		} finally {
 			// Remove sheet from deleting state
 			setDeletingSheets((prev) => {

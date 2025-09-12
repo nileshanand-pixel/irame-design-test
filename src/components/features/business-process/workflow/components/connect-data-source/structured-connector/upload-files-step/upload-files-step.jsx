@@ -30,7 +30,9 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 			return await saveDatasourceV2(datasourceId, data);
 		},
 		onSuccess: (response) => {
-			toast.success('Datasource saved successfully');
+			toast.success('Datasource saved successfully', {
+				position: 'bottom-center',
+			});
 
 			// Check if datasource ID changed and update it via context
 			if (response?.datasource_id && datasourceId !== response.datasource_id) {
@@ -44,6 +46,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 			console.error('Error saving datasource:', error);
 			toast.error(
 				`Failed to save datasource: ${error.message || 'Unknown error'}`,
+				{ position: 'bottom-center' },
 			);
 		},
 	});

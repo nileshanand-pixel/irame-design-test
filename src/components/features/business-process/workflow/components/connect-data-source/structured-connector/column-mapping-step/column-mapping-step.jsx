@@ -165,14 +165,18 @@ export const ColumnMappingStep = ({
 		mutationFn: ({ workflowId, workflowRunId, payload }) =>
 			clarifyWorkFlowRunV2(workflowId, workflowRunId, payload),
 		onSuccess: async () => {
-			toast.success('Workflow column mapping sent successfully');
+			toast.success('Workflow column mapping sent successfully', {
+				position: 'bottom-center',
+			});
 			queryClient.invalidateQueries(['workflow-run-details', runId]);
 			await queryClient.refetchQueries(['workflow-run-details', runId]);
 			// Move to next step after successful submission
 			// stepper.next();
 		},
 		onError: (err) => {
-			toast.error(`Clarification failed: ${err.message}`);
+			toast.error(`Clarification failed: ${err.message}`, {
+				position: 'bottom-center',
+			});
 		},
 	});
 

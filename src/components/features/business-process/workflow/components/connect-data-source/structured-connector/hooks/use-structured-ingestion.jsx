@@ -210,7 +210,9 @@ export function useDatasourceIngest({
 		(fileList) => {
 			if (!datasourceId) {
 				if (toast) {
-					toast.error('Upload session not ready yet');
+					toast.error('Upload session not ready yet', {
+						position: 'bottom-center',
+					});
 				}
 				return [];
 			}

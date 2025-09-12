@@ -52,7 +52,9 @@ export const DatasourceProvider = ({ children }) => {
 					}
 				} catch (error) {
 					console.error('Failed to create datasource:', error);
-					toast.error('Failed to initialize upload session');
+					toast.error('Failed to initialize upload session', {
+						position: 'bottom-center',
+					});
 				} finally {
 					setIsCreating(false);
 				}

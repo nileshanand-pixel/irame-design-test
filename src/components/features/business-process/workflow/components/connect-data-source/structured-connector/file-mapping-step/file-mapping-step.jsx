@@ -241,6 +241,7 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 		onSuccess: (data) => {
 			toast.success(
 				`Workflow check ${isPostRun ? 're-initiated' : 'initiated'}`,
+				{ position: 'bottom-center' },
 			);
 			queryClient.invalidateQueries(['workflow-runs', workflowId]);
 			if (data?.external_id) {
@@ -249,7 +250,10 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 				);
 			}
 		},
-		onError: (err) => toast.error(`Workflow check failed: ${err.message}`),
+		onError: (err) =>
+			toast.error(`Workflow check failed: ${err.message}`, {
+				position: 'bottom-center',
+			}),
 	});
 
 	const handleValidate = () => {
