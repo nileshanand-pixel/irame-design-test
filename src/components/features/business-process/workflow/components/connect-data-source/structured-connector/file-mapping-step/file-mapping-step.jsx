@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Loader, AlertTriangle } from 'lucide-react';
+import { CustomLoader } from '../custom-loader';
 import { toast } from '@/lib/toast';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { queryClient } from '@/lib/react-query';
@@ -289,16 +290,18 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 	}, [showInlineError, inlineError]);
 
 	/* ───────────────────────────── RENDER CONDITIONS ─────────────────── */
-	if (isDatasourceLoading || mutation.isPending) {
+	if (mutation.isPending) {
+		return <CustomLoader />;
+	}
+
+	if (isDatasourceLoading) {
 		return (
 			<div className="flex flex-col h-full flex-1 gap-4">
 				<div className="flex-1 flex items-center justify-center">
 					<div className="flex flex-col items-center">
 						<Loader className="text-[#6A12CD] animate-spin mb-4 size-10" />
 						<span className="text-gray-600 font-medium">
-							{isDatasourceLoading
-								? 'Loading files...'
-								: 'Validating mapping...'}
+							Loading files...
 						</span>
 					</div>
 				</div>

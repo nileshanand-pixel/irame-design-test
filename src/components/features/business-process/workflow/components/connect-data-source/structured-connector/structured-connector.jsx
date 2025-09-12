@@ -13,6 +13,7 @@ import {
 	DatasourceProvider,
 	useStructuredDatasourceId,
 } from './hooks/datasource-context';
+import { CustomLoader } from './custom-loader';
 
 const { useStepper, steps, utils } = defineStepper(
 	{
@@ -61,12 +62,9 @@ const StructuredConnectorContent = ({ workflow }) => {
 	const stepper = useStructuredStepper(baseStepper, steps, runDetails);
 
 	const currentIndex = utils.getIndex(stepper.current.id);
-
 	const isProcessing =
 		runDetails?.status === 'IN_QUEUE' ||
 		runDetails?.status === 'COLUMN_MAPPING_DONE';
-	// const isProcessing = false;
-	// if(runId && !runDetails)
 
 	if (!stepper) return null;
 
@@ -77,7 +75,7 @@ const StructuredConnectorContent = ({ workflow }) => {
 				<div className="flex-1 flex items-center justify-center">
 					<div className="flex flex-col items-center">
 						<div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-						<span className="ml-2 mt-2">Initializing datasource...</span>
+						<span className="ml-2 mt-2">Initializing...</span>
 					</div>
 				</div>
 			</div>
@@ -98,10 +96,7 @@ const StructuredConnectorContent = ({ workflow }) => {
 
 			<div className="flex-1 min-h-0">
 				{isProcessing ? (
-					<div className="flex items-center justify-center py-4 flex-1">
-						<div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
-						<span className="ml-2">Processing your data...</span>
-					</div>
+					<CustomLoader />
 				) : (
 					<div className="h-full">
 						{stepper.switch({

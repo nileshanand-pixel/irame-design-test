@@ -9,6 +9,7 @@ import { toast } from '@/lib/toast';
 import { useWorkflowId } from '@/components/features/business-process/hooks/useWorkflowId';
 import { useStructuredDatasourceId } from '../hooks/datasource-context';
 import { useStructuredDatasourceDetails } from '../hooks/use-structured-datasource-details';
+import { queryClient } from '@/lib/react-query';
 
 export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 	const workflowId = useWorkflowId();
@@ -150,6 +151,9 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 		const saveData = { workflow_check_id: workflowId };
 
 		saveDatasourceMutation.mutate({ datasourceId, data: saveData });
+		queryClient.invalidateQueries({
+			queryKey: ['structured-datasource-details', datasourceId],
+		});
 	};
 
 	// Only show inline error after Continue is clicked. Hide error if items become valid after error was shown.
