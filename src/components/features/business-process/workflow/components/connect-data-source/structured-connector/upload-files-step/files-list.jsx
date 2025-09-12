@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
+import CustomCheckbox from '@/components/elements/custom-checkbox';
 import { Button } from '@/components/ui/button';
 import {
 	Tooltip,
@@ -14,7 +14,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ChevronDown, Trash2, Upload, X } from 'lucide-react';
+import { ChevronDown, Trash2, Upload, X, Check } from 'lucide-react';
 import { CheckCircle, Warning } from '@phosphor-icons/react';
 import { UploadActions } from './upload-actions';
 import { FileItemWithSheets } from './file-item-with-sheets';
@@ -157,7 +157,7 @@ export const FilesList = ({
 				<div className="text-xs text-destructive font-normal flex gap-1 items-center">
 					<Warning weight="fill" className="h-4 w-4 text-destructive" />
 					{errorFiles.length} of {files.length} files failed - delete or
-					re-upload to continue
+					resolve to continue
 				</div>
 			);
 		}
@@ -175,10 +175,10 @@ export const FilesList = ({
 			<div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
 				<div className="flex items-center gap-3 min-w-0">
 					<div className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg">
-						<Checkbox
+						<CustomCheckbox
 							checked={selectType !== SELECT_TYPES.NONE}
 							disabled={processingFiles?.length !== 0}
-							onCheckedChange={toggleSelectAll}
+							onChange={toggleSelectAll}
 						/>
 
 						<DropdownMenu>
@@ -197,20 +197,26 @@ export const FilesList = ({
 							>
 								<DropdownMenuGroup>
 									<DropdownMenuItem
-										className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+										className={`px-3 py-2 text-sm cursor-pointer flex items-center justify-between ${selectType === SELECT_TYPES.ALL ? 'bg-purple-50' : 'hover:bg-gray-100'}`}
 										onClick={() =>
 											setSelectType(SELECT_TYPES.ALL)
 										}
 									>
-										All
+										<span>All</span>
+										{selectType === SELECT_TYPES.ALL && (
+											<Check className="w-4 h-4 text-primary ml-2" />
+										)}
 									</DropdownMenuItem>
 									<DropdownMenuItem
-										className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+										className={`px-3 py-2 text-sm cursor-pointer flex items-center justify-between ${selectType === SELECT_TYPES.FAILED ? 'bg-purple-50' : 'hover:bg-gray-100'}`}
 										onClick={() =>
 											setSelectType(SELECT_TYPES.FAILED)
 										}
 									>
-										Failed
+										<span>Failed</span>
+										{selectType === SELECT_TYPES.FAILED && (
+											<Check className="w-4 h-4 text-primary ml-2" />
+										)}
 									</DropdownMenuItem>
 								</DropdownMenuGroup>
 							</DropdownMenuContent>
@@ -218,7 +224,7 @@ export const FilesList = ({
 					</div>
 
 					<div className="flex items-center gap-3">
-						<span className="font-semibold text-base text-gray-900">
+						<span className="text-sm font-semibold text-primary80">
 							Files Uploaded
 						</span>
 						{renderStatus()}
@@ -244,46 +250,57 @@ export const FilesList = ({
 				)}
 			</div>
 			<div className="grid grid-cols-2 gap-3 p-3">
-				{files.map((file, idx) => {
-					// Determine if file is from a data source (has datasource info)
-					const isDataSourceFile =
-						!!file.datasource_id || !!file.datasourceName;
-					const dataSourceName =
-						file.datasourceName ||
-						file.datasource_name ||
-						(isDataSourceFile &&
-							selectedDataSources?.find(
-								(ds) => ds.datasource_id === file.datasource_id,
-							)?.name);
+				{(() => {
+					// Render files in two columns, each column is an array
+					const columns = [[], []];
+					files.forEach((file, idx) => {
+						const colIdx = idx % 2;
+						// Determine if file is from a data source (has datasource info)
+						const isDataSourceFile =
+							!!file.datasource_id || !!file.datasourceName;
+						const dataSourceName =
+							file.datasourceName ||
+							file.datasource_name ||
+							(isDataSourceFile &&
+								selectedDataSources?.find(
+									(ds) => ds.datasource_id === file.datasource_id,
+								)?.name);
 
-					// Get file status
-					const status = file.status || 'ready';
-					const showCheckbox = !['uploading', 'processing'].includes(
-						status,
-					);
+						// Get file status
+						const status = file.status || 'ready';
+						const showCheckbox = !['uploading', 'processing'].includes(
+							status,
+						);
 
-					const fileId = file.serverId || file.id || file.name;
-					const isSelected = selectedFiles.some((f) => {
-						const selectedFileId = f.serverId || f.id || f.name;
-						return selectedFileId === fileId;
+						const fileId = file.serverId || file.id || file.name;
+						const isSelected = selectedFiles.some((f) => {
+							const selectedFileId = f.serverId || f.id || f.name;
+							return selectedFileId === fileId;
+						});
+
+						columns[colIdx].push(
+							<FileItemWithSheets
+								key={file.name + idx}
+								file={file}
+								progress={progress}
+								isSelected={isSelected}
+								showCheckbox={showCheckbox}
+								onFileSelectToggle={handleFileSelectToggle}
+								onDelete={onDelete}
+								onDeleteSheet={onDeleteSheet}
+								isDataSourceFile={isDataSourceFile}
+								dataSourceName={dataSourceName}
+								deletingSheets={deletingSheets}
+							/>,
+						);
 					});
-
 					return (
-						<FileItemWithSheets
-							key={file.name + idx}
-							file={file}
-							progress={progress}
-							isSelected={isSelected}
-							showCheckbox={showCheckbox}
-							onFileSelectToggle={handleFileSelectToggle}
-							onDelete={onDelete}
-							onDeleteSheet={onDeleteSheet}
-							isDataSourceFile={isDataSourceFile}
-							dataSourceName={dataSourceName}
-							deletingSheets={deletingSheets}
-						/>
+						<>
+							<div className="flex flex-col gap-3">{columns[0]}</div>
+							<div className="flex flex-col gap-3">{columns[1]}</div>
+						</>
 					);
-				})}
+				})()}
 			</div>
 		</div>
 	);

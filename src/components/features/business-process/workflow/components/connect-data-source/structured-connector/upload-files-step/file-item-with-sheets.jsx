@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, ChevronUp, Trash2, X } from 'lucide-react';
 import { CheckCircle, Warning } from '@phosphor-icons/react';
-import { Checkbox } from '@/components/ui/checkbox';
+// import { Checkbox } from '@/components/ui/checkbox';
+import CustomCheckbox from '@/components/elements/custom-checkbox';
 import { Button } from '@/components/ui/button';
 import {
 	Tooltip,
@@ -103,14 +104,13 @@ export const FileItemWithSheets = ({
 				</TooltipProvider>
 			);
 		}
-
 		return (
-			<div className="flex gap-1 items-center">
+			<>
 				{getStatusIcon()}
 				<span className="text-xs text-primary100 font-normal">
 					{getStatusText()}
 				</span>
-			</div>
+			</>
 		);
 	};
 
@@ -130,9 +130,9 @@ export const FileItemWithSheets = ({
 			<div className="flex items-center justify-between px-3 py-2">
 				<div className="flex items-center gap-3 flex-1">
 					{showCheckbox ? (
-						<Checkbox
+						<CustomCheckbox
 							checked={isSelected}
-							onCheckedChange={() => onFileSelectToggle(file)}
+							onChange={() => onFileSelectToggle(file)}
 						/>
 					) : (
 						<div className="w-10 h-10 flex items-center justify-center rounded-md border border-gray-300">
