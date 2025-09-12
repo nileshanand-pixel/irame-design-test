@@ -229,10 +229,6 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 
 		return {
 			datasource_id: datasourceId,
-			// datasource_payload: {
-			// 	raw_files,
-			// 	raw_excel_files: [], // No longer needed as Excel sheets are treated as CSV files
-			// },
 			file_mapping: {
 				csv_files,
 			},

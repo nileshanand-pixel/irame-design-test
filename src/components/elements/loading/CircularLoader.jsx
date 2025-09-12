@@ -1,5 +1,6 @@
 const CircularLoader = ({ className, size }) => {
 	const classNameMap = {
+		xs: 'border-[0.125rem] size-[0.85rem]',
 		sm: 'border-[0.125rem] size-4',
 		md: 'border-4 size-6',
 		lg: 'border-[0.375rem] size-8',

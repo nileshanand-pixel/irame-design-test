@@ -69,20 +69,20 @@ export const SheetItem = ({
 	};
 
 	return (
-		<div className="flex items-center justify-between border-l-2 border-gray-100 pl-2 py-2 ml-4">
+		<div className="flex items-center justify-between  border-gray-100 py-1 ">
 			<div className="flex items-center gap-3 flex-1">
-				<div className="w-fit px-2 py-1 flex items-center justify-center rounded-sm border border-gray-300 bg-blue-50">
+				{/* <div className="w-fit px-2 py-1 flex items-center justify-center rounded-sm border border-gray-300 bg-blue-50">
 					<span className="text-xs  text-purple-80">EXCEL</span>
-				</div>
+				</div> */}
 
 				<div className="flex flex-1 justify-between items-center">
 					<div className="flex flex-col">
 						<span className="text-sm font-medium text-primary100 truncate max-w-[12rem]">
 							{sheet.worksheet || 'Unnamed Sheet'}
 						</span>
-						<span className="text-xs text-primary80 font-normal">
+						{/* <span className="text-xs text-primary80 font-normal">
 							Sheet
-						</span>
+						</span> */}
 					</div>
 
 					<div className="flex items-center gap-3">
@@ -93,7 +93,7 @@ export const SheetItem = ({
 							size="sm"
 							onClick={handleDelete}
 							disabled={isDeleting}
-							className="text-gray-400 hover:text-destructive p-1 h-auto"
+							className=" hover:text-destructive p-1 h-auto"
 						>
 							{isDeleting ? (
 								<div className="w-4 h-4">
