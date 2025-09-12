@@ -399,7 +399,6 @@ export function useDatasourceIngest({
 	// Delete items (non-uploading)
 	const deleteItems = useCallback(
 		async (ids) => {
-			console.log('deleteItems called with:', ids);
 			if (!ids || !ids.length)
 				return { success: false, error: 'No items to delete' };
 			if (!datasourceId)
@@ -410,14 +409,12 @@ export function useDatasourceIngest({
 			const itemsToRemove = [];
 
 			// First pass: categorize items and collect what needs to be deleted
-			console.log('Current items:', items.length);
 			for (const id of ids) {
 				// Enhanced ID matching to handle all possible ID formats
 				const it = items.find(
 					(item) =>
 						item.id === id || item.serverId === id || item.name === id,
 				);
-				console.log('Found item for id', id, ':', it);
 				if (!it) continue;
 
 				if (it.status === 'uploading') {
@@ -432,10 +429,6 @@ export function useDatasourceIngest({
 				}
 			}
 
-			console.log('toCancel:', toCancel);
-			console.log('toDelete:', toDelete);
-			console.log('itemsToRemove:', itemsToRemove);
-
 			// Cancel uploading files first
 			for (const cancelId of toCancel) {
 				const src = cancelTokensRef.current[cancelId];
@@ -449,9 +442,7 @@ export function useDatasourceIngest({
 			// Delete from server if we have items to delete
 			if (toDelete.length > 0 && deleteFiles) {
 				try {
-					console.log('Deleting from server:', toDelete);
 					await deleteFiles(toDelete, datasourceId);
-					console.log('Server deletion successful');
 				} catch (err) {
 					serverDeleteSuccess = false;
 					serverError =
@@ -459,7 +450,6 @@ export function useDatasourceIngest({
 					console.error('Server delete failed:', err);
 				}
 			} else if (toDelete.length === 0) {
-				console.log('No server items to delete');
 			}
 
 			// Always update local state for cancelled items, and for deleted items only if server deletion was successful
@@ -468,17 +458,10 @@ export function useDatasourceIngest({
 				allIdsToRemove.push(...itemsToRemove);
 			}
 
-			console.log('Removing from local state:', allIdsToRemove);
 			if (allIdsToRemove.length > 0) {
 				setItems((prev) => {
 					const filtered = prev.filter(
 						(it) => !allIdsToRemove.includes(it.id),
-					);
-					console.log(
-						'Items before filter:',
-						prev.length,
-						'Items after filter:',
-						filtered.length,
 					);
 					return filtered;
 				});
@@ -494,7 +477,6 @@ export function useDatasourceIngest({
 				deletedCount: serverDeleteSuccess ? toDelete.length : 0,
 			};
 
-			console.log('deleteItems result:', result);
 			return result;
 		},
 		[deleteFiles, datasourceId, items],

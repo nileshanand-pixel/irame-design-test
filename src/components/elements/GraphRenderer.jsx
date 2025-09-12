@@ -221,8 +221,6 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 		};
 	}, []);
 
-	console.log(fontSize, 'font size'); // Debugging line, can be removed later
-
 	useEffect(() => {
 		if (loadedData.length > 0) {
 			if (chartRef.current) chartRef.current.destroy();
@@ -239,7 +237,6 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 
 			const chartType = getChartType(graph);
 
-			console.log(finalDataObj, 'finalDataObj', chartType); // Debugging line, can be removed later
 			chartRef.current = new Chart(ctx, {
 				type: chartType,
 				data: {

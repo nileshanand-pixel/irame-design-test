@@ -127,7 +127,6 @@ const SessionHistoryPanel = ({ onClose }) => {
 							// Determine if this row is the selected one
 							const isSelected = currentRunId === item.external_id;
 
-							console.log(item, 'item harsh');
 							return (
 								<div
 									key={item.external_id}

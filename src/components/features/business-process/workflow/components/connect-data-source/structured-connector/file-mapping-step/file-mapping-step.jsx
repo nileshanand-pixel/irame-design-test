@@ -61,8 +61,6 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 	const { data: datasourceDetails, isLoading: isDatasourceLoading } =
 		useStructuredDatasourceDetails();
 
-	console.log('Kuldeep', datasourceDetails, datasourceId);
-
 	/* ───────────────────────────── HYDRATE FILES ─────────────────────────── */
 	useEffect(() => {
 		const hydrateFilesFromDatasource = async () => {
@@ -181,7 +179,6 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 	/* ───────────────────────────── HANDLERS ─────────────────────────── */
 	const handleToggleMapping = (inputId, inputName, fileIds) => {
 		// Build quick lookup for AI errors (post‑run)
-		console.log(inputName, fileIds);
 		const ira = workflowRunDetails?.data?.file_mapping_ira;
 		const errorLookup = {};
 		if (ira && ira.csv_files) {
@@ -225,7 +222,6 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 				file_name: f.file_name,
 			}));
 		});
-		console.log('MAPPING', fileMapping);
 
 		return {
 			datasource_id: datasourceId,

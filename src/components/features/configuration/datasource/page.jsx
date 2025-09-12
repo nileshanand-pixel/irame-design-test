@@ -150,7 +150,6 @@ const DataSource = () => {
 					...getErrorAnalyticsProps(err),
 				}),
 			);
-			// console.log('Error updating data source', err);
 			toast.error(
 				'Something went wrong while updating Data source ' + err.message,
 			);

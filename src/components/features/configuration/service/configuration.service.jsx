@@ -143,7 +143,6 @@ export const createEmptyDatasource = async (data) => {
 
 export const getDatasourceV2 = async (datasourceId) => {
 	try {
-		console.log('reached here', datasourceId);
 		const response = await axiosClientV2.get(`datasources/${datasourceId}`, {
 			headers: { 'Content-Type': 'application/json' },
 		});

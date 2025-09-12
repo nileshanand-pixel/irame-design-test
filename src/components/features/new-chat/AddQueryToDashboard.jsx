@@ -119,7 +119,6 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 		}
 	}, [userDashboardQuery.data]);
 
-	// console.log(filteredList, "filteredList");
 	return (
 		<Dialog open={open} onOpenChange={closeModal}>
 			<DialogContent className="max-w-[31.25rem] ">

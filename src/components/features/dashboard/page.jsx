@@ -56,7 +56,6 @@ const Dashboard = () => {
 			}
 		} catch (error) {
 			setIsLoading(false);
-			console.log('dashboard create error', error);
 			toast.error('Something went wrong while creating dashboard');
 		}
 	};

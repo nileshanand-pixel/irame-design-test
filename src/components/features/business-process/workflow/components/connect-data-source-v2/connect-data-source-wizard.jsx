@@ -71,12 +71,6 @@ export const ConnectDataSourceWizard = ({ onClose, runDetails, csvFiles }) => {
 		}
 	};
 
-	const handleRunWorkflow = () => {
-		// In a real app, this would post data to an API
-		// console.log('Running workflow with mappings:', columnMappings);
-		onClose();
-	};
-
 	return (
 		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto p-4">
 			<div className="bg-white rounded-lg shadow-lg w-full max-w-[55%] flex flex-col max-h-[75vh] ">

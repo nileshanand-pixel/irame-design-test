@@ -36,8 +36,6 @@ const StepThreeContent = ({ setPrompt, dataSources }) => {
 		},
 	});
 
-	// console.log(isLoading, "isLoading");
-
 	// Determine if all files are document types
 	const isAllDocuments = () => {
 		if (!datasource?.raw_files || datasource.raw_files.length === 0) {
@@ -47,16 +45,11 @@ const StepThreeContent = ({ setPrompt, dataSources }) => {
 		return isUnstructuredData(datasource.raw_files);
 	};
 
-	// console.log(isAllDocuments(), processingComplete, isAllDocuments() && !processingComplete, "isAllDocuments() && !processingComplete")
 	// Show loader for document files, show select prompt for data files
 	if (isLoading) {
 		return <div>Loading datasource information...</div>;
 	}
 
-	// if(isAllDocuments()) {
-
-	// }
-	console.log(datasource?.status, 'datasource?.status');
 	// If all files are documents and processing is not complete, show loader
 	if (isAllDocuments()) {
 		return (
@@ -65,19 +58,6 @@ const StepThreeContent = ({ setPrompt, dataSources }) => {
 			/>
 		);
 	}
-
-	// if(isAllDocuments() && ) {
-	// 	return (
-	// 		<div className="flex space-x-2  text-base animate-in fade-in slide-in-from-bottom-4 duration-700">
-	// 			<div className="flex-shrink-0">
-	// 				<div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-in zoom-in duration-500 delay-200">
-	// 					<Check className="w-5 h-5 text-white" />
-	// 				</div>
-	// 			</div>
-	// 			<div className="font-medium text-primary80">Datasource is ready! Start asking questions to get actionable insights.</div>
-	// 		</div>
-	// 	)
-	// }
 
 	// For data files or when processing is complete, show SelectPrompt
 	if (!isAllDocuments())
