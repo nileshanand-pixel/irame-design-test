@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from '@phosphor-icons/react';
@@ -18,6 +18,10 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 		staleTime: 5000,
 	});
 	const [uploadManagerRef, setUploadManagerRef] = useState(null);
+	const [inlineError, setInlineError] = useState('');
+	const [showInlineError, setShowInlineError] = useState(false);
+	const errorTimeoutRef = useRef(null);
+	const [currentItems, setCurrentItems] = useState([]);
 
 	// Save datasource mutation
 	const saveDatasourceMutation = useMutation({
@@ -48,7 +52,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 		if (!items || items.length === 0) {
 			return {
 				isValid: false,
-				errorMessage: 'Please remove all error files before proceeding !',
+				errorMessage: 'Please select at least one file to proceed.',
 			};
 		}
 
@@ -61,7 +65,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 		if (filesWithErrors.length > 0) {
 			return {
 				isValid: false,
-				errorMessage: 'Please remove all error files before proceeding !!',
+				errorMessage: 'Please remove all error files before proceeding.',
 			};
 		}
 
@@ -78,7 +82,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 		if (sheetsWithErrors.length > 0) {
 			return {
 				isValid: false,
-				errorMessage: 'Please remove all error files before proceeding !',
+				errorMessage: 'Please remove all error files before proceeding.',
 			};
 		}
 
@@ -92,7 +96,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 			return {
 				isValid: false,
 				errorMessage:
-					'Please wait for all files to finish uploading and processing before continuing!',
+					'Please wait for all files to finish uploading and processing before continuing.',
 			};
 		}
 
@@ -100,9 +104,10 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 	};
 
 	const handleContinue = async () => {
+		setShowInlineError(true);
 		// Get current upload state from UploadManager
 		if (!uploadManagerRef) {
-			toast.error('Upload manager not ready. Please try again.');
+			setInlineError('Upload manager not ready. Please try again.');
 			return;
 		}
 
@@ -110,7 +115,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 
 		// Check if datasource is still being created
 		if (creatingDS) {
-			toast.error(
+			setInlineError(
 				'Please wait for the upload session to be ready before continuing.',
 			);
 			return;
@@ -119,22 +124,24 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 		// Validate files and sheets
 		const validation = validateFilesAndSheets(items);
 		if (!validation.isValid) {
-			toast.error(validation.errorMessage);
+			setInlineError(validation.errorMessage);
 			return;
 		}
 
 		if (!datasourceId || !isReady) {
-			toast.error('No datasource available. Please upload files first.');
+			setInlineError('No datasource available. Please upload files first.');
 			return;
 		}
 
 		if (!workflowId) {
-			toast.error('Workflow ID not found. Please refresh the page.');
+			setInlineError('Workflow ID not found. Please refresh the page.');
 			return;
 		}
 
 		// If datasource already non-draft, skip save (already persisted) and advance
 		if (dsDetails?.status && dsDetails.status !== 'draft') {
+			setInlineError('');
+			setShowInlineError(false);
 			stepper.next();
 			return;
 		}
@@ -145,16 +152,54 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 		saveDatasourceMutation.mutate({ datasourceId, data: saveData });
 	};
 
+	// Only show inline error after Continue is clicked. Hide error if items become valid after error was shown.
+	useEffect(() => {
+		if (!showInlineError) return;
+		if (!currentItems) return;
+		const validation = validateFilesAndSheets(currentItems);
+		if (validation.isValid) {
+			setInlineError('');
+			setShowInlineError(false);
+		}
+	}, [currentItems, showInlineError]);
+
+	// Hide error after 2 seconds if shown
+	useEffect(() => {
+		if (showInlineError && inlineError) {
+			if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+			errorTimeoutRef.current = setTimeout(() => {
+				setShowInlineError(false);
+				setInlineError('');
+			}, 2000);
+		}
+		return () => {
+			if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+		};
+	}, [showInlineError, inlineError]);
+
 	return (
 		<div className="flex flex-col h-full min-h-0">
 			<div className="flex-1 px-8 flex flex-col overflow-y-auto show-scrollbar">
 				<RequiredFiles requiredFiles={requiredFiles} />
 				<div className="flex-1">
-					<UploadManager onManagerReady={setUploadManagerRef} />
+					<UploadManager
+						onManagerReady={setUploadManagerRef}
+						onItemsChange={setCurrentItems}
+					/>
 				</div>
 			</div>
 
-			<div className="border-t border-[#E5E7EB] bg-[#F3F4F680] px-8 py-4 h-[4.5rem] flex items-center justify-end">
+			<div className="border-t border-[#E5E7EB] bg-[#F3F4F680] px-8 py-4 h-[4.5rem] flex items-center justify-end gap-4">
+				{/* Animated error message, always mounted for smooth transition */}
+				<div
+					className={`text-sm text-red-600 font-medium transition-all duration-500 transform
+						${showInlineError && inlineError ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none -translate-x-8'}
+						${!showInlineError && inlineError ? 'translate-x-8' : ''}
+						min-w-[1px] max-w-xs truncate`}
+					style={{ minHeight: '1.25rem' }}
+				>
+					{inlineError}
+				</div>
 				<Button
 					className="font-semibold"
 					onClick={handleContinue}

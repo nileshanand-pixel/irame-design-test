@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, Check, AlertTriangle, Loader } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -127,6 +127,11 @@ export const ColumnMappingStep = ({
 	const [openFileId, setOpenFileId] = useState(null);
 	const [openCombobox, setOpenCombobox] = useState(null);
 	const [searchQuery, setSearchQuery] = useState('');
+
+	// Inline error state for column mapping step
+	const [inlineError, setInlineError] = useState('');
+	const [showInlineError, setShowInlineError] = useState(false);
+	const errorTimeoutRef = useRef(null);
 
 	/* seed columnMappings from backend once we have uploadedFiles */
 	useEffect(() => {
@@ -262,6 +267,24 @@ export const ColumnMappingStep = ({
 	};
 
 	const handleContinue = () => {
+		// Validation: all columns mapped, no errors
+		const allMapped = uploadedFiles.every(isFileFullyMapped);
+		const hasErrors = uploadedFiles.some((file) =>
+			file.requiredColumns.some((col) => {
+				const status = columnMappings[file.fileId]?.[col.name]?.status;
+				return status !== 'mapped';
+			}),
+		);
+		if (!allMapped) {
+			setInlineError('All columns must be mapped before continuing.');
+			setShowInlineError(true);
+			return;
+		}
+		if (hasErrors) {
+			setInlineError('Please resolve all errors before continuing.');
+			setShowInlineError(true);
+			return;
+		}
 		const payload = buildClarifyPayload();
 		clarifyWorkFlowMutation.mutate({
 			workflowId,
@@ -269,6 +292,19 @@ export const ColumnMappingStep = ({
 			payload,
 		});
 	};
+	// Hide error after 2 seconds if shown
+	useEffect(() => {
+		if (showInlineError && inlineError) {
+			if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+			errorTimeoutRef.current = setTimeout(() => {
+				setShowInlineError(false);
+				setInlineError('');
+			}, 2000);
+		}
+		return () => {
+			if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+		};
+	}, [showInlineError, inlineError]);
 
 	// FillButton redirect logic
 	const handleComplete = () => {
@@ -638,8 +674,18 @@ export const ColumnMappingStep = ({
 				</div>
 			</div>
 
-			{/* Footer buttons */}
+			{/* Footer with animated error message */}
 			<div className="border border-t-[#E5E7EB] bg-[#F3F4F680] px-8 py-4 gap-4 flex flex-shrink-0 items-center justify-end">
+				{/* Animated error message, always mounted for smooth transition */}
+				<div
+					className={`text-sm text-red-600 font-medium transition-all duration-500 transform
+							${showInlineError && inlineError ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none -translate-x-8'}
+							${!showInlineError && inlineError ? 'translate-x-8' : ''}
+							min-w-[1px] max-w-xs truncate`}
+					style={{ minHeight: '1.25rem' }}
+				>
+					{inlineError}
+				</div>
 				<Button
 					variant="ghost"
 					className="font-semibold bg-[#FEFEFE] border border-primary10 text-primary80"
@@ -662,10 +708,7 @@ export const ColumnMappingStep = ({
 					<Button
 						className="font-semibold"
 						onClick={handleContinue}
-						disabled={
-							mappedUploaded !== totalUploaded ||
-							clarifyWorkFlowMutation.isPending
-						}
+						disabled={clarifyWorkFlowMutation.isPending}
 					>
 						{clarifyWorkFlowMutation.isPending && (
 							<Loader size={16} className="animate-spin mr-2" />

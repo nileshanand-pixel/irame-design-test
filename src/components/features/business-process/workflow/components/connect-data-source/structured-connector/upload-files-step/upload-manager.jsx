@@ -16,7 +16,7 @@ import {
 import { toast } from '@/lib/toast';
 import { useStructuredDatasourceId } from '../hooks/datasource-context';
 
-export const UploadManager = ({ onManagerReady }) => {
+export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 	const { datasourceId, isCreating, isReady } = useStructuredDatasourceId();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 	const [deletingSheets, setDeletingSheets] = useState(new Set());
@@ -311,6 +311,11 @@ export const UploadManager = ({ onManagerReady }) => {
 	useEffect(() => {
 		// Debug: Log items structure when it changes
 	}, [items]);
+
+	// Notify parent whenever items list changes (for inline validation etc.)
+	useEffect(() => {
+		if (onItemsChange) onItemsChange(items);
+	}, [items, onItemsChange]);
 
 	// Expose manager state to parent component
 	useEffect(() => {

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useStructuredDatasourceDetails } from './use-structured-datasource-details';
 
 // Workflow stepper hook
 export const useStructuredStepper = (baseStepper, steps, runDetails) => {
@@ -12,6 +13,10 @@ export const useStructuredStepper = (baseStepper, steps, runDetails) => {
 		RUNNING: 'map_columns',
 	};
 
+	const { data: dsDetails } = useStructuredDatasourceDetails({
+		staleTime: 5000,
+	});
+
 	useEffect(() => {
 		if (!runDetails || !runDetails.status) return;
 		const stepId = statusToStepMap[runDetails.status] || 'upload_files';
@@ -19,6 +24,13 @@ export const useStructuredStepper = (baseStepper, steps, runDetails) => {
 			baseStepper.goTo(stepId);
 		}
 	}, [runDetails]);
+
+	useEffect(() => {
+		if (runDetails || !dsDetails || !dsDetails?.status) return;
+		if (dsDetails.status !== 'draft') {
+			baseStepper.goTo('map_files');
+		}
+	}, [dsDetails?.status]);
 
 	return {
 		...baseStepper,
