@@ -288,21 +288,6 @@ const Configuration = () => {
 		}
 	}, [data]);
 
-	const filteredList = useMemo(() => {
-		if (search) {
-			trackEvent(
-				EVENTS_ENUM.SEARCH_EXISTING_DATASET,
-				EVENTS_REGISTRY.SEARCH_EXISTING_DATASET,
-				() => ({
-					search_query: search,
-				}),
-			);
-		}
-		return dataSources.filter((item) =>
-			item?.name?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
-		);
-	}, [search, dataSources]);
-
 	useEffect(() => {
 		if (files.length) {
 			setShowForm(true);
@@ -420,11 +405,19 @@ const Configuration = () => {
 
 	const handleSearch = (e) => {
 		setSearch(e.target.value);
+		trackEvent(
+			EVENTS_ENUM.SEARCH_EXISTING_DATASET,
+			EVENTS_REGISTRY.SEARCH_EXISTING_DATASET,
+			() => ({
+				search_query: e.target.value,
+			}),
+		);
 	};
-	groupItemsByDate;
 
 	const currentDatasources = dataSources?.filter(
-		(ds) => ds?.processed_files?.datasource_type === selectedDatasourceTab?.type,
+		(ds) =>
+			ds?.processed_files?.datasource_type === selectedDatasourceTab?.type &&
+			ds?.name?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
 	);
 	const { groupArray } = groupItemsByDate(currentDatasources, 'created_at');
 
@@ -707,17 +700,18 @@ const Configuration = () => {
 													>
 														<p
 															className={cn(
-																'text-primary80 font-medium w-full flex items-center',
-																!isProcessing &&
-																	isFailed &&
-																	'cursor-pointer',
+																'text-primary80 font-medium w-full flex items-center cursor-pointer',
 															)}
 															onClick={() => {
 																if (
 																	isProcessing ||
 																	isFailed
-																)
+																) {
+																	navigate(
+																		`datasource?id=${source.datasource_id}`,
+																	);
 																	return;
+																}
 
 																trackEvent(
 																	EVENTS_ENUM.EXISTING_DATASET_CLICKED,
@@ -847,7 +841,8 @@ const Configuration = () => {
 							})}
 						</div>
 
-						{(!filteredList || filteredList.length === 0) && (
+						{(!currentDatasources ||
+							currentDatasources.length === 0) && (
 							<p className="text-primary40 flex flex-col  justify-center items-center">
 								<span className="material-symbols-outlined  text-primary10 text-[4.68rem]">
 									database
