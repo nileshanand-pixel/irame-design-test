@@ -145,6 +145,7 @@ const DataCard = ({ data, form, setForm, addChangeForTracking, isEditing }) => {
 				{isEditing || isAddingDescription ? (
 					<div>
 						<AutoGrowingTextarea
+							className="resize-none"
 							value={form?.description}
 							setValue={handleDescriptionChange}
 							onBlur={() => setIsAddingDescription(false)}
