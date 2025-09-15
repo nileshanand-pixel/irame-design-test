@@ -201,16 +201,9 @@ const DataSource = () => {
 	const handleEditDataSource = () => {
 		if (!query?.id) return;
 		const payload = {
-			processed_files: {
-				glossary: form?.processed_files?.glossary,
-				description: form?.processed_files?.description,
-				files: form?.processed_files?.files?.map((item) => ({
-					id: item.id,
-					columns: item.columns,
-				})),
-			},
-			name: form.name,
+			...form,
 		};
+		delete payload.hasChanges;
 		if (
 			!confirm(
 				'Are you sure you want to save these changes to your data source?',

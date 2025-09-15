@@ -234,7 +234,7 @@ const DataCard = ({ data, form, setForm, addChangeForTracking, isEditing }) => {
 
 						{/* <AccordionContent> */}
 						<div
-							className={`overflow-x-scroll mt-4 w-full h-full`}
+							className={`overflow-x-scroll w-full h-full`}
 							style={{
 								backgroundColor: 'white',
 							}}
@@ -248,6 +248,7 @@ const DataCard = ({ data, form, setForm, addChangeForTracking, isEditing }) => {
 									data={file}
 									datasetData={data}
 									addChangeForTracking={addChangeForTracking}
+									isEditing={isEditing}
 								/>
 							)}
 						</div>
