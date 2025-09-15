@@ -189,7 +189,7 @@ const DataCard = ({ data, form, setForm, addChangeForTracking, isEditing }) => {
 
 			<div className="flex flex-col gap-3">
 				{/* <Accordion> */}
-				{form?.files.map((file, fileIndex) => (
+				{form?.files?.map((file, fileIndex) => (
 					<div
 						className="px-4 py-3 border border-[#EAECF0] rounded-xl"
 						key={fileIndex}

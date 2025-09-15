@@ -245,7 +245,7 @@ const DataSource = () => {
 	const renderActionButtons = () => {
 		return (
 			<div className="flex gap-2 items-center">
-				<Button
+				{/* <Button
 					variant="outline"
 					className="p-2"
 					onClick={() => {
@@ -257,7 +257,7 @@ const DataSource = () => {
 					) : (
 						<DownloadSimple className="size-5" />
 					)}
-				</Button>
+				</Button> */}
 				<Button
 					variant="outline"
 					className="text-sm font-semibold hover:text-purple-100 hover:border-purple-100 hover:bg-white flex items-center"

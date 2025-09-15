@@ -196,7 +196,7 @@ const PreviewTable = ({
 
 	return (
 		<div className="w-full max-h-full overflow-x-scroll pb-4 show-scrollbar h-full text-primary80">
-			{data.type === 'excel' && (
+			{data.type === 'excel' && data?.sheets?.length > 0 && (
 				<div className="flex border-b-2">
 					{data?.sheets?.map((sheet) => (
 						<div
