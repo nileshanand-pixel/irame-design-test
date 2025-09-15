@@ -32,7 +32,12 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getFileType } from '@/utils/file';
 import { toast } from '@/lib/toast';
 import DismissibleBanner from '@/components/elements/dismissible-banner';
-import { Info, Warning, WarningCircle } from '@phosphor-icons/react';
+import {
+	DotsThreeVertical,
+	Info,
+	Warning,
+	WarningCircle,
+} from '@phosphor-icons/react';
 import {
 	Tooltip,
 	TooltipContent,
@@ -679,28 +684,33 @@ const Configuration = () => {
 													source?.status === 'failed';
 												const isProcessing =
 													source?.status === 'processing';
+												const havePreparingPercentage =
+													source.uploaded_count !== null &&
+													source.success_count !== null;
 												const preparingPercentage =
-													Math.floor(
-														(source.uploaded_count /
-															source.success_count) *
-															100,
-														2,
-													);
+													source.success_count === 0
+														? 0
+														: Math.floor(
+																(source.uploaded_count /
+																	source.success_count) *
+																	100,
+																2,
+															);
 
 												return (
 													<div
 														className={cn(
-															'flex justify-between items-center bg-purple-4 p-4 rounded-lg gap-4',
+															'flex justify-between items-center bg-purple-4 p-4 rounded-lg gap-4 cursor-pointer',
 															isFailed &&
 																'border border-[#DC262680] bg-[#fff]',
 															isProcessing &&
-																'bg-[#fff] border-2',
+																'processing-border',
 														)}
 														key={source.datasource_id}
 													>
 														<p
 															className={cn(
-																'text-primary80 font-medium w-full flex items-center cursor-pointer',
+																'text-primary80 font-medium w-[calc(100%-2.85rem)] flex items-center',
 															)}
 															onClick={() => {
 																if (
@@ -736,30 +746,32 @@ const Configuration = () => {
 																alt="database"
 																className="mr-2 size-6 text-primary40"
 															/>
-															<div className="w-full flex flex-col">
-																<p className="text-base max-w-36 truncate text-ellipsis">
+															<div className="w-[calc(100%-1.85rem)] flex flex-col">
+																<p className="text-base  truncate text-ellipsis">
 																	{upperFirst(
 																		source.name,
 																	)}
 																</p>
 
 																{(isFailed ||
-																	isProcessing) && (
-																	<div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden my-1">
-																		<div
-																			className={cn(
-																				'h-2 rounded-full transition-all duration-500',
-																				isFailed &&
-																					'bg-[#E52429]',
-																				isProcessing &&
-																					'bg-primary',
-																			)}
-																			style={{
-																				width: `${isFailed ? 100 : preparingPercentage}%`,
-																			}}
-																		/>
-																	</div>
-																)}
+																	isProcessing) &&
+																	havePreparingPercentage && (
+																		<div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden my-1">
+																			<div
+																				className={cn(
+																					'h-2 rounded-full transition-all duration-500',
+																					isFailed &&
+																						'bg-[#E52429]',
+																					isProcessing &&
+																						'bg-primary',
+																				)}
+																				style={{
+																					width: `${isFailed ? 100 : preparingPercentage}%`,
+																				}}
+																			/>
+																		</div>
+																	)}
+
 																<div className="flex items-center justify-between text-xs text-primary40">
 																	<span>
 																		{!isFailed &&
@@ -769,6 +781,7 @@ const Configuration = () => {
 																				'MMM D, YYYY',
 																			)}
 																	</span>
+
 																	<span className="flex gap-1 items-center">
 																		{isFailed && (
 																			<>
@@ -779,28 +792,23 @@ const Configuration = () => {
 																				</span>
 																			</>
 																		)}
-																		{isProcessing &&
+																		{havePreparingPercentage &&
+																			isProcessing &&
 																			`Preparing dataset ${preparingPercentage}%`}
 																	</span>
 																</div>
 															</div>
 														</p>
+
 														{!isFailed &&
 															!isProcessing && (
 																<div className="flex gap-1 items-center shrink-0">
-																	{/* <span
-																					className="material-symbols-outlined text-xl text-primary40 cursor-pointer hover:bg-purple-4 rounded-md p-1"
-																					onClick={() => {
-																						navigate(
-																							`datasource?id=${source.datasource_id}`,
-																						);
-																					}}
-																				>
-																					edit
-																				</span> */}
 																	<DropdownMenu>
 																		<DropdownMenuTrigger>
-																			<i className="bi-three-dots-vertical text-primary40 text-xl font-bold cursor-pointer hover:bg-purple-4 rounded-md p-1"></i>
+																			<DotsThreeVertical
+																				className="size-7 hover:bg-purple-4 rounded-md p-1"
+																				weight="bold"
+																			/>
 																		</DropdownMenuTrigger>
 																		<DropdownMenuContent align="start">
 																			<DropdownMenuItem
