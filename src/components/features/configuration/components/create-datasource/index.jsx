@@ -2,7 +2,10 @@ import InputText from '@/components/elements/InputText';
 import { Input } from '@/components/ui/input';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { createNewDtaSource } from '../../service/configuration.service';
+import {
+	createNewDtaSource,
+	saveDatasource,
+} from '../../service/configuration.service';
 import { v4 as uuid } from 'uuid';
 import { useRouter } from '@/hooks/useRouter';
 import { queryClient } from '@/lib/react-query';
@@ -46,7 +49,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
-	const { mutate: createDatasource } = useMutation({
+	const { mutate: uploadInitHandler } = useMutation({
 		mutationFn: uploadInit,
 	});
 
@@ -56,6 +59,10 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 	const { mutate: deleteFileFromDs } = useMutation({
 		mutationFn: removeFileFromDs,
+	});
+
+	const { mutate: saveDatasourceHandler } = useMutation({
+		mutationFn: saveDatasource,
 	});
 
 	const { data: datasourceDetails, refetch: refetchDatasourceDetails } = useQuery({
@@ -154,7 +161,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		}
 
 		if (!datasourceId) {
-			createDatasource(
+			uploadInitHandler(
 				{
 					datasource_type: DATASOURCE_TYPES.USER_GENERATED,
 				},
@@ -286,6 +293,17 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	}, [uploadQueue]);
 
 	const createDataSource = async () => {
+		if (files.some((f) => f.status === FILE_STATUS.FAILED)) {
+			const ok = await confirm({
+				header: 'Save datasource',
+				description:
+					'This action is permanent and cannot be undone. Files with error will be removed!',
+				primaryCtaText: 'Save',
+				primaryCtaVariant: 'default',
+			});
+			if (!ok) return;
+		}
+
 		trackEvent(
 			EVENTS_ENUM.SAVE_DATASET_CLICKED,
 			EVENTS_REGISTRY.SAVE_DATASET_CLICKED,
@@ -299,48 +317,42 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		);
 		setIsLoading(true);
 
-		// Use uploadedMetadata for raw_files
-		const rawFilesArr = Object.values(uploadedMetadata || {});
 		const data = {
+			datasourceId,
 			name: datasourceName,
-			raw_files: rawFilesArr.map((file) => ({
-				file_name: file.name || file.file_name,
-				file_id: file.id || uuid(),
-				file_url: file.url || file.file_url,
-				type: file.type,
-			})),
-			description,
+			description: description,
 			intent: [...dataSourceIntent],
 		};
 
 		try {
-			const response = await createNewDtaSource(data);
-			queryClient.invalidateQueries(['data-sources'], {
-				refetchActive: true,
-				refetchInactive: true,
+			// const response = await createNewDtaSource(data);
+			saveDatasourceHandler(data, {
+				onSuccess: () => {
+					queryClient.invalidateQueries(['data-sources-v2']);
+					toast.success('Data source created successfully');
+					startChatting();
+					setIsLoading(false);
+					trackEvent(
+						EVENTS_ENUM.SAVE_DATASET_SUCCESSFUL,
+						EVENTS_REGISTRY.SAVE_DATASET_SUCCESSFUL,
+						() => ({
+							files_count: files.length,
+							files_type: files.map((file) => file.type),
+							analysis_chosen: [...dataSourceIntent],
+							dataset_id: datasourceId,
+							dataset_name: datasourceName,
+							is_description_filled: !!description,
+							// size in mb
+							total_dataset_size: (
+								files?.reduce((total, file) => {
+									return total + (file.size || 0);
+								}, 0) /
+								(1024 * 1024)
+							).toFixed(2),
+						}),
+					);
+				},
 			});
-			toast.success('Data source created successfully');
-			startChatting(response);
-			setIsLoading(false);
-			trackEvent(
-				EVENTS_ENUM.SAVE_DATASET_SUCCESSFUL,
-				EVENTS_REGISTRY.SAVE_DATASET_SUCCESSFUL,
-				() => ({
-					files_count: files.length,
-					files_type: files.map((file) => file.type),
-					analysis_chosen: [...dataSourceIntent],
-					dataset_id: response.datasource_id,
-					dataset_name: datasourceName,
-					is_description_filled: !!description,
-					// size in mb
-					total_dataset_size: (
-						files?.reduce((total, file) => {
-							return total + (file.size || 0);
-						}, 0) /
-						(1024 * 1024)
-					).toFixed(2),
-				}),
-			);
 		} catch (error) {
 			toast.error('Error creating data source');
 			setIsLoading(false);
@@ -369,9 +381,9 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		}
 	};
 
-	const startChatting = (data) => {
+	const startChatting = () => {
 		navigate(
-			`/app/new-chat/?step=3&dataSourceId=${data.datasource_id}&source=configuration`,
+			`/app/new-chat/?step=3&dataSourceId=${datasourceId}&source=configuration`,
 		);
 	};
 
@@ -595,7 +607,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 							placeholder="Add Description here"
 							label="What do you want to do with this Data Set"
 							value={description}
-							setValue={(e) => setDescription(e.target.value)}
+							setValue={(e) => setDescription(e)}
 							error={!!formErrors.description}
 							errorText={formErrors.description}
 							labelClassName="text-sm font-medium text-primary40"

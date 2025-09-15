@@ -111,7 +111,7 @@ export const deleteDataSource = async (dataSourceId) => {
 };
 
 export const updateDataSource = async (id, data) => {
-	const response = await axiosClientV1.patch(`/datasources/${id}`, data, {
+	const response = await axiosClientV2.patch(`/datasources/${id}`, data, {
 		headers: {
 			'Content-Type': 'application/json',
 		},
@@ -126,6 +126,14 @@ export const parseExcel = async (data) => {
 			'Content-Type': 'application/json',
 		},
 		params: data,
+	});
+
+	return response.data;
+};
+
+export const saveDatasource = async ({ datasourceId, ...data }) => {
+	const response = await axiosClientV2.post(`/datasources/${datasourceId}/save`, {
+		...data,
 	});
 
 	return response.data;

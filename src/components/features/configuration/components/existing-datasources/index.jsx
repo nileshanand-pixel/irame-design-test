@@ -234,8 +234,8 @@ export default function ExistingDataSources({ showForm }) {
 												source.success_count === 0
 													? 0
 													: Math.floor(
-															(source.uploaded_count /
-																source.success_count) *
+															(source.success_count /
+																source.uploaded_count) *
 																100,
 															2,
 														);

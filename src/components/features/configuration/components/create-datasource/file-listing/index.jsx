@@ -176,12 +176,13 @@ export default function FileListing({ files, onRemoveFiles, onFileSelect }) {
 				) : (
 					<Button
 						size="sm"
-						className="bg-primary text-white ml-4"
+						className="ml-4"
 						onClick={handleUploadMoreClick}
+						variant="outline"
 						// disabled={isUploading || isProcessing}
 					>
 						<Upload className="w-4 h-4 mr-2" />
-						<span className="text-sm font-semibold">Upload</span>
+						<span className="text-sm">Upload More</span>
 					</Button>
 				)}
 

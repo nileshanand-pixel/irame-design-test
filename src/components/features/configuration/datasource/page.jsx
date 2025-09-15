@@ -81,6 +81,7 @@ const DataSource = () => {
 	const editMutation = useMutation({
 		mutationFn: ({ id, payload }) => updateDataSource(id, payload),
 		onSuccess: () => {
+			setIsEditing(false);
 			toast.success('Dataset updated successfully');
 			// Invalidate and refetch to force fresh data
 			queryClient.invalidateQueries(getDatasourceDetailsQueryKey(query?.id));
@@ -259,8 +260,7 @@ const DataSource = () => {
 					)}
 				</Button> */}
 				<Button
-					variant="outline"
-					className="text-sm font-semibold hover:text-purple-100 hover:border-purple-100 hover:bg-white flex items-center"
+					variant="secondary1"
 					onClick={() => {
 						trackEvent(
 							EVENTS_ENUM.DATASET_START_QUERING_CLICKED,

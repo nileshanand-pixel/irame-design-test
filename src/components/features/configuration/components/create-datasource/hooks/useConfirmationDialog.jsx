@@ -15,17 +15,20 @@ export default function useConfirmDialog() {
 	const [promise, setPromise] = useState(null);
 	const [secondaryCtaText, setSecondaryCtaText] = useState();
 	const [primaryCtaText, setPrimaryCtaText] = useState();
+	const [primaryCtaVariant, setPrimaryCtaVariant] = useState();
 
 	const confirm = ({
 		header,
 		description,
 		secondaryCtaText = 'Cancel',
 		primaryCtaText = 'Delete',
+		primaryCtaVariant = 'destructive',
 	}) => {
 		setHeader(header);
 		setDescription(description);
 		secondaryCtaText && setSecondaryCtaText(secondaryCtaText);
 		primaryCtaText && setPrimaryCtaText(primaryCtaText);
+		primaryCtaVariant && setPrimaryCtaVariant(primaryCtaVariant);
 
 		return new Promise((resolve, _) => {
 			setPromise({ resolve });
@@ -66,7 +69,7 @@ export default function useConfirmDialog() {
 					>
 						{secondaryCtaText}
 					</Button>
-					<Button onClick={handleConfirm} variant="destructive">
+					<Button onClick={handleConfirm} variant={primaryCtaVariant}>
 						{primaryCtaText}
 					</Button>
 				</DialogFooter>
