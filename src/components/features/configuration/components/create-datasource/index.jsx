@@ -1,44 +1,39 @@
 import InputText from '@/components/elements/InputText';
 import { Input } from '@/components/ui/input';
-import { formatFileSize, getFileIcon } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
-import { useFileUploadsV2 } from '@/hooks/useFileUploadsV2';
 import { Button } from '@/components/ui/button';
-import {
-	createNewDtaSource,
-	getDataSourcesV2,
-} from '../../service/configuration.service';
+import { createNewDtaSource } from '../../service/configuration.service';
 import { v4 as uuid } from 'uuid';
 import { useRouter } from '@/hooks/useRouter';
 import { queryClient } from '@/lib/react-query';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { intent } from '../../configuration.content';
 import BackdropLoader from '@/components/elements/loading/BackDropLoader';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { toast } from '@/lib/toast';
 import { X } from 'lucide-react';
+import {
+	addFileInDs,
+	getDatasourceDetails,
+	removeFileFromDs,
+	uploadFile,
+	uploadInit,
+} from '@/components/features/upload/service';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
+import { useSearchParams } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
+import FileListing from './file-listing';
+import { FILE_STATUS } from '@/constants/file.constant';
+import useConfirmDialog from './hooks/useConfirmationDialog';
 
 const CreateDatasource = ({ showForm, onShowFormChange }) => {
+	const [datasourceId, setDatasourceId] = useState('');
+	const [files, setFiles] = useState([]);
+	const [uploadQueue, setUploadQueue] = useState([]);
+
 	const { navigate, query } = useRouter();
-	const {
-		files,
-		progress,
-		addFiles,
-		removeFile,
-		uploadedMetadata,
-		resetUploads,
-		isAllFilesUploaded,
-		error,
-		setError,
-	} = useFileUploadsV2({ isDuplicateUploadAllowed: true });
-	// Show toast if duplicate upload error occurs
-	useEffect(() => {
-		if (error) {
-			toast.error(error);
-			setError(null);
-		}
-	}, [error, setError]);
 
 	const [datasourceName, setDatasourceName] = useState('');
 	const [description, setDescription] = useState('');
@@ -47,61 +42,248 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	const [dataSourceIntent, setDataSourceIntent] = useState([]);
 
 	const inputRef = useRef();
+	const [searchParams, setSearchParams] = useSearchParams();
 
-	const fetchDataSources = async () => {
-		console.log('fetching ds');
-		const data = await getDataSourcesV2();
-		return Array.isArray(data) ? data : [];
-	};
+	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
-	const { data: dataSources } = useQuery({
-		queryKey: ['data-sources-v2'],
-		queryFn: fetchDataSources,
+	const { mutate: createDatasource } = useMutation({
+		mutationFn: uploadInit,
 	});
 
-	const handleRemoveFile = (e, file, idx) => {
-		e.preventDefault();
-		e.stopPropagation();
-		trackEvent(
-			EVENTS_ENUM.REMOVE_UPLOAD_FILE,
-			EVENTS_REGISTRY.REMOVE_UPLOAD_FILE,
-			() => ({
-				file_type: file.type,
-				file_name: file.name,
-			}),
-		);
-		// If this is the last file, reset uploads after removal
-		if (files.length === 1) {
-			removeFile(file.name);
-			resetUploads();
-		} else {
-			removeFile(file.name);
+	const { mutate: uploadFileInDs } = useMutation({
+		mutationFn: addFileInDs,
+	});
+
+	const { mutate: deleteFileFromDs } = useMutation({
+		mutationFn: removeFileFromDs,
+	});
+
+	const { data: datasourceDetails, refetch: refetchDatasourceDetails } = useQuery({
+		queryKey: ['datasource-details', { datasourceId }],
+		queryFn: getDatasourceDetails,
+		enabled: !!datasourceId,
+		refetchInterval: (data) => {
+			const datasourceFiles = data?.state?.data?.files;
+
+			if (datasourceFiles?.length > 0) {
+				if (files.length === 0) {
+					setFiles(
+						datasourceFiles?.map((f) => {
+							return {
+								...f,
+								name: f.filename,
+							};
+						}),
+					);
+					// TODO: fetch size of each file and store in files array
+				} else {
+					let isFileStatusChanged = datasourceFiles?.some(
+						(datasourceFile) => {
+							for (let i = 0; i < files.length; i++) {
+								const file = files[i];
+
+								if (
+									file.name === datasourceFile.filename &&
+									file.status !== datasourceFile?.status
+								) {
+									return true;
+								}
+							}
+
+							return false;
+						},
+					);
+
+					if (isFileStatusChanged) {
+						setFiles((prev) => {
+							return prev.map((file) => {
+								for (let i = 0; i < datasourceFiles.length; i++) {
+									const datasourceFile = datasourceFiles?.[i];
+									if (datasourceFile?.filename === file.name) {
+										return {
+											...file,
+											status: datasourceFile?.status,
+										};
+									}
+								}
+								return file;
+							});
+						});
+					}
+				}
+			}
+
+			const inProcessing = data?.state?.data?.files?.some(
+				(f) => ![FILE_STATUS.FAILED, FILE_STATUS.SUCCESS].includes(f.status),
+			);
+
+			if (inProcessing) {
+				return 2000;
+			}
+			return false;
+		},
+	});
+
+	const uploadFilesOnS3 = (userSelectedFiles) => {
+		const filesArr = Array.from(userSelectedFiles);
+
+		const newFiles = filesArr
+			.filter((file) => {
+				return !files.some((f) => f.name === file.name); // remove duplicate files
+			})
+			.map((file) => {
+				return {
+					name: file?.name,
+					size: file.size,
+					type: file.type,
+					status: FILE_STATUS.UPLOADING,
+					id: uuidv4(),
+					uploadProgress: 0,
+				};
+			});
+		setFiles((prev) => [...newFiles, ...prev]);
+		setUploadQueue((prev) => [...prev, ...newFiles]);
+	};
+
+	const handleFilesSelect = (userSelectedFiles) => {
+		if (!datasourceName) {
+			setFormErrors((prev) => ({
+				...prev,
+				datasourceName: 'Please enter a name for your datasource',
+			}));
 		}
-		setFormErrors({});
+
+		if (!datasourceId) {
+			createDatasource(
+				{
+					datasource_type: DATASOURCE_TYPES.USER_GENERATED,
+				},
+				{
+					onSuccess: (data) => {
+						setDatasourceId(data?.datasource_id);
+						uploadFilesOnS3(userSelectedFiles);
+						setSearchParams({ datasource_id: data?.datasource_id });
+					},
+				},
+			);
+		} else {
+			uploadFilesOnS3(userSelectedFiles);
+		}
 	};
 
 	const handleFileChange = (e) => {
 		try {
-			if (!datasourceName) {
-				setFormErrors((prev) => ({
-					...prev,
-					datasourceName: 'Please enter a name for your datasource',
-				}));
-			}
-			if (
-				dataSources.some((source) => source.name === datasourceName.trim())
-			) {
-				setFormErrors((prev) => ({
-					...prev,
-					datasourceName: 'Data source name already exists',
-				}));
-			}
-			if (!e.target.files.length) return;
-			addFiles(e.target.files);
+			handleFilesSelect(e.target.files);
 		} catch (error) {
 			console.log(error);
 		}
 	};
+
+	const uploadSingleFile = async (file) => {
+		if (!file) return;
+
+		const source = axios.CancelToken.source();
+		setFiles((prev) => {
+			return prev.map((currentFile) => {
+				if (currentFile.id === file.id) {
+					const newFile = {
+						...currentFile,
+						cancelToken: source,
+					};
+					return newFile;
+				} else {
+					return currentFile;
+				}
+			});
+		});
+
+		try {
+			const data = await uploadFile({
+				file: file,
+				updateProgress: (progress) => {
+					setFiles((prev) => {
+						return prev.map((currentFile) => {
+							if (currentFile.id === file.id) {
+								const newFile = {
+									...currentFile,
+									uploadProgress: progress,
+								};
+								return newFile;
+							} else {
+								return currentFile;
+							}
+						});
+					});
+				},
+				cancelToken: source.token,
+				datasourceId,
+			});
+
+			setFiles((prev) =>
+				prev.map((f) => {
+					if (f.id === file.id) {
+						const newF = {
+							...f,
+							status: FILE_STATUS.UPLOADED,
+							url: data?.url,
+						};
+						delete newF.cancelToken;
+						return newF;
+					}
+					return f;
+				}),
+			);
+
+			uploadFileInDs(
+				{
+					datasource_id: datasourceId,
+					files: [
+						{
+							file_url: data.url,
+						},
+					],
+				},
+				{
+					onSuccess: () => {
+						setFiles((prev) =>
+							prev.map((f) => {
+								if (f.id === file.id) {
+									const newF = {
+										...f,
+										status: FILE_STATUS.PROCESSING,
+									};
+									return newF;
+								}
+								return f;
+							}),
+						);
+						refetchDatasourceDetails();
+					},
+				},
+			);
+		} catch (err) {
+			// if (!axios.isCancel(err)) {
+			// 	setProgress((prev) => ({ ...prev, [file.name]: 0 }));
+			// }
+		}
+	};
+
+	const uploadFiles = async () => {
+		const updatedUploadQueue = [...uploadQueue];
+
+		while (updatedUploadQueue.length > 0) {
+			const file = updatedUploadQueue.shift();
+
+			uploadSingleFile(file);
+		}
+		setUploadQueue([...updatedUploadQueue]);
+	};
+
+	useEffect(() => {
+		if (uploadQueue.length > 0) {
+			uploadFiles();
+		}
+	}, [uploadQueue]);
 
 	const createDataSource = async () => {
 		trackEvent(
@@ -140,7 +322,6 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 			toast.success('Data source created successfully');
 			startChatting(response);
 			setIsLoading(false);
-			resetUploads();
 			trackEvent(
 				EVENTS_ENUM.SAVE_DATASET_SUCCESSFUL,
 				EVENTS_REGISTRY.SAVE_DATASET_SUCCESSFUL,
@@ -195,10 +376,6 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	};
 
 	useEffect(() => {
-		onShowFormChange(files.length > 0);
-	}, [files.length, onShowFormChange]);
-
-	useEffect(() => {
 		setFormErrors((prev) => ({
 			...prev,
 			datasourceName: '',
@@ -232,7 +409,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 	const handleUploadCardClossClick = () => {
 		onShowFormChange(false);
-		resetUploads();
+		navigate('/app/configuration');
 	};
 
 	const renderUploadButtons = () => {
@@ -246,7 +423,6 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 								createDataSource();
 							}}
 							disabled={
-								!isAllFilesUploaded ||
 								isLoading ||
 								formErrors.datasourceName ||
 								!datasourceName
@@ -289,14 +465,93 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 					className="absolute top-0 w-0 -z-1 opacity-0"
 					onChange={(e) => handleFileChange(e)}
 					id="file-upload"
-					accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, application/vnd.ms-excel.sheet.binary.macroEnabled.12, .pdf"
+					accept=".csv,.xlsx,.pdf"
 				/>
 			</div>
 		);
 	};
 
+	const handleRemoveFiles = async (fileObjs) => {
+		// remove file from ds
+		const filesToDeleteFromDs = datasourceDetails?.files?.filter((f) => {
+			return fileObjs.some((fileObj) => {
+				return f.filename === fileObj.name;
+			});
+		});
+
+		// confirmation modal
+		if (filesToDeleteFromDs?.length === 1) {
+			const ok = await confirm({
+				header: 'Delete file?',
+				description: 'This action is permanent and cannot be undone. ',
+			});
+			if (!ok) return;
+		} else if (filesToDeleteFromDs?.length > 1) {
+			const ok = await confirm({
+				header: `Delete ${filesToDeleteFromDs?.length} files?`,
+				description: 'This action is permanent and cannot be undone. ',
+			});
+			if (!ok) return;
+		} else {
+			const ok = await confirm({
+				header: 'Remove file?',
+				description:
+					'This action will stop the process and permanently remove the selected file.',
+				primaryCtaText: 'Remove',
+			});
+			if (!ok) return;
+		}
+
+		if (filesToDeleteFromDs?.length > 0) {
+			deleteFileFromDs(
+				{
+					datasourceId: datasourceId,
+					fileIds: filesToDeleteFromDs?.map((f) => f.id),
+				},
+				{
+					onSuccess: () => {
+						refetchDatasourceDetails();
+					},
+				},
+			);
+		}
+
+		// remove file from files
+		const newFiles = files.filter((file) => {
+			return !fileObjs?.some((f) => f.id === file.id);
+		});
+		if (newFiles.length === 0) {
+			handleUploadCardClossClick();
+		}
+		// console.log(newFiles, "newFiles");
+		setFiles([...newFiles]);
+		// setFiles((prev) => {
+		// 	return prev.filter((file) => {
+		// 		return !fileObjs?.some((f) => f.id === file.id);
+		// 	});
+		// });
+		// if(files.length === )
+	};
+
+	console.log(files, 'files');
+	// useEffect(() => {
+	// 	if(files.length === 0) {
+
+	// 	}
+	// }, [files]);
+
+	useEffect(() => {
+		const idFromUrl = searchParams.get('datasource_id');
+
+		if (idFromUrl) {
+			setDatasourceId(idFromUrl);
+			onShowFormChange(true);
+		}
+	}, [searchParams]);
+
 	return (
 		<div className="border rounded-2xl py-4 px-6 col-span-12 shadow-1xl h-full flex flex-col">
+			<ConfirmationDialog />
 			{isLoading && (
 				<div>
 					{' '}
@@ -370,14 +625,21 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 								))}
 						</div>
 					</div>
+
+					{files.length !== 0 && (
+						<FileListing
+							files={files}
+							onRemoveFiles={handleRemoveFiles}
+							onFileSelect={handleFilesSelect}
+						/>
+					)}
 				</div>
 			)}
 
 			{/* Render Files and their progress */}
-			<div className="flex-1 overflow-y-auto">
+			{/* <div className="flex-1 overflow-y-auto">
 				{Array.isArray(files) &&
 					files?.map((file, idx) => {
-						// Try to get uploaded metadata for this file (for url, id, etc.)
 						const uploadedMeta = uploadedMetadata[file.id];
 						const fileUrl = uploadedMeta?.url || file.url;
 						return (
@@ -406,7 +668,6 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 										{progress[file.name] < 100 ? (
 											<p className="mr-4">uploading...</p>
 										) : null}
-										{/* Download button can be added here if needed */}
 										{fileUrl && (
 											<div
 												onClick={(e) =>
@@ -432,7 +693,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 							</div>
 						);
 					})}
-			</div>
+			</div> */}
 		</div>
 	);
 };
