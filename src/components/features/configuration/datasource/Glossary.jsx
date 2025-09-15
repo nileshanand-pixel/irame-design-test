@@ -4,7 +4,7 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const Glossary = ({ data, setForm, form, addChangeForTracking }) => {
-	const [localForm, setLocalForm] = useState(form.processed_files.glossary.items);
+	const [localForm, setLocalForm] = useState(form?.glossary?.items);
 
 	// Handle input change, update only if there's an actual change
 	const handleChange = (index, key, value) => {
@@ -21,12 +21,9 @@ const Glossary = ({ data, setForm, form, addChangeForTracking }) => {
 			const updatedForm = {
 				...form,
 				hasChanges: true,
-				processed_files: {
-					...form.processed_files,
-					glossary: {
-						...form.processed_files.glossary,
-						items: updatedGlossaries,
-					},
+				glossary: {
+					...form.glossary,
+					items: updatedGlossaries,
 				},
 			};
 			setForm(updatedForm);
@@ -52,12 +49,9 @@ const Glossary = ({ data, setForm, form, addChangeForTracking }) => {
 		const updatedForm = {
 			...form,
 			hasChanges: true,
-			processed_files: {
-				...form.processed_files,
-				glossary: {
-					...form.processed_files.glossary,
-					items: updatedGlossaries,
-				},
+			glossary: {
+				...form.glossary,
+				items: updatedGlossaries,
 			},
 		};
 		setForm(updatedForm);
@@ -72,16 +66,13 @@ const Glossary = ({ data, setForm, form, addChangeForTracking }) => {
 		const updatedForm = {
 			...form,
 			hasChanges: true,
-			processed_files: {
-				...form.processed_files,
-				glossary: {
-					...form.processed_files.glossary,
-					items: updatedGlossaries,
-				},
+			glossary: {
+				...form.glossary,
+				items: updatedGlossaries,
 			},
 		};
 		setForm(updatedForm);
-		const glossaryData = data?.processed_files?.glossary?.items[index];
+		const glossaryData = data?.glossary?.items[index];
 		trackEvent(
 			EVENTS_ENUM.DATASET_GLOSARRY_DELETED,
 			EVENTS_REGISTRY.DATASET_GLOSARRY_DELETED,
