@@ -4,10 +4,9 @@ import Glossary from './Glossary';
 import { useRouter } from '@/hooks/useRouter';
 import {
 	deleteDataSource,
-	getDataSourceById,
 	updateDataSource,
 } from '../service/configuration.service';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/lib/toast';
 import { queryClient } from '@/lib/react-query';
@@ -22,10 +21,12 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
-	DropdownMenuRadioItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
+import CircularLoader from '@/components/elements/loading/CircularLoader';
+import { DownloadSimple } from '@phosphor-icons/react';
+import useS3File from '@/hooks/useS3File';
 
 const tabs = [
 	{ name: 'Data Card', component: DataCard },
@@ -36,9 +37,10 @@ const DataSource = () => {
 	const [isEditing, setIsEditing] = useState(false);
 	const { navigate, query } = useRouter();
 	const [form, setForm] = useState(null);
-	const [isNameEditing, setIsNameEditing] = useState(false);
 	const [selectedTab, setSelectedTab] = useState(tabs[0].name);
 	const [changesForTracking, setChangesForTracking] = useState([]);
+
+	const { isDownloading, downloadS3File } = useS3File();
 
 	const datasourceQuery = useDatasourceDetailsV2({
 		datasourceId: query?.id,
@@ -190,10 +192,6 @@ const DataSource = () => {
 		addChangeForTracking('name');
 	};
 
-	const handleBlur = () => {
-		setIsNameEditing(false);
-	};
-
 	const handleTabChange = (tabName) => {
 		setSelectedTab(tabName);
 	};
@@ -232,9 +230,34 @@ const DataSource = () => {
 		) : null;
 	};
 
+	const handleDownloadDatasource = () => {
+		datasourceQuery?.data?.files?.forEach((file) => {
+			const fileUrl = file.processed_url || file.url;
+			const downloadName = file.filename;
+
+			if (fileUrl) {
+				downloadS3File(fileUrl, downloadName);
+				toast.success('Your files has been added to download!');
+			}
+		});
+	};
+
 	const renderActionButtons = () => {
 		return (
 			<div className="flex gap-2 items-center">
+				<Button
+					variant="outline"
+					className="p-2"
+					onClick={() => {
+						handleDownloadDatasource();
+					}}
+				>
+					{isDownloading ? (
+						<CircularLoader className="size-[1.125rem]" />
+					) : (
+						<DownloadSimple className="size-5" />
+					)}
+				</Button>
 				<Button
 					variant="outline"
 					className="text-sm font-semibold hover:text-purple-100 hover:border-purple-100 hover:bg-white flex items-center"
@@ -350,7 +373,6 @@ const DataSource = () => {
 									type="text"
 									value={form.name}
 									onChange={handleNameChange}
-									onBlur={handleBlur}
 									autoFocus
 									className="outline-none bg-transparent border-b-2 border-gray-300"
 								/>

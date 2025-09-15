@@ -41,7 +41,7 @@ const getFileSize = async (url) => {
 
 const DataCard = ({ data, form, setForm, addChangeForTracking, isEditing }) => {
 	const [isAddingDescription, setIsAddingDescription] = useState(false);
-	const [activeAccordion, setActiveAccordion] = useState(form?.files[0]?.id);
+	const [activeAccordion, setActiveAccordion] = useState(form?.files?.[0]?.id);
 	const [fileSizes, setFileSizes] = useState({});
 	const editRef = useRef(null);
 	// const handle = useFullScreenHandle();
@@ -100,10 +100,7 @@ const DataCard = ({ data, form, setForm, addChangeForTracking, isEditing }) => {
 		);
 
 		const fileUrl = calculateFileUrl(file);
-		const downloadName =
-			file.filename === file.worksheet || !file.worksheet
-				? file.filename
-				: `${file.filename}(${file.worksheet}).csv`;
+		const downloadName = file.filename;
 
 		if (fileUrl) {
 			downloadS3File(fileUrl, downloadName);
