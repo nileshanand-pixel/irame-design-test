@@ -19,7 +19,13 @@ const SELECT_TYPES = {
 	NONE: 'NONE',
 };
 
-export default function FileListing({ files, onRemoveFiles, onFileSelect }) {
+export default function FileListing({
+	files,
+	onRemoveFiles,
+	onFileSelect,
+	onDeleteSheet,
+	deletingSheets,
+}) {
 	const [selectType, setSelectType] = useState(SELECT_TYPES.NONE);
 	const [selectedFiles, setSelectedFiles] = useState([]);
 
@@ -230,10 +236,12 @@ export default function FileListing({ files, onRemoveFiles, onFileSelect }) {
 							key={fileObj.id}
 							fileObj={fileObj}
 							onRemoveFiles={onRemoveFiles}
+							onDeleteSheet={onDeleteSheet}
 							isSelected={selectedFiles.some(
 								(f) => f.id === fileObj.id,
 							)}
 							onFileSelectToggle={handleFileSelectToggle}
+							deletingSheets={deletingSheets}
 						/>
 					);
 				})}

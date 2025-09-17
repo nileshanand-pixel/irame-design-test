@@ -106,10 +106,10 @@ export default function ExistingDataSources({ showForm }) {
 		queryKey: ['data-sources-v2'],
 		queryFn: fetchDataSources,
 		refetchInterval: (data) => {
-			// if(data?.state?.data?.some((ds) => ds.status === "processing")) {
-			// 	return 2000;
-			// }
-			// return false;
+			if (data?.state?.data?.some((ds) => ds.status === 'processing')) {
+				return 2000;
+			}
+			return false;
 		},
 	});
 

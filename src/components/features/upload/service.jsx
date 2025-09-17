@@ -91,3 +91,19 @@ export const getRequiredFilesStatus = async ({ queryKey }) => {
 
 	return response.data;
 };
+
+export const removeSheets = async (fileId, sheetNames) => {
+	try {
+		const response = await axiosClientV1.delete('/files/delete-sheet', {
+			headers: { 'Content-Type': 'application/json' },
+			data: {
+				file_id: fileId,
+				sheet_names: sheetNames,
+			},
+		});
+		return response.data;
+	} catch (error) {
+		console.error('Error removing sheets from file', error);
+		throw error;
+	}
+};

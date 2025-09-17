@@ -20,6 +20,7 @@ import {
 	addFileInDs,
 	getDatasourceDetails,
 	removeFileFromDs,
+	removeSheets,
 	uploadFile,
 	uploadInit,
 } from '@/components/features/upload/service';
@@ -43,6 +44,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	const [formErrors, setFormErrors] = useState({});
 	const [isLoading, setIsLoading] = useState(false);
 	const [dataSourceIntent, setDataSourceIntent] = useState([]);
+	const [deletingSheets, setDeletingSheets] = useState(new Set());
 
 	const inputRef = useRef();
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -59,6 +61,10 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 	const { mutate: deleteFileFromDs } = useMutation({
 		mutationFn: removeFileFromDs,
+	});
+
+	const { mutate: removeSheetsHandler } = useMutation({
+		mutationFn: removeSheets,
 	});
 
 	const { mutate: saveDatasourceHandler } = useMutation({
@@ -110,6 +116,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 										return {
 											...file,
 											status: datasourceFile?.status,
+											sheets: datasourceFile?.sheets,
 										};
 									}
 								}
@@ -131,7 +138,12 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		},
 	});
 
-	const uploadFilesOnS3 = (userSelectedFiles) => {
+	const uploadFilesOnS3 = (newFiles) => {
+		setFiles((prev) => [...newFiles, ...prev]);
+		setUploadQueue((prev) => [...prev, ...newFiles]);
+	};
+
+	const handleFilesSelect = (userSelectedFiles) => {
 		const filesArr = Array.from(userSelectedFiles);
 
 		const newFiles = filesArr
@@ -146,13 +158,15 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 					status: FILE_STATUS.UPLOADING,
 					id: uuidv4(),
 					uploadProgress: 0,
+					rawFile: file,
 				};
 			});
-		setFiles((prev) => [...newFiles, ...prev]);
-		setUploadQueue((prev) => [...prev, ...newFiles]);
-	};
+		if (newFiles.length === 0) {
+			return;
+		}
 
-	const handleFilesSelect = (userSelectedFiles) => {
+		onShowFormChange(true);
+
 		if (!datasourceName) {
 			setFormErrors((prev) => ({
 				...prev,
@@ -168,13 +182,13 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				{
 					onSuccess: (data) => {
 						setDatasourceId(data?.datasource_id);
-						uploadFilesOnS3(userSelectedFiles);
+						uploadFilesOnS3(newFiles);
 						setSearchParams({ datasource_id: data?.datasource_id });
 					},
 				},
 			);
 		} else {
-			uploadFilesOnS3(userSelectedFiles);
+			uploadFilesOnS3(newFiles);
 		}
 	};
 
@@ -206,7 +220,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 		try {
 			const data = await uploadFile({
-				file: file,
+				file: file.rawFile,
 				updateProgress: (progress) => {
 					setFiles((prev) => {
 						return prev.map((currentFile) => {
@@ -421,6 +435,8 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 	const handleUploadCardClossClick = () => {
 		onShowFormChange(false);
+		setFiles([]);
+		setUploadQueue([]);
 		navigate('/app/configuration');
 	};
 
@@ -483,7 +499,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		);
 	};
 
-	const handleRemoveFiles = async (fileObjs) => {
+	const handleRemoveFiles = async (fileObjs, confirmBeforeDelete = true) => {
 		// remove file from ds
 		const filesToDeleteFromDs = datasourceDetails?.files?.filter((f) => {
 			return fileObjs.some((fileObj) => {
@@ -492,26 +508,28 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		});
 
 		// confirmation modal
-		if (filesToDeleteFromDs?.length === 1) {
-			const ok = await confirm({
-				header: 'Delete file?',
-				description: 'This action is permanent and cannot be undone. ',
-			});
-			if (!ok) return;
-		} else if (filesToDeleteFromDs?.length > 1) {
-			const ok = await confirm({
-				header: `Delete ${filesToDeleteFromDs?.length} files?`,
-				description: 'This action is permanent and cannot be undone. ',
-			});
-			if (!ok) return;
-		} else {
-			const ok = await confirm({
-				header: 'Remove file?',
-				description:
-					'This action will stop the process and permanently remove the selected file.',
-				primaryCtaText: 'Remove',
-			});
-			if (!ok) return;
+		if (confirmBeforeDelete) {
+			if (filesToDeleteFromDs?.length === 1) {
+				const ok = await confirm({
+					header: 'Delete file?',
+					description: 'This action is permanent and cannot be undone. ',
+				});
+				if (!ok) return;
+			} else if (filesToDeleteFromDs?.length > 1) {
+				const ok = await confirm({
+					header: `Delete ${filesToDeleteFromDs?.length} files?`,
+					description: 'This action is permanent and cannot be undone. ',
+				});
+				if (!ok) return;
+			} else {
+				const ok = await confirm({
+					header: 'Remove file?',
+					description:
+						'This action will stop the process and permanently remove the selected file.',
+					primaryCtaText: 'Remove',
+				});
+				if (!ok) return;
+			}
 		}
 
 		if (filesToDeleteFromDs?.length > 0) {
@@ -523,34 +541,28 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				{
 					onSuccess: () => {
 						refetchDatasourceDetails();
+						toast.success(
+							`File${filesToDeleteFromDs.length > 1 ? 's' : ''} deleted successfully`,
+						);
+						// remove file from files
+						const newFiles = files.filter((file) => {
+							return !fileObjs?.some((f) => f.id === file.id);
+						});
+						if (newFiles.length === 0) {
+							handleUploadCardClossClick();
+						}
+						// console.log(newFiles, "newFiles");
+						setFiles([...newFiles]);
+					},
+					onError: () => {
+						toast.error(
+							`Failed to delete file${filesToDeleteFromDs.length > 1 ? 's' : ''}`,
+						);
 					},
 				},
 			);
 		}
-
-		// remove file from files
-		const newFiles = files.filter((file) => {
-			return !fileObjs?.some((f) => f.id === file.id);
-		});
-		if (newFiles.length === 0) {
-			handleUploadCardClossClick();
-		}
-		// console.log(newFiles, "newFiles");
-		setFiles([...newFiles]);
-		// setFiles((prev) => {
-		// 	return prev.filter((file) => {
-		// 		return !fileObjs?.some((f) => f.id === file.id);
-		// 	});
-		// });
-		// if(files.length === )
 	};
-
-	console.log(files, 'files');
-	// useEffect(() => {
-	// 	if(files.length === 0) {
-
-	// 	}
-	// }, [files]);
 
 	useEffect(() => {
 		const idFromUrl = searchParams.get('datasource_id');
@@ -560,6 +572,74 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 			onShowFormChange(true);
 		}
 	}, [searchParams]);
+
+	const handleDeleteSheet = async (file, sheet, isLastSheet) => {
+		const fileId = file.serverId || file.id;
+		const fileName = file.name || file.filename;
+		const sheetName = sheet.worksheet;
+
+		if (!fileId) {
+			toast.error('Unable to delete sheet - file ID not found');
+			return;
+		}
+
+		let confirmHeader, confirmDescription;
+		if (isLastSheet) {
+			confirmHeader = 'Delete last sheet?';
+			confirmDescription = `This is the last sheet in "${fileName}". Deleting it will also delete the entire file. This action is permanent and cannot be undone.`;
+		} else {
+			confirmHeader = 'Delete sheet?';
+			confirmDescription = `Are you sure you want to delete sheet "${sheetName}" from "${fileName}"? This action is permanent and cannot be undone.`;
+		}
+
+		const confirmed = await confirm({
+			header: confirmHeader,
+			description: confirmDescription,
+		});
+
+		if (!confirmed) return;
+
+		// Add sheet to deleting state
+		setDeletingSheets((prev) => new Set([...prev, sheet.id]));
+
+		try {
+			if (isLastSheet) {
+				// Delete the entire file if it's the last sheet
+				handleRemoveFiles([file], false);
+			} else {
+				// Delete just the sheet
+				removeSheetsHandler(
+					{
+						fileId,
+						sheetNames: [sheetName],
+					},
+					{
+						onSuccess: () => {
+							toast.success(
+								`Sheet "${sheetName}" deleted successfully`,
+							);
+							refetchDatasourceDetails();
+						},
+						onError: () => {
+							toast.error('Failed to delete sheet');
+						},
+					},
+				);
+			}
+		} catch (error) {
+			console.error('Error deleting sheet:', error);
+			const errorMessage =
+				error.message || `Failed to delete sheet "${sheetName}"`;
+			toast.error(errorMessage);
+		} finally {
+			// Remove sheet from deleting state
+			setDeletingSheets((prev) => {
+				const newSet = new Set(prev);
+				newSet.delete(sheet.id);
+				return newSet;
+			});
+		}
+	};
 
 	return (
 		<div className="border rounded-2xl py-4 px-6 col-span-12 shadow-1xl h-full flex flex-col">
@@ -642,7 +722,9 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 						<FileListing
 							files={files}
 							onRemoveFiles={handleRemoveFiles}
+							onDeleteSheet={handleDeleteSheet}
 							onFileSelect={handleFilesSelect}
+							deletingSheets={deletingSheets}
 						/>
 					)}
 				</div>

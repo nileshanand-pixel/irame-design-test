@@ -3,14 +3,21 @@ import ProgressBar from '../progress-bar';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
 import { Warning } from '@phosphor-icons/react';
 import CustomCheckbox from '@/components/elements/custom-checkbox';
-import { Trash2, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { SheetItem } from './sheet-item';
 
 export default function FileItem({
 	fileObj,
 	onRemoveFiles,
+	onDeleteSheet,
 	isSelected,
 	onFileSelectToggle,
+	deletingSheets,
 }) {
+	const [isExpanded, setIsExpanded] = useState(false);
+
 	const renderStatus = () => {
 		// uploading on s3 status
 		if (
@@ -54,9 +61,25 @@ export default function FileItem({
 		}
 	};
 
+	const hasSheets =
+		fileObj?.sheets &&
+		Array.isArray(fileObj?.sheets) &&
+		fileObj.sheets.length > 0;
+	const sheetCount = hasSheets ? fileObj.sheets.length : 0;
+
+	const handleExpandToggle = () => {
+		if (hasSheets) {
+			setIsExpanded(!isExpanded);
+		}
+	};
+
+	const handleSheetDelete = (sheet, isLastSheet) => {
+		onDeleteSheet?.(fileObj, sheet, isLastSheet);
+	};
+
 	return (
-		<div className="flex items-center justify-between border rounded-lg px-3 py-2 bg-white">
-			<div className="flex items-center gap-3 flex-1">
+		<div className="border rounded-lg bg-white">
+			<div className="flex items-center gap-3 flex-1 px-3 py-2">
 				{[
 					FILE_STATUS.UPLOADING,
 					FILE_STATUS.UPLOADED,
@@ -64,7 +87,10 @@ export default function FileItem({
 					FILE_STATUS.AI_PROCESSING,
 				].includes(fileObj.status) ? (
 					<div className="w-10 h-10 flex items-center justify-center rounded-md border border-gray-300">
-						<span className="text-xs font-bold text-primary">PDF</span>
+						<span className="text-xs font-bold text-primary">
+							{fileObj?.name?.split('.')?.pop()?.toUpperCase() ||
+								'FILE'}
+						</span>
 					</div>
 				) : (
 					<CustomCheckbox
@@ -75,22 +101,52 @@ export default function FileItem({
 
 				<div className="flex flex-1 gap-2 items-center">
 					<div className="flex flex-col flex-1">
-						<span className="text-sm font-medium text-primary100 truncate max-w-[12.5rem]">
-							{fileObj.name}
-						</span>
-						{fileObj.size && (
-							<span className="text-xs text-primary100 font-normal">
-								{(fileObj.size / 1024 / 1024).toFixed(1)} MB
-								{/* 12 Pages */}
+						<span className="flex items-center gap-2">
+							<span className="text-sm font-medium text-primary100 truncate max-w-[12.5rem]">
+								{fileObj.name}
 							</span>
-						)}
+
+							{hasSheets && (
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={handleExpandToggle}
+									className="p-1 h-auto text-gray-500 hover:text-gray-700"
+								>
+									{isExpanded ? (
+										<ChevronUp className="size-4" />
+									) : (
+										<ChevronDown className="size-4" />
+									)}
+								</Button>
+							)}
+						</span>
+
+						<span className="text-xs text-primary100 font-normal">
+							{fileObj.size
+								? (fileObj.size / 1024 / 1024).toFixed(1) + 'MB'
+								: '. '}
+
+							{hasSheets && (
+								<>
+									<span className="h-4 border-l-2 border-primary20 mx-2" />
+									<span className="text-xs text-primary100 font-medium">
+										{sheetCount} sheet
+										{sheetCount !== 1 ? 's' : ''}
+									</span>
+								</>
+							)}
+							{/* 12 Pages */}
+						</span>
 					</div>
 
 					{renderStatus()}
 
-					<button
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={() => onRemoveFiles([fileObj])}
-						className="text-gray-400 hover:text-destructive ml-2"
+						className="hover:text-destructive p-1 h-auto"
 					>
 						{[
 							FILE_STATUS.PROCESSING,
@@ -98,13 +154,33 @@ export default function FileItem({
 							FILE_STATUS.AI_PROCESSING,
 							FILE_STATUS.UPLOADING,
 						].includes(fileObj.status) ? (
-							<X className="w-6 h-6 text-primary80" />
+							<X className="w-6 h-6" />
 						) : (
-							<Trash2 className="w-4 h-4 text-primary100" />
+							<Trash2 className="w-4 h-4" />
 						)}
-					</button>
+					</Button>
 				</div>
 			</div>
+
+			{hasSheets && isExpanded && (
+				<div className="border-t border-gray-100">
+					<div className="px-3 py-1">
+						<div className="flex flex-col space-y-3">
+							{fileObj.sheets.map((sheet) => (
+								<SheetItem
+									key={sheet.id}
+									sheet={sheet}
+									fileId={fileObj.id || fileObj.serverId}
+									fileName={fileObj.name || fileObj.filename}
+									isLastSheet={fileObj.sheets.length === 1}
+									onDeleteSheet={handleSheetDelete}
+									isDeleting={deletingSheets.has(sheet.id)}
+								/>
+							))}
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
