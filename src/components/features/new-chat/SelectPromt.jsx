@@ -10,6 +10,7 @@ import { queryClient } from '@/lib/react-query';
 import ScrollList from '@/components/elements/ScrollList';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { useDatasourceId } from '@/hooks/use-datasource-id';
 
 const SelectPrompt = ({ setPrompt, dataSources }) => {
 	const [activeTab, setActiveTab] = useState('');
@@ -20,18 +21,20 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
+	const datasourceId = useDatasourceId();
+
 	const datasourceName = useMemo(() => {
 		return dataSources?.filter(
-			(dataSource) => dataSource.datasource_id === query.datasource_id,
+			(dataSource) => dataSource.datasource_id === datasourceId,
 		)?.[0]?.name;
-	}, [query, dataSources]);
+	}, [datasourceId, dataSources]);
 
 	const handleActiveTab = (selectedTab) => {
 		trackEvent(
 			EVENTS_ENUM.L1_CATEGORY_CLICKED,
 			EVENTS_REGISTRY.L1_CATEGORY_CLICKED,
 			() => ({
-				dataset_id: query.datasource_id,
+				dataset_id: datasourceId,
 				dataset_name: datasourceName,
 				category_name: selectedTab,
 			}),
@@ -45,7 +48,7 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 				EVENTS_ENUM.L2_CATEGORY_CLICKED,
 				EVENTS_REGISTRY.L2_CATEGORY_CLICKED,
 				() => ({
-					dataset_id: query.datasource_id,
+					dataset_id: datasourceId,
 					dataset_name: datasourceName,
 					l1_category_name: activeTab,
 					clicked_on: index + 1,
@@ -62,13 +65,13 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 			if (utilReducer.isSideNavOpen)
 				dispatch(updateUtilProp([{ key: 'isSideNavOpen', value: false }]));
 			const payload = {
-				datasource_id: query.datasource_id,
+				datasource_id: datasourceId,
 				query: question,
 				type: 'single',
 			};
 			createQuerySession(payload).then((res) => {
 				navigate(
-					`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen&datasource_id=${query.datasource_id}`,
+					`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen&datasource_id=${datasourceId}`,
 				);
 				(dispatch(
 					updateChatStoreProp([
@@ -103,7 +106,7 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 					EVENTS_ENUM.CHAT_SESSION_STARTED,
 					EVENTS_REGISTRY.CHAT_SESSION_STARTED,
 					() => ({
-						dataset_id: query.datasource_id,
+						dataset_id: datasourceId,
 						dataset_name: datasourceName,
 						start_method: 'suggestion_click',
 						chat_session_id: res?.session_id,
@@ -116,7 +119,7 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 					() => ({
 						chat_session_id: res?.session_id,
 						query_id: res?.query_id,
-						dataset_id: query.datasource_id,
+						dataset_id: datasourceId,
 						dataset_name: datasourceName,
 						message_type: 'user',
 						message_source: 'suggestion_click',
@@ -140,14 +143,14 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 				if (
 					utilReducer?.suggestionData &&
 					utilReducer?.suggestionData?.suggestion?.length > 0 &&
-					query.datasource_id === utilReducer.suggestionData.dataSourceId
+					datasourceId === utilReducer.suggestionData.dataSourceId
 				) {
 					setData(utilReducer.suggestionData);
 					if (activeTab === '') {
 						setActiveTab(utilReducer.suggestionData?.suggestion[0].type);
 					}
 				} else {
-					const resp = await fetchSuggestions(query.datasource_id);
+					const resp = await fetchSuggestions(datasourceId);
 					setData(resp);
 					setActiveTab(resp?.suggestion[0]?.type);
 					dispatch(
@@ -158,7 +161,7 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 							EVENTS_ENUM.CHAT_SUGGESTIONS_LOADED,
 							EVENTS_REGISTRY.CHAT_SUGGESTIONS_LOADED,
 							() => ({
-								dataset_id: query.datasource_id,
+								dataset_id: datasourceId,
 								dataset_name: datasourceName,
 								categories: resp?.suggestion?.map(
 									(suggestion) => suggestion.type,
@@ -175,14 +178,14 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 
 		fetchData();
 
-		if (query.datasource_id) {
+		if (datasourceId) {
 			intervalId = setInterval(fetchData, 5000);
 		}
 
 		return () => {
 			clearInterval(intervalId);
 		};
-	}, [query.datasource_id, dataSources]);
+	}, [datasourceId, dataSources]);
 
 	return (
 		<div className="mt-4">
