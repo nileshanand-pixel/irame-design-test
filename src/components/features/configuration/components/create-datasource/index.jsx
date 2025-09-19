@@ -59,9 +59,9 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		mutationFn: addFileInDs,
 	});
 
-	const { mutate: deleteFileFromDs } = useMutation({
-		mutationFn: removeFileFromDs,
-	});
+	// const { mutate: deleteFileFromDs } = useMutation({
+	// 	mutationFn: removeFileFromDs,
+	// });
 
 	const { mutate: removeSheetsHandler } = useMutation({
 		mutationFn: removeSheets,
@@ -432,11 +432,10 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	};
 
 	const handleUploadCardClossClick = () => {
-		onShowFormChange(false);
 		setFiles([]);
 		setUploadQueue([]);
 		setDatasourceId('');
-		navigate('/app/configuration');
+		setSearchParams({});
 	};
 
 	const renderUploadButtons = () => {
@@ -499,66 +498,61 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	};
 
 	const handleRemoveFiles = async (fileObjs, confirmBeforeDelete = true) => {
-		// remove file from ds
-		const filesToDeleteFromDs = datasourceDetails?.files?.filter((f) => {
-			return fileObjs.some((fileObj) => {
-				return f.filename === fileObj.name;
+		try {
+			// remove file from ds
+			const filesToDeleteFromDs = datasourceDetails?.files?.filter((f) => {
+				return fileObjs.some((fileObj) => {
+					return f.filename === fileObj.name;
+				});
 			});
-		});
 
-		// confirmation modal
-		if (confirmBeforeDelete) {
-			if (filesToDeleteFromDs?.length === 1) {
-				const ok = await confirm({
-					header: 'Delete file?',
-					description: 'This action is permanent and cannot be undone. ',
-				});
-				if (!ok) return;
-			} else if (filesToDeleteFromDs?.length > 1) {
-				const ok = await confirm({
-					header: `Delete ${filesToDeleteFromDs?.length} files?`,
-					description: 'This action is permanent and cannot be undone. ',
-				});
-				if (!ok) return;
-			} else {
-				const ok = await confirm({
-					header: 'Remove file?',
-					description:
-						'This action will stop the process and permanently remove the selected file.',
-					primaryCtaText: 'Remove',
-				});
-				if (!ok) return;
+			// confirmation modal
+			if (confirmBeforeDelete) {
+				if (filesToDeleteFromDs?.length === 1) {
+					const ok = await confirm({
+						header: 'Delete file?',
+						description:
+							'This action is permanent and cannot be undone. ',
+					});
+					if (!ok) return;
+				} else if (filesToDeleteFromDs?.length > 1) {
+					const ok = await confirm({
+						header: `Delete ${filesToDeleteFromDs?.length} files?`,
+						description:
+							'This action is permanent and cannot be undone. ',
+					});
+					if (!ok) return;
+				} else {
+					const ok = await confirm({
+						header: 'Remove file?',
+						description:
+							'This action will stop the process and permanently remove the selected file.',
+						primaryCtaText: 'Remove',
+					});
+					if (!ok) return;
+				}
 			}
-		}
 
-		if (filesToDeleteFromDs?.length > 0) {
-			deleteFileFromDs(
-				{
+			if (filesToDeleteFromDs?.length > 0) {
+				await removeFileFromDs({
 					datasourceId: datasourceId,
 					fileIds: filesToDeleteFromDs?.map((f) => f.id),
-				},
-				{
-					onSuccess: () => {
-						refetchDatasourceDetails();
-						toast.success(
-							`File${filesToDeleteFromDs.length > 1 ? 's' : ''} deleted successfully`,
-						);
-						// remove file from files
-						const newFiles = files.filter((file) => {
-							return !fileObjs?.some((f) => f.id === file.id);
-						});
-						if (newFiles.length === 0) {
-							handleUploadCardClossClick();
-						}
-						// console.log(newFiles, "newFiles");
-						setFiles([...newFiles]);
-					},
-					onError: () => {
-						toast.error(
-							`Failed to delete file${filesToDeleteFromDs.length > 1 ? 's' : ''}`,
-						);
-					},
-				},
+				});
+				refetchDatasourceDetails();
+			}
+
+			toast.success(
+				`File${filesToDeleteFromDs.length > 1 ? 's' : ''} deleted successfully`,
+			);
+			const newFiles = files.filter((file) => {
+				return !fileObjs?.some((f) => f.id === file.id);
+			});
+			if (newFiles.length === 0) {
+				handleUploadCardClossClick();
+			}
+		} catch (error) {
+			toast.error(
+				`Failed to delete file${filesToDeleteFromDs.length > 1 ? 's' : ''}`,
 			);
 		}
 	};
@@ -568,9 +562,12 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 		if (idFromUrl) {
 			setDatasourceId(idFromUrl);
-			onShowFormChange(true);
 		}
 	}, [searchParams]);
+
+	useEffect(() => {
+		onShowFormChange(files.length !== 0);
+	}, [files]);
 
 	const handleDeleteSheet = async (file, sheet, isLastSheet) => {
 		const fileId = file.serverId || file.id;
