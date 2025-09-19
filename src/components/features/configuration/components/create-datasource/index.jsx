@@ -674,7 +674,12 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	};
 
 	return (
-		<div className={cn('border rounded-2xl py-4 px-6 shadow-1xl h-full')}>
+		<div
+			className={cn(
+				'border rounded-2xl py-4 px-6 shadow-1xl h-full',
+				isInitializingUpload && 'flex items-center justify-center',
+			)}
+		>
 			<ConfirmationDialog />
 			{isLoading && (
 				<div>

@@ -44,6 +44,14 @@ const DataSource = () => {
 
 	const datasourceQuery = useDatasourceDetailsV2({
 		datasourceId: query?.id,
+		queryOptions: {
+			refetchInterval: (data) => {
+				if (data?.state?.data?.status === 'processing') {
+					return 2000;
+				}
+				return false;
+			},
+		},
 	});
 
 	const deleteMutation = useMutation({
