@@ -7,6 +7,12 @@ import { ChevronDown, ChevronUp, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { SheetItem } from './sheet-item';
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export default function FileItem({
 	fileObj,
@@ -51,12 +57,24 @@ export default function FileItem({
 
 		if (fileObj?.status === FILE_STATUS.FAILED) {
 			return (
-				<div className="flex gap-1 items-center">
-					<Warning weight="fill" className="w-4 h-4 text-destructive" />
-					<span className="text-xs text-destructive font-normal">
-						Processing Failed
-					</span>
-				</div>
+				<TooltipProvider delayDuration={0}>
+					<Tooltip>
+						<TooltipTrigger className="ms-2">
+							<div className="flex gap-1 items-center cursor-pointer">
+								<Warning
+									weight="fill"
+									className="w-4 h-4 text-destructive"
+								/>
+								<span className="text-xs text-destructive font-normal">
+									Processing Failed
+								</span>
+							</div>
+						</TooltipTrigger>
+						<TooltipContent className="max-w-[20rem]">
+							{fileObj.message}
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
 			);
 		}
 	};
@@ -124,7 +142,9 @@ export default function FileItem({
 
 						<span className="text-xs text-primary100 font-normal">
 							{fileObj.size
-								? (fileObj.size / 1024 / 1024).toFixed(1) + 'MB'
+								? fileObj.size < 1024 * 1024
+									? (fileObj.size / 1024).toFixed(1) + 'KB'
+									: (fileObj.size / 1024 / 1024).toFixed(1) + 'MB'
 								: '. '}
 
 							{hasSheets && (
