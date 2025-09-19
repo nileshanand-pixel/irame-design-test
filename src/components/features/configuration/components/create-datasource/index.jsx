@@ -66,9 +66,9 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	// 	mutationFn: removeFileFromDs,
 	// });
 
-	const { mutate: removeSheetsHandler } = useMutation({
-		mutationFn: removeSheets,
-	});
+	// const { mutate: removeSheetsHandler } = useMutation({
+	// 	mutationFn: removeSheets,
+	// });
 
 	// const { mutate: saveDatasourceHandler } = useMutation({
 	// 	mutationFn: saveDatasource,
@@ -608,23 +608,9 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				handleRemoveFiles([file], false);
 			} else {
 				// Delete just the sheet
-				removeSheetsHandler(
-					{
-						fileId,
-						sheetNames: [sheetName],
-					},
-					{
-						onSuccess: () => {
-							toast.success(
-								`Sheet "${sheetName}" deleted successfully`,
-							);
-							refetchDatasourceDetails();
-						},
-						onError: () => {
-							toast.error('Failed to delete sheet');
-						},
-					},
-				);
+				await removeSheets(fileId, [sheetName]);
+				toast.success(`Sheet "${sheetName}" deleted successfully`);
+				refetchDatasourceDetails();
 			}
 		} catch (error) {
 			console.error('Error deleting sheet:', error);
