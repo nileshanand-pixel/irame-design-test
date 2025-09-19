@@ -75,7 +75,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	// });
 
 	const { data: datasourceDetails, refetch: refetchDatasourceDetails } = useQuery({
-		queryKey: ['datasource-details', { datasourceId }],
+		queryKey: ['datasource-details-v2', { datasourceId }],
 		queryFn: getDatasourceDetails,
 		enabled: !!datasourceId,
 		refetchInterval: (data) => {
@@ -310,15 +310,58 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		}
 	}, [uploadQueue]);
 
+	const canSaveDatasource = files.some((f) =>
+		[
+			FILE_STATUS.SUCCESS,
+			FILE_STATUS.PROCESSING,
+			FILE_STATUS.AI_PROCESSING,
+		].includes(f.status),
+	);
+
 	const createDataSource = async () => {
 		try {
+			if (!canSaveDatasource) {
+				return;
+			}
+
 			setIsLoading(true);
 
-			if (files.some((f) => f.status === FILE_STATUS.FAILED)) {
+			let uploadingFileCount = 0;
+			let failedFileCount = 0;
+
+			files.forEach((f) => {
+				if (f.status === FILE_STATUS.FAILED) {
+					failedFileCount++;
+				} else if (
+					[FILE_STATUS.UPLOADED, FILE_STATUS.UPLOADING].includes(f.status)
+				) {
+					uploadingFileCount++;
+				}
+			});
+
+			if (failedFileCount > 0 && uploadingFileCount > 0) {
+				const ok = await confirm({
+					header: 'Save datasource',
+					description:
+						'This action is permanent and cannot be undone. Files with error and uploading files will be removed!',
+					primaryCtaText: 'Save',
+					primaryCtaVariant: 'default',
+				});
+				if (!ok) return;
+			} else if (failedFileCount > 0) {
 				const ok = await confirm({
 					header: 'Save datasource',
 					description:
 						'This action is permanent and cannot be undone. Files with error will be removed!',
+					primaryCtaText: 'Save',
+					primaryCtaVariant: 'default',
+				});
+				if (!ok) return;
+			} else if (uploadingFileCount > 0) {
+				const ok = await confirm({
+					header: 'Save datasource',
+					description:
+						'This action is permanent and cannot be undone. Uploading files will not be stored!',
 					primaryCtaText: 'Save',
 					primaryCtaVariant: 'default',
 				});
@@ -436,6 +479,8 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	};
 
 	const handleUploadCardClossClick = () => {
+		setDescription('');
+		setDatasourceName('');
 		setFiles([]);
 		setUploadQueue([]);
 		setDatasourceId('');
@@ -455,7 +500,8 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 							disabled={
 								isLoading ||
 								formErrors.datasourceName ||
-								!datasourceName
+								!datasourceName ||
+								!canSaveDatasource
 							}
 						>
 							Save Dataset
