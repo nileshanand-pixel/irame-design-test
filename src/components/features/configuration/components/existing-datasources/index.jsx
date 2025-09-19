@@ -353,6 +353,17 @@ export default function ExistingDataSources({ showForm }) {
 																<DropdownMenuContent align="start">
 																	<DropdownMenuItem
 																		className="text-primary80 font-medium hover:!bg-purple-4"
+																		onClick={() => {
+																			navigate(
+																				`datasource?id=${source.datasource_id}`,
+																			);
+																		}}
+																	>
+																		<i className="bi-pencil me-2 text-primary80 font-medium"></i>
+																		Edit
+																	</DropdownMenuItem>
+																	<DropdownMenuItem
+																		className="text-primary80 font-medium hover:!bg-purple-4"
 																		onClick={(
 																			e,
 																		) =>
@@ -364,17 +375,6 @@ export default function ExistingDataSources({ showForm }) {
 																	>
 																		<i className="bi-trash me-2 text-primary80 font-medium"></i>
 																		Delete
-																	</DropdownMenuItem>
-																	<DropdownMenuItem
-																		className="text-primary80 font-medium hover:!bg-purple-4"
-																		onClick={() => {
-																			navigate(
-																				`datasource?id=${source.datasource_id}`,
-																			);
-																		}}
-																	>
-																		<i className="bi-pencil me-2 text-primary80 font-medium"></i>
-																		Edit
 																	</DropdownMenuItem>
 																</DropdownMenuContent>
 															</DropdownMenu>
