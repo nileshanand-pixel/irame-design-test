@@ -344,7 +344,12 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				onSuccess: () => {
 					queryClient.invalidateQueries(['data-sources-v2']);
 					toast.success('Data source created successfully');
-					startChatting();
+					if (files.some((f) => f.status !== FILE_STATUS.SUCCESS)) {
+						handleUploadCardClossClick();
+					} else {
+						startChatting();
+					}
+
 					setIsLoading(false);
 					trackEvent(
 						EVENTS_ENUM.SAVE_DATASET_SUCCESSFUL,
@@ -415,20 +420,13 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 	const handleInputClick = (e) => {
 		e.preventDefault();
-		if (files.length === 0) {
-			trackEvent(
-				EVENTS_ENUM.UPLOAD_DATASET_CLICKED,
-				EVENTS_REGISTRY.UPLOAD_DATASET_CLICKED,
-				() => ({
-					source: query?.source || 'url',
-				}),
-			);
-		} else {
-			trackEvent(
-				EVENTS_ENUM.UPLOAD_MORE_CLICKED,
-				EVENTS_REGISTRY.UPLOAD_MORE_CLICKED,
-			);
-		}
+		trackEvent(
+			EVENTS_ENUM.UPLOAD_DATASET_CLICKED,
+			EVENTS_REGISTRY.UPLOAD_DATASET_CLICKED,
+			() => ({
+				source: query?.source || 'url',
+			}),
+		);
 		// if (!isAllFilesUploaded() || isLoading) return;
 		inputRef.current.click();
 	};
@@ -437,6 +435,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		onShowFormChange(false);
 		setFiles([]);
 		setUploadQueue([]);
+		setDatasourceId('');
 		navigate('/app/configuration');
 	};
 
