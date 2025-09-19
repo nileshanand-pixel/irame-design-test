@@ -20,7 +20,6 @@ export const useOAuthLogin = (data) => {
 
 			navigate('/app/new-chat?source=login');
 		} catch (err) {
-			console.log(err);
 			navigate('/');
 		}
 	};

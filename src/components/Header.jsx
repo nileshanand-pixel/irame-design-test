@@ -20,9 +20,7 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { LockClosedIcon } from '@radix-ui/react-icons';
 import { ReaderIcon } from '@radix-ui/react-icons';
 import { RocketIcon } from '@radix-ui/react-icons';
-import { useDatasourceId } from '@/hooks/use-datasource-id';
 import useDataSourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
-import { data } from 'autoprefixer';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');

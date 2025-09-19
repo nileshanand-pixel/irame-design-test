@@ -281,7 +281,7 @@ const DashboardDetailsPage = () => {
 														}),
 													);
 													navigate(
-														`/app/new-chat/session?sessionId=${selectedItem?.content?.session_id}&source=dashboard&dataSourceId=${selectedItem?.content?.datasource_id}`,
+														`/app/new-chat/session?sessionId=${selectedItem?.content?.session_id}&source=dashboard&datasource_id=${selectedItem?.content?.datasource_id}`,
 													);
 												}}
 											>

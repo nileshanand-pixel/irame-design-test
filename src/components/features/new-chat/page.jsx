@@ -136,7 +136,7 @@ const NewChat = () => {
 				};
 			}
 			const payload = {
-				datasource_id: query.dataSourceId,
+				datasource_id: query.datasource_id,
 				type: mode,
 			};
 
@@ -152,7 +152,7 @@ const NewChat = () => {
 			createQuerySession(payload)
 				.then((res) => {
 					navigate(
-						`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen&dataSourceId=${query.dataSourceId}`,
+						`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen&datasource_id=${query.datasource_id}`,
 					);
 					dispatch(
 						updateChatStoreProp([
@@ -182,7 +182,7 @@ const NewChat = () => {
 						EVENTS_ENUM.CHAT_SESSION_STARTED,
 						EVENTS_REGISTRY.CHAT_SESSION_STARTED,
 						() => ({
-							dataset_id: query.dataSourceId,
+							dataset_id: query.datasource_id,
 							dataset_name: datasourceData?.name,
 							start_method: 'manual_input',
 							chat_session_id: res?.session_id,
@@ -195,7 +195,7 @@ const NewChat = () => {
 						() => ({
 							chat_session_id: res?.session_id,
 							query_id: res?.query_id,
-							dataset_id: query.dataSourceId,
+							dataset_id: query.datasource_id,
 							dataset_name: datasourceData?.name,
 							message_type: 'user',
 							message_source: 'manual_input',
@@ -296,9 +296,9 @@ const NewChat = () => {
 	}, [dataSources, query]);
 
 	useEffect(() => {
-		const { step, dataSourceId } = query;
+		const { step, datasource_id } = query;
 
-		if (!step || !dataSourceId) {
+		if (!step || !datasource_id) {
 			trackEvent(
 				EVENTS_ENUM.LANDING_PAGE_LOADED,
 				EVENTS_REGISTRY.LANDING_PAGE_LOADED,
@@ -327,7 +327,7 @@ const NewChat = () => {
 		setIsGraphLoading(true);
 		setDoingScience(true);
 	}, [
-		query.dataSourceId,
+		query.datasource_id,
 		query.sessionId,
 		query.queryId,
 		utilReducer?.answerFromHistory,

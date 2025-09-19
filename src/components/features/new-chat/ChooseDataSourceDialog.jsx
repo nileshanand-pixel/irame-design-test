@@ -54,7 +54,7 @@ const ChooseDataSourceDialog = ({
 			}),
 		);
 		navigate(
-			`/app/new-chat/?step=3&dataSourceId=${selectedDataSource}&source=homepage`,
+			`/app/new-chat/?step=3&datasource_id=${selectedDataSource}&source=homepage`,
 		);
 		handleNextStep(3);
 		setOpen(false);

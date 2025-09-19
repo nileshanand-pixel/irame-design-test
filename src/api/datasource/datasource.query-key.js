@@ -1,3 +1,3 @@
-export const getDatasourceDetailsQueryKey = (id) => {
-	return ['data-source-details', id];
+export const getDatasourceDetailsQueryKey = (id, version) => {
+	return ['data-source-details' + (version === 'v2' ? 'v2' : ''), id];
 };

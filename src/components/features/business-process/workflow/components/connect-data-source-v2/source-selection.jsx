@@ -374,7 +374,6 @@ export const SourceSelection = ({
 			file_name: f.name,
 			datasource_id: f.datasource_id,
 		}));
-		// console.log(raw_files);
 
 		const raw_excel_files = availableFiles
 			.filter((f) => EXCEL_EXTENSIONS.includes(f.type))
@@ -400,8 +399,6 @@ export const SourceSelection = ({
 				.map((f) => f.file_id),
 			...raw_excel_files.map((f) => f.file_id),
 		]);
-
-		// console.log(mappedFileIds);
 
 		const filteredRawFiles = raw_files.filter(
 			(f) => mappedFileIds.has(f.file_id) && f.file_url,

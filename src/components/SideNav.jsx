@@ -150,7 +150,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		if (sessionId === session.session_id) return;
 		dispatch(resetChatStore());
 		navigate(
-			`/app/new-chat/session?sessionId=${session.session_id}&source=side_bar&dataSourceId=${session.datasource_id}`,
+			`/app/new-chat/session?sessionId=${session.session_id}&source=side_bar&datasource_id=${session.datasource_id}`,
 		);
 		dispatch(
 			updateChatStoreProp([
@@ -427,11 +427,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							]),
 						);
 						navigate(
-							`/app/new-chat/session/?sessionId=${workflow.session_id}&source=side_bar&dataSourceId=${workflow.datasource_id}`,
+							`/app/new-chat/session/?sessionId=${workflow.session_id}&source=side_bar&datasource_id=${workflow.datasource_id}`,
 						);
 					} else {
 						navigate(
-							`/app/business-process/${workflow.business_process_id}/workflows/${workflow.workflow_check_id}?run_id=${workflow.external_id}`,
+							`/app/business-process/${workflow.business_process_id}/workflows/${workflow.workflow_check_id}?run_id=${workflow.external_id}&datasource_id=${workflow.datasource_id}`,
 						);
 					}
 				}}

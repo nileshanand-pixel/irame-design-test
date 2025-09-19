@@ -73,8 +73,6 @@ const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) =>
 		}
 	}, [data, loadedData.length]);
 
-	// console.log('TableResponse', data, loadedData, columns);
-
 	return (
 		<div className="mb-4">
 			{isGraphLoading ? (

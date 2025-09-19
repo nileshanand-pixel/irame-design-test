@@ -249,7 +249,6 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 			setFiles((prev) =>
 				prev.map((f) => {
 					if (f.name === file.name) {
-						// console.log({ file, f });
 						const newF = Object.assign(f, {
 							status: 'ready',
 						});

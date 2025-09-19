@@ -55,11 +55,14 @@ const SessionHistoryPanel = ({ onClose }) => {
 		refetchInterval: 60000,
 	});
 
-	const handleRowClick = (externalId, linkActive, sessionUrl) => {
+	const handleRowClick = ({ runId, linkActive, sessionUrl, datasourceId }) => {
 		if (linkActive) {
 			window.open(sessionUrl, '_blank', 'noopener,noreferrer');
 		} else {
-			searchParams.set('run_id', externalId);
+			searchParams.set('run_id', runId);
+			if (datasourceId) {
+				searchParams.set('datasource_id', datasourceId);
+			}
 			navigate({
 				pathname: location.pathname,
 				search: searchParams.toString(),
@@ -119,12 +122,11 @@ const SessionHistoryPanel = ({ onClose }) => {
 					<div className="divide-y text-black/60">
 						{runs.map((item) => {
 							const linkActive = isLinkActive(item.status);
-							const sessionUrl = `${window.location.origin}/app/new-chat/session/?sessionId=${item.session_id}&source=workflow&dataSourceId=${item.datasource_id}`;
+							const sessionUrl = `${window.location.origin}/app/new-chat/session/?sessionId=${item.session_id}&source=workflow&datasource_id=${item.datasource_id}`;
 
 							// Determine if this row is the selected one
 							const isSelected = currentRunId === item.external_id;
 
-							console.log(item, 'item harsh');
 							return (
 								<div
 									key={item.external_id}
@@ -132,11 +134,12 @@ const SessionHistoryPanel = ({ onClose }) => {
 										isSelected ? 'bg-purple-50' : ''
 									}`}
 									onClick={() =>
-										handleRowClick(
-											item.external_id,
+										handleRowClick({
+											runId: item.external_id,
 											linkActive,
 											sessionUrl,
-										)
+											datasourceId: item.datasource_id,
+										})
 									}
 								>
 									<div className="col-span-3">

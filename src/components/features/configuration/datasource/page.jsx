@@ -169,7 +169,6 @@ const DataSource = () => {
 					...getErrorAnalyticsProps(err),
 				}),
 			);
-			// console.log('Error updating data source', err);
 			toast.error(
 				'Something went wrong while updating Data source ' + err.message,
 			);
@@ -279,7 +278,7 @@ const DataSource = () => {
 							}),
 						);
 						navigate(
-							`/app/new-chat/?step=3&dataSourceId=${query?.id}&source=configuration`,
+							`/app/new-chat/?step=3&datasource_id=${query?.id}&source=configuration`,
 						);
 					}}
 				>
