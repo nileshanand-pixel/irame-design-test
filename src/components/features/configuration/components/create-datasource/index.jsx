@@ -32,6 +32,7 @@ import FileListing from './file-listing';
 import { FILE_STATUS } from '@/constants/file.constant';
 import useConfirmDialog from './hooks/useConfirmationDialog';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
+import { cn } from '@/lib/utils';
 
 const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	const [datasourceId, setDatasourceId] = useState('');
@@ -69,9 +70,9 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		mutationFn: removeSheets,
 	});
 
-	const { mutate: saveDatasourceHandler } = useMutation({
-		mutationFn: saveDatasource,
-	});
+	// const { mutate: saveDatasourceHandler } = useMutation({
+	// 	mutationFn: saveDatasource,
+	// });
 
 	const { data: datasourceDetails, refetch: refetchDatasourceDetails } = useQuery({
 		queryKey: ['datasource-details', { datasourceId }],
@@ -310,74 +311,72 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	}, [uploadQueue]);
 
 	const createDataSource = async () => {
-		if (files.some((f) => f.status === FILE_STATUS.FAILED)) {
-			const ok = await confirm({
-				header: 'Save datasource',
-				description:
-					'This action is permanent and cannot be undone. Files with error will be removed!',
-				primaryCtaText: 'Save',
-				primaryCtaVariant: 'default',
-			});
-			if (!ok) return;
-		}
-
-		trackEvent(
-			EVENTS_ENUM.SAVE_DATASET_CLICKED,
-			EVENTS_REGISTRY.SAVE_DATASET_CLICKED,
-			() => ({
-				files_count: files.length,
-				files_type: files.map((file) => file.type),
-				analysis_chosen: [...dataSourceIntent],
-				dataset_name: datasourceName,
-				is_description_filled: !!description,
-			}),
-		);
-		setIsLoading(true);
-
-		const data = {
-			datasourceId,
-			name: datasourceName,
-			description: description,
-			intent: [...dataSourceIntent],
-		};
-
 		try {
-			// const response = await createNewDtaSource(data);
-			saveDatasourceHandler(data, {
-				onSuccess: () => {
-					queryClient.invalidateQueries(['data-sources-v2']);
-					toast.success('Data source created successfully');
-					if (files.some((f) => f.status !== FILE_STATUS.SUCCESS)) {
-						handleUploadCardClossClick();
-					} else {
-						startChatting();
-					}
+			setIsLoading(true);
 
-					setIsLoading(false);
-					trackEvent(
-						EVENTS_ENUM.SAVE_DATASET_SUCCESSFUL,
-						EVENTS_REGISTRY.SAVE_DATASET_SUCCESSFUL,
-						() => ({
-							files_count: files.length,
-							files_type: files.map((file) => file.type),
-							analysis_chosen: [...dataSourceIntent],
-							dataset_id: datasourceId,
-							dataset_name: datasourceName,
-							is_description_filled: !!description,
-							// size in mb
-							total_dataset_size: (
-								files?.reduce((total, file) => {
-									return total + (file.size || 0);
-								}, 0) /
-								(1024 * 1024)
-							).toFixed(2),
-						}),
-					);
-				},
-			});
+			if (files.some((f) => f.status === FILE_STATUS.FAILED)) {
+				const ok = await confirm({
+					header: 'Save datasource',
+					description:
+						'This action is permanent and cannot be undone. Files with error will be removed!',
+					primaryCtaText: 'Save',
+					primaryCtaVariant: 'default',
+				});
+				if (!ok) return;
+			}
+
+			trackEvent(
+				EVENTS_ENUM.SAVE_DATASET_CLICKED,
+				EVENTS_REGISTRY.SAVE_DATASET_CLICKED,
+				() => ({
+					files_count: files.length,
+					files_type: files.map((file) => file.type),
+					analysis_chosen: [...dataSourceIntent],
+					dataset_name: datasourceName,
+					is_description_filled: !!description,
+				}),
+			);
+
+			const data = {
+				datasourceId,
+				name: datasourceName,
+				description: description,
+				intent: [...dataSourceIntent],
+			};
+
+			await saveDatasource(data);
+
+			queryClient.invalidateQueries(['data-sources-v2']);
+			toast.success('Data source created successfully');
+			if (files.some((f) => f.status !== FILE_STATUS.SUCCESS)) {
+				handleUploadCardClossClick();
+			} else {
+				startChatting();
+			}
+
+			trackEvent(
+				EVENTS_ENUM.SAVE_DATASET_SUCCESSFUL,
+				EVENTS_REGISTRY.SAVE_DATASET_SUCCESSFUL,
+				() => ({
+					files_count: files.length,
+					files_type: files.map((file) => file.type),
+					analysis_chosen: [...dataSourceIntent],
+					dataset_id: datasourceId,
+					dataset_name: datasourceName,
+					is_description_filled: !!description,
+					// size in mb
+					total_dataset_size: (
+						files?.reduce((total, file) => {
+							return total + (file.size || 0);
+						}, 0) /
+						(1024 * 1024)
+					).toFixed(2),
+				}),
+			);
 		} catch (error) {
-			toast.error('Error creating data source');
-			setIsLoading(false);
+			const errorMessage =
+				error.response?.data?.message || 'Error creating data source';
+			toast.error(errorMessage);
 			trackEvent(
 				EVENTS_ENUM.SAVE_DATASET_FAILED,
 				EVENTS_REGISTRY.SAVE_DATASET_FAILED,
@@ -392,6 +391,8 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 					...getErrorAnalyticsProps(error),
 				}),
 			);
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -641,7 +642,12 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	};
 
 	return (
-		<div className="border rounded-2xl py-4 px-6 col-span-12 shadow-1xl h-[50rem] flex flex-col">
+		<div
+			className={cn(
+				'border rounded-2xl py-4 px-6 col-span-12 shadow-1xl flex flex-col',
+				showForm ? 'h-[50rem]' : 'h-full',
+			)}
+		>
 			<ConfirmationDialog />
 			{isLoading && (
 				<div>
