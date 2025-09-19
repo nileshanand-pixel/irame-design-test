@@ -31,11 +31,13 @@ import axios from 'axios';
 import FileListing from './file-listing';
 import { FILE_STATUS } from '@/constants/file.constant';
 import useConfirmDialog from './hooks/useConfirmationDialog';
+import CircularLoader from '@/components/elements/loading/CircularLoader';
 
 const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	const [datasourceId, setDatasourceId] = useState('');
 	const [files, setFiles] = useState([]);
 	const [uploadQueue, setUploadQueue] = useState([]);
+	const [isInitializingUpload, setIsInitializingUpload] = useState(false);
 
 	const { navigate, query } = useRouter();
 
@@ -51,9 +53,9 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
-	const { mutate: uploadInitHandler } = useMutation({
-		mutationFn: uploadInit,
-	});
+	// const { mutate: uploadInitHandler } = useMutation({
+	// 	mutationFn: uploadInit,
+	// });
 
 	const { mutate: uploadFileInDs } = useMutation({
 		mutationFn: addFileInDs,
@@ -143,52 +145,53 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		setUploadQueue((prev) => [...prev, ...newFiles]);
 	};
 
-	const handleFilesSelect = (userSelectedFiles) => {
-		const filesArr = Array.from(userSelectedFiles);
+	const handleFilesSelect = async (userSelectedFiles) => {
+		try {
+			const filesArr = Array.from(userSelectedFiles);
 
-		const newFiles = filesArr
-			.filter((file) => {
-				return !files.some((f) => f.name === file.name); // remove duplicate files
-			})
-			.map((file) => {
-				return {
-					name: file?.name,
-					size: file.size,
-					type: file.type,
-					status: FILE_STATUS.UPLOADING,
-					id: uuidv4(),
-					uploadProgress: 0,
-					rawFile: file,
-				};
-			});
-		if (newFiles.length === 0) {
-			return;
-		}
+			const newFiles = filesArr
+				.filter((file) => {
+					return !files.some((f) => f.name === file.name); // remove duplicate files
+				})
+				.map((file) => {
+					return {
+						name: file?.name,
+						size: file.size,
+						type: file.type,
+						status: FILE_STATUS.UPLOADING,
+						id: uuidv4(),
+						uploadProgress: 0,
+						rawFile: file,
+					};
+				});
+			if (newFiles.length === 0) {
+				return;
+			}
 
-		onShowFormChange(true);
+			setIsInitializingUpload(true);
 
-		if (!datasourceName) {
-			setFormErrors((prev) => ({
-				...prev,
-				datasourceName: 'Please enter a name for your datasource',
-			}));
-		}
+			onShowFormChange(true);
 
-		if (!datasourceId) {
-			uploadInitHandler(
-				{
+			if (!datasourceName) {
+				setFormErrors((prev) => ({
+					...prev,
+					datasourceName: 'Please enter a name for your datasource',
+				}));
+			}
+
+			if (!datasourceId) {
+				const resp = await uploadInit({
 					datasource_type: DATASOURCE_TYPES.USER_GENERATED,
-				},
-				{
-					onSuccess: (data) => {
-						setDatasourceId(data?.datasource_id);
-						uploadFilesOnS3(newFiles);
-						setSearchParams({ datasource_id: data?.datasource_id });
-					},
-				},
-			);
-		} else {
+				});
+
+				setDatasourceId(resp?.datasource_id);
+				setSearchParams({ datasource_id: resp?.datasource_id });
+			}
 			uploadFilesOnS3(newFiles);
+		} catch (error) {
+			toast.error('Failed to initialize upload');
+		} finally {
+			setIsInitializingUpload(false);
 		}
 	};
 
@@ -638,7 +641,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	};
 
 	return (
-		<div className="border rounded-2xl py-4 px-6 col-span-12 shadow-1xl h-full flex flex-col">
+		<div className="border rounded-2xl py-4 px-6 col-span-12 shadow-1xl h-[50rem] flex flex-col">
 			<ConfirmationDialog />
 			{isLoading && (
 				<div>
@@ -646,84 +649,97 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 					<BackdropLoader />
 				</div>
 			)}
-			<div className="flex flex-row gap-4 justify-between items-center">
-				<div>
-					<h3 className="text-primary80 font-semibold text-xl">
-						Connect New Dataset
-					</h3>
-					<p className="text-primary40 text-sm">
-						Securely upload your dataset.
-						<span className="ml-1 text-primary30 text-xs">
-							Upload{' '}
-							<span className="font-semibold text-primary60">
-								one type of file
-							</span>{' '}
-							(.xlsx/.xlsb/.csv or .pdf) at a time.
-						</span>
-					</p>
+			{isInitializingUpload ? (
+				<div className="flex items-center gap-2 justify-center ">
+					<CircularLoader size="sm" />
+					<p className="text-primary80 text-sm">Initializing upload</p>
 				</div>
-
-				{renderUploadButtons()}
-			</div>
-
-			{showForm && (
-				<div className="mt-4 space-y-6 mb-10">
-					<div className="grid grid-cols-2 gap-4">
-						<InputText
-							placeholder="Enter name here"
-							label="Data Set Name"
-							value={datasourceName}
-							setValue={(e) => setDatasourceName(e)}
-							error={!!formErrors.datasourceName}
-							errorText={formErrors.datasourceName}
-							labelClassName="text-sm font-medium text-primary40"
-						/>
-
-						<InputText
-							placeholder="Add Description here"
-							label="What do you want to do with this Data Set"
-							value={description}
-							setValue={(e) => setDescription(e)}
-							error={!!formErrors.description}
-							errorText={formErrors.description}
-							labelClassName="text-sm font-medium text-primary40"
-						/>
-					</div>
-
-					<div>
-						<p className="text-sm font-medium text-primary40 mb-3">
-							Choose Analysis Type
-						</p>
-						<div className="flex flex-wrap gap-2">
-							{Array.isArray(intent) &&
-								intent.map((useCase, index) => (
-									<span
-										key={useCase.value}
-										onClick={() =>
-											handleSelectUseCase(useCase.value)
-										}
-										className={`text-sm font-normal text-black/60 px-3 py-1.5 border border-black/10 rounded-[30px] cursor-pointer hover:bg-purple-8 hover:text-purple-100 ${
-											dataSourceIntent.includes(useCase.value)
-												? 'bg-purple-8 text-purple-100 border-[0.075rem] border-primary'
-												: ''
-										}`}
-									>
-										{useCase?.label}
-									</span>
-								))}
+			) : (
+				<>
+					<div className="flex flex-row gap-4 justify-between items-center">
+						<div>
+							<h3 className="text-primary80 font-semibold text-xl">
+								Connect New Dataset
+							</h3>
+							<p className="text-primary40 text-sm">
+								Securely upload your dataset.
+								<span className="ml-1 text-primary30 text-xs">
+									Upload{' '}
+									<span className="font-semibold text-primary60">
+										one type of file
+									</span>{' '}
+									(.xlsx/.xlsb/.csv or .pdf) at a time.
+								</span>
+							</p>
 						</div>
+
+						{renderUploadButtons()}
 					</div>
 
-					{files.length !== 0 && (
-						<FileListing
-							files={files}
-							onRemoveFiles={handleRemoveFiles}
-							onDeleteSheet={handleDeleteSheet}
-							onFileSelect={handleFilesSelect}
-							deletingSheets={deletingSheets}
-						/>
+					{showForm && (
+						<div className="mt-4 space-y-6 mb-10">
+							<div className="grid grid-cols-2 gap-4">
+								<InputText
+									placeholder="Enter name here"
+									label="Data Set Name"
+									value={datasourceName}
+									setValue={(e) => setDatasourceName(e)}
+									error={!!formErrors.datasourceName}
+									errorText={formErrors.datasourceName}
+									labelClassName="text-sm font-medium text-primary40"
+								/>
+
+								<InputText
+									placeholder="Add Description here"
+									label="What do you want to do with this Data Set"
+									value={description}
+									setValue={(e) => setDescription(e)}
+									error={!!formErrors.description}
+									errorText={formErrors.description}
+									labelClassName="text-sm font-medium text-primary40"
+								/>
+							</div>
+
+							<div>
+								<p className="text-sm font-medium text-primary40 mb-3">
+									Choose Analysis Type
+								</p>
+								<div className="flex flex-wrap gap-2">
+									{Array.isArray(intent) &&
+										intent.map((useCase, index) => (
+											<span
+												key={useCase.value}
+												onClick={() =>
+													handleSelectUseCase(
+														useCase.value,
+													)
+												}
+												className={`text-sm font-normal text-black/60 px-3 py-1.5 border border-black/10 rounded-[30px] cursor-pointer hover:bg-purple-8 hover:text-purple-100 ${
+													dataSourceIntent.includes(
+														useCase.value,
+													)
+														? 'bg-purple-8 text-purple-100 border-[0.075rem] border-primary'
+														: ''
+												}`}
+											>
+												{useCase?.label}
+											</span>
+										))}
+								</div>
+							</div>
+
+							{files.length !== 0 && (
+								<FileListing
+									files={files}
+									onRemoveFiles={handleRemoveFiles}
+									onDeleteSheet={handleDeleteSheet}
+									onFileSelect={handleFilesSelect}
+									deletingSheets={deletingSheets}
+								/>
+							)}
+						</div>
 					)}
-				</div>
+				</>
 			)}
 
 			{/* Render Files and their progress */}
