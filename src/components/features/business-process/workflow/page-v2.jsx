@@ -12,11 +12,11 @@ import {
 } from '../service/workflow.service';
 import Breadcrumb from './components/BreadCrumb';
 import WorkflowDetails from './components/WorkflowDetails';
-import DataSourceCard from './components/connect-data-source-v2/data-source-card';
 import WorkflowPlan from './components/WorkflowPlan';
 import { queryClient } from '@/lib/react-query';
 import { toast } from '@/lib/toast';
 import { useWorkflowRunId } from '../hooks/use-workflow-run-id';
+import DataSourceCard from './components/connect-data-source/data-source-card';
 
 export default function WorkflowPageV2() {
 	const { businessProcessId, workflowId } = useParams();
