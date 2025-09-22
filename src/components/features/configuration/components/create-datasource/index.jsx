@@ -449,7 +449,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 	const startChatting = () => {
 		navigate(
-			`/app/new-chat/?step=3&dataSourceId=${datasourceId}&source=configuration`,
+			`/app/new-chat/?step=3&datasource_id=${datasourceId}&source=configuration`,
 		);
 	};
 

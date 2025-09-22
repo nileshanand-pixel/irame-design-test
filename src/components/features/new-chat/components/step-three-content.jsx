@@ -38,11 +38,7 @@ const StepThreeContent = ({ setPrompt, dataSources }) => {
 
 	// Determine if all files are document types
 	const isAllDocuments = () => {
-		if (!datasource?.raw_files || datasource.raw_files.length === 0) {
-			return false;
-		}
-
-		return isUnstructuredData(datasource.raw_files);
+		return isUnstructuredData(datasource?.processed_files?.files);
 	};
 
 	// Show loader for document files, show select prompt for data files
