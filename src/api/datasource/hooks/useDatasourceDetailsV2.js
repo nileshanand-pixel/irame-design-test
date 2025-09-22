@@ -10,7 +10,7 @@ export default function useDatasourceDetailsV2({
 	const id = useDatasourceId() || datasourceId;
 
 	const data = useQuery({
-		queryKey: getDatasourceDetailsQueryKey(id),
+		queryKey: getDatasourceDetailsQueryKey(id, 'v2'),
 		queryFn: getDatasourceByIdV2,
 		enabled: !!id,
 		...queryOptions,
