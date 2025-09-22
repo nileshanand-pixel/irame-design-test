@@ -23,7 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { useBusinessProcessId } from '../../../hooks/use-business-process-id';
 import upperFirst from 'lodash.upperfirst';
 import { toast } from '@/lib/toast';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 /** ---------- helpers that don’t hit React state ---------- **/
 
@@ -80,7 +80,7 @@ export const ColumnMapping = ({
 		data: aiDatasource,
 		isLoading: isAiDsLoading,
 		refetch,
-	} = useDatasourceDetails({
+	} = useDatasourceDetailsV2({
 		datasourceId: workflowRunDetails?.datasource_id,
 		queryOptions: {
 			refetchInterval: ({ state }) => {

@@ -16,7 +16,7 @@ import { getDataSourceById } from '../../configuration/service/configuration.ser
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDispatch } from 'react-redux';
 import { openModal } from '@/redux/reducer/modalReducer';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const ReportsInDatasource = () => {
 	const { query, navigate } = useRouter();
@@ -49,7 +49,7 @@ const ReportsInDatasource = () => {
 		enabled: !!(query.datasourceId && query.datasourceId === 'audit'),
 	});
 
-	const datasourceQuery = useDatasourceDetails({
+	const datasourceQuery = useDatasourceDetailsV2({
 		queryOptions: {
 			refetchInterval: 10000,
 			enabled: !!(

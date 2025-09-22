@@ -33,7 +33,7 @@ import { getLocalStorage, setLocalStorage } from '@/utils/local-storage';
 import { sendChatSessionStartedEvent } from '@/utils/chat';
 import InputArea from '../components/input-area/input-area';
 import { isUnstructuredData } from '@/utils/datasource-utils';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -88,13 +88,7 @@ const Workzone = () => {
 		}
 	};
 
-	const { data: datasourceData } = useDatasourceDetails();
-	const { rawFiles } = useMemo(() => {
-		const ds = datasourceData;
-		return {
-			rawFiles: ds?.raw_files,
-		};
-	}, [datasourceData]);
+	const { data: datasourceData } = useDatasourceDetailsV2();
 
 	const handleTabClick = (tab) => {
 		if (tab === 'planner') {
@@ -573,7 +567,7 @@ const Workzone = () => {
 			const currentDoingScience =
 				doingScience.find((loadingObj) => loadingObj.queryId === query?.id)
 					?.status || !!query?.parentQueryId;
-			const isAllDocuments = isUnstructuredData(rawFiles);
+			const isAllDocuments = isUnstructuredData(datasourceData?.files);
 
 			const showWorkspaceToggle = !hasClarification;
 			return (
@@ -783,7 +777,7 @@ const Workzone = () => {
 				(item) => item?.query_id === chatStoreReducer?.activeQueryId,
 			) || answers?.[0];
 		const hasClarification = !!markerAnswer?.answer?.clarification;
-		const isAllDocuments = isUnstructuredData(rawFiles);
+		const isAllDocuments = isUnstructuredData(datasourceData?.files);
 		return workspace.show && !hasClarification && !isAllDocuments;
 	};
 

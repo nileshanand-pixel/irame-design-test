@@ -23,7 +23,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 	const [dashboards, setDashboards] = useState([]);
@@ -39,7 +39,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 		queryFn: () => getUserDashboard(),
 	});
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 
 	const handleAddQueryToDashboard = () => {
 		setIsLoading(true);

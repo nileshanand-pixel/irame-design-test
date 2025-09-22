@@ -12,7 +12,7 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getSupportedGraphs } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import { RESPONSE_CARD_VIEWS } from '@/constants/chat.constant';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const GraphComponent = ({
 	data,
@@ -40,7 +40,8 @@ const GraphComponent = ({
 		supportedGraphsData?.[0]?.id || null,
 	);
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
+
 	function generateColumns(keys) {
 		return keys?.map((key) => {
 			let headerTitle = key.replace(/_/g, ' ').toUpperCase();

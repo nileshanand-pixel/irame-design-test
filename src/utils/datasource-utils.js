@@ -38,7 +38,7 @@ export const isUnstructuredData = (files) => {
 		return false;
 	}
 	return files.every((file) => {
-		const fileName = file.filename.toLowerCase();
-		return UNSTRUCTURED_TYPES.some((ext) => fileName.endsWith(ext));
+		const fileName = file?.filename?.toLowerCase();
+		return UNSTRUCTURED_TYPES.some((ext) => fileName?.endsWith(ext));
 	});
 };

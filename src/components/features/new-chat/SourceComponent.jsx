@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const ExcelFileContent = ({
 	file,
@@ -27,7 +27,7 @@ const ExcelFileContent = ({
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 	return (
 		<div className="flex flex-wrap gap-2 mt-4 rounded-lg py-2.5">
 			<MultiSelect
@@ -113,7 +113,7 @@ const SourceComponent = ({
 			? JSON.parse(data?.tool_data)
 			: data?.tool_data;
 
-	const { data: datasourceData, isLoading } = useDatasourceDetails();
+	const { data: datasourceData, isLoading } = useDatasourceDetailsV2();
 
 	async function fetchDatasource(datasourceId) {
 		try {
@@ -150,9 +150,9 @@ const SourceComponent = ({
 
 	const renderFiles = () => {
 		let contentArr = [];
-		if (!datasourceData?.processed_files?.files) return;
+		if (!datasourceData?.files) return;
 
-		const sortedFiles = datasourceData?.processed_files?.files.sort((a, b) => {
+		const sortedFiles = datasourceData?.files.sort((a, b) => {
 			const selectedColumnsCountA = selectedColumns[a.id]?.length || 0;
 			const selectedColumnsCountB = selectedColumns[b.id]?.length || 0;
 			return selectedColumnsCountB - selectedColumnsCountA;

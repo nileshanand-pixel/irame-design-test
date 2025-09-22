@@ -20,7 +20,7 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { LockClosedIcon } from '@radix-ui/react-icons';
 import { ReaderIcon } from '@radix-ui/react-icons';
 import { RocketIcon } from '@radix-ui/react-icons';
-import useDataSourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
@@ -37,7 +37,7 @@ const Header = () => {
 		);
 	};
 
-	const { data: datasourceDetails } = useDataSourceDetails();
+	const { data: datasourceDetails } = useDatasourceDetailsV2();
 
 	useEffect(() => {
 		const fetchData = async () => {

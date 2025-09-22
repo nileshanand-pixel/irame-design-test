@@ -9,7 +9,7 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { queryClient } from '@/lib/react-query';
 import { sendChatSessionStartedEvent } from '@/utils/chat';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const FollowUpQuestions = ({
 	question,
@@ -24,7 +24,7 @@ const FollowUpQuestions = ({
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const utilReducer = useSelector((state) => state.utilReducer);
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 	const handlePrompt = () => {
 		try {
 			trackEvent(

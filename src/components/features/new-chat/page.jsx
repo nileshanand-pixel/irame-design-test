@@ -21,7 +21,7 @@ import { useDatasourceId } from '@/hooks/use-datasource-id';
 import { useMemo } from 'react';
 import InputArea from './components/input-area/input-area';
 import StepThreeContent from './components/step-three-content';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -47,7 +47,7 @@ const NewChat = () => {
 	const [errors, setErrors] = useState({});
 	const preChatScreenLoadedRef = useRef(false);
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 	const gradientText = {
 		backgroundImage:
 			'linear-gradient(270deg, rgba(106, 18, 205, 0.4), rgba(106, 18, 205, 0.8))',

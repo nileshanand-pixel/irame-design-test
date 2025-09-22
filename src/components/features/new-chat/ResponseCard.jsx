@@ -15,7 +15,7 @@ import AddQueryFlow from '../reports/components/AddQueryFlow';
 import { useRouter } from '@/hooks/useRouter';
 import useS3File from '@/hooks/useS3File';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const ResponseCard = ({
 	answerResp,
@@ -38,7 +38,7 @@ const ResponseCard = ({
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const { isDownloading, downloadS3File } = useS3File();
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
 			value?.tool_space === 'main' &&

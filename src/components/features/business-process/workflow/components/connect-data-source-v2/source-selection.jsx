@@ -42,7 +42,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useBusinessProcessId } from '../../../hooks/use-business-process-id';
 import { toast } from '@/lib/toast';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 // ---------------------  generic helpers  ------------------------------
 const mergeUniqueById = (prev = [], next = []) => {
@@ -165,7 +165,7 @@ export const SourceSelection = ({
 	);
 
 	/* ───────────────────────────── 4. POST‑RUN HYDRATION ──────────────────── */
-	const { data: aiDatasource, isLoading: isAiDsLoading } = useDatasourceDetails({
+	const { data: aiDatasource, isLoading: isAiDsLoading } = useDatasourceDetailsV2({
 		datasourceId: topLevelDatasourceId,
 		queryOptions: {
 			enabled: isPostRun && !!topLevelDatasourceId,
