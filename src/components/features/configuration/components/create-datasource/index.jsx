@@ -120,6 +120,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 											...file,
 											status: datasourceFile?.status,
 											sheets: datasourceFile?.sheets,
+											message: datasourceFile?.message,
 										};
 									}
 								}
@@ -166,6 +167,18 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 					};
 				});
 			if (newFiles.length === 0) {
+				return;
+			}
+
+			// Check if all files (existing + new) have the same type
+			const allFiles = [...files, ...newFiles];
+			const fileTypes = allFiles.map((file) => file.type);
+			const uniqueTypes = [...new Set(fileTypes)];
+
+			if (uniqueTypes.length > 1) {
+				toast.error(
+					'Please upload files of the same type. Mixing different file types is not allowed.',
+				);
 				return;
 			}
 
