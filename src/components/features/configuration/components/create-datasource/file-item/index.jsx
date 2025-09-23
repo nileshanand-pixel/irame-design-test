@@ -21,6 +21,7 @@ export default function FileItem({
 	isSelected,
 	onFileSelectToggle,
 	deletingSheets,
+	deletingFiles,
 }) {
 	const [isExpanded, setIsExpanded] = useState(false);
 
@@ -170,12 +171,23 @@ export default function FileItem({
 						onClick={() => onRemoveFiles([fileObj])}
 						className="hover:text-destructive p-1 h-auto"
 					>
-						{[
-							FILE_STATUS.PROCESSING,
-							FILE_STATUS.UPLOADED,
-							FILE_STATUS.AI_PROCESSING,
-							FILE_STATUS.UPLOADING,
-						].includes(fileObj.status) ? (
+						{deletingFiles.includes(fileObj.id) ? (
+							<TooltipProvider delayDuration={0}>
+								<Tooltip>
+									<TooltipTrigger className="ms-2">
+										<CircularLoader size="sm" />
+									</TooltipTrigger>
+									<TooltipContent className="max-w-[20rem]">
+										Deleting File...
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+						) : [
+								FILE_STATUS.PROCESSING,
+								FILE_STATUS.UPLOADED,
+								FILE_STATUS.AI_PROCESSING,
+								FILE_STATUS.UPLOADING,
+						  ].includes(fileObj.status) ? (
 							<X className="w-6 h-6" />
 						) : (
 							<Trash2 className="w-4 h-4" />

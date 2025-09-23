@@ -40,6 +40,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	const [files, setFiles] = useState([]);
 	const [uploadQueue, setUploadQueue] = useState([]);
 	const [isInitializingUpload, setIsInitializingUpload] = useState(false);
+	const [deletingFiles, setDeletingFiles] = useState([]);
 
 	const { navigate, query } = useRouter();
 
@@ -603,8 +604,41 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		);
 	};
 
+	const removeFilesFromState = (fileObjs) => {
+		// Cancel any ongoing upload requests for the files being removed
+		fileObjs.forEach((fileObj) => {
+			if (fileObj?.cancelToken) {
+				fileObj.cancelToken.cancel('File upload cancelled due to removal');
+			}
+		});
+
+		// Remove files from files state
+		setFiles((prev) => {
+			return prev.filter((file) => {
+				return !fileObjs.some((fileObj) => fileObj.id === file.id);
+			});
+		});
+
+		// Remove files from uploadQueue
+		setUploadQueue((prev) => {
+			return prev.filter((file) => {
+				return !fileObjs.some((fileObj) => fileObj.id === file.id);
+			});
+		});
+
+		// Remove files from deletingFiles state
+		setDeletingFiles((prev) => {
+			const fileIdsToRemove = fileObjs.map((f) => f.id);
+			return prev.filter((fileId) => !fileIdsToRemove.includes(fileId));
+		});
+	};
+
 	const handleRemoveFiles = async (fileObjs, confirmBeforeDelete = true) => {
 		try {
+			setDeletingFiles((prev) => {
+				return [...prev, fileObjs?.map((f) => f.id)];
+			});
+
 			// remove file from ds
 			const filesToDeleteFromDs = datasourceDetails?.files?.filter((f) => {
 				return fileObjs.some((fileObj) => {
@@ -647,6 +681,8 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				refetchDatasourceDetails();
 			}
 
+			removeFilesFromState(fileObjs);
+
 			toast.success(
 				`File${filesToDeleteFromDs.length > 1 ? 's' : ''} deleted successfully`,
 			);
@@ -657,9 +693,13 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				handleUploadCardClossClick();
 			}
 		} catch (error) {
-			toast.error(
-				`Failed to delete file${filesToDeleteFromDs.length > 1 ? 's' : ''}`,
-			);
+			toast.error(`Failed to delete file${fileObjs.length > 1 ? 's' : ''}`);
+		} finally {
+			setDeletingFiles((prev) => {
+				return prev.filter(
+					(fileId) => !fileObjs.some((fileObj) => fileObj.id === fileId),
+				);
+			});
 		}
 	};
 
@@ -829,6 +869,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 									onDeleteSheet={handleDeleteSheet}
 									onFileSelect={handleFilesSelect}
 									deletingSheets={deletingSheets}
+									deletingFiles={deletingFiles}
 								/>
 							)}
 						</div>

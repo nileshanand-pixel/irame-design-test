@@ -25,6 +25,7 @@ export default function FileListing({
 	onFileSelect,
 	onDeleteSheet,
 	deletingSheets,
+	deletingFiles,
 }) {
 	const [selectType, setSelectType] = useState(SELECT_TYPES.NONE);
 	const [selectedFiles, setSelectedFiles] = useState([]);
@@ -242,6 +243,7 @@ export default function FileListing({
 							)}
 							onFileSelectToggle={handleFileSelectToggle}
 							deletingSheets={deletingSheets}
+							deletingFiles={deletingFiles}
 						/>
 					);
 				})}
