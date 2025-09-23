@@ -33,6 +33,7 @@ import { FILE_STATUS } from '@/constants/file.constant';
 import useConfirmDialog from './hooks/useConfirmationDialog';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
 import { cn } from '@/lib/utils';
+import { getFileType } from '@/utils/file';
 
 const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	const [datasourceId, setDatasourceId] = useState('');
@@ -151,31 +152,73 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		try {
 			const filesArr = Array.from(userSelectedFiles);
 
-			const newFiles = filesArr
-				.filter((file) => {
-					return !files.some((f) => f.name === file.name); // remove duplicate files
-				})
-				.map((file) => {
-					return {
-						name: file?.name,
-						size: file.size,
-						type: file.type,
-						status: FILE_STATUS.UPLOADING,
-						id: uuidv4(),
-						uploadProgress: 0,
-						rawFile: file,
-					};
+			const newFiles = [];
+			const processedNames = new Set();
+
+			filesArr.forEach((file) => {
+				let uniqueName = file.name;
+				let counter = 1;
+
+				// Check against existing files and already processed files in this batch
+				while (
+					files.some((f) => f.name === uniqueName) ||
+					processedNames.has(uniqueName)
+				) {
+					const baseName = file.name.substring(
+						0,
+						file.name.lastIndexOf('.'),
+					);
+					const extension = file.name.substring(
+						file.name.lastIndexOf('.'),
+					);
+					uniqueName = `${baseName}_${counter}${extension}`;
+					counter++;
+				}
+
+				processedNames.add(uniqueName);
+
+				// Create a new File object with the modified name
+				const modifiedFile = new File([file], uniqueName, {
+					type: file.type,
+					lastModified: file.lastModified,
 				});
+
+				// console.log(file.type, 'file.type');
+				newFiles.push({
+					name: uniqueName,
+					size: file.size,
+					type: file.type,
+					status: FILE_STATUS.UPLOADING,
+					id: uuidv4(),
+					uploadProgress: 0,
+					rawFile: modifiedFile,
+				});
+			});
+
 			if (newFiles.length === 0) {
 				return;
 			}
 
 			// Check if all files (existing + new) have the same type
 			const allFiles = [...files, ...newFiles];
-			const fileTypes = allFiles.map((file) => file.type);
+			const fileTypes = allFiles.map((file) =>
+				file.rawFile ? getFileType(file) : file.type,
+			);
 			const uniqueTypes = [...new Set(fileTypes)];
 
-			if (uniqueTypes.length > 1) {
+			const allowedTypes = ['pdf', 'excel', 'csv'];
+
+			for (let i = 0; i < uniqueTypes.length; i++) {
+				const type = uniqueTypes[i];
+				if (!allowedTypes.includes(type)) {
+					toast.error(
+						'This file type is not allowed. Please upload only PDF, Excel (.xlsx/.xlsb), or CSV files.',
+					);
+					return;
+				}
+			}
+
+			if (uniqueTypes.length > 1 && uniqueTypes.includes('pdf')) {
 				toast.error(
 					'Please upload files of the same type. Mixing different file types is not allowed.',
 				);
@@ -554,7 +597,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 					className="absolute top-0 w-0 -z-1 opacity-0"
 					onChange={(e) => handleFileChange(e)}
 					id="file-upload"
-					accept=".csv,.xlsx,.pdf"
+					accept=".csv,.xlsx,.pdf,.xlsb"
 				/>
 			</div>
 		);

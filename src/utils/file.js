@@ -15,10 +15,21 @@ export function getFileType(file) {
 
 	const mime = file.type;
 
-	if (mime.startsWith('image/')) return 'image';
+	// Check for PDF files
 	if (mime === 'application/pdf') return 'pdf';
+
+	// Check for Excel files (.xlsx, .xlsb)
+	if (
+		mime ===
+			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+		mime === 'application/vnd.ms-excel.sheet.binary.macroenabled.12'
+	)
+		return 'excel';
+
+	// Check for CSV files
 	if (mime === 'text/csv' || mime === 'application/vnd.ms-excel') return 'csv';
 
+	// Return empty string for all other file types
 	return '';
 }
 

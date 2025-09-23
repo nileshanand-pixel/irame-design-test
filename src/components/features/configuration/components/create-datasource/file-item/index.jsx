@@ -70,9 +70,11 @@ export default function FileItem({
 								</span>
 							</div>
 						</TooltipTrigger>
-						<TooltipContent className="max-w-[20rem]">
-							{fileObj.message}
-						</TooltipContent>
+						{fileObj.message && (
+							<TooltipContent className="max-w-[20rem]">
+								{fileObj.message}
+							</TooltipContent>
+						)}
 					</Tooltip>
 				</TooltipProvider>
 			);
