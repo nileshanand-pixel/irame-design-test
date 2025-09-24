@@ -21,12 +21,37 @@ import ReportCoverPage from '@/components/features/reports/export/cover/Page';
 import ReportContentPage from '@/components/features/reports/export/Page';
 import HelpMenu from '@/components/elements/HelpMenu';
 import WorkflowPageV2 from '@/components/features/business-process/workflow/page-v2';
+import * as Sentry from '@sentry/react';
+import { useEffect } from 'react';
+import {
+	useLocation,
+	useNavigationType,
+	createRoutesFromChildren,
+	matchRoutes,
+} from 'react-router-dom';
 
 const AppRoutes = () => {
+	// Add React Router v6 integration for Sentry
+	useEffect(() => {
+		if (import.meta.env.VITE_SENTRY_DSN) {
+			Sentry.addIntegration(
+				Sentry.reactRouterV6BrowserTracingIntegration({
+					useEffect,
+					useLocation,
+					useNavigationType,
+					createRoutesFromChildren,
+					matchRoutes,
+				}),
+			);
+		}
+	}, []);
+
+	const SentryRoutes = Sentry.withSentryReactRouterV6Routing(Routes);
+
 	return (
 		<>
 			<TermsModal />
-			<Routes>
+			<SentryRoutes>
 				<Route exact path="/*" element={<SignInSignUp />} />
 				<Route
 					path="/app/*"
@@ -154,7 +179,7 @@ const AppRoutes = () => {
 					element={<ReportCoverPage />}
 				/>
 				<Route path="test" element={<TestRoute />} />
-			</Routes>
+			</SentryRoutes>
 			{/* {!window.location.pathname.includes('export') && <HelpMenu />} */}
 		</>
 	);
