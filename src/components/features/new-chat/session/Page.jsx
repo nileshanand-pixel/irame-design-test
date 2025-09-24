@@ -1,10 +1,10 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useRouter } from '@/hooks/useRouter';
 import { cn, getInitials } from '@/lib/utils';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { createQuery, getQueriesOfSession } from '../service/new-chat.service';
-import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
+import { createQuery, getSessionQueries } from '../service/new-chat.service';
+import { useQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import ResponseCard from '../ResponseCard';
@@ -38,26 +38,153 @@ import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
 	const utilReducer = useSelector((state) => state.utilReducer);
-	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const dispatch = useDispatch();
 	const { pathname, navigate, query } = useRouter();
 
+	// Session state management
+	const [currentSessionId, setCurrentSessionId] = useState(query?.sessionId);
+	const [activeQueryId, setActiveQueryId] = useState('');
+	const [queries, setQueries] = useState([]);
+	const [answers, setAnswers] = useState([]);
+	const [sessionMode, setSessionMode] = useState('single');
+	const [doingScience, setDoingScience] = useState([]);
+
+	// React Query for fetching session data
+	const {
+		data: sessionQueriesData,
+		isLoading: isQueriesLoading,
+		error: queriesError,
+	} = useQuery({
+		queryKey: ['chat', 'session', currentSessionId, 'queries'],
+		queryFn: () => getSessionQueries(currentSessionId),
+		enabled: !!currentSessionId,
+		refetchInterval: (data) => {
+			// If there are any queries that are not 'done', keep polling
+			const queryList = data?.query_list || [];
+			const hasPendingQueries = queryList.some(
+				(query) => query.status !== 'done',
+			);
+			return hasPendingQueries ? 5000 : false;
+		},
+		refetchIntervalInBackground: true,
+	});
+
+	// Process session data callback
+	const processSessionData = useCallback((data) => {
+		const res = data?.query_list;
+		if (!res || res.length <= 0) return;
+
+		// Update queries
+		const tempQueries = res.map((item) => ({
+			id: item?.query_id,
+			question: item?.query,
+			type: item?.type,
+			metadata: item?.metadata,
+		}));
+		setQueries(tempQueries);
+		setSessionMode(res[0]?.type || 'single');
+
+		// Update answers
+		setAnswers((prevAnswers) => {
+			return res.map((newAnswer) => {
+				const existingAnswer = prevAnswers.find(
+					(answer) => answer.query_id === newAnswer.query_id,
+				);
+
+				if (existingAnswer) {
+					if (existingAnswer.status === 'done') {
+						return existingAnswer;
+					}
+
+					const graphKeyExists =
+						existingAnswer?.answer &&
+						Object.keys(existingAnswer?.answer).includes('graph');
+					const newGraph = newAnswer?.answer?.graph;
+					const shouldUpdateGraph = !graphKeyExists && newGraph;
+
+					return {
+						...newAnswer,
+						answer: {
+							...newAnswer.answer,
+							...(shouldUpdateGraph && { graph: newGraph }),
+						},
+					};
+				}
+
+				return newAnswer;
+			});
+		});
+
+		// Update doing science state
+		setDoingScience(() => {
+			return res.map((answerItem) => {
+				const status = answerItem?.status !== 'done';
+				return { queryId: answerItem?.query_id, status };
+			});
+		});
+	}, []);
+
+	// Session management functions
+	const changeSession = useCallback(
+		(newSessionId) => {
+			if (newSessionId !== currentSessionId) {
+				setCurrentSessionId(newSessionId);
+				setQueries([]);
+				setAnswers([]);
+				setActiveQueryId('');
+				setDoingScience([]);
+			}
+		},
+		[currentSessionId],
+	);
+
+	const addQuery = useCallback((newQuery) => {
+		setQueries((prev) => [...prev, newQuery]);
+	}, []);
+
+	const updateQuery = useCallback((queryId, updates) => {
+		setQueries((prev) =>
+			prev.map((q) => (q.id === queryId ? { ...q, ...updates } : q)),
+		);
+	}, []);
+
+	const addDoingScience = useCallback((queryId) => {
+		setDoingScience((prev) => [...prev, { queryId, status: true }]);
+	}, []);
+
+	const resetDoingScience = useCallback((targetState) => {
+		setDoingScience((prev) =>
+			prev.map((item) => ({ ...item, status: targetState })),
+		);
+	}, []);
+
+	const setDoingScienceState = useCallback((newDoingScience) => {
+		setDoingScience(newDoingScience);
+	}, []);
+
+	// Process session data when it's available
+	useEffect(() => {
+		if (sessionQueriesData?.query_list) {
+			processSessionData(sessionQueriesData);
+			// Scroll to bottom when session data loads
+			scrollToBottom();
+		}
+	}, [sessionQueriesData, processSessionData]);
+
 	const intervalRef = useRef();
-	const scrollRef = useRef(null);
+	const scrollRef = useRef();
 
 	const [workspace, setWorkspace] = useState({
 		show: true,
 		activeTab: 'planner',
 		visitedTabs: { planner: true },
 	});
-	const [prompt, setPrompt] = useState(chatStoreReducer?.inputPrompt || '');
+	const [prompt, setPrompt] = useState('');
 	const [bulkPrompt, setBulkPrompt] = useState([
 		{ id: 1, text: 'Hi' },
 		{ id: 2, text: 'Bi' },
 		{ id: 3, text: 'Ji' },
 	]);
-	const [answers, setAnswers] = useState([]);
-	const [doingScience, setDoingScience] = useState([]);
 	const [dashboard, setDashboard] = useState({
 		name: '',
 		isCreating: false,
@@ -77,15 +204,34 @@ const Workzone = () => {
 	const [activeQueryResponse, setActiveQueryResponse] = useState({});
 	const [activeQueryProgress, setActiveQueryProgress] = useState(null);
 	const [newDashboardIds, setNewDashboardIds] = useState([]);
-	const queries = chatStoreReducer?.queries;
+	const [activateGraphOnLast, setActivateGraphOnLast] = useState(false);
 
 	const scrollToBottom = () => {
-		if (scrollRef.current) {
-			scrollRef.current.scrollTo({
-				top: scrollRef.current.scrollHeight,
-				behavior: 'smooth',
-			});
-		}
+		// Use multiple attempts with increasing delays for reliability
+		const scrollAttempts = [50, 150, 300, 500];
+
+		scrollAttempts.forEach((delay, index) => {
+			setTimeout(() => {
+				if (scrollRef.current) {
+					// Try scrollIntoView on a dummy element first
+					const dummyElement =
+						document.getElementById('scroll-dummy-bottom');
+					if (dummyElement) {
+						dummyElement.scrollIntoView({
+							behavior: 'smooth',
+							block: 'end',
+							inline: 'nearest',
+						});
+					} else {
+						// Fallback to scrollTo method
+						scrollRef.current.scrollTo({
+							top: scrollRef.current.scrollHeight,
+							behavior: 'smooth',
+						});
+					}
+				}
+			}, delay);
+		});
 	};
 
 	const { data: datasourceData } = useDatasourceDetails();
@@ -102,10 +248,10 @@ const Workzone = () => {
 				EVENTS_ENUM.PLANNER_TAB_CLICKED,
 				EVENTS_REGISTRY.PLANNER_TAB_CLICKED,
 				() => ({
-					chat_session_id: query?.sessionId,
+					chat_session_id: currentSessionId,
 					dataset_id: datasourceData?.datasource_id,
 					dataset_name: datasourceData?.name,
-					query_id: chatStoreReducer?.activeQueryId,
+					query_id: activeQueryId,
 				}),
 			);
 		} else if (tab === 'reference') {
@@ -113,10 +259,10 @@ const Workzone = () => {
 				EVENTS_ENUM.REFERENCE_TAB_CLICKED,
 				EVENTS_REGISTRY.REFERENCE_TAB_CLICKED,
 				() => ({
-					chat_session_id: query?.sessionId,
+					chat_session_id: currentSessionId,
 					dataset_id: datasourceData?.datasource_id,
 					dataset_name: datasourceData?.name,
-					query_id: chatStoreReducer?.activeQueryId,
+					query_id: activeQueryId,
 				}),
 			);
 		} else if (tab === 'coder') {
@@ -124,10 +270,10 @@ const Workzone = () => {
 				EVENTS_ENUM.CODER_TAB_CLICKED,
 				EVENTS_REGISTRY.CODER_TAB_CLICKED,
 				() => ({
-					chat_session_id: query?.sessionId,
+					chat_session_id: currentSessionId,
 					dataset_id: datasourceData?.datasource_id,
 					dataset_name: datasourceData?.name,
-					query_id: chatStoreReducer?.activeQueryId,
+					query_id: activeQueryId,
 				}),
 			);
 		}
@@ -148,172 +294,7 @@ const Workzone = () => {
 				showFailedResponse: true,
 				showDelay: false,
 			}));
-			clearPolling();
 		}
-	};
-
-	const resetDoingScience = (targetState) => {
-		setDoingScience((prevState) => {
-			return prevState?.map((item) => ({ ...item, status: targetState }));
-		});
-	};
-
-	const fetchQueries = () => {
-		if (!chatStoreReducer?.activeChatSession?.id) return;
-		const checkGraphOrObservationAbsent = (resp) => {
-			return (
-				resp.status === 'done' && !resp.answer?.graph && !resp.answer?.answer
-			);
-		};
-
-		const sessionMode = (firstAnswer) => {
-			return firstAnswer?.type || 'single';
-		};
-
-		getQueriesOfSession(chatStoreReducer?.activeChatSession?.id)
-			.then((resp) => {
-				const res = resp?.query_list;
-				if (res.length <= 0) return;
-				const dataSourceName = resp?.datasource_name;
-				const dataSourceDetails = resp?.datasource_details;
-				const dataSourceId = res[0].datasource_id;
-				const tempQueries = res?.map((item) => ({
-					id: item?.query_id,
-					question: item?.query,
-					type: item?.type,
-					metadata: item?.metadata,
-				}));
-
-				const lastQueryPreviousAnswer = answers[answers.length - 1];
-				if (
-					lastQueryPreviousAnswer &&
-					lastQueryPreviousAnswer?.status === 'in_progress'
-				) {
-					const lastQueryCurrentAnswer = res[res.length - 1];
-					if (lastQueryCurrentAnswer?.status === 'done') {
-						trackEvent(
-							EVENTS_ENUM.CHAT_MESSAGE_SENT,
-							EVENTS_REGISTRY.CHAT_MESSAGE_SENT,
-							() => ({
-								chat_session_id: lastQueryCurrentAnswer?.session_id,
-								query_id: lastQueryCurrentAnswer?.query_id,
-								dataset_id: lastQueryCurrentAnswer.dataSourceId,
-								dataset_name: resp?.datasource_name,
-								message_type: 'ai',
-								message_source: '',
-								message_text:
-									lastQueryCurrentAnswer?.answer?.clarification
-										?.tool_data?.text,
-								is_clarification:
-									!!lastQueryCurrentAnswer?.answer?.clarification,
-								message_number: res.length * 2,
-								first_message_in_chat: false,
-							}),
-						);
-					}
-				}
-
-				dispatch(
-					updateChatStoreProp([
-						{ key: 'queries', value: [...tempQueries] },
-						{
-							key: 'activeChatSession',
-							value: {
-								...chatStoreReducer?.activeChatSession,
-								mode: sessionMode(res[0]),
-							},
-						},
-					]),
-				);
-
-				setAnswers((prevAnswers) => {
-					return res.map((newAnswer) => {
-						const existingAnswer = prevAnswers.find(
-							(answer) => answer.query_id === newAnswer.query_id,
-						);
-
-						if (existingAnswer) {
-							if (existingAnswer.status === 'done') {
-								return existingAnswer;
-							}
-
-							const graphKeyExists =
-								existingAnswer?.answer &&
-								Object.keys(existingAnswer?.answer).includes(
-									'graph',
-								);
-							const newGraph = newAnswer?.answer?.graph;
-
-							const shouldUpdateGraph = !graphKeyExists && newGraph;
-							return {
-								...newAnswer,
-								answer: {
-									...newAnswer.answer,
-									...(shouldUpdateGraph && { graph: newGraph }),
-								},
-							};
-						}
-
-						return newAnswer;
-					});
-				});
-
-				setDoingScience((prevState) => {
-					const tempDoingScience = prevState.filter((item) => item.id);
-					return res?.map((answerItem) => {
-						const status = answerItem?.status !== 'done';
-						return { queryId: answerItem?.query_id, status };
-					});
-				});
-
-				const activeQueryResp = res?.find(
-					(item) => item?.query_id === chatStoreReducer?.activeQueryId,
-				);
-				setActiveQueryResponse(activeQueryResp);
-				if (!!activeQueryResp) {
-					dispatch(
-						updateChatStoreProp([
-							{
-								key: 'activeChatSession',
-								value: {
-									...chatStoreReducer?.activeChatSession,
-									status: activeQueryResp?.status,
-								},
-							},
-						]),
-					);
-					let failed = checkGraphOrObservationAbsent(activeQueryResp);
-					if (failed) {
-						setBanners((prevState) => ({
-							...prevState,
-							showDelay: false,
-							showFailedResponse: true,
-						}));
-						setInputDisabled(false);
-						resetDoingScience(false);
-						setIsGraphLoading(false);
-					}
-				}
-			})
-			.catch((error) => {
-				console.error('Error fetching session queries:', error);
-				resetDoingScience(false);
-				setIsGraphLoading(false);
-				setInputDisabled(false);
-				setBanners((prevState) => ({
-					...prevState,
-					showDelay: false,
-					showFailedResponse: true,
-				}));
-				clearPolling();
-				navigate('/app/new-chat');
-			});
-
-		setResponseTimeElapsed((prev) => {
-			const newElapsedTime = prev + 5;
-			handleResponseDelay(newElapsedTime);
-			return newElapsedTime;
-		});
 	};
 
 	const handlePromptChange = (e) => {
@@ -322,7 +303,7 @@ const Workzone = () => {
 
 	const handleAppendQuery = (
 		prompt,
-		queries,
+		bulkQueries,
 		savedQueryReference,
 		mode = 'single',
 	) => {
@@ -333,14 +314,18 @@ const Workzone = () => {
 			setActiveQueryProgress(null);
 			const lastAns = answers[answers.length - 1];
 			const tempPrompt = prompt;
-			const tempCurrentQueries = [
-				...chatStoreReducer?.queries,
-				{ id: '', question: tempPrompt, parentQueryId: lastAns?.query_id },
-			];
+			const newQuery = {
+				id: '',
+				question: tempPrompt,
+				parentQueryId: lastAns?.query_id,
+			};
+
+			addQuery(newQuery);
+
 			let metadata;
-			if (queries && queries?.length > 0) {
+			if (bulkQueries && bulkQueries?.length > 0) {
 				metadata = {
-					queries: queries
+					queries: bulkQueries
 						.filter((query) => query?.text?.length > 0)
 						.map((item) => ({ query: item?.text })),
 					saved_query_reference: savedQueryReference,
@@ -356,31 +341,14 @@ const Workzone = () => {
 
 			if (mode === 'single' && prompt) payload.query = prompt;
 			if (mode !== 'single' && metadata) payload.metadata = metadata;
-			dispatch(
-				updateChatStoreProp([{ key: 'queries', value: tempCurrentQueries }]),
-			);
+
 			createQuery(payload).then((res) => {
-				const updatedQueries = tempCurrentQueries?.map((item) => {
-					if (item?.parentQueryId === res?.query_id) {
-						return { id: res.query_id, question: tempPrompt };
-					}
-					return { ...item };
-				});
-				setDoingScience((prevState) => {
-					const tempState = [...prevState];
-					tempState.push({ queryId: res?.query_id, status: true });
-					return tempState;
-				});
-				dispatch(
-					updateChatStoreProp([
-						{
-							key: 'refreshChat',
-							value: !chatStoreReducer?.refreshChat,
-						},
-						{ key: 'queries', value: updatedQueries },
-						{ key: 'activeQueryId', value: res?.query_id },
-					]),
-				);
+				updateQuery('', { id: res.query_id, question: tempPrompt });
+				addDoingScience(res?.query_id);
+				setActiveQueryId(res?.query_id);
+
+				// Scroll to bottom when new query is added
+				scrollToBottom();
 
 				trackEvent(
 					EVENTS_ENUM.CHAT_MESSAGE_SENT,
@@ -427,13 +395,14 @@ const Workzone = () => {
 		try {
 			if (inputDisabled) return;
 			const tempPrompt = workspaceChanges.query;
-			const tempCurrentQueries = [
-				...chatStoreReducer?.queries,
-				{ id: '', question: tempPrompt, parentQueryId: answer.query_id },
-			];
-			dispatch(
-				updateChatStoreProp([{ key: 'queries', value: tempCurrentQueries }]),
-			);
+			const newQuery = {
+				id: '',
+				question: tempPrompt,
+				parentQueryId: answer.query_id,
+			};
+
+			addQuery(newQuery);
+
 			createQuery({
 				child_no: parseInt(answer.child_no) + 1,
 				datasource_id: answer?.datasource_id,
@@ -449,41 +418,26 @@ const Workzone = () => {
 				},
 				type: answer?.type,
 			}).then((res) => {
-				const updatedQueries = tempCurrentQueries?.map((item) => {
-					if (item?.parentQueryId === res?.query_id) {
-						return { id: res.query_id, question: tempPrompt };
-					}
-					return { ...item };
-				});
-				setDoingScience((prevState) => {
-					const tempState = [...prevState];
-					tempState.push({ queryId: res?.query_id, status: true });
-					return tempState;
-				});
-				dispatch(
-					updateChatStoreProp([
-						{
-							key: 'refreshChat',
-							value: !chatStoreReducer?.refreshChat,
-						},
-						{ key: 'queries', value: updatedQueries },
-						{ key: 'activeQueryId', value: res?.query_id },
-					]),
-				);
+				updateQuery('', { id: res.query_id, question: tempPrompt });
+				addDoingScience(res?.query_id);
+				setActiveQueryId(res?.query_id);
+
+				// Scroll to bottom when regenerated query is added
+				scrollToBottom();
 
 				trackEvent(
 					EVENTS_ENUM.CHAT_MESSAGE_SENT,
 					EVENTS_REGISTRY.CHAT_MESSAGE_SENT,
 					() => ({
-						chat_session_id: query?.sessionId,
+						chat_session_id: currentSessionId,
 						dataset_id: datasourceData?.datasource_id,
 						dataset_name: datasourceData?.name,
-						query_id: chatStoreReducer?.activeQueryId,
+						query_id: res?.query_id,
 						message_type: 'user',
 						message_source: 'regenerate_from_edit',
 						message_text: tempPrompt,
 						is_clarification: false,
-						message_number: chatStoreReducer?.queries?.length * 2 + 1,
+						message_number: queries?.length * 2 + 1,
 						first_message_in_chat: false,
 					}),
 				);
@@ -511,12 +465,10 @@ const Workzone = () => {
 
 	const toggleIra = (targetQueryId) => {
 		if (!targetQueryId) return;
-		if (targetQueryId === chatStoreReducer?.activeQueryId) {
+		if (targetQueryId === activeQueryId) {
 			setWorkspace((prevState) => ({ ...prevState, show: !prevState.show }));
 		}
-		dispatch(
-			updateChatStoreProp([{ key: 'activeQueryId', value: targetQueryId }]),
-		);
+		setActiveQueryId(targetQueryId);
 	};
 
 	const handleCreateNewDashboard = async () => {
@@ -610,9 +562,8 @@ const Workzone = () => {
 									src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
 									className="me-1 size-5"
 								/>
-								{(workspace.show &&
-									chatStoreReducer?.activeQueryId === query?.id) ||
-								!chatStoreReducer?.activeQueryId
+								{(workspace.show && activeQueryId === query?.id) ||
+								!activeQueryId
 									? 'Hide'
 									: 'Show'}{' '}
 								Workspace
@@ -634,7 +585,7 @@ const Workzone = () => {
 							isGraphLoading={isGraphLoading}
 							setIsGraphLoading={setIsGraphLoading}
 							setAnswerResp={setAnswers}
-							setDoingScience={setDoingScience}
+							setDoingScience={setDoingScienceState}
 							setResponseTimeElapsed={setResponseTimeElapsed}
 							setBanners={setBanners}
 							doingScience={currentDoingScience}
@@ -677,115 +628,60 @@ const Workzone = () => {
 		);
 	};
 
+	const showWorkSpace = () => {
+		const markerAnswer =
+			answers.find((item) => item?.query_id === activeQueryId) || answers?.[0];
+		const hasClarification = !!markerAnswer?.answer?.clarification;
+		const isAllDocuments = isUnstructuredData(rawFiles);
+		return workspace.show && !hasClarification && !isAllDocuments;
+	};
+
 	useEffect(() => {
 		const allDone =
 			doingScience.length && doingScience.every((item) => !item.status);
 		if (allDone) {
 			clearPolling();
 			scrollToBottom();
-			dispatch(
-				updateChatStoreProp([
-					{ key: 'activateGraphOnLast', value: true },
-					{
-						key: 'activeQueryId',
-						value: answers?.[answers?.length - 1]?.query_id,
-					},
-				]),
-			);
+			setActivateGraphOnLast(true);
+			setActiveQueryId(answers?.[answers?.length - 1]?.query_id);
 			markSessionStatusInReducer(
 				answers?.[answers?.length - 1]?.session_id,
 				'done',
 			);
 			queryClient.invalidateQueries(['chat-history']);
-
 			setInputDisabled(false);
 			return;
 		}
-		if (!chatStoreReducer?.activeQueryId && answers && answers?.length) {
-			dispatch(
-				updateChatStoreProp([
-					{
-						key: 'activeQueryId',
-						value: answers?.[answers?.length - 1]?.query_id,
-					},
-				]),
-			);
+
+		if (!activeQueryId && answers && answers?.length) {
+			setActiveQueryId(answers?.[answers?.length - 1]?.query_id);
 		}
+	}, [doingScience, answers, activeQueryId]);
 
-		intervalRef.current = setInterval(() => {
-			let hasPendingQueries = true;
-			if (doingScience.length && doingScience.every((item) => !item.status)) {
-				hasPendingQueries = false;
-			}
-			if (hasPendingQueries) {
-				setInputDisabled(true);
-				fetchQueries();
-			} else {
-				clearPolling();
-				resetDoingScience(false);
-				setIsGraphLoading(false);
-			}
-		}, 5000);
-		return () => clearInterval(intervalRef.current);
-	}, [doingScience]);
-
+	// Update session ID when URL changes
 	useEffect(() => {
-		if (!query?.sessionId && chatStoreReducer?.activeChatSession?.id) {
-			navigate(
-				`/app/new-chat/session/?sessionId=${chatStoreReducer?.activeChatSession?.id}&source=chat_screen`,
-				{ replace: true },
-			);
+		if (query?.sessionId && query.sessionId !== currentSessionId) {
+			changeSession(query.sessionId);
 			setPrompt('');
+			setInputDisabled(true);
+			setBanners({
+				showFailedResponse: false,
+				showDelay: false,
+			});
 		}
-		setInputDisabled(true);
-		fetchQueries();
-	}, [chatStoreReducer?.activeChatSession?.id, chatStoreReducer?.refreshChat]);
+	}, [query?.sessionId, currentSessionId, changeSession]);
 
+	// Reset when queries length changes
 	useEffect(() => {
-		setAnswers([]);
-	}, [chatStoreReducer?.resetIra]);
-
-	useEffect(() => {
-		setInputDisabled(true);
-		dispatch(
-			updateChatStoreProp([
-				{
-					key: 'activateGraphOnLast',
-					value: false,
-				},
-			]),
-		);
-	}, [chatStoreReducer?.queries?.length]);
-
-	useEffect(() => {
-		if (query?.sessionId && !chatStoreReducer?.activeChatSession?.id) {
-			dispatch(
-				updateChatStoreProp([
-					{
-						key: 'activeChatSession',
-						value: {
-							...chatStoreReducer?.activeChatSession,
-							id: query?.sessionId,
-						},
-					},
-				]),
-			);
+		if (queries.length > 0) {
+			setInputDisabled(true);
+			setActivateGraphOnLast(false);
 		}
-	}, [query]);
+	}, [queries.length]);
 
 	// useEffect(() => {}, [utilReducer?.isGenerateReportModalOpen]);
 
 	// useEffect(() => {}, [processedFiles]);
-
-	const showWorkSpace = () => {
-		const markerAnswer =
-			answers.find(
-				(item) => item?.query_id === chatStoreReducer?.activeQueryId,
-			) || answers?.[0];
-		const hasClarification = !!markerAnswer?.answer?.clarification;
-		const isAllDocuments = isUnstructuredData(rawFiles);
-		return workspace.show && !hasClarification && !isAllDocuments;
-	};
 
 	const config = {
 		queryInBulk: { enabled: false },
@@ -862,6 +758,8 @@ const Workzone = () => {
 			>
 				<div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
 					{renderConversation()}
+					{/* Dummy element for reliable scrolling to bottom */}
+					<div id="scroll-dummy-bottom" className="h-1" />
 				</div>
 
 				<div className="bg-white border-t p-4">
@@ -909,9 +807,7 @@ const Workzone = () => {
 							workspace={workspace}
 							answerResp={
 								answers.find(
-									(item) =>
-										item?.query_id ===
-										chatStoreReducer?.activeQueryId,
+									(item) => item?.query_id === activeQueryId,
 								) || answers?.[0]
 							}
 							canEdit={answers.every(

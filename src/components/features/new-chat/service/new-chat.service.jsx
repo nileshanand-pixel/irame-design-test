@@ -81,6 +81,13 @@ export const getQueriesOfSession = async (sessionId) => {
 	}
 };
 
+export const getSessionQueries = async (sessionId) => {
+	if (!sessionId) {
+		throw new Error('Session ID is required');
+	}
+	return await getQueriesOfSession(sessionId);
+};
+
 export const getTemplate = async (templateId) => {
 	try {
 		const response = await axiosClientV1.get(`/saved-queries/${templateId}`, {

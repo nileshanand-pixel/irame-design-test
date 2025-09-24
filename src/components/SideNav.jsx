@@ -262,8 +262,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	};
 
 	const renderSession = (session) => {
-		const isActiveSession =
-			chatStoreReducer?.activeChatSession?.id === session.session_id;
+		const isActiveSession = sessionId === session.session_id;
 		let showSpinner = session?.status !== 'done';
 		const sessionIconUrl = session?.metadata?.workflow_run_id
 			? 'https://d2vkmtgu2mxkyq.cloudfront.net/sidenav_workflow_icon.svg'
@@ -390,8 +389,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	};
 
 	const renderWorkflow = (workflow) => {
-		const isActive =
-			chatStoreReducer?.activeChatSession?.id === workflow.session_id;
+		const isActive = sessionId === workflow.session_id;
 		const showSpinner = workflow.status !== 'COMPLETED';
 		const shouldOpenSession = ['RUNNING', 'COMPLETED', 'FAILED'].includes(
 			workflow.status,
