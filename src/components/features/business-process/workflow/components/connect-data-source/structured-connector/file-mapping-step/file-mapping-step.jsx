@@ -452,7 +452,7 @@ const MappingPicker = ({ rf, files, onToggle }) => {
 	return (
 		<>
 			<MultiSelect
-				key={`${rf.id}-${selectedValues.join(',')}`} // Force re-render when selection changes
+				// key={rf.id}
 				options={options}
 				defaultValue={selectedValues}
 				maxCount={2}
