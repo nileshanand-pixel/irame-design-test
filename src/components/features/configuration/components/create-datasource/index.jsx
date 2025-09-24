@@ -30,10 +30,10 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import FileListing from './file-listing';
 import { FILE_STATUS } from '@/constants/file.constant';
-import useConfirmDialog from './hooks/useConfirmationDialog';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
 import { cn } from '@/lib/utils';
 import { getFileType } from '@/utils/file';
+import useConfirmDialog from '@/hooks/use-confirm-dialog';
 
 const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	const [datasourceId, setDatasourceId] = useState('');
@@ -213,7 +213,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				const type = uniqueTypes[i];
 				if (!allowedTypes.includes(type)) {
 					toast.error(
-						'This file type is not allowed. Please upload only PDF, Excel (.xlsx/.xlsb), or CSV files.',
+						'Unsupported file type. Please upload only PDF, Excel (.xlsx/.xlsb), or CSV files.',
 					);
 					return;
 				}

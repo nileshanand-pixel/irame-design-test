@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadActions } from './upload-actions';
 import { CloudArrowUp } from '@phosphor-icons/react';
+import { toast } from '@/lib/toast';
 
 export const DropZone = ({
 	onFilesAdded,
@@ -15,9 +16,24 @@ export const DropZone = ({
 		[onFilesAdded],
 	);
 
+	const onDropRejected = useCallback((rejectedFiles) => {
+		if (rejectedFiles.length > 0) {
+			toast.error(
+				`Unsupported file type. Please upload only .csv or .xlsx files.`,
+			);
+		}
+	}, []);
+
 	const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
 		onDrop,
+		onDropRejected,
 		multiple: true,
+		accept: {
+			'text/csv': ['.csv'],
+			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [
+				'.xlsx',
+			],
+		},
 	});
 
 	return (

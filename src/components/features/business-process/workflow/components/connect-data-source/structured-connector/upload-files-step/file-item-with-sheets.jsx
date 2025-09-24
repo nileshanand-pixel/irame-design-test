@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/tooltip';
 import { SheetItem } from './sheet-item';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
+import { getFileSize } from '@/utils/file';
 
 export const FileItemWithSheets = ({
 	file,
@@ -166,10 +167,7 @@ export const FileItemWithSheets = ({
 							</div>
 							<div className="flex items-center gap-2">
 								<span className="text-xs  text-primary100 font-normal">
-									{file.size
-										? (file.size / 1024 / 1024).toFixed(1) +
-											' MB'
-										: '. '}
+									{getFileSize(file)}
 								</span>
 								{hasSheets && (
 									<>

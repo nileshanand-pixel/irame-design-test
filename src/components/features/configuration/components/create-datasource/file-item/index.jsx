@@ -13,6 +13,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { getFileSize } from '@/utils/file';
 
 export default function FileItem({
 	fileObj,
@@ -144,11 +145,7 @@ export default function FileItem({
 						</span>
 
 						<span className="text-xs text-primary100 font-normal">
-							{fileObj.size
-								? fileObj.size < 1024 * 1024
-									? (fileObj.size / 1024).toFixed(1) + 'KB'
-									: (fileObj.size / 1024 / 1024).toFixed(1) + 'MB'
-								: '. '}
+							{getFileSize(fileObj)}
 
 							{hasSheets && (
 								<>

@@ -15,6 +15,7 @@ import {
 } from '@/components/features/configuration/service/configuration.service';
 import { toast } from '@/lib/toast';
 import { useStructuredDatasourceId } from '../hooks/datasource-context';
+import { getFileType } from '@/utils/file';
 
 export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 	const { datasourceId, isCreating, isReady } = useStructuredDatasourceId();
@@ -95,6 +96,24 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 
 	const handleFilesListInput = (e) => {
 		const list = Array.from(e.target.files || []);
+
+		let isInvalidFilePresent = false;
+
+		list.forEach((file) => {
+			const fileType = getFileType(file);
+			if (fileType !== 'csv' && fileType !== 'excel') {
+				isInvalidFilePresent = true;
+			}
+		});
+
+		if (isInvalidFilePresent) {
+			toast.error(
+				`Unsupported file type. Please upload only .csv or .xlsx files.`,
+				{ position: 'bottom-center' },
+			);
+			return;
+		}
+
 		addLocalFiles(list);
 		e.target.value = '';
 	};
