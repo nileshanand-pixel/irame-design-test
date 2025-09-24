@@ -59,7 +59,7 @@ export default function ReportHeader({ report, onDownload }) {
 				logError(err, {
 					feature: 'reports',
 					action: 'copy-report-id',
-					reportId: report.report_id,
+					reportId: report?.report_id,
 				});
 				toast.error('Failed to copy!');
 			});

@@ -71,7 +71,6 @@ const Dashboard = () => {
 			logError(error, {
 				feature: 'dashboard',
 				action: 'create-dashboard',
-				dashboardName,
 			});
 			toast.error('Something went wrong while creating dashboard');
 		}

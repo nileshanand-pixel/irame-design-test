@@ -30,7 +30,6 @@ const useLocalStorage = (key) => {
 			action: 'parseStoredValue',
 			extra: {
 				key,
-				storedValue,
 				errorMessage: error.message,
 			},
 		});

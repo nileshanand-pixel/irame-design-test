@@ -25,7 +25,6 @@ export const RiskLevelDropdown = ({ value, riskTypes, reportId, reportCardId }) 
 				extra: {
 					reportId,
 					reportCardId,
-					riskLevel,
 					errorMessage: error.message,
 				},
 			});

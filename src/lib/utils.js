@@ -98,7 +98,6 @@ export const getPdfPageCount = async (url) => {
 		logError(error, {
 			feature: 'utils',
 			action: 'get_pdf_page_count',
-			extra: { url },
 		});
 		return 0; // Fallback in case of an error
 	}

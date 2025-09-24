@@ -55,7 +55,6 @@ export const uploadFile = async (file, setProgress, cancelToken = null) => {
 			feature: 'configuration',
 			action: 'uploadFile',
 			extra: {
-				fileName: file.name,
 				fileType: file.type,
 				errorMessage: error.message,
 			},

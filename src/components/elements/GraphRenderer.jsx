@@ -164,10 +164,6 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 						feature: 'graphRenderer',
 						action: 'loadCSVData',
 						extra: {
-							csvUrl: graph.csv_url,
-							chartType: graph.type,
-							xAxis: graph.x_axis,
-							yAxis: graph.y_axis,
 							errorMessage: error.message,
 						},
 					});

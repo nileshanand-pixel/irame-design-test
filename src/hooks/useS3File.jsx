@@ -17,7 +17,6 @@ export default function useS3File() {
 			logError(error, {
 				feature: 'file_operations',
 				action: 'download_s3_file',
-				extra: { s3Url, fileName },
 			});
 			toast.error(
 				`Error downloading file: ${error?.response?.data?.message || error?.message}`,
@@ -37,7 +36,6 @@ export default function useS3File() {
 			logError(error, {
 				feature: 'file_operations',
 				action: 'open_s3_file',
-				extra: { s3Url },
 			});
 			toast.error(
 				`Error opening file: ${error?.response?.data?.message || error?.message}`,
@@ -57,7 +55,6 @@ export default function useS3File() {
 			logError(error, {
 				feature: 'file_operations',
 				action: 'create_s3_file',
-				extra: { s3Url },
 			});
 			toast.error(
 				`Error creating signed file url: ${error?.response?.data?.message || error?.message}`,

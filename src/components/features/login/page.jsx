@@ -121,8 +121,6 @@ const SignInSignUp = () => {
 					action: 'credentials_login',
 					extra: {
 						errorCode: error?.code,
-						hasEmail: !!formData.email,
-						hasPassword: !!formData.password,
 					},
 				});
 				toast.error('Login failed. Invalid Credentials.');
@@ -177,7 +175,6 @@ const SignInSignUp = () => {
 						action: 'sso_login_non_200',
 						extra: {
 							statusCode: status_code,
-							responseData: responseData,
 						},
 					});
 					toast.error(

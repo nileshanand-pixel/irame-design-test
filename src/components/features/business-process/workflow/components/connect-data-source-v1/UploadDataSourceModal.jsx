@@ -116,11 +116,6 @@ export default function UploadDataSourceModal({
 				logError(err, {
 					feature: 'UploadDataSourceModal',
 					action: 'uploadFile',
-					extra: {
-						fileName: file.name,
-						fileSize: file.size,
-						fileType: file.type,
-					},
 				});
 				setProgress((prev) => ({ ...prev, [file.name]: 0 }));
 			}

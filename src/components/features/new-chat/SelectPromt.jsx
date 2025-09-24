@@ -174,7 +174,7 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 					feature: 'chat',
 					action: 'fetchSuggestions',
 					extra: {
-						dataSourceId: query.dataSourceId,
+						dataSourceId: query?.dataSourceId,
 						errorMessage: error.message,
 					},
 				});

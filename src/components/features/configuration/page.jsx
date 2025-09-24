@@ -183,7 +183,6 @@ const Configuration = () => {
 			logError(error, {
 				feature: 'configuration',
 				action: 'create-datasource',
-				datasourceName,
 			});
 			toast.error('Error creating data source');
 			setIsLoading(false);

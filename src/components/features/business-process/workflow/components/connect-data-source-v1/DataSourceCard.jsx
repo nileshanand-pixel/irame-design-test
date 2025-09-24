@@ -107,7 +107,7 @@ const DataSourceCard = ({
 				action: 'initiateWorkflow',
 				extra: {
 					workflowId,
-					dataSourceId: selectedDataSource,
+					dataSourceId: selectedDatasourceId,
 					errorMessage: err.message,
 				},
 			});
@@ -188,7 +188,6 @@ const DataSourceCard = ({
 								action: 'fetchFileSize',
 								extra: {
 									fileId: file.id,
-									fileUrl: file.url,
 									errorMessage: error.message,
 								},
 							});

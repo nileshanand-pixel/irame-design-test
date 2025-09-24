@@ -73,7 +73,6 @@ const DataSource = () => {
 				action: 'delete_datasource',
 				extra: {
 					datasource_id: datasourceQuery?.data?.datasource_id,
-					dataset_name: datasourceQuery?.data?.name,
 				},
 			});
 			toast.error('Something went wrong while deleting Data source');
@@ -169,8 +168,6 @@ const DataSource = () => {
 				action: 'update_datasource',
 				extra: {
 					datasource_id: datasourceQuery?.data?.datasource_id,
-					dataset_name: datasourceQuery?.data?.name,
-					changes: changesForTracking,
 				},
 			});
 			toast.error(

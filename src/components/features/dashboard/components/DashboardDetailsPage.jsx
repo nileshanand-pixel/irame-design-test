@@ -36,7 +36,7 @@ const DashboardDetailsPage = () => {
 			logError(error, {
 				feature: 'dashboard',
 				action: 'fetch-dashboard-content',
-				id: query.id,
+				id: query?.id,
 			});
 			toast.error('Something went wrong while loading dashboard content');
 		},

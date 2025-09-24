@@ -109,8 +109,7 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 						feature: 'fileUploads',
 						action: 'processExcelFile',
 						extra: {
-							fileName: file.name,
-							fileType: file.type,
+							fileType: file?.type,
 							errorMessage: err.message,
 						},
 					});
@@ -280,9 +279,8 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 					feature: 'fileUploads',
 					action: 'uploadSingleFile',
 					extra: {
-						fileName: file.name,
-						fileType: file.type,
-						fileId: file.id,
+						fileType: file?.type,
+						fileId: file?.id,
 						errorMessage: err.message,
 					},
 				});

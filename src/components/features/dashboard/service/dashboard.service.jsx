@@ -1,6 +1,4 @@
 import axiosClientV1 from '@/lib/axios';
-import { toast } from '@/lib/toast';
-import { logError } from '@/lib/logger';
 
 export const getUserDashboard = async () => {
 	const response = await axiosClientV1.get(`/dashboards`, {

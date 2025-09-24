@@ -18,7 +18,6 @@ export const getFileMetadata = async (fileUrl) => {
 		logError(err, {
 			feature: 'file_utils',
 			action: 'get_file_metadata',
-			extra: { fileUrl },
 		});
 		throw err;
 	}

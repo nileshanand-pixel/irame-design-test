@@ -54,7 +54,6 @@ export const downloadFile = (fileUrl, fileName) => {
 				logError(err, {
 					feature: 'file_download',
 					action: 'download_blob',
-					extra: { fileName, fileUrl },
 				});
 			});
 	} else {

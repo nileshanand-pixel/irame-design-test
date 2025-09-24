@@ -61,7 +61,7 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 			logError(err, {
 				feature: 'dashboard',
 				action: 'update-dashboard',
-				dashboard_id: data.dashboard_id,
+				dashboard_id: data?.dashboard_id,
 			});
 			toast.error('Something went wrong while updating dashboard');
 		},

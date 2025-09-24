@@ -94,8 +94,6 @@ const PreviewTable = ({
 						{
 							feature: 'configuration',
 							action: 'previewtable-sheet-missing',
-							sheetName,
-							url,
 						},
 					);
 				}
@@ -103,15 +101,12 @@ const PreviewTable = ({
 				logError(new Error('Unsupported file type.'), {
 					feature: 'configuration',
 					action: 'previewtable-unsupported-file',
-					fileExtension,
-					url,
 				});
 			}
 		} catch (error) {
 			logError(error, {
 				feature: 'configuration',
 				action: 'previewtable-fetch-data',
-				url,
 			});
 		}
 	};

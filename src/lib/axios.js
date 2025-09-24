@@ -42,7 +42,6 @@ const setupInterceptors = (axiosClient) => {
 					extra: {
 						status: error.response?.status,
 						statusText: error.response?.statusText,
-						url: error.config?.url,
 						method: error.config?.method,
 						baseURL: error.config?.baseURL,
 					},

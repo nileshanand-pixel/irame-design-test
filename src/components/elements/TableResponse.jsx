@@ -66,7 +66,6 @@ const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) =>
 						feature: 'tableResponse',
 						action: 'loadCSVData',
 						extra: {
-							url,
 							errorMessage: error.message,
 						},
 					});

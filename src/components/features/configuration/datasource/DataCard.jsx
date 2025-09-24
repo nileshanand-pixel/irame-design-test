@@ -36,7 +36,6 @@ const getFileSize = async (url) => {
 		logError(error, {
 			feature: 'configuration',
 			action: 'datacard-get-file-size',
-			url,
 		});
 		return 0;
 	}

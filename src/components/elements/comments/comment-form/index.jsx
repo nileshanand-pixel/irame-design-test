@@ -47,8 +47,6 @@ export default function CommentForm({
 				action: 'addComment',
 				extra: {
 					errorMessage: err.message,
-					commentLength: commentString.length,
-					fileCount: files.length,
 				},
 			});
 			toast.error(`Error in Adding comment: ${err.message}`);
