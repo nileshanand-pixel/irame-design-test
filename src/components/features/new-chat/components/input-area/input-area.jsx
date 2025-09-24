@@ -190,7 +190,6 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 									setShowModal(false);
 								}
 							} catch (error) {
-								console.error('Error selecting template:', error);
 								logError(error, {
 									feature: 'chat',
 									action: 'select-template',
@@ -217,7 +216,6 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 						try {
 							enhancePrompt(prompt, setPrompt);
 						} catch (error) {
-							console.error('Error enhancing prompt:', error);
 							logError(error, {
 								feature: 'chat',
 								action: 'enhance-prompt',

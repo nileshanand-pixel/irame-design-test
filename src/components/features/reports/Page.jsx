@@ -9,6 +9,7 @@ import {
 	getUserReports,
 } from './service/reports.service';
 import EmptyState from '@/components/elements/EmptyState';
+import { logError } from '@/lib/logger';
 import DataSourceCard from './components/DataSourceCard';
 import DataSourceCardSkeleton from './components/DatasourceCardSkeleton';
 import { useDispatch } from 'react-redux';
@@ -24,18 +25,48 @@ const ReportFolders = () => {
 		queryKey: ['get-datasources-reports'],
 		queryFn: () => getDatasources(),
 		refetchInterval: 10000,
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'fetchDatasources',
+				extra: {
+					errorMessage: error.message,
+					status: error.response?.status,
+				},
+			});
+		},
 	});
 
 	const sharedReportsQuery = useQuery({
 		queryKey: ['get-shared-reports'],
 		queryFn: () => getSharedReports(),
 		refetchInterval: 600000,
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'fetchSharedReports',
+				extra: {
+					errorMessage: error.message,
+					status: error.response?.status,
+				},
+			});
+		},
 	});
 
 	const userAuditReports = useQuery({
 		queryKey: ['user-reports'],
 		queryFn: () => getUserReports(),
 		refetchInterval: 600000,
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'fetchUserReports',
+				extra: {
+					errorMessage: error.message,
+					status: error.response?.status,
+				},
+			});
+		},
 	});
 
 	const filteredList = useMemo(() => {

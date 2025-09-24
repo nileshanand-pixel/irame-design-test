@@ -148,6 +148,11 @@ export const ColumnMapping = ({
 			await queryClient.refetchQueries(['workflow-run-details', runId]);
 		},
 		onError: (err) => {
+			logError(err, {
+				feature: 'workflow',
+				action: 'clarify-workflow-column-mapping',
+				extra: { workflowId, runId },
+			});
 			toast.error(`Clarification failed: ${err.message}`);
 			throw err;
 		},

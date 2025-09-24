@@ -49,6 +49,14 @@ const Configuration = () => {
 	// Show toast if duplicate upload error occurs
 	useEffect(() => {
 		if (error) {
+			logError(error, {
+				feature: 'configuration',
+				action: 'file-upload',
+				extra: {
+					errorMessage: error.message,
+					fileCount: files.length,
+				},
+			});
 			toast.error(error);
 			setError(null);
 		}
@@ -245,6 +253,16 @@ const Configuration = () => {
 	const { data, isLoading: isFetchingData } = useQuery({
 		queryKey: ['data-sources'],
 		queryFn: fetchDataSources,
+		onError: (error) => {
+			logError(error, {
+				feature: 'configuration',
+				action: 'fetchDataSources',
+				extra: {
+					errorMessage: error.message,
+					status: error.response?.status,
+				},
+			});
+		},
 	});
 
 	const handleSelectUseCase = (value) => {

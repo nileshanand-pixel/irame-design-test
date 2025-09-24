@@ -84,8 +84,7 @@ const SingleReportPage = () => {
 				action: 'generate-pdf',
 				reportId,
 			});
-			console.error('Failed:', error);
-			toast.success('PDF Download failed', error.message);
+			toast.error('PDF Download failed', error.message);
 		}
 	};
 

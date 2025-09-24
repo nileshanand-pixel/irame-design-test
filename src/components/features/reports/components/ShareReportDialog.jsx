@@ -131,6 +131,11 @@ const ShareReportDialog = React.memo(() => {
 				updateAuthStoreProp([{ key: 'user_id', value: currentuser_id }]),
 			);
 		if (selectedReport?.user_id !== currentuser_id) {
+			logError(new Error('User attempted to share report they do not own'), {
+				feature: 'reports',
+				action: 'share-report-unauthorized',
+				reportId,
+			});
 			toast.error('You are not authorized for this operation!');
 			setInvitedEmails([]);
 			return;

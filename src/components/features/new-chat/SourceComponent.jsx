@@ -120,7 +120,6 @@ const SourceComponent = ({
 		try {
 			return await getDataSourceById(datasourceId);
 		} catch (error) {
-			console.error('Error fetching data source:', error);
 			logError(error, { feature: 'chat', action: 'fetch-datasource' });
 		}
 	}

@@ -35,7 +35,11 @@ const SignInSignUp = () => {
 				const response = await getOAuthProviders();
 				setOAuthProviders(response.providers);
 			} catch (error) {
-				console.error('Failed to fetch OAuth providers:', error);
+				logError(error, {
+					feature: 'login',
+					action: 'fetchOAuthProviders',
+					extra: { errorMessage: error.message },
+				});
 			}
 		};
 		fetchOAuthProviders();
@@ -112,8 +116,25 @@ const SignInSignUp = () => {
 			);
 
 			if (error?.code === 'ERR_BAD_REQUEST') {
+				logError(error, {
+					feature: 'authentication',
+					action: 'credentials_login',
+					extra: {
+						errorCode: error?.code,
+						hasEmail: !!formData.email,
+						hasPassword: !!formData.password,
+					},
+				});
 				toast.error('Login failed. Invalid Credentials.');
 			} else {
+				logError(error, {
+					feature: 'authentication',
+					action: 'credentials_login',
+					extra: {
+						errorCode: error?.code,
+						errorMessage: error?.message,
+					},
+				});
 				toast.error('Login failed. Unknown Error Please Try Again.');
 			}
 		} finally {
@@ -151,6 +172,14 @@ const SignInSignUp = () => {
 						'',
 						`${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`,
 					);
+					logError(new Error('SSO login failed with non-200 status'), {
+						feature: 'authentication',
+						action: 'sso_login_non_200',
+						extra: {
+							statusCode: status_code,
+							responseData: responseData,
+						},
+					});
 					toast.error(
 						'Login failed. Please check your credentials and try again.',
 					);
@@ -159,7 +188,6 @@ const SignInSignUp = () => {
 				}
 			})
 			.catch((error) => {
-				console.error(error);
 				logError(error, { feature: 'login', action: 'google-login' });
 				const params = new URLSearchParams(window.location.search);
 				params.delete('code');
@@ -177,6 +205,14 @@ const SignInSignUp = () => {
 						...getErrorAnalyticsProps(error),
 					}),
 				);
+				logError(error, {
+					feature: 'authentication',
+					action: 'sso_login',
+					extra: {
+						errorCode: error?.code,
+						errorMessage: error?.message,
+					},
+				});
 				toast.error('An error occurred during login. Please try again.');
 			})
 			.finally(() => {

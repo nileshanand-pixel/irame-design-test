@@ -53,7 +53,6 @@ const GraphCard = ({ data, isGraphLoading, setIsGraphLoading, selectedItem }) =>
 						action: 'load-csv-data',
 						dashboard_content_id: data?.dashboard_content_id,
 					});
-					console.error('Error loading CSV data:', error);
 				} finally {
 					setIsGraphLoading(false);
 				}

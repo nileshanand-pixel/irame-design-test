@@ -11,7 +11,7 @@ import PreviewTable from './PreviewTable';
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import PreviewPdf from './PreviewPdf';
 import { getPdfPageCount } from '@/lib/utils';
-import { getFileMeta } from '@/lib/file';
+import { getFileMetadata } from '@/lib/file';
 import { logError } from '@/lib/logger';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
@@ -30,7 +30,7 @@ const formatFileSize = (sizeInBytes) => {
 // Function to get file size from S3 URL
 const getFileSize = async (url) => {
 	try {
-		const response = await getFileMeta(url);
+		const response = await getFileMetadata(url);
 		return response.size || 0;
 	} catch (error) {
 		logError(error, {
@@ -38,7 +38,6 @@ const getFileSize = async (url) => {
 			action: 'datacard-get-file-size',
 			url,
 		});
-		console.error('Error fetching file size:', error);
 		return 0;
 	}
 };

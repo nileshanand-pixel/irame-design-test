@@ -233,7 +233,6 @@ const NewChat = () => {
 					);
 			});
 		} catch (error) {
-			console.error('Error fetching user session:', error);
 			logError(error, { feature: 'chat', action: 'fetch-user-session' });
 		}
 	};
@@ -247,6 +246,16 @@ const NewChat = () => {
 		queryFn: () => getDataSources(),
 		onSuccess: (data) => {
 			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
+		},
+		onError: (error) => {
+			logError(error, {
+				feature: 'chat',
+				action: 'fetchDataSources',
+				extra: {
+					errorMessage: error.message,
+					status: error.response?.status,
+				},
+			});
 		},
 	});
 

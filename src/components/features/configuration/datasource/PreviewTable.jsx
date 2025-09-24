@@ -98,7 +98,6 @@ const PreviewTable = ({
 							url,
 						},
 					);
-					console.error(`Worksheet "${sheetName}" not found in the file.`);
 				}
 			} else {
 				logError(new Error('Unsupported file type.'), {
@@ -107,7 +106,6 @@ const PreviewTable = ({
 					fileExtension,
 					url,
 				});
-				console.error('Unsupported file type.');
 			}
 		} catch (error) {
 			logError(error, {
@@ -115,7 +113,6 @@ const PreviewTable = ({
 				action: 'previewtable-fetch-data',
 				url,
 			});
-			console.error('Error fetching data:', error);
 		}
 	};
 

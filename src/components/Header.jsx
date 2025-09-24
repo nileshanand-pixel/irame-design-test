@@ -14,6 +14,7 @@ import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { logError } from '@/lib/logger';
 import { authUserDetails } from './features/login/service/auth.service';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
@@ -52,7 +53,11 @@ const Header = () => {
 					...userData,
 				});
 			} catch (error) {
-				console.error('Error fetching user details:', error);
+				logError(error, {
+					feature: 'header',
+					action: 'fetch_user_details',
+					extra: { hasUserData: !!(value.user_name && value.email) },
+				});
 			}
 		};
 		fetchData();

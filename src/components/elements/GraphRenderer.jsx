@@ -7,6 +7,7 @@ import { GraphCategoryFilter } from './GraphCategoryFilter';
 import { debounce } from 'lodash';
 import { cn, getChartType } from '@/lib/utils';
 import useS3File from '@/hooks/useS3File';
+import { logError } from '@/lib/logger';
 
 const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 	const chartRef = useRef(null);
@@ -159,7 +160,17 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 					const csvData = await d3.csv(csvUrl);
 					setBaseData(csvData);
 				} catch (error) {
-					console.error('Error loading CSV data:', error);
+					logError(error, {
+						feature: 'graphRenderer',
+						action: 'loadCSVData',
+						extra: {
+							csvUrl: graph.csv_url,
+							chartType: graph.type,
+							xAxis: graph.x_axis,
+							yAxis: graph.y_axis,
+							errorMessage: error.message,
+						},
+					});
 				} finally {
 					setIsGraphLoading(false);
 				}

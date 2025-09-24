@@ -30,6 +30,16 @@ const Dashboard = () => {
 	const userDashboardQuery = useQuery({
 		queryKey: ['user-dashboard'],
 		queryFn: () => getUserDashboard(),
+		onError: (error) => {
+			logError(error, {
+				feature: 'dashboard',
+				action: 'fetchUserDashboard',
+				extra: {
+					errorMessage: error.message,
+					status: error.response?.status,
+				},
+			});
+		},
 	});
 
 	const handleCreateNewDashboard = async () => {

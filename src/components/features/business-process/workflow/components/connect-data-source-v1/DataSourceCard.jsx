@@ -11,6 +11,7 @@ import {
 	CardDescription,
 	CardContent,
 } from '@/components/ui/card';
+import { logError } from '@/lib/logger';
 import { ChevronRight, RefreshCw, AlertCircle } from 'lucide-react';
 import QueueStatus from '@/components/features/new-chat/QueueStatus';
 import { ErrorResolutionModal } from './ErrorResolutionModal';
@@ -29,7 +30,7 @@ import { getDataSourceById } from '@/components/features/configuration/service/c
 import { getFileIcon } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
 import WorkFlowDataSourceCardSkeleton from './WorkFlowDataSourceCardSkeleton';
-import { getFileMeta } from '@/lib/file';
+import { getFileMetadata } from '@/lib/file';
 import { toast } from '@/lib/toast';
 import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
@@ -101,8 +102,16 @@ const DataSourceCard = ({
 			}
 		},
 		onError: (err) => {
+			logError(err, {
+				feature: 'businessProcess',
+				action: 'initiateWorkflow',
+				extra: {
+					workflowId,
+					dataSourceId: selectedDataSource,
+					errorMessage: err.message,
+				},
+			});
 			toast.error(`Workflow initiation failed: ${err.message}`);
-			console.error('Workflow initiation error:', err);
 			setValidationStatus('idle');
 		},
 	});
@@ -116,8 +125,16 @@ const DataSourceCard = ({
 			setShouldShowRevalidate(false);
 		},
 		onError: (err) => {
+			logError(err, {
+				feature: 'businessProcess',
+				action: 'clarifyWorkflow',
+				extra: {
+					workflowId,
+					runId,
+					errorMessage: err.message,
+				},
+			});
 			toast.error(`Clarification failed: ${err.message}`);
-			console.error('Clarification error:', err);
 			setValidationStatus('NEED_CLARIFICATION');
 		},
 	});
@@ -163,10 +180,18 @@ const DataSourceCard = ({
 				await Promise.all(
 					datasourceQuery.data.processed_files.files.map(async (file) => {
 						try {
-							const response = await getFileMeta(file.url);
+							const response = await getFileMetadata(file.url);
 							sizes[file.id] = response.size;
 						} catch (error) {
-							console.error('Error fetching file size:', error);
+							logError(error, {
+								feature: 'businessProcess',
+								action: 'fetchFileSize',
+								extra: {
+									fileId: file.id,
+									fileUrl: file.url,
+									errorMessage: error.message,
+								},
+							});
 							sizes[file.id] = 0;
 						}
 					}),

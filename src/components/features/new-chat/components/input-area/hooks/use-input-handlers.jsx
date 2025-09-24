@@ -44,7 +44,6 @@ export const useInputHandlers = ({
 			resetQueries();
 			setMode('single');
 		} catch (error) {
-			console.error('Error sending message:', error);
 			logError(error, { feature: 'chat', action: 'send-message' });
 			toast.error('Failed to send message. Please try again.');
 		}

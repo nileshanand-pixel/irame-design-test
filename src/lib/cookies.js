@@ -1,5 +1,8 @@
 import Cookies from 'js-cookie';
 
+import { jwtDecode } from 'jwt-decode';
+import { logError } from './logger';
+
 export const resetCookies = () => {
 	const allCookies = Cookies.get();
 	const alwaysIgnoredCookies = ['termsAccepted'];
@@ -28,7 +31,11 @@ export const getUserDetailsFromToken = (token) => {
 
 		return userDetails;
 	} catch (error) {
-		console.error('Failed to decode token', error);
+		logError(error, {
+			feature: 'cookies',
+			action: 'decode_token',
+			extra: { hasToken: !!token },
+		});
 		return null;
 	}
 };

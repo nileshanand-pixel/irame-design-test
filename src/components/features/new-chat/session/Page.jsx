@@ -297,7 +297,6 @@ const Workzone = () => {
 				}
 			})
 			.catch((error) => {
-				console.error('Error fetching session queries:', error);
 				logError(error, {
 					feature: 'chat',
 					action: 'fetch-session-queries',

@@ -9,6 +9,7 @@ import {
 	getUserSession,
 } from './features/new-chat/service/new-chat.service';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { logError } from '@/lib/logger';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -61,7 +62,13 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			);
 			return data;
 		} catch (error) {
-			console.error('Error fetching user session:', error);
+			logError(error, {
+				feature: 'sidenav',
+				action: 'fetchUserSession',
+				extra: {
+					errorMessage: error.message,
+				},
+			});
 		}
 	};
 
@@ -201,7 +208,18 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			}
 
 			handleRedirectionAfterDeletion(sessionId, workflowId);
-		} catch (error) {}
+		} catch (error) {
+			logError(error, {
+				feature: 'sidenav',
+				action: 'handleDeletion',
+				extra: {
+					sessionId,
+					workflowId,
+					threadType,
+					errorMessage: error.message,
+				},
+			});
+		}
 	};
 
 	const handleRunningWorkflowDeletion = async (
@@ -225,7 +243,18 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			);
 			queryClient.invalidateQueries(['get-business-processes-home-page']);
 			handleRedirectionAfterDeletion(sessionId, workflowId);
-		} catch (error) {}
+		} catch (error) {
+			logError(error, {
+				feature: 'sidenav',
+				action: 'handleRunningWorkflowDeletion',
+				extra: {
+					sessionId,
+					workflowId,
+					runId,
+					errorMessage: error.message,
+				},
+			});
+		}
 	};
 
 	const askIra = (e) => {

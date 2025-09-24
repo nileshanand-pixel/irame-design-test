@@ -1,6 +1,7 @@
 import { createSignedUrlFromS3Url, downloadFile } from '@/utils/file';
 import { useState } from 'react';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 
 export default function useS3File() {
 	const [isDownloading, setIsDownloading] = useState(false);
@@ -13,6 +14,11 @@ export default function useS3File() {
 			const signedUrl = await createSignedUrlFromS3Url(s3Url);
 			downloadFile(signedUrl, fileName);
 		} catch (error) {
+			logError(error, {
+				feature: 'file_operations',
+				action: 'download_s3_file',
+				extra: { s3Url, fileName },
+			});
 			toast.error(
 				`Error downloading file: ${error?.response?.data?.message || error?.message}`,
 			);
@@ -28,6 +34,11 @@ export default function useS3File() {
 			const signedUrl = await createSignedUrlFromS3Url(s3Url);
 			window.open(signedUrl, '_blank');
 		} catch (error) {
+			logError(error, {
+				feature: 'file_operations',
+				action: 'open_s3_file',
+				extra: { s3Url },
+			});
 			toast.error(
 				`Error opening file: ${error?.response?.data?.message || error?.message}`,
 			);
@@ -43,6 +54,11 @@ export default function useS3File() {
 			const signedUrl = await createSignedUrlFromS3Url(s3Url);
 			return signedUrl;
 		} catch (error) {
+			logError(error, {
+				feature: 'file_operations',
+				action: 'create_s3_file',
+				extra: { s3Url },
+			});
 			toast.error(
 				`Error creating signed file url: ${error?.response?.data?.message || error?.message}`,
 			);

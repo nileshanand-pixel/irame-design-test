@@ -1,12 +1,17 @@
 import * as Sentry from '@sentry/react';
 
-// Initialize Sentry only once, using DSN from .env
-Sentry.init({
-	dsn: import.meta.env.VITE_SENTRY_DSN,
-	sendDefaultPii: true,
-	environment: import.meta.env.MODE,
-	// You can add more Sentry config here as needed
-});
+// Initialize Sentry only if DSN is available
+if (import.meta.env.VITE_SENTRY_DSN) {
+	Sentry.init({
+		dsn: import.meta.env.VITE_SENTRY_DSN,
+		sendDefaultPii: false,
+		environment: import.meta.env.MODE,
+		integrations: [
+			// React Router v6 integration for routing breadcrumbs
+			Sentry.reactRouterV6BrowserTracingIntegration(),
+		],
+	});
+}
 
 /**
  * Centralized error logger for the app.
@@ -14,21 +19,24 @@ Sentry.init({
  * @param {Object} context - Additional context (feature, action, user, extra, etc).
  */
 export function logError(error, context = {}) {
-	// Attach extra context for Sentry
-	Sentry.captureException(error, {
-		tags: {
-			feature: context.feature,
-			action: context.action,
-			...context.tags,
-		},
-		extra: {
-			...context.extra,
-		},
-		user: context.user,
-		level: context.level || 'error',
-	});
+	// Only send to Sentry if it's initialized (DSN is available)
+	if (import.meta.env.VITE_SENTRY_DSN) {
+		// Attach extra context for Sentry
+		Sentry.captureException(error, {
+			tags: {
+				feature: context.feature,
+				action: context.action,
+				...context.tags,
+			},
+			extra: {
+				...context.extra,
+			},
+			user: context.user,
+			level: context.level || 'error',
+		});
+	}
 
-	// Optionally, log to console in development
+	// Always log to console in development
 	if (import.meta.env.DEV) {
 		// eslint-disable-next-line no-console
 		console.error('[logError]', error, context);

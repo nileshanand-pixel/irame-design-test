@@ -25,7 +25,6 @@ export const usePromptEnhancer = (prompt) => {
 					setShowStream(false);
 				}
 			} catch (err) {
-				console.error('Error in streaming prompt:', err);
 				logError(err, { feature: 'chat', action: 'stream-prompt' });
 				clearInterval(intervalId);
 				setShowStream(false);
@@ -43,7 +42,6 @@ export const usePromptEnhancer = (prompt) => {
 			try {
 				return await enhancePrompt(promptText);
 			} catch (error) {
-				console.error('API error in enhancePrompt:', error);
 				logError(error, { feature: 'chat', action: 'enhance-prompt-api' });
 				throw new Error(error.message || 'Failed to enhance prompt');
 			}

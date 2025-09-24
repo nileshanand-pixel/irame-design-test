@@ -68,7 +68,14 @@ const DataSource = () => {
 					...getErrorAnalyticsProps(err),
 				}),
 			);
-			console.error('Error deleting data source', err);
+			logError(err, {
+				feature: 'datasource',
+				action: 'delete_datasource',
+				extra: {
+					datasource_id: datasourceQuery?.data?.datasource_id,
+					dataset_name: datasourceQuery?.data?.name,
+				},
+			});
 			toast.error('Something went wrong while deleting Data source');
 		},
 	});
@@ -157,6 +164,15 @@ const DataSource = () => {
 				}),
 			);
 			// console.log('Error updating data source', err);
+			logError(err, {
+				feature: 'datasource',
+				action: 'update_datasource',
+				extra: {
+					datasource_id: datasourceQuery?.data?.datasource_id,
+					dataset_name: datasourceQuery?.data?.name,
+					changes: changesForTracking,
+				},
+			});
 			toast.error(
 				'Something went wrong while updating Data source ' + err.message,
 			);

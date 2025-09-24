@@ -1,5 +1,6 @@
 import axiosClientV1 from '@/lib/axios';
 import { removeQueryString } from './url';
+import { logError } from '@/lib/logger';
 
 export const isImageFile = (file) => {
 	return file.type.includes('image');
@@ -49,7 +50,13 @@ export const downloadFile = (fileUrl, fileName) => {
 				document.body.removeChild(a);
 				URL.revokeObjectURL(blobUrl);
 			})
-			.catch((err) => console.error('Download failed:', err));
+			.catch((err) => {
+				logError(err, {
+					feature: 'file_download',
+					action: 'download_blob',
+					extra: { fileName, fileUrl },
+				});
+			});
 	} else {
 		const a = document.createElement('a');
 		a.href = fileUrl;

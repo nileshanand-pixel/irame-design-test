@@ -14,6 +14,7 @@ import {
 } from '../service/workflow.service';
 import Breadcrumb from './components/BreadCrumb';
 import WorkflowDetails from './components/WorkflowDetails';
+import { logError } from '@/lib/logger';
 import DataSourceCard from './components/connect-data-source-v1/DataSourceCard';
 import WorkflowPlan from './components/WorkflowPlan';
 import { queryClient } from '@/lib/react-query';
@@ -51,7 +52,15 @@ export default function WorkflowPage() {
 			);
 		},
 		onError: (err) => {
-			console.error('Workflow run failed:', err);
+			logError(err, {
+				feature: 'businessProcess',
+				action: 'runWorkflow',
+				extra: {
+					workflowId,
+					businessProcessId,
+					errorMessage: err.message,
+				},
+			});
 			toast.error(`Workflow execution failed: ${err.message}`);
 		},
 	});

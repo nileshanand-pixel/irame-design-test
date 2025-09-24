@@ -36,7 +36,6 @@ export const useModalManagement = (setMode) => {
 			setShowModal(false);
 			resetSecondaryModalData();
 		} catch (error) {
-			console.error('Error handling action selection:', error);
 			logError(error, { feature: 'chat', action: 'modal-action' });
 			toast.error("Couldn't process that action. Please try again.");
 		}

@@ -10,6 +10,7 @@ import { queryClient } from '@/lib/react-query';
 import ScrollList from '@/components/elements/ScrollList';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { logError } from '@/lib/logger';
 
 const SelectPrompt = ({ setPrompt, dataSources }) => {
 	const [activeTab, setActiveTab] = useState('');
@@ -169,7 +170,14 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 					}
 				}
 			} catch (error) {
-				console.error('Error fetching suggestions:', error);
+				logError(error, {
+					feature: 'chat',
+					action: 'fetchSuggestions',
+					extra: {
+						dataSourceId: query.dataSourceId,
+						errorMessage: error.message,
+					},
+				});
 			}
 		};
 

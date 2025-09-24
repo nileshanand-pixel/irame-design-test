@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/lib/toast';
 import axiosClientV1 from '@/lib/axios';
+import { logError } from '@/lib/logger';
 
 export const getPresignedUrl = async (fileName) => {
 	const response = await axiosClientV1.get(
@@ -50,7 +51,15 @@ export const uploadFile = async (file, setProgress, cancelToken = null) => {
 
 		return { name: file.name, url, presigned_url };
 	} catch (error) {
-		console.error(`Error uploading file ${file.name}`, error);
+		logError(error, {
+			feature: 'configuration',
+			action: 'uploadFile',
+			extra: {
+				fileName: file.name,
+				fileType: file.type,
+				errorMessage: error.message,
+			},
+		});
 		throw error;
 	}
 };
@@ -95,7 +104,15 @@ export const deleteDataSource = async (dataSourceId) => {
 		toast.success('Data source deleted successfully');
 		return response.data;
 	} catch (error) {
-		console.error('Error deleting data source', error);
+		logError(error, {
+			feature: 'configuration',
+			action: 'deleteDataSource',
+			extra: {
+				dataSourceId,
+				errorMessage: error.message,
+				status: error.response?.status,
+			},
+		});
 		toast.error('Failed to delete data source');
 
 		throw error;
