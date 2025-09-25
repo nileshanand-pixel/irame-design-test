@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { getDataSources } from '@/components/features/configuration/service/configuration.service';
+import { getDataSourcesV2 } from '@/components/features/configuration/service/configuration.service';
 import { Button } from '@/components/ui/button';
 
 export function ChooseExistingModal({
@@ -23,7 +23,7 @@ export function ChooseExistingModal({
 
 	const { data: dataSources, isLoading } = useQuery({
 		queryKey: ['data-sources'],
-		queryFn: getDataSources,
+		queryFn: getDataSourcesV2,
 		enabled: open,
 	});
 

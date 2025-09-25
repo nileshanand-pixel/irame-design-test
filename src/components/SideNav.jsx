@@ -16,7 +16,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import InputText from './elements/InputText';
-import { getDataSources } from './features/configuration/service/configuration.service';
+import { getDataSourcesV2 } from './features/configuration/service/configuration.service';
 import { resetChatStore, updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
 import Spinner from './elements/loading/Spinner';
@@ -129,7 +129,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	];
 
 	const fetchDataSources = async () => {
-		const data = await getDataSources();
+		const data = await getDataSourcesV2();
 		dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		return Array.isArray(data) ? data : [];
 	};

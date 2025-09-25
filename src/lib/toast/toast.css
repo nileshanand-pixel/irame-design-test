@@ -31,3 +31,8 @@
     height: 1.2rem;
   }
 }
+
+.Toastify__toast--info .Toastify__toast-icon svg {
+  color: rgba(38, 6, 74, 1);
+  fill: rgba(38, 6, 74, 1);
+}

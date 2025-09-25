@@ -28,14 +28,20 @@ const ToastComponent = ({ message, action }) => {
 export const toast = {
 	success: (message, { action, ...config } = {}) => {
 		return notify.success(<ToastComponent message={message} action={action} />, {
-			closeButton: false,
+			closeButton: true,
 			...config,
 		});
 	},
 	error: (message, { action, ...config } = {}) => {
 		return notify.error(<ToastComponent message={message} action={action} />, {
 			icon: <img src={errorSvg} className="errorIcon" />,
-			closeButton: false,
+			closeButton: true,
+			...config,
+		});
+	},
+	info: (message, { action, ...config } = {}) => {
+		return notify.info(<ToastComponent message={message} action={action} />, {
+			closeButton: true,
 			...config,
 		});
 	},
