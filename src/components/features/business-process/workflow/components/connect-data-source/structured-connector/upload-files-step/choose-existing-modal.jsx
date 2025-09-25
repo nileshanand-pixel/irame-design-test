@@ -35,7 +35,13 @@ export function ChooseExistingModal({
 			);
 			return !hasPDF;
 		})
-		.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
+		.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
+		.sort((a, b) => {
+			// Active items come first
+			if (a.status === 'active' && b.status !== 'active') return -1;
+			if (a.status !== 'active' && b.status === 'active') return 1;
+			return 0; // Keep original order for items with same status
+		});
 
 	const toggleSelect = (ds) => {
 		setSelected((prev) =>
@@ -96,10 +102,9 @@ export function ChooseExistingModal({
 						</div>
 					) : (
 						<div className="grid grid-cols-2 gap-4">
-							{filtered.map((ds) => {
-								const isProcessing =
-									!ds.processed_files?.files ||
-									ds.processed_files.files.length === 0;
+							{filtered.map((ds, index) => {
+								const isProcessing = ds.status !== 'active';
+
 								const isSelected = selected.some(
 									(s) => s.datasource_id === ds.datasource_id,
 								);
