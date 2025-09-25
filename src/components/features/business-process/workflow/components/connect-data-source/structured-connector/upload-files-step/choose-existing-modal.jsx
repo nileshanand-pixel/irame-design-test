@@ -14,10 +14,13 @@ export function ChooseExistingModal({
 }) {
 	const [search, setSearch] = useState('');
 	const [selected, setSelected] = useState([]);
+	const [initialSelectionCount, setInitialSelectionCount] = useState(0);
 
 	useEffect(() => {
 		if (open) {
-			setSelected(selectedDataSources || []);
+			const initialSelected = selectedDataSources || [];
+			setSelected(initialSelected);
+			setInitialSelectionCount(initialSelected.length);
 		}
 	}, [open, selectedDataSources]);
 
@@ -157,7 +160,12 @@ export function ChooseExistingModal({
 				</div>
 
 				<div className="py-4 px-8 border-t mt-6 border-gray-200 bg-[#F3F4F680] flex justify-end">
-					<Button onClick={handleConfirm} disabled={selected.length === 0}>
+					<Button
+						onClick={handleConfirm}
+						disabled={
+							selected.length === 0 && initialSelectionCount === 0
+						}
+					>
 						Continue
 					</Button>
 				</div>
