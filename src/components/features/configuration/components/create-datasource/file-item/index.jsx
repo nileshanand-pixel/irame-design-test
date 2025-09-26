@@ -57,7 +57,10 @@ export default function FileItem({
 			);
 		}
 
-		if (fileObj?.status === FILE_STATUS.FAILED) {
+		if (
+			fileObj?.status === FILE_STATUS.FAILED ||
+			fileObj?.status === FILE_STATUS.UPLOADING_FAILED
+		) {
 			return (
 				<TooltipProvider delayDuration={0}>
 					<Tooltip>
@@ -68,7 +71,9 @@ export default function FileItem({
 									className="w-4 h-4 text-destructive"
 								/>
 								<span className="text-xs text-destructive font-normal">
-									Processing Failed
+									{fileObj?.status === FILE_STATUS.FAILED
+										? 'Processing Failed'
+										: 'Uploading Failed'}
 								</span>
 							</div>
 						</TooltipTrigger>

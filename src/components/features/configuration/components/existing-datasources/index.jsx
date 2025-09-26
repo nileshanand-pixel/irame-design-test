@@ -29,6 +29,7 @@ import { queryClient } from '@/lib/react-query';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { useSearchParams } from 'react-router-dom';
 
 const TABS = [
 	{
@@ -48,6 +49,7 @@ export default function ExistingDataSources({ showForm }) {
 	const [selectedDatasourceTab, setSelectedDatasourceTab] = useState(TABS[0]);
 	const [dataSources, setDataSources] = useState([]);
 	const [search, setSearch] = useState('');
+	const [setSearchParams] = useSearchParams();
 
 	const dispatch = useDispatch();
 
@@ -137,6 +139,31 @@ export default function ExistingDataSources({ showForm }) {
 			ds?.name?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
 	);
 	const { groupArray } = groupItemsByDate(currentDatasources, 'created_at');
+
+	const handleDatasourceClick = (ds) => {
+		if (isFailed) {
+			setSearchParams({
+				datasource_id: ds?.datasource_id,
+			});
+			return;
+		}
+
+		if (isProcessing) {
+			navigate(`datasource?id=${source.datasource_id}`);
+			return;
+		}
+
+		trackEvent(
+			EVENTS_ENUM.EXISTING_DATASET_CLICKED,
+			EVENTS_REGISTRY.EXISTING_DATASET_CLICKED,
+			() => ({
+				dataset_id: source.datasource_id,
+				dataset_name: source.name,
+				source: search ? 'search' : 'select',
+			}),
+		);
+		startChatting(source);
+	};
 
 	return (
 		<div
@@ -256,30 +283,9 @@ export default function ExistingDataSources({ showForm }) {
 															'text-primary80 font-medium w-[calc(100%-2.85rem)] flex items-center',
 														)}
 														onClick={() => {
-															if (
-																isProcessing ||
-																isFailed
-															) {
-																navigate(
-																	`datasource?id=${source.datasource_id}`,
-																);
-																return;
-															}
-
-															trackEvent(
-																EVENTS_ENUM.EXISTING_DATASET_CLICKED,
-																EVENTS_REGISTRY.EXISTING_DATASET_CLICKED,
-																() => ({
-																	dataset_id:
-																		source.datasource_id,
-																	dataset_name:
-																		source.name,
-																	source: search
-																		? 'search'
-																		: 'select',
-																}),
+															handleDatasourceClick(
+																source,
 															);
-															startChatting(source);
 														}}
 													>
 														<img

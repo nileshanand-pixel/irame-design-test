@@ -59,7 +59,6 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	// const { mutate: uploadInitHandler } = useMutation({
 	// 	mutationFn: uploadInit,
 	// });
-
 	const { mutate: uploadFileInDs } = useMutation({
 		mutationFn: addFileInDs,
 	});
@@ -81,6 +80,14 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		queryFn: getDatasourceDetails,
 		enabled: !!datasourceId,
 		refetchInterval: (data) => {
+			if (!datasourceName) {
+				setDatasourceName(data?.state?.data?.name);
+			}
+
+			if (!description) {
+				setDescription(data?.state?.data?.description);
+			}
+
 			const datasourceFiles = data?.state?.data?.files;
 
 			if (datasourceFiles?.length > 0) {
@@ -340,6 +347,21 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 							}),
 						);
 						refetchDatasourceDetails();
+					},
+					onError: (error) => {
+						setFiles((prev) =>
+							prev.map((f) => {
+								if (f.id === file.id) {
+									const newF = {
+										...f,
+										status: FILE_STATUS.UPLOADING_FAILED,
+										message: error?.response?.data?.message,
+									};
+									return newF;
+								}
+								return f;
+							}),
+						);
 					},
 				},
 			);
@@ -693,7 +715,9 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				handleUploadCardClossClick();
 			}
 		} catch (error) {
-			toast.error(`Failed to delete file${fileObjs.length > 1 ? 's' : ''}`);
+			toast.error(
+				`Failed to delete file${fileObjs.length > 1 ? 's' : ''}: ${error?.response?.data?.message}`,
+			);
 		} finally {
 			setDeletingFiles((prev) => {
 				return prev.filter(
@@ -708,6 +732,8 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 		if (idFromUrl) {
 			setDatasourceId(idFromUrl);
+		} else {
+			handleUploadCardClossClick();
 		}
 	}, [searchParams]);
 
