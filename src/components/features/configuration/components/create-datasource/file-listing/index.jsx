@@ -106,7 +106,7 @@ export default function FileListing({
 	};
 
 	return (
-		<div className="flex flex-col h-full border border-gray-200 rounded-lg bg-white max-h-[32rem] overflow-y-auto">
+		<div className="flex flex-col h-full border border-gray-200 rounded-lg bg-white  overflow-y-auto">
 			<div className="flex items-center justify-between border-b p-3 bg-white ">
 				<div className="flex items-center gap-3 flex-1">
 					<div className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg">
