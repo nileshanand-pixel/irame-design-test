@@ -366,9 +366,19 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				},
 			);
 		} catch (err) {
-			// if (!axios.isCancel(err)) {
-			// 	setProgress((prev) => ({ ...prev, [file.name]: 0 }));
-			// }
+			setFiles((prev) =>
+				prev.map((f) => {
+					if (f.id === file.id) {
+						const newF = {
+							...f,
+							status: FILE_STATUS.UPLOADING_FAILED,
+							message: err?.response?.data?.message || err?.message,
+						};
+						return newF;
+					}
+					return f;
+				}),
+			);
 		}
 	};
 

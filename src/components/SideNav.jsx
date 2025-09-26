@@ -81,7 +81,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			group: '',
 			items: [
 				{
-					link: '/app/business-process',
+					link: '/app/business-process?source=side_bar',
 					text: 'Business Process',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/workflow_icon.svg',
 					// beta: true,
@@ -104,7 +104,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						),
 				},
 				{
-					link: '/app/reports/datasources',
+					link: '/app/reports/datasources?source=side_bar',
 					text: 'Reports',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/report-icon.svg',
 					// beta: true,
@@ -597,7 +597,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 										to={option.link}
 										key={optionKey}
 										onClick={() => {
-											setActiveTab(option.link);
+											setActiveTab(option.link.split('?')[0]);
 											option?.trackingCall &&
 												option.trackingCall();
 										}}
