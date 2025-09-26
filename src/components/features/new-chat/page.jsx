@@ -8,7 +8,7 @@ import { useRouter } from '@/hooks/useRouter';
 import { createQuerySession, getUserSession } from './service/new-chat.service';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
-import { getDataSources } from '../configuration/service/configuration.service';
+import { getDataSourcesV2 } from '../configuration/service/configuration.service';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
@@ -239,7 +239,7 @@ const NewChat = () => {
 		error,
 	} = useQuery({
 		queryKey: ['data-sources'],
-		queryFn: () => getDataSources(),
+		queryFn: () => getDataSourcesV2(),
 		onSuccess: (data) => {
 			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		},

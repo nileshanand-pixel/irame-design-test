@@ -2,7 +2,10 @@ import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { useWorkflowRunId } from '@/components/features/business-process/hooks/use-workflow-run-id';
-import { getDatasourceV2 } from '@/components/features/configuration/service/configuration.service';
+import {
+	getDatasourceV2,
+	getDataSourcesV2,
+} from '@/components/features/configuration/service/configuration.service';
 
 const SERVER_TO_UI_STATUS = {
 	PROCESSING: 'processing',
@@ -46,6 +49,7 @@ export function useDatasourceIngest({
 
 	const [creatingDS, setCreatingDS] = useState(false);
 	const [selectedDataSources, setSelectedDataSources] = useState([]);
+	const [copiedFromDataSources, setCopiedFromDataSources] = useState([]);
 	const cancelTokensRef = useRef({});
 
 	// Sync datasource ID from initialDatasourceId
@@ -120,6 +124,7 @@ export function useDatasourceIngest({
 						url: f.url,
 						processed_url: f.processed_url,
 						type: f.type,
+						reference_datasource_id: f.reference_datasource_id,
 						sheets: Array.isArray(f.sheets)
 							? f.sheets.map((s) => ({
 									id: s.id,
@@ -198,6 +203,26 @@ export function useDatasourceIngest({
 		if (!getDatasource || !datasourceId) return;
 		const ds = await getDatasourceV2(datasourceId);
 		replaceItemsByServer(ds.files || []);
+
+		// Collect unique reference datasource IDs and fetch them
+		const uniqueRefs = new Set();
+		for (const file of ds.files || []) {
+			if (file.reference_datasource_id) {
+				uniqueRefs.add(file.reference_datasource_id);
+			}
+		}
+		if (uniqueRefs.size > 0) {
+			const allDS = await getDataSourcesV2();
+			const refDS = allDS.filter((ds) =>
+				uniqueRefs.has(ds.datasource_id || ds.id),
+			);
+			setSelectedDataSources(refDS);
+			// Initialize copiedFromDataSources with current reference datasources
+			setCopiedFromDataSources([...uniqueRefs]);
+		} else {
+			setSelectedDataSources([]);
+			setCopiedFromDataSources([]);
+		}
 	}, [datasourceId, getDatasource, replaceItemsByServer]);
 
 	useEffect(() => {
@@ -621,40 +646,90 @@ export function useDatasourceIngest({
 
 	// Copy files from datasources
 	const copyFilesFromDataSources = useCallback(
-		async (selectedDS) => {
+		async (newSelectedDS) => {
 			if (!copyFiles || !datasourceId) {
 				throw new Error('Copy files not available or no datasource ID');
 			}
 
-			// Prepare the payload for copyFiles API
-			const datasources = selectedDS
-				.map((ds) => ({
-					id: ds.datasource_id,
-					files: (ds.raw_files || []).map((file) => ({
-						file_id: file.file_id,
-					})),
-				}))
-				.filter((ds) => ds.files.length > 0); // Only include datasources that have files
+			// Get current and new datasource IDs
+			const currentIds = new Set(copiedFromDataSources);
+			const newIds = new Set(
+				newSelectedDS
+					.map((ds) => ds.datasource_id)
+					.filter((id) => id !== datasourceId),
+			);
 
-			if (datasources.length === 0) {
-				throw new Error('No files found in selected datasources');
+			// Find datasources to remove and add
+			const toRemoveIds = [...currentIds].filter((id) => !newIds.has(id));
+			const toAddIds = [...newIds].filter((id) => !currentIds.has(id));
+
+			// Handle removal of deselected datasources
+			if (toRemoveIds.length > 0) {
+				const idsToDelete = [];
+				for (const dsId of toRemoveIds) {
+					const filesFromDs = items.filter(
+						(it) => it.meta?.reference_datasource_id === dsId,
+					);
+					idsToDelete.push(
+						...filesFromDs.map((it) => it.serverId || it.id),
+					);
+				}
+				if (idsToDelete.length > 0) {
+					await deleteItems(idsToDelete);
+				}
+			} // Handle addition of new datasources
+			if (toAddIds.length > 0) {
+				const toAdd = newSelectedDS.filter((ds) =>
+					toAddIds.includes(ds.datasource_id),
+				);
+
+				// Fetch datasources to add in parallel
+				const datasourcePromises = toAdd.map((ds) =>
+					getDatasourceV2(ds.datasource_id),
+				);
+				const datasourcesData = await Promise.all(datasourcePromises);
+
+				// Prepare the payload for copyFiles API
+				const datasources = datasourcesData
+					.map((dsData, index) => ({
+						id: toAdd[index].datasource_id,
+						files: (dsData.files || [])
+							.filter(
+								(file) =>
+									file.type === 'csv' || file.type === 'excel',
+							)
+							.map((file) => ({
+								file_id: file.id,
+							})),
+					}))
+					.filter((ds) => ds.files.length > 0);
+
+				if (datasources.length > 0) {
+					const payload = { datasources };
+					await copyFiles(payload, datasourceId);
+				}
 			}
 
-			const payload = { datasources };
+			// Update the copied list
+			setCopiedFromDataSources([...newIds]);
 
-			// Call the copyFiles API
-			const result = await copyFiles(payload, datasourceId);
-
-			// Trigger hydration to refresh the datasource state
-			if (result && getDatasource) {
-				setTimeout(() => {
-					hydrate().catch(() => {});
-				}, 1000); // Small delay to allow backend processing
-			}
-
-			return result;
+			// Trigger hydration to refresh the datasource state immediately
+			hydrate().catch(() => {});
+			return {
+				success: true,
+				added: toAddIds.length,
+				removed: toRemoveIds.length,
+			};
 		},
-		[copyFiles, datasourceId, getDatasource, hydrate],
+		[
+			copyFiles,
+			datasourceId,
+			getDatasource,
+			hydrate,
+			copiedFromDataSources,
+			items,
+			deleteItems,
+		],
 	);
 
 	// Reset
@@ -668,6 +743,7 @@ export function useDatasourceIngest({
 		stopPolling();
 		setUploadQueue([]);
 		setItems([]);
+		setCopiedFromDataSources([]);
 	}, [stopPolling]);
 
 	useEffect(

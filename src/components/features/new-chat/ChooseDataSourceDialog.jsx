@@ -9,7 +9,7 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import { useEffect, useState } from 'react';
-import { getDataSources } from '../configuration/service/configuration.service';
+import { getDataSourcesV2 } from '../configuration/service/configuration.service';
 import { useNavigate } from 'react-router-dom';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -74,7 +74,7 @@ const ChooseDataSourceDialog = ({
 		// });
 	};
 	const fetchDataSources = async () => {
-		const data = await getDataSources();
+		const data = await getDataSourcesV2();
 		return Array.isArray(data) ? data : [];
 	};
 

@@ -124,66 +124,38 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 			return;
 		}
 
-		// Only copy datasources that are not already added
-		const notAddedDS = selectedDS.filter((ds) => !ds.added);
-		if (notAddedDS.length === 0) {
-			toast.info('All selected datasources already added', {
-				position: 'bottom-center',
-			});
-			return;
-		}
-
 		try {
-			// Use the hook's function to copy files
-			const result = await copyFilesFromDataSources(notAddedDS);
+			// Use the hook's function to copy files and handle deletions
+			const result = await copyFilesFromDataSources(selectedDS);
 
-			if (result && result?.duplicated_files?.length) {
-				// Mark copied datasources as added
-				const updatedSelected = selectedDS.map((ds) =>
-					notAddedDS.some((n) => n.datasource_id === ds.datasource_id)
-						? { ...ds, added: true }
-						: ds,
-				);
-				setSelectedDataSources(updatedSelected);
+			if (result?.success) {
+				// Update selected datasources
+				setSelectedDataSources(selectedDS);
 
-				// Only add duplicated files, matching by original_file_id
-				const duplicatedFiles = result.duplicated_files.map((dup) => {
-					// Find the datasource containing the original file
-					const ds = updatedSelected.find(
-						(ds) =>
-							ds.datasource_id === dup.source_datasource_id &&
-							Array.isArray(ds.raw_files) &&
-							ds.raw_files.some(
-								(file) => file.id === dup.original_file_id,
-							),
+				// Provide feedback
+				if (result.added > 0 && result.removed > 0) {
+					toast.success(
+						`Added ${result.added} datasource(s), removed ${result.removed} datasource(s)`,
+						{ position: 'bottom-center' },
 					);
-					const origFile =
-						ds?.raw_files?.find(
-							(file) => file.id === dup.original_file_id,
-						) || {};
-					return {
-						...origFile,
-						id: dup.new_file_id,
-						name: dup.file_name,
-						datasource_id: ds?.datasource_id,
-						datasource_name: ds?.name,
-					};
-				});
-
-				// Add to local state
-				addExistingFiles(updatedSelected, duplicatedFiles);
-
-				toast.success(
-					`Successfully added ${duplicatedFiles.length} file(s)`,
-					{ position: 'bottom-center' },
-				);
-			} else {
-				toast.error('Failed to copy files', { position: 'bottom-center' });
+				} else if (result.added > 0) {
+					toast.success(
+						`Successfully added ${result.added} datasource(s)`,
+						{ position: 'bottom-center' },
+					);
+				} else if (result.removed > 0) {
+					toast.success(
+						`Successfully removed ${result.removed} datasource(s)`,
+						{ position: 'bottom-center' },
+					);
+				} else {
+					toast.info('No changes made', { position: 'bottom-center' });
+				}
 			}
 		} catch (error) {
 			console.error('Error copying files:', error);
 			const errorMessage =
-				error.message || 'Failed to copy files from selected datasources';
+				error.message || 'Failed to update datasource selection';
 			toast.error(errorMessage, { position: 'bottom-center' });
 		}
 	};

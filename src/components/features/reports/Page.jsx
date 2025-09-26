@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import {
-	getDatasources,
+	getDatasourcesByReports,
 	getSharedReports,
 	getUserReports,
 } from './service/reports.service';
@@ -22,7 +22,7 @@ const ReportFolders = () => {
 
 	const datasourcesQuery = useQuery({
 		queryKey: ['get-datasources-reports'],
-		queryFn: () => getDatasources(),
+		queryFn: () => getDatasourcesByReports(),
 		refetchInterval: 10000,
 	});
 

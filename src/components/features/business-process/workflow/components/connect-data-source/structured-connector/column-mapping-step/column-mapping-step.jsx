@@ -335,7 +335,7 @@ export const ColumnMappingStep = ({
 	if (isValidating) {
 		return (
 			<div className="flex flex-col h-full flex-1 gap-4">
-				<div className="p-6 relative h-60 top-1/2">
+				<div className="p-6 relative  top-1/2">
 					<div className="absolute inset-0 flex items-center justify-center z-10">
 						<div className="flex flex-col items-center">
 							<Loader className="text-[#6A12CD] animate-spin mb-4 size-10" />
