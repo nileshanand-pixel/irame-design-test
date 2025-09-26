@@ -260,10 +260,7 @@ export const uploadFileWithProgress = async (
 	datasourceId,
 ) => {
 	// Step 1: Get presigned URL
-	const { presigned_url, url } = await getPresignedUrl(
-		file?.name?.replace(/\s/g, '_'),
-		datasourceId,
-	);
+	const { presigned_url, url } = await getPresignedUrl(file?.name, datasourceId);
 
 	// Step 2: Prepare headers based on cloud provider
 	const headers = { 'Content-Type': file.type };

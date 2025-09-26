@@ -182,18 +182,20 @@ export function useDatasourceIngest({
 
 	const uniqueName = useCallback(
 		(name, existingNames) => {
-			if (!allowDuplicateNames) return name;
+			if (allowDuplicateNames) return name;
 			if (!existingNames.has(name)) return name;
-			const dot = name.lastIndexOf('.');
-			const base = dot !== -1 ? name.slice(0, dot) : name;
-			const ext = dot !== -1 ? name.slice(dot) : '';
-			let i = 1;
-			let candidate = `${base}_${String(i).padStart(2, '0')}${ext}`;
-			while (existingNames.has(candidate)) {
-				i += 1;
-				candidate = `${base}_${String(i).padStart(2, '0')}${ext}`;
+
+			let newName = name;
+			let counter = 1;
+
+			while (existingNames.has(newName)) {
+				const baseName = name.substring(0, name.lastIndexOf('.'));
+				const extension = name.substring(name.lastIndexOf('.'));
+				newName = `${baseName}_${counter}${extension}`;
+				counter++;
 			}
-			return candidate;
+
+			return newName;
 		},
 		[allowDuplicateNames],
 	);
@@ -252,6 +254,12 @@ export function useDatasourceIngest({
 					const id = uuidv4();
 					const name = uniqueName(file.name, existingNames);
 					existingNames.add(name);
+
+					const modifiedFile = new File([file], name, {
+						type: file.type,
+						lastModified: file.lastModified,
+					});
+
 					const newItem = {
 						id,
 						name,
@@ -259,7 +267,7 @@ export function useDatasourceIngest({
 						type: file.type,
 						status: 'uploading',
 						progress: 0,
-						meta: { localFile: file },
+						meta: { localFile: modifiedFile },
 						createdAt: now(),
 						updatedAt: now(),
 					};

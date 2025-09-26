@@ -77,7 +77,7 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 		methods,
 		pollIntervalMs: 2000,
 		uploadConcurrency: 3,
-		allowDuplicateNames: true,
+		allowDuplicateNames: false,
 		autoStartUploads: true,
 		warnOnUnloadWhenUploading: true,
 		autoAddAfterUpload: true,
