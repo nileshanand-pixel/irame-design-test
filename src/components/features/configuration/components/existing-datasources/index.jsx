@@ -140,10 +140,13 @@ export default function ExistingDataSources({ showForm }) {
 	);
 	const { groupArray } = groupItemsByDate(currentDatasources, 'created_at');
 
-	const handleDatasourceClick = (ds) => {
+	const handleDatasourceClick = (source) => {
+		const isFailed = source?.status === 'failed';
+		const isProcessing = source?.status === 'processing';
+
 		if (isFailed) {
 			setSearchParams({
-				datasource_id: ds?.datasource_id,
+				datasource_id: source?.datasource_id,
 			});
 			return;
 		}
