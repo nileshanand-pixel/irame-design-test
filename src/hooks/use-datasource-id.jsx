@@ -17,6 +17,5 @@ export const useDatasourceId = () => {
 			break;
 		}
 	}
-	console.log(datasourceId);
 	return datasourceId;
 };

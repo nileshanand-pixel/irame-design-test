@@ -252,11 +252,6 @@ const NewChat = () => {
 		};
 	}, [dataSources, utilReducer?.dataSources]);
 
-	const processedFiles = useMemo(() => {
-		const ds = findDataSourceById(datasourceId);
-		return ds?.processed_files?.files || [];
-	}, [findDataSourceById, datasourceId]);
-
 	const getChatHistoryDataSourceName = (dataSourceId) => {
 		const dataSource = findDataSourceById(dataSourceId);
 		return { id: dataSourceId, name: dataSource?.name };

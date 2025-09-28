@@ -135,7 +135,8 @@ export default function ExistingDataSources({ showForm }) {
 
 	const currentDatasources = dataSources?.filter(
 		(ds) =>
-			ds?.processed_files?.datasource_type === selectedDatasourceTab?.type &&
+			!ds?.is_duplicate &&
+			ds?.datasource_type === selectedDatasourceTab?.type &&
 			ds?.name?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
 	);
 	const { groupArray } = groupItemsByDate(currentDatasources, 'created_at');

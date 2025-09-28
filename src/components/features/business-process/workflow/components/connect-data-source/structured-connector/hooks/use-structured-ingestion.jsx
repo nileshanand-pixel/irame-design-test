@@ -671,6 +671,9 @@ export function useDatasourceIngest({
 			const toRemoveIds = [...currentIds].filter((id) => !newIds.has(id));
 			const toAddIds = [...newIds].filter((id) => !currentIds.has(id));
 
+			let removedFiles = 0;
+			let addedFiles = 0;
+
 			// Handle removal of deselected datasources
 			if (toRemoveIds.length > 0) {
 				const idsToDelete = [];
@@ -682,10 +685,13 @@ export function useDatasourceIngest({
 						...filesFromDs.map((it) => it.serverId || it.id),
 					);
 				}
+				removedFiles = idsToDelete.length;
 				if (idsToDelete.length > 0) {
 					await deleteItems(idsToDelete);
 				}
-			} // Handle addition of new datasources
+			}
+
+			// Handle addition of new datasources
 			if (toAddIds.length > 0) {
 				const toAdd = newSelectedDS.filter((ds) =>
 					toAddIds.includes(ds.datasource_id),
@@ -712,10 +718,19 @@ export function useDatasourceIngest({
 					}))
 					.filter((ds) => ds.files.length > 0);
 
+				addedFiles = datasources.reduce(
+					(sum, ds) => sum + ds.files.length,
+					0,
+				);
+
 				if (datasources.length > 0) {
 					const payload = { datasources };
 					await copyFiles(payload, datasourceId);
 				}
+			}
+
+			if (addedFiles === 0 && removedFiles === 0) {
+				throw new Error('no supported files present to add/remove');
 			}
 
 			// Update the copied list
@@ -725,8 +740,8 @@ export function useDatasourceIngest({
 			hydrate().catch(() => {});
 			return {
 				success: true,
-				added: toAddIds.length,
-				removed: toRemoveIds.length,
+				added: addedFiles,
+				removed: removedFiles,
 			};
 		},
 		[

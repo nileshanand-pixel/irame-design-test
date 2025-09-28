@@ -32,12 +32,14 @@ export function ChooseExistingModal({
 
 	// Exclude data sources with PDF files and apply search
 	const filtered = (dataSources || [])
-		.filter((item) => {
-			const hasPDF = item.processed_files?.files?.some(
-				(file) => file.type === 'pdf',
-			);
-			return !hasPDF;
-		})
+		// removing this as we don't get files any more in the response
+		// will add something later from backend if needed
+		// .filter((item) => {
+		// 	const hasPDF = item.processed_files?.files?.some(
+		// 		(file) => file.type === 'pdf',
+		// 	);
+		// 	return !hasPDF;
+		// })
 		.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
 		.sort((a, b) => {
 			// Active items come first
