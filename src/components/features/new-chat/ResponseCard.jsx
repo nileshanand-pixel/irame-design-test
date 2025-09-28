@@ -30,6 +30,7 @@ const ResponseCard = ({
 	showTable,
 	setIsTableLoading,
 	isTableLoading,
+	isLastQuery,
 }) => {
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
@@ -75,10 +76,7 @@ const ResponseCard = ({
 	const showTableOnly = !showGraph && !!dataFrameItem;
 
 	// show followup questions only for last query
-	const showFollowup =
-		answerResp?.query_id ===
-			chatStoreReducer?.queries?.[chatStoreReducer?.queries?.length - 1]?.id &&
-		answerResp?.status === 'done';
+	const showFollowup = isLastQuery && answerResp?.status === 'done';
 
 	const handleAddQueryToReport = () => {
 		dispatch(
@@ -128,12 +126,7 @@ const ResponseCard = ({
 	};
 
 	useEffect(() => {
-		if (
-			answerResp?.answer?.follow_up &&
-			showFollowup &&
-			!doingScience &&
-			!isGraphLoading
-		) {
+		if (answerResp?.answer?.follow_up && showFollowup && !doingScience) {
 			trackEvent(
 				EVENTS_ENUM.FOLLOW_UP_SUGGESTION_SHOWED,
 				EVENTS_REGISTRY.FOLLOW_UP_SUGGESTION_SHOWED,
@@ -147,7 +140,7 @@ const ResponseCard = ({
 				}),
 			);
 		}
-	}, [answerResp, showFollowup, doingScience, isGraphLoading]);
+	}, [answerResp, showFollowup, doingScience]);
 
 	return (
 		<>
@@ -262,40 +255,36 @@ const ResponseCard = ({
 					)}
 				</div>
 			)}
-			{answerResp?.answer?.follow_up &&
-				showFollowup &&
-				!doingScience &&
-				!isGraphLoading && (
-					<div className="mx-12">
-						<div className="mt-2 mb-2 font-semibold text-xl text-primary80 pb-4 border-b border-primary10 ">
-							Related Questions
-						</div>
-						<div className=" flex flex-col mx-auto">
-							{answerResp?.answer?.follow_up?.tool_data?.questions &&
-								Array.isArray(
-									answerResp?.answer?.follow_up?.tool_data
-										?.questions,
-								) &&
-								showFollowup &&
-								answerResp?.answer?.follow_up?.tool_data?.questions?.map(
-									(question, index) => (
-										<FollowUpQuestions
-											key={index}
-											question={question}
-											index={index}
-											setAnswerResp={setAnswerResp}
-											setDoingScience={setDoingScience}
-											setResponseTimeElapsed={
-												setResponseTimeElapsed
-											}
-											setBanners={setBanners}
-											answerResp={answerResp}
-										/>
-									),
-								)}
-						</div>
+			{answerResp?.answer?.follow_up && showFollowup && !doingScience && (
+				<div className="mx-12">
+					<div className="mt-2 mb-2 font-semibold text-xl text-primary80 pb-4 border-b border-primary10 ">
+						Related Questions
 					</div>
-				)}
+					<div className=" flex flex-col mx-auto">
+						{answerResp?.answer?.follow_up?.tool_data?.questions &&
+							Array.isArray(
+								answerResp?.answer?.follow_up?.tool_data?.questions,
+							) &&
+							showFollowup &&
+							answerResp?.answer?.follow_up?.tool_data?.questions?.map(
+								(question, index) => (
+									<FollowUpQuestions
+										key={index}
+										question={question}
+										index={index}
+										setAnswerResp={setAnswerResp}
+										setDoingScience={setDoingScience}
+										setResponseTimeElapsed={
+											setResponseTimeElapsed
+										}
+										setBanners={setBanners}
+										answerResp={answerResp}
+									/>
+								),
+							)}
+					</div>
+				</div>
+			)}
 			<AddQueryFlow
 				isOpen={isAddToReportOpen}
 				onClose={() => setIsAddToReportOpen(false)}

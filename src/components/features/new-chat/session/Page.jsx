@@ -58,9 +58,9 @@ const Workzone = () => {
 		queryKey: ['chat', 'session', currentSessionId, 'queries'],
 		queryFn: () => getSessionQueries(currentSessionId),
 		enabled: !!currentSessionId,
-		refetchInterval: (data) => {
+		refetchInterval: (query) => {
 			// If there are any queries that are not 'done', keep polling
-			const queryList = data?.query_list || [];
+			const queryList = query?.state?.data?.query_list || [];
 			const hasPendingQueries = queryList.some(
 				(query) => query.status !== 'done',
 			);
@@ -596,6 +596,10 @@ const Workzone = () => {
 							}
 							setIsTableLoading={setIsTableLoading}
 							isTableLoading={isTableLoading}
+							isLastQuery={
+								answerElem?.query_id ===
+								queries?.[queries?.length - 1]?.id
+							}
 						/>
 					</div>
 				</div>
