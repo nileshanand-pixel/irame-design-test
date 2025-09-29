@@ -28,6 +28,7 @@ const ExcelFileContent = ({
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
 	const { data: datasourceData } = useDatasourceDetailsV2();
+
 	return (
 		<div className="flex flex-wrap gap-2 mt-4 rounded-lg py-2.5">
 			<MultiSelect
@@ -152,11 +153,26 @@ const SourceComponent = ({
 		let contentArr = [];
 		if (!datasourceData?.files) return;
 
-		const sortedFiles = datasourceData?.files.sort((a, b) => {
-			const selectedColumnsCountA = selectedColumns[a.id]?.length || 0;
-			const selectedColumnsCountB = selectedColumns[b.id]?.length || 0;
-			return selectedColumnsCountB - selectedColumnsCountA;
-		});
+		const sortedFiles = datasourceData?.files
+			?.map((file) => {
+				if (file.sheets) {
+					return file.sheets.map((sheet) => {
+						return {
+							filename: `${file?.filename?.split('.')?.[0]}(${sheet?.worksheet}).csv`,
+							...sheet,
+							id: file?.filename + ' - ' + sheet?.worksheet,
+						};
+					});
+				} else {
+					return file;
+				}
+			})
+			.flat()
+			?.sort((a, b) => {
+				const selectedColumnsCountA = selectedColumns[a.id]?.length || 0;
+				const selectedColumnsCountB = selectedColumns[b.id]?.length || 0;
+				return selectedColumnsCountB - selectedColumnsCountA;
+			});
 
 		sortedFiles?.map((file) => {
 			if (file?.id) {
