@@ -5,7 +5,8 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 	Sentry.init({
 		dsn: import.meta.env.VITE_SENTRY_DSN,
 		sendDefaultPii: false,
-		environment: import.meta.env.MODE,
+		environment: import.meta.env.VITE_ENV,
+		tunnel: import.meta.env.VITE_SENTRY_TUNNEL,
 		// React Router integration will be added separately
 	});
 }
