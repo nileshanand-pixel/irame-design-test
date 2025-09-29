@@ -154,7 +154,15 @@ const Header = () => {
 		>
 			<div className="flex gap-6 items-center">
 				{showDataSourceName ? (
-					<div className="flex gap-2 items-center rounded-lg px-3 py-2 bg-purple-10 text-primary80 text-sm font-medium w-fit truncate">
+					<div
+						className="flex gap-2 items-center rounded-lg px-3 py-2 bg-purple-10 hover:bg-purple-20 text-primary80 text-sm font-medium w-fit truncate cursor-pointer"
+						onClick={() =>
+							window.open(
+								`/app/configuration/datasource?id=${datasourceDetails.datasource_id}`,
+								'_blank',
+							)
+						}
+					>
 						<img
 							src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
 							alt="edit-prompt"
