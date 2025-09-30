@@ -33,12 +33,12 @@ export const isStructuredData = (rawFiles) => {
  * isUnstructuredData([{ file_name: 'report.pdf' }, { file_name: 'notes.docx' }]); // true
  * isUnstructuredData([{ file_name: 'data.csv' }, { file_name: 'report.pdf' }]); // false
  */
-export const isUnstructuredData = (rawFiles) => {
-	if (!rawFiles || rawFiles.length === 0) {
+export const isUnstructuredData = (files) => {
+	if (!files || files.length === 0) {
 		return false;
 	}
-	return rawFiles.every((file) => {
-		const fileName = file.file_name.toLowerCase();
-		return UNSTRUCTURED_TYPES.some((ext) => fileName.endsWith(ext));
+	return files.every((file) => {
+		const fileName = file?.filename?.toLowerCase();
+		return UNSTRUCTURED_TYPES.some((ext) => fileName?.endsWith(ext));
 	});
 };

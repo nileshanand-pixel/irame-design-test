@@ -1,4 +1,5 @@
 import axiosClientV1 from '@/lib/axios';
+import { logError } from '@/lib/logger';
 import { resetCookies } from '@/lib/cookies';
 import { resetAllStores } from '@/redux/GlobalStore';
 import { untrackUser } from '@/lib/mixpanel';
@@ -6,10 +7,18 @@ import { toast } from '@/lib/toast';
 import { grantType } from '@/config/auth.config';
 
 export const ensureCleanup = async () => {
-	storageLogoutCleanup();
-	if (window.location.pathname !== '/') {
-		toast.error('Session expired. Logging out...');
-		window.location.href = '/';
+	try {
+		storageLogoutCleanup();
+		if (window.location.pathname !== '/') {
+			logError(new Error('Session expired - forcing logout'), {
+				feature: 'login',
+				action: 'session-expired',
+			});
+			toast.error('Session expired. Logging out...');
+			window.location.href = '/';
+		}
+	} catch (error) {
+		logError(error, { feature: 'login', action: 'ensureCleanup' });
 	}
 };
 
@@ -19,9 +28,14 @@ export const logout = async () => {
 		if (response.status === 200) {
 			toast.success('Successfully logged out');
 		} else {
+			logError(new Error(`Logout failed with status ${response.status}`), {
+				feature: 'login',
+				action: 'logout',
+			});
 			toast.error('Something went wrong');
 		}
 	} catch (error) {
+		logError(error, { feature: 'login', action: 'logout' });
 		toast.error('Something went wrong');
 	} finally {
 		localStorage.removeItem('userDetails');

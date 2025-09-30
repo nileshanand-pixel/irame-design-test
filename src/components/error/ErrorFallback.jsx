@@ -1,10 +1,22 @@
 import PropTypes from 'prop-types';
 import { useRouter } from '@/hooks/useRouter';
 import { resetAllStores } from '@/redux/GlobalStore';
+import { logError } from '@/lib/logger';
 
 const ErrorFallback = ({ error, resetErrorBoundary }) => {
 	const { pathname, navigate } = useRouter();
 	const IMAGE_SRC = '/assets/bgs/error-boundary-image.png';
+
+	// Log the error to Sentry with context
+	logError(error, {
+		feature: 'error_boundary',
+		action: 'react_error_caught',
+		extra: {
+			pathname,
+			componentStack: error.componentStack,
+			errorBoundary: 'global',
+		},
+	});
 
 	console.log(error.message);
 

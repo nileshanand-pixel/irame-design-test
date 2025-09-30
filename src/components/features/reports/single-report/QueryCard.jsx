@@ -21,6 +21,7 @@ import { Loader2, Eye, Copy } from 'lucide-react';
 import { getSupportedGraphs } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { RiskLevelDropdown } from './RiskLevelDropdown';
 import { Hint } from '@/components/Hint';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
@@ -48,13 +49,19 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 			toast.success('Report card deleted successfully');
 			queryClient.invalidateQueries(['report-details', report.report_id]);
 		},
-		onError: () => {
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'delete-report-card',
+				reportId: report?.report_id,
+				reportCardId: card?.external_id,
+			});
 			toast.error('Failed to delete report card');
 		},
 	});
 
 	const openQuery = () => {
-		const url = `${window.location.origin}/app/new-chat/session/?sessionId=${card.session_id}&queryId=${card.query_id}&source=report&dataSourceId=${card.datasource_id}`;
+		const url = `${window.location.origin}/app/new-chat/session/?sessionId=${card.session_id}&queryId=${card.query_id}&source=report&datasource_id=${card.datasource_id}`;
 		window.open(url, '_blank');
 	};
 

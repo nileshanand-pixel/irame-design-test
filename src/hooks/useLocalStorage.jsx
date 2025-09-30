@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logError } from '@/lib/logger';
 
 const initialValue = {
 	userDetails: {
@@ -24,6 +25,14 @@ const useLocalStorage = (key) => {
 	try {
 		initial = storedValue ? JSON.parse(storedValue) : initialValue[key] || {};
 	} catch (error) {
+		logError(error, {
+			feature: 'localStorage',
+			action: 'parseStoredValue',
+			extra: {
+				key,
+				errorMessage: error.message,
+			},
+		});
 		initial = initialValue[key] || {};
 	}
 

@@ -9,6 +9,7 @@ import React, {
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { createPortal } from 'react-dom';
 
 import SingleInputMode from './modes/single-input-mode';
@@ -25,8 +26,8 @@ import { useMentions } from './hooks/use-mentions';
 import { useModalManagement } from './hooks/use-modal-management';
 import { useInputHandlers } from './hooks/use-input-handlers';
 import { pxToRem } from '@/utils/unit-convertor';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 import { useSessionId } from '@/hooks/use-session-id';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	// Refs
@@ -38,18 +39,15 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	const dispatch = useDispatch();
 	const sessionId = useSessionId();
 
+	// QNA Disabled check
+	const isQnaDisabled = import.meta.env.VITE_QNA_DISABLED === 'true';
+
 	// Custom hooks - Core functionality
 	const { mode, queries, setMode, setQueries, handleQueryChange, resetQueries } =
 		useInputModes();
 	const [prompt, setPrompt] = useState('');
 
-	const { data: datasourceData } = useDatasourceDetails();
-	const { processedFiles } = useMemo(() => {
-		const ds = datasourceData;
-		return {
-			processedFiles: ds?.processed_files?.files || [],
-		};
-	}, [datasourceData]);
+	const { data: datasourceData } = useDatasourceDetailsV2();
 
 	useEffect(() => {
 		setPrompt('');
@@ -151,8 +149,8 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 						onPromptChange={handlePromptChange}
 						onKeyDown={(event) => handleKeyDown(event, firstActionRef)}
 						disabled={disabled || isEnhancing}
-						files={processedFiles}
-						filesLoading={!processedFiles?.length}
+						files={datasourceData?.files}
+						filesLoading={!datasourceData?.files?.length}
 						dispatch={dispatch}
 						utilReducer={utilReducer}
 						updateUtilProp={updateUtilProp}
@@ -189,7 +187,10 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 									setShowModal(false);
 								}
 							} catch (error) {
-								console.error('Error selecting template:', error);
+								logError(error, {
+									feature: 'chat',
+									action: 'select-template',
+								});
 								toast.error(
 									'Failed to load template. Please try again.',
 								);
@@ -203,8 +204,8 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 				{renderInputByMode()}
 
 				<InputToolbar
-					disabled={disabled}
-					filesLoading={!processedFiles?.length}
+					disabled={disabled || isQnaDisabled}
+					filesLoading={!datasourceData?.files?.length}
 					isEnhancing={isEnhancing}
 					showStream={showStream}
 					disablePromptEnhancer={disablePromptEnhancer}
@@ -212,7 +213,10 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 						try {
 							enhancePrompt(prompt, setPrompt);
 						} catch (error) {
-							console.error('Error enhancing prompt:', error);
+							logError(error, {
+								feature: 'chat',
+								action: 'enhance-prompt',
+							});
 							toast.error(
 								'Failed to enhance prompt. Please try again.',
 							);

@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import MultiSelect from '@/components/elements/MultiSelect';
 import PDFViewer from './components/PdfViewer';
-import { useQuery } from '@tanstack/react-query';
 import { getDataSourceById } from '../configuration/service/configuration.service';
 import { getFileIcon } from '@/lib/utils';
 import { EditContext } from './components/WorkspaceEditProvider';
@@ -10,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import { logError } from '@/lib/logger';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const ExcelFileContent = ({
 	file,
@@ -22,12 +22,24 @@ const ExcelFileContent = ({
 	setChangesets,
 	setEditedFileNames,
 	editedFileNames,
+	canEdit,
 }) => {
 	const { query } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
+
+	const getDefaultSelectedColumns = () => {
+		const keysToCheck = file?.sheetKeys || [file?.id];
+		for (const key of keysToCheck) {
+			if (selectedColumns[key] && selectedColumns[key].length > 0) {
+				return selectedColumns[key];
+			}
+		}
+		return [];
+	};
+
 	return (
 		<div className="flex flex-wrap gap-2 mt-4 rounded-lg py-2.5">
 			<MultiSelect
@@ -35,9 +47,9 @@ const ExcelFileContent = ({
 					label: column.name,
 					value: column.name,
 				}))}
-				defaultValue={selectedColumns[file?.id]}
+				defaultValue={getDefaultSelectedColumns()}
 				onValueChange={(newSelectedColumns) => {
-					if (editDisabled) return;
+					if (!canEdit || editDisabled) return;
 					const newEditedFileNames = [...editedFileNames];
 					if (!newEditedFileNames.includes(file?.filename)) {
 						newEditedFileNames.push(file?.filename);
@@ -91,6 +103,7 @@ const SourceComponent = ({
 	datasourceId,
 	workspaceHasChanges,
 	setWorkspaceHasChanges,
+	canEdit,
 }) => {
 	const [selectedPDF, setSelectedPDF] = useState(null);
 	const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
@@ -113,13 +126,13 @@ const SourceComponent = ({
 			? JSON.parse(data?.tool_data)
 			: data?.tool_data;
 
-	const { data: datasourceData, isLoading } = useDatasourceDetails();
+	const { data: datasourceData, isLoading } = useDatasourceDetailsV2();
 
 	async function fetchDatasource(datasourceId) {
 		try {
 			return await getDataSourceById(datasourceId);
 		} catch (error) {
-			console.error('Error fetching data source:', error);
+			logError(error, { feature: 'chat', action: 'fetch-datasource' });
 		}
 	}
 
@@ -150,13 +163,33 @@ const SourceComponent = ({
 
 	const renderFiles = () => {
 		let contentArr = [];
-		if (!datasourceData?.processed_files?.files) return;
+		if (!datasourceData?.files) return;
 
-		const sortedFiles = datasourceData?.processed_files?.files.sort((a, b) => {
-			const selectedColumnsCountA = selectedColumns[a.id]?.length || 0;
-			const selectedColumnsCountB = selectedColumns[b.id]?.length || 0;
-			return selectedColumnsCountB - selectedColumnsCountA;
-		});
+		const sortedFiles = datasourceData?.files
+			?.map((file) => {
+				if (file.sheets) {
+					return file.sheets.map((sheet) => {
+						return {
+							filename: `${file?.filename?.split('.')?.[0]}(${sheet?.worksheet}).csv`,
+							...sheet,
+							id: file?.filename + ' - ' + sheet?.worksheet,
+							sheetKeys: [
+								sheet?.id,
+								file?.filename + ' - ' + sheet?.worksheet,
+								sheet?.worksheet,
+							],
+						};
+					});
+				} else {
+					return file;
+				}
+			})
+			.flat()
+			?.sort((a, b) => {
+				const selectedColumnsCountA = selectedColumns[a.id]?.length || 0;
+				const selectedColumnsCountB = selectedColumns[b.id]?.length || 0;
+				return selectedColumnsCountB - selectedColumnsCountA;
+			});
 
 		sortedFiles?.map((file) => {
 			if (file?.id) {
@@ -191,6 +224,7 @@ const SourceComponent = ({
 								setChangesets={setChangesets}
 								setEditedFileNames={setEditedFileNames}
 								editedFileNames={editedFileNames}
+								canEdit={canEdit}
 							/>
 						)}
 					</div>

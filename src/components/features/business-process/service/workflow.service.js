@@ -136,6 +136,11 @@ export const deleteRunningWorkflow = async (runId) => {
 
 		return response.data;
 	} catch (error) {
+		logError(error, {
+			feature: 'workflow',
+			action: 'delete-running-workflow',
+			extra: { runId },
+		});
 		toast.error('Failed to delete session');
 		throw error;
 	}

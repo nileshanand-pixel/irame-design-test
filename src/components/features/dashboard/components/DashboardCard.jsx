@@ -7,6 +7,7 @@ import {
 import { useRouter } from '@/hooks/useRouter';
 import InputText from '@/components/elements/InputText';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
 import { useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/react-query';
@@ -27,6 +28,14 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 				refetchActive: true,
 				refetchInactive: true,
 			});
+		},
+		onError: (error, id) => {
+			logError(error, {
+				feature: 'dashboard',
+				action: 'delete-dashboard',
+				id,
+			});
+			toast.error('Something went wrong while deleting dashboard');
 		},
 	});
 	const editMutation = useMutation({
@@ -49,6 +58,11 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 		},
 		onError: (err) => {
 			console.log('Error updating dashboard', err);
+			logError(err, {
+				feature: 'dashboard',
+				action: 'update-dashboard',
+				dashboard_id: data?.dashboard_id,
+			});
 			toast.error('Something went wrong while updating dashboard');
 		},
 	});

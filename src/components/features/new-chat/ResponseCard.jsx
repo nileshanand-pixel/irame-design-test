@@ -15,7 +15,7 @@ import AddQueryFlow from '../reports/components/AddQueryFlow';
 import { useRouter } from '@/hooks/useRouter';
 import useS3File from '@/hooks/useS3File';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const ResponseCard = ({
 	answerResp,
@@ -30,6 +30,7 @@ const ResponseCard = ({
 	showTable,
 	setIsTableLoading,
 	isTableLoading,
+	isLastQuery,
 }) => {
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
@@ -38,7 +39,7 @@ const ResponseCard = ({
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const { isDownloading, downloadS3File } = useS3File();
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(
 		([key, value]) =>
 			value?.tool_space === 'main' &&
@@ -71,14 +72,56 @@ const ResponseCard = ({
 		([key, value]) => value?.tool_type === WorkspaceEnum.DataFrame,
 	);
 
-	const showGraph = !!graphDataItem;
-	const showTableOnly = !showGraph && !!dataFrameItem;
+	const displayLogic = useMemo(() => {
+		const hasGraphData = !!graphDataItem;
+		const hasTableData = !!dataFrameItem;
+		const hasText = !!safeHTML;
 
-	// show followup questions only for last query
-	const showFollowup =
-		answerResp?.query_id ===
-			chatStoreReducer?.queries?.[chatStoreReducer?.queries?.length - 1]?.id &&
-		answerResp?.status === 'done';
+		const hasRelatedQuestions =
+			!!answerResp?.answer?.follow_up?.tool_data?.questions &&
+			Array.isArray(answerResp?.answer?.follow_up?.tool_data?.questions);
+
+		const isQueryDone = answerResp?.status === 'done';
+		const isQnaEnabled = !(import.meta.env.VITE_QNA_DISABLED === 'true');
+		const isNotProcessing = !doingScience;
+
+		return {
+			// Content availability
+			hasText,
+			hasGraphData,
+			hasTableData,
+			hasVisualData: hasGraphData || hasTableData,
+
+			// Display modes
+			showGraph: hasGraphData,
+			showTableOnly: !hasGraphData && hasTableData,
+			showResponseContent: hasText || (mainItems && mainItems.length > 0),
+
+			// Feature availability
+			canDownloadCsv: hasTableData && !!dataFrameItem[1]?.tool_data?.csv_url,
+			canAddToReport: hasText && isQueryDone,
+			canAddToDashboard: hasGraphData,
+
+			// Related questions
+			showRelatedQuestions:
+				hasRelatedQuestions &&
+				isQnaEnabled &&
+				isQueryDone &&
+				isNotProcessing &&
+				isLastQuery,
+			relatedQuestions: hasRelatedQuestions
+				? answerResp.answer.follow_up.tool_data.questions
+				: [],
+		};
+	}, [
+		graphDataItem,
+		dataFrameItem,
+		safeHTML,
+		answerResp,
+		doingScience,
+		isLastQuery,
+		mainItems,
+	]);
 
 	const handleAddQueryToReport = () => {
 		dispatch(
@@ -128,12 +171,7 @@ const ResponseCard = ({
 	};
 
 	useEffect(() => {
-		if (
-			answerResp?.answer?.follow_up &&
-			showFollowup &&
-			!doingScience &&
-			!isGraphLoading
-		) {
+		if (displayLogic.showRelatedQuestions) {
 			trackEvent(
 				EVENTS_ENUM.FOLLOW_UP_SUGGESTION_SHOWED,
 				EVENTS_REGISTRY.FOLLOW_UP_SUGGESTION_SHOWED,
@@ -147,13 +185,19 @@ const ResponseCard = ({
 				}),
 			);
 		}
-	}, [answerResp, showFollowup, doingScience, isGraphLoading]);
+	}, [
+		displayLogic.showRelatedQuestions,
+		answerResp,
+		query,
+		datasourceData,
+		chatStoreReducer,
+	]);
 
 	return (
 		<>
-			{(safeHTML || (mainItems && mainItems.length > 0)) && (
+			{displayLogic.showResponseContent && (
 				<div className="mt-4 mx-12">
-					{safeHTML && (
+					{displayLogic.hasText && (
 						<div className="max-w-[98%] mb-4 bg-purple-4 p-4 rounded-tl-md rounded-e-xl rounded-bl-xl">
 							<p
 								className="text-primary80 font-medium"
@@ -163,7 +207,7 @@ const ResponseCard = ({
 						</div>
 					)}
 
-					{showGraph && (
+					{displayLogic.showGraph && (
 						<div className="mb-4">
 							<GraphComponent
 								data={{
@@ -178,7 +222,7 @@ const ResponseCard = ({
 						</div>
 					)}
 
-					{showTableOnly && (
+					{displayLogic.showTableOnly && (
 						<div className="mb-4">
 							<TableResponse
 								data={dataFrameItem[1].tool_data}
@@ -190,54 +234,50 @@ const ResponseCard = ({
 						</div>
 					)}
 
-					{/* Common CTA Container */}
-					{(graphDataItem || dataFrameItem) && (
+					{displayLogic.hasVisualData && (
 						<div className="my-4 flex justify-between">
-							{dataFrameItem &&
-								dataFrameItem[1]?.tool_data?.csv_url && (
-									<Button
-										variant="outline"
-										className="text-muted-foreground cursor-pointer"
-										onClick={() => {
-											if (isDownloading) return;
+							{displayLogic.canDownloadCsv && (
+								<Button
+									variant="outline"
+									className="text-muted-foreground cursor-pointer"
+									onClick={() => {
+										if (isDownloading) return;
 
-											trackEvent(
-												EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
-												EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
-												() => ({
-													chat_session_id:
-														query?.sessionId,
-													dataset_id:
-														datasourceData?.datasource_id,
-													dataset_name:
-														datasourceData?.name,
-													query_id:
-														chatStoreReducer?.activeQueryId,
-												}),
-											);
+										trackEvent(
+											EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
+											EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
+											() => ({
+												chat_session_id: query?.sessionId,
+												dataset_id:
+													datasourceData?.datasource_id,
+												dataset_name: datasourceData?.name,
+												query_id:
+													chatStoreReducer?.activeQueryId,
+											}),
+										);
 
-											downloadS3File(
-												dataFrameItem[1]?.tool_data?.csv_url,
-											);
-										}}
-									>
-										{isDownloading ? (
-											<>
-												<span className="mr-2">
-													<CircularLoader size="md" />
-												</span>
-												Downloading...
-											</>
-										) : (
-											<>
-												<i className="bi-download mr-2"></i>
-												Download CSV
-											</>
-										)}
-									</Button>
-								)}
+										downloadS3File(
+											dataFrameItem[1]?.tool_data?.csv_url,
+										);
+									}}
+								>
+									{isDownloading ? (
+										<>
+											<span className="mr-2">
+												<CircularLoader size="md" />
+											</span>
+											Downloading...
+										</>
+									) : (
+										<>
+											<i className="bi-download mr-2"></i>
+											Download CSV
+										</>
+									)}
+								</Button>
+							)}
 							<div className="flex gap-2">
-								{safeHTML && answerResp?.status === 'done' && (
+								{displayLogic.canAddToReport && (
 									<Button
 										variant="outline"
 										className="text-muted-foreground cursor-pointer flex gap-1"
@@ -247,7 +287,7 @@ const ResponseCard = ({
 										Add to Report
 									</Button>
 								)}
-								{showGraph && (
+								{displayLogic.canAddToDashboard && (
 									<Button
 										variant="outline"
 										className="text-muted-foreground flex gap-1 cursor-pointer"
@@ -262,40 +302,27 @@ const ResponseCard = ({
 					)}
 				</div>
 			)}
-			{answerResp?.answer?.follow_up &&
-				showFollowup &&
-				!doingScience &&
-				!isGraphLoading && (
-					<div className="mx-12">
-						<div className="mt-2 mb-2 font-semibold text-xl text-primary80 pb-4 border-b border-primary10 ">
-							Related Questions
-						</div>
-						<div className=" flex flex-col mx-auto">
-							{answerResp?.answer?.follow_up?.tool_data?.questions &&
-								Array.isArray(
-									answerResp?.answer?.follow_up?.tool_data
-										?.questions,
-								) &&
-								showFollowup &&
-								answerResp?.answer?.follow_up?.tool_data?.questions?.map(
-									(question, index) => (
-										<FollowUpQuestions
-											key={index}
-											question={question}
-											index={index}
-											setAnswerResp={setAnswerResp}
-											setDoingScience={setDoingScience}
-											setResponseTimeElapsed={
-												setResponseTimeElapsed
-											}
-											setBanners={setBanners}
-											answerResp={answerResp}
-										/>
-									),
-								)}
-						</div>
+			{displayLogic.showRelatedQuestions && (
+				<div className="mx-12">
+					<div className="mt-2 mb-2 font-semibold text-xl text-primary80 pb-4 border-b border-primary10 ">
+						Related Questions
 					</div>
-				)}
+					<div className=" flex flex-col mx-auto">
+						{displayLogic.relatedQuestions.map((question, index) => (
+							<FollowUpQuestions
+								key={index}
+								question={question}
+								index={index}
+								setAnswerResp={setAnswerResp}
+								setDoingScience={setDoingScience}
+								setResponseTimeElapsed={setResponseTimeElapsed}
+								setBanners={setBanners}
+								answerResp={answerResp}
+							/>
+						))}
+					</div>
+				</div>
+			)}
 			<AddQueryFlow
 				isOpen={isAddToReportOpen}
 				onClose={() => setIsAddToReportOpen(false)}

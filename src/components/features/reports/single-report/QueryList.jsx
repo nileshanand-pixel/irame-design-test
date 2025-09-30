@@ -5,6 +5,7 @@ import { DotsSixVertical } from '@phosphor-icons/react';
 import { useMutation } from '@tanstack/react-query';
 import { updateReportCardOrder } from '../service/reports.service';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
 import { useReportId } from '../hooks/useReportId';
@@ -32,7 +33,12 @@ export default function QueryList({ reportDetails, pdfMode }) {
 			toast.success('Order updated successfully!');
 			queryClient.invalidateQueries(['report-details', reportId]);
 		},
-		onError: () => {
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'update-query-order',
+				reportId,
+			});
 			toast.error('Failed to update order!');
 		},
 	});

@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const plannerTitles = [
 	'Question Interpretation',
@@ -42,7 +42,7 @@ const PlannerComponent = ({
 		);
 	};
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 	// Initialize segments from data
 	useEffect(() => {
 		if (!workspaceHasChanges) setInitialSegments();

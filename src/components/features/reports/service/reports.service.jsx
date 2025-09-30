@@ -38,7 +38,7 @@ export const getDatasourceReports = async (datasourceId) => {
 	return response.data;
 };
 
-export const getDatasources = async () => {
+export const getDatasourcesByReports = async () => {
 	const response = await axiosClientV2.get(`/reports/datasources`, {
 		headers: {},
 	});

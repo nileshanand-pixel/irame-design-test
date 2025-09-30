@@ -6,6 +6,8 @@ import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import TooltipWrapper from '@/components/elements/TooltipWrapper';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { queryClient } from '@/lib/react-query';
 import MultiGraphCard from './MultiGraphCard';
 import { trackEvent } from '@/lib/mixpanel';
@@ -129,6 +131,18 @@ const DashboardDetailsPage = () => {
 			});
 		};
 	}, [query, dashboardDetailsQuery.data]);
+
+	// Handle dashboard details query errors
+	useEffect(() => {
+		if (dashboardDetailsQuery.error) {
+			logError(dashboardDetailsQuery.error, {
+				feature: 'dashboard',
+				action: 'fetch-dashboard-content',
+				id: query?.id,
+			});
+			toast.error('Something went wrong while loading dashboard content');
+		}
+	}, [dashboardDetailsQuery.error]);
 
 	return (
 		<div className="w-full h-full px-8" ref={elementRef}>
@@ -281,7 +295,7 @@ const DashboardDetailsPage = () => {
 														}),
 													);
 													navigate(
-														`/app/new-chat/session?sessionId=${selectedItem?.content?.session_id}&source=dashboard&dataSourceId=${selectedItem?.content?.datasource_id}`,
+														`/app/new-chat/session?sessionId=${selectedItem?.content?.session_id}&source=dashboard&datasource_id=${selectedItem?.content?.datasource_id}`,
 													);
 												}}
 											>

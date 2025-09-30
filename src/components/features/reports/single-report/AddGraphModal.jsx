@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { updateVisibleGraphs } from '../service/reports.service';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -38,7 +39,13 @@ export const AddGraphModal = ({ open, reportCardId, graphs = [], onClose }) => {
 			queryClient.invalidateQueries(['report-details', reportId]);
 			onClose();
 		},
-		onError: () => {
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'update-visible-graphs',
+				reportId,
+				reportCardId,
+			});
 			toast.error('Failed to update visible graphs');
 		},
 	});

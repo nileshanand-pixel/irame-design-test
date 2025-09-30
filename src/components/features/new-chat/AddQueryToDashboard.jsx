@@ -18,12 +18,13 @@ import { useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from '@/hooks/useRouter';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 	const [dashboards, setDashboards] = useState([]);
@@ -39,7 +40,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 		queryFn: () => getUserDashboard(),
 	});
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 
 	const handleAddQueryToDashboard = () => {
 		setIsLoading(true);
@@ -96,6 +97,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 				}));
 			})
 			.catch((err) => {
+				logError(err, { feature: 'chat', action: 'add-query-to-dashboard' });
 				toast.error('Something went wrong while adding query to dashboard');
 			})
 			.finally(() => {
@@ -119,7 +121,6 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 		}
 	}, [userDashboardQuery.data]);
 
-	// console.log(filteredList, "filteredList");
 	return (
 		<Dialog open={open} onOpenChange={closeModal}>
 			<DialogContent className="max-w-[31.25rem] ">

@@ -7,6 +7,7 @@ import {
 import * as XLSX from 'xlsx'; // npm install xlsx
 import { v4 as uuidv4 } from 'uuid'; // <-- Add this import
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 
 const MAX_CONCURRENT_UPLOADS = 5;
 
@@ -104,6 +105,14 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 					});
 					newProgress[file.name] = 100;
 				} catch (err) {
+					logError(err, {
+						feature: 'fileUploads',
+						action: 'processExcelFile',
+						extra: {
+							fileType: file?.type,
+							errorMessage: err.message,
+						},
+					});
 					// Reset states for this file only
 					setFiles((prev) => prev.filter((f) => f.name !== file.name));
 					setProgress((prev) => {
@@ -249,7 +258,6 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 			setFiles((prev) =>
 				prev.map((f) => {
 					if (f.name === file.name) {
-						// console.log({ file, f });
 						const newF = Object.assign(f, {
 							status: 'ready',
 						});
@@ -266,6 +274,15 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 			return Promise.resolve(data);
 		} catch (err) {
 			if (!axios.isCancel(err)) {
+				logError(err, {
+					feature: 'fileUploads',
+					action: 'uploadSingleFile',
+					extra: {
+						fileType: file?.type,
+						fileId: file?.id,
+						errorMessage: err.message,
+					},
+				});
 				setProgress((prev) => ({ ...prev, [file.name]: 0 }));
 			}
 			return Promise.reject(err);

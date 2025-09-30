@@ -4,11 +4,12 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import {
-	getDatasources,
+	getDatasourcesByReports,
 	getSharedReports,
 	getUserReports,
 } from './service/reports.service';
 import EmptyState from '@/components/elements/EmptyState';
+import { logError } from '@/lib/logger';
 import DataSourceCard from './components/DataSourceCard';
 import DataSourceCardSkeleton from './components/DatasourceCardSkeleton';
 import { useDispatch } from 'react-redux';
@@ -22,7 +23,7 @@ const ReportFolders = () => {
 
 	const datasourcesQuery = useQuery({
 		queryKey: ['get-datasources-reports'],
-		queryFn: () => getDatasources(),
+		queryFn: () => getDatasourcesByReports(),
 		refetchInterval: 10000,
 	});
 
@@ -76,6 +77,48 @@ const ReportFolders = () => {
 
 		setDatasources(folders);
 	}, [datasourcesQuery.data, sharedReportsQuery.data, userAuditReports.data]);
+
+	// Handle datasources query errors
+	useEffect(() => {
+		if (datasourcesQuery.error) {
+			logError(datasourcesQuery.error, {
+				feature: 'reports',
+				action: 'fetchDatasources',
+				extra: {
+					errorMessage: datasourcesQuery.error.message,
+					status: datasourcesQuery.error.response?.status,
+				},
+			});
+		}
+	}, [datasourcesQuery.error]);
+
+	// Handle shared reports query errors
+	useEffect(() => {
+		if (sharedReportsQuery.error) {
+			logError(sharedReportsQuery.error, {
+				feature: 'reports',
+				action: 'fetchSharedReports',
+				extra: {
+					errorMessage: sharedReportsQuery.error.message,
+					status: sharedReportsQuery.error.response?.status,
+				},
+			});
+		}
+	}, [sharedReportsQuery.error]);
+
+	// Handle user audit reports query errors
+	useEffect(() => {
+		if (userAuditReports.error) {
+			logError(userAuditReports.error, {
+				feature: 'reports',
+				action: 'fetchUserReports',
+				extra: {
+					errorMessage: userAuditReports.error.message,
+					status: userAuditReports.error.response?.status,
+				},
+			});
+		}
+	}, [userAuditReports.error]);
 
 	const emptyStateConfig = {
 		image: 'https://d2vkmtgu2mxkyq.cloudfront.net/empty-state.svg',

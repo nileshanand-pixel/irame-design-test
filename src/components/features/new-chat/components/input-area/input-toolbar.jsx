@@ -16,6 +16,7 @@ const InputToolbar = ({
 	onMentionClick,
 	filesLoading,
 }) => {
+	const isQnaDisabled = import.meta.env.VITE_QNA_DISABLED === 'true';
 	return (
 		<div className="flex justify-between">
 			<div className="flex px-2 items-center">
@@ -32,10 +33,10 @@ const InputToolbar = ({
 								variant="transparent"
 								size="iconSm"
 								className={`${
-									disablePromptEnhancer &&
+									(disablePromptEnhancer || isQnaDisabled) &&
 									'cursor-not-allowed opacity-40'
 								}`}
-								disabled={disablePromptEnhancer}
+								disabled={disablePromptEnhancer || isQnaDisabled}
 							>
 								<img
 									src="https://d2vkmtgu2mxkyq.cloudfront.net/generate_ai.svg"
@@ -52,7 +53,7 @@ const InputToolbar = ({
 									onClick={onMentionClick}
 									variant="transparent"
 									size="iconSm"
-									disabled={disabled}
+									disabled={disabled || isQnaDisabled}
 									className="ml-2 -mt-1 text-base text-primary80"
 								>
 									@
@@ -64,7 +65,7 @@ const InputToolbar = ({
 				{!disablePromptEnhancer && <PromptingRole />}
 			</div>
 
-			{!isEnhancing && !showStream && !disabled && (
+			{!isEnhancing && !showStream && !disabled && !isQnaDisabled && (
 				<div className="flex gap-4 items-center justify-between">
 					{mode === 'single' && promptLength > 0 && (
 						<span className="text-muted-foreground font-bold text-xs">
@@ -84,7 +85,7 @@ const InputToolbar = ({
 				</div>
 			)}
 
-			{disabled && (
+			{(disabled || isQnaDisabled) && (
 				<div className="flex gap-2 items-end ml-auto cursor-not-allowed">
 					<i className="bi bi-arrow-repeat animate-spin text-purple-40 text-xl"></i>
 				</div>

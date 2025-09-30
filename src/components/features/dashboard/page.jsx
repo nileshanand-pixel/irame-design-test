@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { createDashboard, getUserDashboard } from './service/dashboard.service';
+import { logError } from '@/lib/logger';
 import DashboardCard from './components/DashboardCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from '@/hooks/useRouter';
@@ -56,7 +57,10 @@ const Dashboard = () => {
 			}
 		} catch (error) {
 			setIsLoading(false);
-			console.log('dashboard create error', error);
+			logError(error, {
+				feature: 'dashboard',
+				action: 'create-dashboard',
+			});
 			toast.error('Something went wrong while creating dashboard');
 		}
 	};
@@ -81,6 +85,20 @@ const Dashboard = () => {
 			setDashboard(userDashboardQuery.data || []);
 		}
 	}, [refetch, userDashboardQuery.data]);
+
+	// Handle user dashboard query errors
+	useEffect(() => {
+		if (userDashboardQuery.error) {
+			logError(userDashboardQuery.error, {
+				feature: 'dashboard',
+				action: 'fetchUserDashboard',
+				extra: {
+					errorMessage: userDashboardQuery.error.message,
+					status: userDashboardQuery.error.response?.status,
+				},
+			});
+		}
+	}, [userDashboardQuery.error]);
 
 	useEffect(() => {
 		setErrors({});

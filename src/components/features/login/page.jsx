@@ -13,6 +13,7 @@ import {
 import BoxLoader from '@/components/elements/loading/BoxLoader';
 import useAuth from '@/hooks/useAuth';
 import { getErrorAnalyticsProps, trackEvent, trackUser } from '@/lib/mixpanel';
+import { logError } from '@/lib/logger';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { grantType } from '@/config/auth.config';
 import { createOrUpdateUserSession } from '../user-session-manager/helper';
@@ -34,7 +35,11 @@ const SignInSignUp = () => {
 				const response = await getOAuthProviders();
 				setOAuthProviders(response.providers);
 			} catch (error) {
-				console.error('Failed to fetch OAuth providers:', error);
+				logError(error, {
+					feature: 'login',
+					action: 'fetchOAuthProviders',
+					extra: { errorMessage: error.message },
+				});
 			}
 		};
 		fetchOAuthProviders();
@@ -64,7 +69,6 @@ const SignInSignUp = () => {
 		const provider = oauthProviders.find(
 			(p) => p.name.toLowerCase() === team.toLowerCase(),
 		);
-		// console.log(provider);
 		if (provider) {
 			const redirectUri = `${window.location.origin}`;
 			window.location.href = `${provider.authorize_url}?provider=${provider.name}&redirect_uri=${redirectUri}`;
@@ -81,7 +85,6 @@ const SignInSignUp = () => {
 				EVENTS_REGISTRY.CREDENTIALS_LOGIN_ATTEMPTED,
 			);
 			const [response, status_code] = await login(data);
-			// console.log(response, status_code);
 
 			const authUserData = await authUserDetails();
 			localStorage.setItem('userDetails', JSON.stringify(authUserData));
@@ -98,7 +101,7 @@ const SignInSignUp = () => {
 			createOrUpdateUserSession('/app/new-chat');
 			navigate('/app/new-chat?source=login');
 		} catch (error) {
-			console.log(error);
+			logError(error, { feature: 'login', action: 'email-login' });
 			trackEvent(
 				EVENTS_ENUM.LOGIN_FAILURE,
 				EVENTS_REGISTRY.LOGIN_FAILURE,
@@ -110,8 +113,23 @@ const SignInSignUp = () => {
 			);
 
 			if (error?.code === 'ERR_BAD_REQUEST') {
+				logError(error, {
+					feature: 'authentication',
+					action: 'credentials_login',
+					extra: {
+						errorCode: error?.code,
+					},
+				});
 				toast.error('Login failed. Invalid Credentials.');
 			} else {
+				logError(error, {
+					feature: 'authentication',
+					action: 'credentials_login',
+					extra: {
+						errorCode: error?.code,
+						errorMessage: error?.message,
+					},
+				});
 				toast.error('Login failed. Unknown Error Please Try Again.');
 			}
 		} finally {
@@ -149,6 +167,13 @@ const SignInSignUp = () => {
 						'',
 						`${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`,
 					);
+					logError(new Error('SSO login failed with non-200 status'), {
+						feature: 'authentication',
+						action: 'sso_login_non_200',
+						extra: {
+							statusCode: status_code,
+						},
+					});
 					toast.error(
 						'Login failed. Please check your credentials and try again.',
 					);
@@ -157,7 +182,7 @@ const SignInSignUp = () => {
 				}
 			})
 			.catch((error) => {
-				console.error(error);
+				logError(error, { feature: 'login', action: 'google-login' });
 				const params = new URLSearchParams(window.location.search);
 				params.delete('code');
 				window.history.replaceState(
@@ -174,6 +199,14 @@ const SignInSignUp = () => {
 						...getErrorAnalyticsProps(error),
 					}),
 				);
+				logError(error, {
+					feature: 'authentication',
+					action: 'sso_login',
+					extra: {
+						errorCode: error?.code,
+						errorMessage: error?.message,
+					},
+				});
 				toast.error('An error occurred during login. Please try again.');
 			})
 			.finally(() => {
@@ -206,6 +239,11 @@ const SignInSignUp = () => {
 
 	useEffect(() => {
 		if (router.query?.error) {
+			logError(new Error('Login error from query param'), {
+				feature: 'login',
+				action: 'query-error',
+				extra: { error: router.query?.error },
+			});
 			toast.error('Something went wrong while logging in');
 		}
 	}, [router.query]);

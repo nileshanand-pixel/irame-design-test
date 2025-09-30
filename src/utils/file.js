@@ -1,5 +1,6 @@
 import axiosClientV1 from '@/lib/axios';
 import { removeQueryString } from './url';
+import { logError } from '@/lib/logger';
 
 export const isImageFile = (file) => {
 	return file.type.includes('image');
@@ -15,10 +16,21 @@ export function getFileType(file) {
 
 	const mime = file.type;
 
-	if (mime.startsWith('image/')) return 'image';
+	// Check for PDF files
 	if (mime === 'application/pdf') return 'pdf';
+
+	// Check for Excel files (.xlsx, .xlsb)
+	if (
+		mime ===
+			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+		mime === 'application/vnd.ms-excel.sheet.binary.macroenabled.12'
+	)
+		return 'excel';
+
+	// Check for CSV files
 	if (mime === 'text/csv' || mime === 'application/vnd.ms-excel') return 'csv';
 
+	// Return empty string for all other file types
 	return '';
 }
 
@@ -49,7 +61,12 @@ export const downloadFile = (fileUrl, fileName) => {
 				document.body.removeChild(a);
 				URL.revokeObjectURL(blobUrl);
 			})
-			.catch((err) => console.error('Download failed:', err));
+			.catch((err) => {
+				logError(err, {
+					feature: 'file_download',
+					action: 'download_blob',
+				});
+			});
 	} else {
 		const a = document.createElement('a');
 		a.href = fileUrl;
@@ -58,4 +75,13 @@ export const downloadFile = (fileUrl, fileName) => {
 		a.click();
 		document.body.removeChild(a);
 	}
+};
+
+export const getFileSize = (file) => {
+	if (file.size) {
+		return file.size < 1024 * 1024
+			? (file.size / 1024).toFixed(1) + 'KB'
+			: (file.size / 1024 / 1024).toFixed(1) + 'MB';
+	}
+	return '.';
 };

@@ -15,6 +15,7 @@ import { ReportStatusDropdown } from './ReportStatusDropdown';
 import { updateReportStoreProp } from '@/redux/reducer/reportReducer';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 
 export default function ReportHeader({ report, onDownload }) {
 	const [status, setStatus] = useState(report.status);
@@ -54,7 +55,12 @@ export default function ReportHeader({ report, onDownload }) {
 			.then(() => {
 				toast.success('Report Id copied to clipboard!');
 			})
-			.catch(() => {
+			.catch((err) => {
+				logError(err, {
+					feature: 'reports',
+					action: 'copy-report-id',
+					reportId: report?.report_id,
+				});
 				toast.error('Failed to copy!');
 			});
 	};

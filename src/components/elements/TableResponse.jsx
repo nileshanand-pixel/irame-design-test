@@ -4,6 +4,7 @@ import Chart from 'chart.js/auto';
 import * as d3 from 'd3';
 import { DataTableColumnHeader } from './data-table/components/data-table-column-header';
 import TableComponent from './TableComponent';
+import { logError } from '@/lib/logger';
 
 const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) => {
 	// const [chartState, setChartState] = useState({
@@ -61,7 +62,13 @@ const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) =>
 
 					setColumns(generateColumns(Object.keys(csvData[0])));
 				} catch (error) {
-					console.error('Error loading CSV data:', error);
+					logError(error, {
+						feature: 'tableResponse',
+						action: 'loadCSVData',
+						extra: {
+							errorMessage: error.message,
+						},
+					});
 				} finally {
 					setIsGraphLoading(false);
 				}
@@ -72,8 +79,6 @@ const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) =>
 			fetchData();
 		}
 	}, [data, loadedData.length]);
-
-	// console.log('TableResponse', data, loadedData, columns);
 
 	return (
 		<div className="mb-4">

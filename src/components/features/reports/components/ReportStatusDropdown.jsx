@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { updateReportStatus } from '../service/reports.service';
 import { queryClient } from '@/lib/react-query';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { REPORT_STATUS_CONFIG } from '@/config/report';
 import { useReportId } from '../hooks/useReportId';
@@ -19,7 +20,12 @@ export const ReportStatusDropdown = ({ value, onChange }) => {
 			toast.success('Report status updated successfully!');
 			queryClient.invalidateQueries(['report-details', reportId]);
 		},
-		onError: () => {
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'update-status',
+				reportId,
+			});
 			toast.error('Failed to update report status!');
 		},
 	});

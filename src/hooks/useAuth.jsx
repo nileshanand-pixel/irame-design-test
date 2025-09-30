@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { authUserDetails } from '@/components/features/login/service/auth.service';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 
 const useAuth = () => {
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,6 +19,14 @@ const useAuth = () => {
 					setIsAuthenticated(false);
 					setUserDetails(null);
 				} else {
+					logError(error, {
+						feature: 'auth',
+						action: 'checkAuth',
+						extra: {
+							errorMessage: error.message,
+							status: error.response?.status,
+						},
+					});
 					// toast.error('Failed to check authentication status');
 				}
 			} finally {

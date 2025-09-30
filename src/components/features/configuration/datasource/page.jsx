@@ -4,20 +4,30 @@ import Glossary from './Glossary';
 import { useRouter } from '@/hooks/useRouter';
 import {
 	deleteDataSource,
-	getDataSourceById,
 	updateDataSource,
 } from '../service/configuration.service';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { queryClient } from '@/lib/react-query';
 import DataSourceSkeleton from './DatasourceSkeleton';
 import BackdropLoader from '@/components/elements/loading/BackDropLoader';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { areStringObjectsEqual } from '@/utils/common';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 import { getDatasourceDetailsQueryKey } from '@/api/datasource/datasource.query-key';
+import { FileText } from 'lucide-react';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
+import CircularLoader from '@/components/elements/loading/CircularLoader';
+import { DownloadSimple } from '@phosphor-icons/react';
+import useS3File from '@/hooks/useS3File';
 
 const tabs = [
 	{ name: 'Data Card', component: DataCard },
@@ -25,14 +35,24 @@ const tabs = [
 ];
 
 const DataSource = () => {
+	const [isEditing, setIsEditing] = useState(false);
 	const { navigate, query } = useRouter();
 	const [form, setForm] = useState(null);
-	const [isNameEditing, setIsNameEditing] = useState(false);
 	const [selectedTab, setSelectedTab] = useState(tabs[0].name);
 	const [changesForTracking, setChangesForTracking] = useState([]);
 
-	const datasourceQuery = useDatasourceDetails({
+	const { isDownloading, downloadS3File } = useS3File();
+
+	const datasourceQuery = useDatasourceDetailsV2({
 		datasourceId: query?.id,
+		queryOptions: {
+			refetchInterval: (data) => {
+				if (data?.state?.data?.status === 'processing') {
+					return 2000;
+				}
+				return false;
+			},
+		},
 	});
 
 	const deleteMutation = useMutation({
@@ -52,6 +72,11 @@ const DataSource = () => {
 			navigate('/app/configuration?source=configuration');
 		},
 		onError: (err) => {
+			logError(err, {
+				feature: 'configuration',
+				action: 'delete-datasource',
+				datasource_id: datasourceQuery?.data?.datasource_id,
+			});
 			trackEvent(
 				EVENTS_ENUM.DATASET_DELETION_FAILED,
 				EVENTS_REGISTRY.DATASET_DELETION_FAILED,
@@ -62,7 +87,13 @@ const DataSource = () => {
 					...getErrorAnalyticsProps(err),
 				}),
 			);
-			console.error('Error deleting data source', err);
+			logError(err, {
+				feature: 'datasource',
+				action: 'delete_datasource',
+				extra: {
+					datasource_id: datasourceQuery?.data?.datasource_id,
+				},
+			});
 			toast.error('Something went wrong while deleting Data source');
 		},
 	});
@@ -70,6 +101,7 @@ const DataSource = () => {
 	const editMutation = useMutation({
 		mutationFn: ({ id, payload }) => updateDataSource(id, payload),
 		onSuccess: () => {
+			setIsEditing(false);
 			toast.success('Dataset updated successfully');
 			// Invalidate and refetch to force fresh data
 			queryClient.invalidateQueries(getDatasourceDetailsQueryKey(query?.id));
@@ -87,24 +119,23 @@ const DataSource = () => {
 			}
 
 			if (changesForTracking.includes('description')) {
-				eventProperties.old_desc =
-					oldDataSourceData?.processed_files?.description;
-				eventProperties.new_desc = form?.processed_files?.description;
+				eventProperties.old_desc = oldDataSourceData?.description;
+				eventProperties.new_desc = form?.description;
 			}
 
 			if (changesForTracking.includes('column_desc')) {
 				const oldColumns =
-					oldDataSourceData?.processed_files?.files?.flatMap((file) =>
+					oldDataSourceData?.files?.flatMap((file) =>
 						file.columns.map((col) => ({
 							...col,
-							file_name: file.file_name,
+							file_name: file.filename,
 						})),
 					) || [];
 				const newColumns =
-					form?.processed_files?.files?.flatMap((file) =>
+					form?.files?.flatMap((file) =>
 						file.columns.map((col) => ({
 							...col,
-							file_name: file.file_name,
+							file_name: file.filename,
 						})),
 					) || [];
 				const changedColumns = newColumns.filter((newCol, index) => {
@@ -123,11 +154,11 @@ const DataSource = () => {
 				}));
 			}
 
-			const newGlossariesTerms = (
-				form?.processed_files?.glossary?.items || []
-			).map((glossary) => glossary.term);
+			const newGlossariesTerms = (form?.glossary?.items || []).map(
+				(glossary) => glossary.term,
+			);
 			const oldGlossariesTerms = (
-				oldDataSourceData?.processed_files?.glossary?.items || []
+				oldDataSourceData?.glossary?.items || []
 			).map((glossary) => glossary.term);
 
 			eventProperties.old_glossary_terms = oldGlossariesTerms;
@@ -151,6 +182,13 @@ const DataSource = () => {
 				}),
 			);
 			// console.log('Error updating data source', err);
+			logError(err, {
+				feature: 'datasource',
+				action: 'update_datasource',
+				extra: {
+					datasource_id: datasourceQuery?.data?.datasource_id,
+				},
+			});
 			toast.error(
 				'Something went wrong while updating Data source ' + err.message,
 			);
@@ -182,14 +220,6 @@ const DataSource = () => {
 		addChangeForTracking('name');
 	};
 
-	const handleEditClick = () => {
-		setIsNameEditing(true);
-	};
-
-	const handleBlur = () => {
-		setIsNameEditing(false);
-	};
-
 	const handleTabChange = (tabName) => {
 		setSelectedTab(tabName);
 	};
@@ -197,16 +227,9 @@ const DataSource = () => {
 	const handleEditDataSource = () => {
 		if (!query?.id) return;
 		const payload = {
-			processed_files: {
-				glossary: form?.processed_files?.glossary,
-				description: form?.processed_files?.description,
-				files: form?.processed_files?.files?.map((item) => ({
-					id: item.id,
-					columns: item.columns,
-				})),
-			},
-			name: form.name,
+			...form,
 		};
+		delete payload.hasChanges;
 		if (
 			!confirm(
 				'Are you sure you want to save these changes to your data source?',
@@ -230,41 +253,59 @@ const DataSource = () => {
 				setForm={setForm}
 				data={datasourceQuery?.data}
 				addChangeForTracking={addChangeForTracking}
+				isEditing={isEditing}
 			/>
 		) : null;
+	};
+
+	const handleDownloadDatasource = () => {
+		datasourceQuery?.data?.files?.forEach((file) => {
+			const fileUrl = file.processed_url || file.url;
+			const downloadName = file.filename;
+
+			if (fileUrl) {
+				downloadS3File(fileUrl, downloadName);
+				toast.success('Your files has been added to download!');
+			}
+		});
 	};
 
 	const renderActionButtons = () => {
 		return (
 			<div className="flex gap-2 items-center">
-				<div className="flex flex-row-reverse p-2 bg-primary4 hover:bg-primary8 rounded-md text-purple-80">
-					<span
-						onClick={handleDeleteDatasource}
-						className="material-symbols-outlined cursor-pointer text-xl"
-					>
-						delete
-					</span>
-				</div>
-
-				<Button
-					variant="outlined"
-					className="text-sm font-semibold text-purple-100 bg-purple-4 border-none hover:text-purple-100 hover:opacity-80 flex items-center"
+				{/* <Button
+					variant="outline"
+					className="p-2"
 					onClick={() => {
-						trackEvent(
-							EVENTS_ENUM.DATASET_START_QUERING_CLICKED,
-							EVENTS_REGISTRY.DATASET_START_QUERING_CLICKED,
-							() => ({
-								dataset_id: datasourceQuery?.data?.datasource_id,
-								dataset_name: datasourceQuery?.data?.name,
-							}),
-						);
-						navigate(
-							`/app/new-chat/?step=3&dataSourceId=${query?.id}&source=configuration`,
-						);
+						handleDownloadDatasource();
 					}}
 				>
-					Start Querying
-				</Button>
+					{isDownloading ? (
+						<CircularLoader className="size-[1.125rem]" />
+					) : (
+						<DownloadSimple className="size-5" />
+					)}
+				</Button> */}
+				{!(import.meta.env.VITE_QNA_DISABLED === 'true') && (
+					<Button
+						variant="secondary1"
+						onClick={() => {
+							trackEvent(
+								EVENTS_ENUM.DATASET_START_QUERING_CLICKED,
+								EVENTS_REGISTRY.DATASET_START_QUERING_CLICKED,
+								() => ({
+									dataset_id: datasourceQuery?.data?.datasource_id,
+									dataset_name: datasourceQuery?.data?.name,
+								}),
+							);
+							navigate(
+								`/app/new-chat/?step=3&datasource_id=${query?.id}&source=configuration`,
+							);
+						}}
+					>
+						Start Querying
+					</Button>
+				)}
 				<Button
 					className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 					onClick={handleEditDataSource}
@@ -272,6 +313,35 @@ const DataSource = () => {
 				>
 					Save Changes
 				</Button>
+
+				<DropdownMenu>
+					<DropdownMenuTrigger>
+						<i className="bi-three-dots-vertical text-primary40 text-xl font-bold cursor-pointer hover:bg-purple-4 rounded-md p-1"></i>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DropdownMenuItem
+							className="text-primary80 font-medium hover:!bg-purple-4"
+							onClick={() => {
+								setIsEditing(true);
+							}}
+							disabled={
+								isEditing ||
+								datasourceQuery?.data?.status === 'processing'
+							}
+						>
+							<i className="bi-pencil me-2 text-primary80 font-medium"></i>
+							Edit
+						</DropdownMenuItem>
+
+						<DropdownMenuItem
+							className="text-primary80 font-medium hover:!bg-purple-4"
+							onClick={handleDeleteDatasource}
+						>
+							<i className="bi-trash me-2 text-primary80 font-medium"></i>
+							Delete
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</div>
 		);
 	};
@@ -282,12 +352,16 @@ const DataSource = () => {
 			if (
 				!form ||
 				form.name !== fetchedData.name ||
-				JSON.stringify(form.processed_files) !==
-					JSON.stringify(fetchedData.processed_files)
+				form.description !== fetchedData?.description ||
+				JSON.stringify(form.files) !== JSON.stringify(fetchedData?.files) ||
+				JSON.stringify(form.glossary) !==
+					JSON.stringify(fetchedData?.glossary)
 			) {
 				setForm({
-					processed_files: fetchedData.processed_files,
+					files: fetchedData?.files,
+					glossary: fetchedData?.glossary,
 					name: fetchedData.name,
+					description: fetchedData?.description,
 					hasChanges: false,
 				});
 			}
@@ -295,11 +369,12 @@ const DataSource = () => {
 	}, [datasourceQuery.isSuccess, datasourceQuery.data]);
 
 	return (
-		<div className="w-full px-8 relative h-full pt-2">
+		<div className="flex flex-col w-full px-8 relative h-full pt-2">
 			{(editMutation.isPending || deleteMutation.isPending) && (
 				<BackdropLoader />
 			)}
-			<div className="text-primary80 gap-2 mb-4">
+
+			<div className="text-primary80 gap-2 mb-4 shrink-0">
 				<span
 					className="text-2xl font-semibold cursor-pointer"
 					onClick={() =>
@@ -317,16 +392,16 @@ const DataSource = () => {
 			{datasourceQuery.isLoading || !form ? (
 				<DataSourceSkeleton color="#E0E0E0" />
 			) : (
-				<div className="border rounded-3xl py-6 px-6 shadow-1xl h-[80vh]">
+				<div className="border rounded-3xl py-6 px-6 shadow-1xl h-[89vh] ">
 					{/* Header */}
 					<div className="flex justify-between w-full">
-						<div className="flex items-center text-[#26064ACC]">
-							{isNameEditing ? (
+						<div className="flex items-center gap-2 text-[#26064ACC]">
+							<FileText className="size-6" />
+							{isEditing ? (
 								<input
 									type="text"
 									value={form.name}
 									onChange={handleNameChange}
-									onBlur={handleBlur}
 									autoFocus
 									className="outline-none bg-transparent border-b-2 border-gray-300"
 								/>
@@ -335,16 +410,6 @@ const DataSource = () => {
 									{form.name}
 								</span>
 							)}
-							<span
-								className="ml-2 cursor-pointer text-xl font-semibold"
-								onClick={handleEditClick}
-							>
-								<img
-									src="https://d2vkmtgu2mxkyq.cloudfront.net/edit_icon.svg"
-									className="size-6"
-									style={{ strokeWidth: '4' }}
-								></img>
-							</span>
 						</div>
 
 						{renderActionButtons()}

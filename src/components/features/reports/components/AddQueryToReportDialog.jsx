@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { useMutation } from '@tanstack/react-query';
 
 import CustomSelect from '@/components/elements/CustomSelect';
@@ -21,8 +22,8 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
 import { useSelector } from 'react-redux';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 import { useNavigate } from 'react-router-dom';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const AddQueryToReportDialog = ({
 	open,
@@ -38,7 +39,7 @@ const AddQueryToReportDialog = ({
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const navigate = useNavigate();
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 
 	const mutation = useMutation({
 		mutationFn: (payload) => addQueryToExistingReport(payload),
@@ -75,7 +76,15 @@ const AddQueryToReportDialog = ({
 			setRiskLevel('');
 			onSuccessCloseAll();
 		},
-		onError: () => toast.error('Failed to add query to report!'),
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'add-query-to-report',
+				reportId: report?.report_id,
+				queryId,
+			});
+			toast.error('Failed to add query to report!');
+		},
 	});
 
 	const handleSubmit = () => {

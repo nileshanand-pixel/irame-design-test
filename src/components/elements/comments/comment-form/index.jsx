@@ -9,6 +9,7 @@ import UserProfileIcon from '../../user-profile-icon';
 import { Paperclip } from '@phosphor-icons/react';
 import FilePicker from '../../file-picker';
 import { useFileUploadsV2 } from '@/hooks/useFileUploadsV2';
+import { logError } from '@/lib/logger';
 import FilePreview from '../../file-preview';
 import { isImageFile } from '@/utils/file';
 import ImagePreview from '../../image-preview';
@@ -41,6 +42,13 @@ export default function CommentForm({
 			resetUploads();
 		},
 		onError: (err) => {
+			logError(err, {
+				feature: 'comments',
+				action: 'addComment',
+				extra: {
+					errorMessage: err.message,
+				},
+			});
 			toast.error(`Error in Adding comment: ${err.message}`);
 		},
 	});

@@ -1,9 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import SessionHistoryPanel from './components/SessionHistoryPanel';
 import { WorkflowPageSkeleton } from './components/WorkflowPageSkeleton';
 import {
@@ -14,24 +12,30 @@ import {
 } from '../service/workflow.service';
 import Breadcrumb from './components/BreadCrumb';
 import WorkflowDetails from './components/WorkflowDetails';
-import DataSourceCard from './components/connect-data-source-v2/data-source-card';
+import { logError } from '@/lib/logger';
 import WorkflowPlan from './components/WorkflowPlan';
 import { queryClient } from '@/lib/react-query';
 import { toast } from '@/lib/toast';
+import { useWorkflowRunId } from '../hooks/use-workflow-run-id';
+import DataSourceCard from './components/connect-data-source/data-source-card';
 
 export default function WorkflowPageV2() {
 	const { businessProcessId, workflowId } = useParams();
 	const navigate = useNavigate();
-	const [searchParams] = useSearchParams();
-	const runId = searchParams.get('run_id');
+	const runId = useWorkflowRunId();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
-	const [isValidationSuccessful, setIsValidationSuccessful] = useState(false);
 
 	// Data fetching
 	const { data: workflowDetails, isLoading: isWorkflowLoading } = useQuery({
 		queryKey: ['workflow-details', workflowId],
 		queryFn: () => getWorkflowDetails(workflowId),
 		enabled: Boolean(workflowId),
+	});
+
+	const { data: runDetails, isLoading: isRunLoading } = useQuery({
+		queryKey: ['workflow-run-details', runId],
+		queryFn: () => getWorkflowRunDetails(workflowId, runId),
+		enabled: Boolean(runId),
 	});
 
 	const { data: businessProcesses, isLoading: isBusinessLoading } = useQuery({
@@ -46,13 +50,16 @@ export default function WorkflowPageV2() {
 			queryClient.invalidateQueries(['workflow-runs', workflowId]);
 			queryClient.invalidateQueries(['workflow-run-details', runId]);
 			const data = await getWorkflowRunDetails(workflowId, runId);
-			console.log(data, 'data harsh');
 			navigate(
-				`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow&dataSourceId=${data.datasource_id}`,
+				`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow&datasource_id=${data.datasource_id}`,
 			);
 		},
 		onError: (err) => {
-			console.error('Workflow run failed:', err);
+			logError(err, {
+				feature: 'workflow',
+				action: 'run_workflow',
+				extra: { workflowId, runId },
+			});
 			toast.error(`Workflow execution failed: ${err.message}`);
 		},
 	});
@@ -79,6 +86,18 @@ export default function WorkflowPageV2() {
 	);
 
 	const plan = useMemo(() => workflowDetails?.data?.plan || '', [workflowDetails]);
+
+	useEffect(() => {
+		if (
+			runId &&
+			runDetails &&
+			['COMPLETED', 'FAILED'].includes(runDetails.status)
+		) {
+			navigate(
+				`/app/new-chat/session/?sessionId=${runDetails.session_id}&source=workflow`,
+			);
+		}
+	}, [runDetails]);
 
 	if (isWorkflowLoading || isBusinessLoading) {
 		return <WorkflowPageSkeleton />;
@@ -110,13 +129,11 @@ export default function WorkflowPageV2() {
 								onViewHistory={() => setSidebarOpen(true)}
 							/>
 
-							<DataSourceCard
-								requiredFiles={workflowDetails?.data?.required_files}
-							/>
+							<DataSourceCard />
 
 							<WorkflowPlan plan={plan} disabled />
 
-							<div className="mt-auto sticky bottom-12 left-0 flex justify-center py-4">
+							{/* <div className="mt-auto sticky bottom-12 left-0 flex justify-center py-4">
 								<Button
 									className="rounded-lg hover:bg-purple-100 h-12 py-1 px-4 hover:text-white hover:opacity-80 w-[95%]"
 									onClick={() => runWorkFlowMutation.mutate()}
@@ -134,7 +151,7 @@ export default function WorkflowPageV2() {
 										'Run Workflow'
 									)}
 								</Button>
-							</div>
+							</div> */}
 						</div>
 					</Panel>
 

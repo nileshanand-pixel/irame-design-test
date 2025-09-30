@@ -9,6 +9,7 @@ import {
 	getUserSession,
 } from './features/new-chat/service/new-chat.service';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { logError } from '@/lib/logger';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -16,7 +17,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import InputText from './elements/InputText';
-import { getDataSources } from './features/configuration/service/configuration.service';
+import { getDataSourcesV2 } from './features/configuration/service/configuration.service';
 import { resetChatStore, updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
 import Spinner from './elements/loading/Spinner';
@@ -61,7 +62,13 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			);
 			return data;
 		} catch (error) {
-			console.error('Error fetching user session:', error);
+			logError(error, {
+				feature: 'sidenav',
+				action: 'fetchUserSession',
+				extra: {
+					errorMessage: error.message,
+				},
+			});
 		}
 	};
 
@@ -81,7 +88,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			group: '',
 			items: [
 				{
-					link: '/app/business-process',
+					link: '/app/business-process?source=side_bar',
 					text: 'Business Process',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/workflow_icon.svg',
 					// beta: true,
@@ -104,7 +111,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						),
 				},
 				{
-					link: '/app/reports/datasources',
+					link: '/app/reports/datasources?source=side_bar',
 					text: 'Reports',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/report-icon.svg',
 					// beta: true,
@@ -129,7 +136,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	];
 
 	const fetchDataSources = async () => {
-		const data = await getDataSources();
+		const data = await getDataSourcesV2();
 		dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		return Array.isArray(data) ? data : [];
 	};
@@ -150,7 +157,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		if (sessionId === session.session_id) return;
 		dispatch(resetChatStore());
 		navigate(
-			`/app/new-chat/session?sessionId=${session.session_id}&source=side_bar&dataSourceId=${session.datasource_id}`,
+			`/app/new-chat/session?sessionId=${session.session_id}&source=side_bar&datasource_id=${session.datasource_id}`,
 		);
 		dispatch(
 			updateChatStoreProp([
@@ -201,7 +208,18 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			}
 
 			handleRedirectionAfterDeletion(sessionId, workflowId);
-		} catch (error) {}
+		} catch (error) {
+			logError(error, {
+				feature: 'sidenav',
+				action: 'handleDeletion',
+				extra: {
+					sessionId,
+					workflowId,
+					threadType,
+					errorMessage: error.message,
+				},
+			});
+		}
 	};
 
 	const handleRunningWorkflowDeletion = async (
@@ -225,7 +243,18 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			);
 			queryClient.invalidateQueries(['get-business-processes-home-page']);
 			handleRedirectionAfterDeletion(sessionId, workflowId);
-		} catch (error) {}
+		} catch (error) {
+			logError(error, {
+				feature: 'sidenav',
+				action: 'handleRunningWorkflowDeletion',
+				extra: {
+					sessionId,
+					workflowId,
+					runId,
+					errorMessage: error.message,
+				},
+			});
+		}
 	};
 
 	const askIra = (e) => {
@@ -262,8 +291,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	};
 
 	const renderSession = (session) => {
-		const isActiveSession =
-			chatStoreReducer?.activeChatSession?.id === session.session_id;
+		const isActiveSession = sessionId === session.session_id;
 		let showSpinner = session?.status !== 'done';
 		const sessionIconUrl = session?.metadata?.workflow_run_id
 			? 'https://d2vkmtgu2mxkyq.cloudfront.net/sidenav_workflow_icon.svg'
@@ -390,8 +418,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	};
 
 	const renderWorkflow = (workflow) => {
-		const isActive =
-			chatStoreReducer?.activeChatSession?.id === workflow.session_id;
+		const isActive = sessionId === workflow.session_id;
 		const showSpinner = workflow.status !== 'COMPLETED';
 		const shouldOpenSession = ['RUNNING', 'COMPLETED', 'FAILED'].includes(
 			workflow.status,
@@ -427,11 +454,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							]),
 						);
 						navigate(
-							`/app/new-chat/session/?sessionId=${workflow.session_id}&source=side_bar&dataSourceId=${workflow.datasource_id}`,
+							`/app/new-chat/session/?sessionId=${workflow.session_id}&source=side_bar&datasource_id=${workflow.datasource_id}`,
 						);
 					} else {
 						navigate(
-							`/app/business-process/${workflow.business_process_id}/workflows/${workflow.workflow_check_id}?run_id=${workflow.external_id}`,
+							`/app/business-process/${workflow.business_process_id}/workflows/${workflow.workflow_check_id}?run_id=${workflow.external_id}&datasource_id=${workflow.datasource_id}`,
 						);
 					}
 				}}
@@ -554,31 +581,33 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			</div>
 
 			{/* Ask IRA Button */}
-			<div className="flex-none mt-6 mb-6 mx-4">
-				<Hint
-					label="Ask Ira"
-					side="right"
-					align="start"
-					show={!isSideNavOpen}
-				>
-					<Link
-						to={'/app/new-chat?source=side_bar'}
-						onClick={askIra}
-						className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
-							isSideNavOpen
-								? 'rounded-[12.5rem] px-5 py-3'
-								: 'rounded-full px-2 mx-auto py-2'
-						} bg-purple-4`}
+			{!(import.meta.env.VITE_QNA_DISABLED === 'true') && (
+				<div className="flex-none mt-6 mb-6 mx-4">
+					<Hint
+						label="Ask Ira"
+						side="right"
+						align="start"
+						show={!isSideNavOpen}
 					>
-						<img
-							src="https://d2vkmtgu2mxkyq.cloudfront.net/plus.svg"
-							alt="ask-ira"
-							className="size-6"
-						/>
-						{isSideNavOpen && <p>Ask IRA</p>}
-					</Link>
-				</Hint>
-			</div>
+						<Link
+							to={'/app/new-chat?source=side_bar'}
+							onClick={askIra}
+							className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
+								isSideNavOpen
+									? 'rounded-[12.5rem] px-5 py-3'
+									: 'rounded-full px-2 mx-auto py-2'
+							} bg-purple-4`}
+						>
+							<img
+								src="https://d2vkmtgu2mxkyq.cloudfront.net/plus.svg"
+								alt="ask-ira"
+								className="size-6"
+							/>
+							{isSideNavOpen && <p>Ask IRA</p>}
+						</Link>
+					</Hint>
+				</div>
+			)}
 
 			{/* Main Navigation Menu */}
 			<div className="flex-none m-4">
@@ -597,7 +626,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 										to={option.link}
 										key={optionKey}
 										onClick={() => {
-											setActiveTab(option.link);
+											setActiveTab(option.link.split('?')[0]);
 											option?.trackingCall &&
 												option.trackingCall();
 										}}

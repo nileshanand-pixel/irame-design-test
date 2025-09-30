@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { toast } from '@/lib/toast';
 import { chatCommandInitiator } from '@/lib/utils';
+import { logError } from '@/lib/logger';
 
 export const useInputHandlers = ({
 	prompt,
@@ -33,7 +34,11 @@ export const useInputHandlers = ({
 	);
 
 	const handleSend = useCallback(async () => {
-		if (isEnhancing && mode === 'single') return;
+		if (
+			(isEnhancing && mode === 'single') ||
+			import.meta.env.VITE_QNA_DISABLED === 'true'
+		)
+			return;
 
 		try {
 			const cleanedPrompt = transformMentions(prompt);
@@ -43,7 +48,7 @@ export const useInputHandlers = ({
 			resetQueries();
 			setMode('single');
 		} catch (error) {
-			console.error('Error sending message:', error);
+			logError(error, { feature: 'chat', action: 'send-message' });
 			toast.error('Failed to send message. Please try again.');
 		}
 	}, [
