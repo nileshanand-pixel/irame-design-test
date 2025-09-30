@@ -125,6 +125,19 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 		}
 
 		try {
+			// Calculate datasource changes for better messaging
+			const currentDSIds = new Set(
+				selectedDataSources.map((ds) => ds.datasource_id),
+			);
+			const newDSIds = new Set(selectedDS.map((ds) => ds.datasource_id));
+
+			const addedDSCount = [...newDSIds].filter(
+				(id) => !currentDSIds.has(id),
+			).length;
+			const removedDSCount = [...currentDSIds].filter(
+				(id) => !newDSIds.has(id),
+			).length;
+
 			// Use the hook's function to copy files and handle deletions
 			const result = await copyFilesFromDataSources(selectedDS);
 
@@ -132,20 +145,20 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 				// Update selected datasources
 				setSelectedDataSources(selectedDS);
 
-				// Provide feedback
+				// Provide feedback with both datasource and file counts
 				if (result.added > 0 && result.removed > 0) {
 					toast.success(
-						`Added ${result.added} datasource(s), removed ${result.removed} datasource(s)`,
+						`Added ${addedDSCount} datasource${addedDSCount > 1 ? 's' : ''} (${result.added} file${result.added > 1 ? 's' : ''}), removed ${removedDSCount} datasource${removedDSCount > 1 ? 's' : ''} (${result.removed} file${result.removed > 1 ? 's' : ''})`,
 						{ position: 'bottom-center' },
 					);
 				} else if (result.added > 0) {
 					toast.success(
-						`Successfully added ${result.added} datasource(s)`,
+						`Added ${addedDSCount} datasource${addedDSCount > 1 ? 's' : ''} with ${result.added} file${result.added > 1 ? 's' : ''}`,
 						{ position: 'bottom-center' },
 					);
 				} else if (result.removed > 0) {
 					toast.success(
-						`Successfully removed ${result.removed} datasource(s)`,
+						`Removed ${removedDSCount} datasource${removedDSCount > 1 ? 's' : ''} with ${result.removed} file${result.removed > 1 ? 's' : ''}`,
 						{ position: 'bottom-center' },
 					);
 				} else {
