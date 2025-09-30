@@ -40,7 +40,7 @@ const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 			}),
 		);
 		navigate(
-			`/app/new-chat/?step=3&dataSourceId=${data?.datasource_id}&source=homepage`,
+			`/app/new-chat/?step=3&datasource_id=${data?.datasource_id}&source=homepage`,
 		);
 		handleNextStep(2);
 		handleNextStep(3);

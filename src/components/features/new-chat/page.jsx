@@ -8,7 +8,7 @@ import { useRouter } from '@/hooks/useRouter';
 import { createQuerySession, getUserSession } from './service/new-chat.service';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
-import { getDataSources } from '../configuration/service/configuration.service';
+import { getDataSourcesV2 } from '../configuration/service/configuration.service';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
@@ -22,7 +22,7 @@ import { useDatasourceId } from '@/hooks/use-datasource-id';
 import { useMemo } from 'react';
 import InputArea from './components/input-area/input-area';
 import StepThreeContent from './components/step-three-content';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -48,7 +48,7 @@ const NewChat = () => {
 	const [errors, setErrors] = useState({});
 	const preChatScreenLoadedRef = useRef(false);
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 	const gradientText = {
 		backgroundImage:
 			'linear-gradient(270deg, rgba(106, 18, 205, 0.4), rgba(106, 18, 205, 0.8))',
@@ -138,7 +138,7 @@ const NewChat = () => {
 				};
 			}
 			const payload = {
-				datasource_id: query.dataSourceId,
+				datasource_id: query.datasource_id,
 				type: mode,
 			};
 
@@ -154,7 +154,7 @@ const NewChat = () => {
 			createQuerySession(payload)
 				.then((res) => {
 					navigate(
-						`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen&dataSourceId=${query.dataSourceId}`,
+						`/app/new-chat/session?sessionId=${res?.session_id}&source=pre_chat_screen&datasource_id=${query.datasource_id}`,
 					);
 					dispatch(
 						updateChatStoreProp([
@@ -184,7 +184,7 @@ const NewChat = () => {
 						EVENTS_ENUM.CHAT_SESSION_STARTED,
 						EVENTS_REGISTRY.CHAT_SESSION_STARTED,
 						() => ({
-							dataset_id: query.dataSourceId,
+							dataset_id: query.datasource_id,
 							dataset_name: datasourceData?.name,
 							start_method: 'manual_input',
 							chat_session_id: res?.session_id,
@@ -197,7 +197,7 @@ const NewChat = () => {
 						() => ({
 							chat_session_id: res?.session_id,
 							query_id: res?.query_id,
-							dataset_id: query.dataSourceId,
+							dataset_id: query.datasource_id,
 							dataset_name: datasourceData?.name,
 							message_type: 'user',
 							message_source: 'manual_input',
@@ -243,7 +243,7 @@ const NewChat = () => {
 		error,
 	} = useQuery({
 		queryKey: ['data-sources'],
-		queryFn: () => getDataSources(),
+		queryFn: () => getDataSourcesV2(),
 		onSuccess: (data) => {
 			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		},
@@ -265,11 +265,6 @@ const NewChat = () => {
 			return datasets?.find((ds) => ds.datasource_id === dataSourceId);
 		};
 	}, [dataSources, utilReducer?.dataSources]);
-
-	const processedFiles = useMemo(() => {
-		const ds = findDataSourceById(datasourceId);
-		return ds?.processed_files?.files || [];
-	}, [findDataSourceById, datasourceId]);
 
 	const getChatHistoryDataSourceName = (dataSourceId) => {
 		const dataSource = findDataSourceById(dataSourceId);
@@ -310,9 +305,9 @@ const NewChat = () => {
 	}, [dataSources, query]);
 
 	useEffect(() => {
-		const { step, dataSourceId } = query;
+		const { step, datasource_id } = query;
 
-		if (!step || !dataSourceId) {
+		if (!step || !datasource_id) {
 			trackEvent(
 				EVENTS_ENUM.LANDING_PAGE_LOADED,
 				EVENTS_REGISTRY.LANDING_PAGE_LOADED,
@@ -341,7 +336,7 @@ const NewChat = () => {
 		setIsGraphLoading(true);
 		setDoingScience(true);
 	}, [
-		query.dataSourceId,
+		query.datasource_id,
 		query.sessionId,
 		query.queryId,
 		utilReducer?.answerFromHistory,

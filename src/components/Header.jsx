@@ -21,9 +21,7 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { LockClosedIcon } from '@radix-ui/react-icons';
 import { ReaderIcon } from '@radix-ui/react-icons';
 import { RocketIcon } from '@radix-ui/react-icons';
-import { useDatasourceId } from '@/hooks/use-datasource-id';
-import useDataSourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
-import { data } from 'autoprefixer';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const Header = () => {
 	const [value, setValue] = useLocalStorage('userDetails');
@@ -40,7 +38,7 @@ const Header = () => {
 		);
 	};
 
-	const { data: datasourceDetails } = useDataSourceDetails();
+	const { data: datasourceDetails } = useDatasourceDetailsV2();
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -161,7 +159,15 @@ const Header = () => {
 		>
 			<div className="flex gap-6 items-center">
 				{showDataSourceName ? (
-					<div className="flex gap-2 items-center rounded-lg px-3 py-2 bg-purple-10 text-primary80 text-sm font-medium w-fit truncate">
+					<div
+						className="flex gap-2 items-center rounded-lg px-3 py-2 bg-purple-10 hover:bg-purple-20 text-primary80 text-sm font-medium w-fit truncate cursor-pointer"
+						onClick={() =>
+							window.open(
+								`/app/configuration/datasource?id=${datasourceDetails.datasource_id}`,
+								'_blank',
+							)
+						}
+					>
 						<img
 							src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
 							alt="edit-prompt"

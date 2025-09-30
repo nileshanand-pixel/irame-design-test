@@ -21,8 +21,8 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
 import { useSelector } from 'react-redux';
 import { trackEvent } from '@/lib/mixpanel';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 import { useNavigate } from 'react-router-dom';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const AddQueryToNewReportDialog = ({
 	open,
@@ -39,7 +39,7 @@ const AddQueryToNewReportDialog = ({
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const navigate = useNavigate();
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 
 	const mutation = useMutation({
 		mutationFn: (payload) => createReportAndAddQuery(payload),

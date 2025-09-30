@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import MultiSelect from '@/components/elements/MultiSelect';
 import PDFViewer from './components/PdfViewer';
-import { useQuery } from '@tanstack/react-query';
 import { getDataSourceById } from '../configuration/service/configuration.service';
 import { getFileIcon } from '@/lib/utils';
 import { EditContext } from './components/WorkspaceEditProvider';
@@ -11,7 +10,7 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
 import { logError } from '@/lib/logger';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const ExcelFileContent = ({
 	file,
@@ -28,7 +27,8 @@ const ExcelFileContent = ({
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
+
 	return (
 		<div className="flex flex-wrap gap-2 mt-4 rounded-lg py-2.5">
 			<MultiSelect
@@ -114,7 +114,7 @@ const SourceComponent = ({
 			? JSON.parse(data?.tool_data)
 			: data?.tool_data;
 
-	const { data: datasourceData, isLoading } = useDatasourceDetails();
+	const { data: datasourceData, isLoading } = useDatasourceDetailsV2();
 
 	async function fetchDatasource(datasourceId) {
 		try {
@@ -151,13 +151,28 @@ const SourceComponent = ({
 
 	const renderFiles = () => {
 		let contentArr = [];
-		if (!datasourceData?.processed_files?.files) return;
+		if (!datasourceData?.files) return;
 
-		const sortedFiles = datasourceData?.processed_files?.files.sort((a, b) => {
-			const selectedColumnsCountA = selectedColumns[a.id]?.length || 0;
-			const selectedColumnsCountB = selectedColumns[b.id]?.length || 0;
-			return selectedColumnsCountB - selectedColumnsCountA;
-		});
+		const sortedFiles = datasourceData?.files
+			?.map((file) => {
+				if (file.sheets) {
+					return file.sheets.map((sheet) => {
+						return {
+							filename: `${file?.filename?.split('.')?.[0]}(${sheet?.worksheet}).csv`,
+							...sheet,
+							id: file?.filename + ' - ' + sheet?.worksheet,
+						};
+					});
+				} else {
+					return file;
+				}
+			})
+			.flat()
+			?.sort((a, b) => {
+				const selectedColumnsCountA = selectedColumns[a.id]?.length || 0;
+				const selectedColumnsCountB = selectedColumns[b.id]?.length || 0;
+				return selectedColumnsCountB - selectedColumnsCountA;
+			});
 
 		sortedFiles?.map((file) => {
 			if (file?.id) {

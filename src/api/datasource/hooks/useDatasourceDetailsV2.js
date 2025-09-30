@@ -1,17 +1,17 @@
 import { useDatasourceId } from '@/hooks/use-datasource-id';
 import { useQuery } from '@tanstack/react-query';
-import { getDatasourceById } from '../datasource.service';
+import { getDatasourceByIdV2 } from '../datasource.service';
 import { getDatasourceDetailsQueryKey } from '../datasource.query-key';
 
-export default function useDatasourceDetails({
+export default function useDatasourceDetailsV2({
 	queryOptions = {},
 	datasourceId,
 } = {}) {
-	const id = useDatasourceId() || datasourceId;
+	const id = datasourceId || useDatasourceId();
 
 	const data = useQuery({
 		queryKey: getDatasourceDetailsQueryKey(id),
-		queryFn: getDatasourceById,
+		queryFn: getDatasourceByIdV2,
 		enabled: !!id,
 		...queryOptions,
 	});

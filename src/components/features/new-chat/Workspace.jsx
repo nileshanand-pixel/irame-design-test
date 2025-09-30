@@ -18,7 +18,7 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
 import { useSelector } from 'react-redux';
 import { cn } from '@/lib/utils';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const Workspace = ({
 	handleTabClick,
@@ -38,7 +38,7 @@ const Workspace = ({
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 
-	const { data: datasourceData } = useDatasourceDetails();
+	const { data: datasourceData } = useDatasourceDetailsV2();
 	const availableTabs = useMemo(() => {
 		return TAB_ORDER.filter(
 			(tab) => answerResp?.answer?.[tab]?.tool_space === 'secondary',

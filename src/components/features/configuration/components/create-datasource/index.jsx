@@ -1,0 +1,993 @@
+import InputText from '@/components/elements/InputText';
+import { Input } from '@/components/ui/input';
+import { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+	createNewDtaSource,
+	saveDatasource,
+} from '../../service/configuration.service';
+import { v4 as uuid } from 'uuid';
+import { useRouter } from '@/hooks/useRouter';
+import { queryClient } from '@/lib/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { intent } from '../../configuration.content';
+import BackdropLoader from '@/components/elements/loading/BackDropLoader';
+import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
+import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
+import { X } from 'lucide-react';
+import {
+	addFileInDs,
+	getDatasourceDetails,
+	removeFileFromDs,
+	removeSheets,
+	uploadFile,
+	uploadInit,
+} from '@/components/features/upload/service';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
+import { useSearchParams } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
+import FileListing from './file-listing';
+import { FILE_STATUS } from '@/constants/file.constant';
+import CircularLoader from '@/components/elements/loading/CircularLoader';
+import { cn } from '@/lib/utils';
+import { getFileType } from '@/utils/file';
+import useConfirmDialog from '@/hooks/use-confirm-dialog';
+
+const CreateDatasource = ({ showForm, onShowFormChange }) => {
+	const [datasourceId, setDatasourceId] = useState('');
+	const [files, setFiles] = useState([]);
+	const [uploadQueue, setUploadQueue] = useState([]);
+	const [isInitializingUpload, setIsInitializingUpload] = useState(false);
+	const [deletingFiles, setDeletingFiles] = useState([]);
+
+	const { navigate, query } = useRouter();
+
+	const [datasourceName, setDatasourceName] = useState('');
+	const [description, setDescription] = useState('');
+	const [formErrors, setFormErrors] = useState({});
+	const [isLoading, setIsLoading] = useState(false);
+	const [dataSourceIntent, setDataSourceIntent] = useState([]);
+	const [deletingSheets, setDeletingSheets] = useState(new Set());
+
+	const inputRef = useRef();
+	const [searchParams, setSearchParams] = useSearchParams();
+
+	const [ConfirmationDialog, confirm] = useConfirmDialog();
+
+	// const { mutate: uploadInitHandler } = useMutation({
+	// 	mutationFn: uploadInit,
+	// });
+	const { mutate: uploadFileInDs } = useMutation({
+		mutationFn: addFileInDs,
+	});
+
+	// const { mutate: deleteFileFromDs } = useMutation({
+	// 	mutationFn: removeFileFromDs,
+	// });
+
+	// const { mutate: removeSheetsHandler } = useMutation({
+	// 	mutationFn: removeSheets,
+	// });
+
+	// const { mutate: saveDatasourceHandler } = useMutation({
+	// 	mutationFn: saveDatasource,
+	// });
+
+	const { data: datasourceDetails, refetch: refetchDatasourceDetails } = useQuery({
+		queryKey: ['datasource-details-v2', { datasourceId }],
+		queryFn: getDatasourceDetails,
+		enabled: !!datasourceId,
+		refetchInterval: (data) => {
+			if (!datasourceName) {
+				setDatasourceName(data?.state?.data?.name);
+			}
+
+			if (!description) {
+				setDescription(data?.state?.data?.description);
+			}
+
+			const datasourceFiles = data?.state?.data?.files;
+
+			if (datasourceFiles?.length > 0) {
+				if (files.length === 0) {
+					setFiles(
+						datasourceFiles?.map((f) => {
+							return {
+								...f,
+								name: f.filename,
+							};
+						}),
+					);
+					// TODO: fetch size of each file and store in files array
+				} else {
+					let isFileStatusChanged = datasourceFiles?.some(
+						(datasourceFile) => {
+							for (let i = 0; i < files.length; i++) {
+								const file = files[i];
+
+								if (
+									file.name === datasourceFile.filename &&
+									file.status !== datasourceFile?.status
+								) {
+									return true;
+								}
+							}
+
+							return false;
+						},
+					);
+
+					if (isFileStatusChanged) {
+						setFiles((prev) => {
+							return prev.map((file) => {
+								for (let i = 0; i < datasourceFiles.length; i++) {
+									const datasourceFile = datasourceFiles?.[i];
+									if (datasourceFile?.filename === file.name) {
+										return {
+											...file,
+											status: datasourceFile?.status,
+											sheets: datasourceFile?.sheets,
+											message: datasourceFile?.message,
+										};
+									}
+								}
+								return file;
+							});
+						});
+					}
+				}
+			}
+
+			const inProcessing = data?.state?.data?.files?.some(
+				(f) => ![FILE_STATUS.FAILED, FILE_STATUS.SUCCESS].includes(f.status),
+			);
+
+			if (inProcessing) {
+				return 2000;
+			}
+			return false;
+		},
+	});
+
+	const uploadFilesOnS3 = (newFiles) => {
+		setFiles((prev) => [...newFiles, ...prev]);
+		setUploadQueue((prev) => [...prev, ...newFiles]);
+	};
+
+	const handleFilesSelect = async (userSelectedFiles) => {
+		try {
+			const filesArr = Array.from(userSelectedFiles);
+
+			const newFiles = [];
+			const processedNames = new Set();
+
+			filesArr.forEach((file) => {
+				let uniqueName = file.name;
+				let counter = 1;
+
+				// Check against existing files and already processed files in this batch
+				while (
+					files.some((f) => f.name === uniqueName) ||
+					processedNames.has(uniqueName)
+				) {
+					const baseName = file.name.substring(
+						0,
+						file.name.lastIndexOf('.'),
+					);
+					const extension = file.name.substring(
+						file.name.lastIndexOf('.'),
+					);
+					uniqueName = `${baseName}_${counter}${extension}`;
+					counter++;
+				}
+
+				processedNames.add(uniqueName);
+
+				// Create a new File object with the modified name
+				const modifiedFile = new File([file], uniqueName, {
+					type: file.type,
+					lastModified: file.lastModified,
+				});
+
+				// console.log(file.type, 'file.type');
+				newFiles.push({
+					name: uniqueName,
+					size: file.size,
+					type: file.type,
+					status: FILE_STATUS.UPLOADING,
+					id: uuidv4(),
+					uploadProgress: 0,
+					rawFile: modifiedFile,
+				});
+			});
+
+			if (newFiles.length === 0) {
+				return;
+			}
+
+			// Check if all files (existing + new) have the same type
+			const allFiles = [...files, ...newFiles];
+			const fileTypes = allFiles.map((file) =>
+				file.rawFile ? getFileType(file) : file.type,
+			);
+			const uniqueTypes = [...new Set(fileTypes)];
+
+			const allowedTypes = ['pdf', 'excel', 'csv'];
+
+			for (let i = 0; i < uniqueTypes.length; i++) {
+				const type = uniqueTypes[i];
+				if (!allowedTypes.includes(type)) {
+					toast.error(
+						'Unsupported file type. Please upload only PDF, Excel (.xlsx/.xlsb), or CSV files.',
+					);
+					return;
+				}
+			}
+
+			if (uniqueTypes.length > 1 && uniqueTypes.includes('pdf')) {
+				toast.error(
+					'Please upload files of the same type. Mixing different file types is not allowed.',
+				);
+				return;
+			}
+
+			setIsInitializingUpload(true);
+
+			onShowFormChange(true);
+
+			if (!datasourceName) {
+				setFormErrors((prev) => ({
+					...prev,
+					datasourceName: 'Please enter a name for your datasource',
+				}));
+			}
+
+			if (!datasourceId) {
+				const resp = await uploadInit({
+					datasource_type: DATASOURCE_TYPES.USER_GENERATED,
+				});
+
+				setDatasourceId(resp?.datasource_id);
+				setSearchParams({ datasource_id: resp?.datasource_id });
+			}
+			uploadFilesOnS3(newFiles);
+		} catch (error) {
+			toast.error('Failed to initialize upload');
+		} finally {
+			setIsInitializingUpload(false);
+		}
+	};
+
+	const handleFileChange = (e) => {
+		try {
+			handleFilesSelect(e.target.files);
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
+	const uploadSingleFile = async (file) => {
+		if (!file) return;
+
+		const source = axios.CancelToken.source();
+		setFiles((prev) => {
+			return prev.map((currentFile) => {
+				if (currentFile.id === file.id) {
+					const newFile = {
+						...currentFile,
+						cancelToken: source,
+					};
+					return newFile;
+				} else {
+					return currentFile;
+				}
+			});
+		});
+
+		try {
+			const data = await uploadFile({
+				file: file.rawFile,
+				updateProgress: (progress) => {
+					setFiles((prev) => {
+						return prev.map((currentFile) => {
+							if (currentFile.id === file.id) {
+								const newFile = {
+									...currentFile,
+									uploadProgress: progress,
+								};
+								return newFile;
+							} else {
+								return currentFile;
+							}
+						});
+					});
+				},
+				cancelToken: source.token,
+				datasourceId,
+			});
+
+			setFiles((prev) =>
+				prev.map((f) => {
+					if (f.id === file.id) {
+						const newF = {
+							...f,
+							status: FILE_STATUS.UPLOADED,
+							url: data?.url,
+						};
+						delete newF.cancelToken;
+						return newF;
+					}
+					return f;
+				}),
+			);
+
+			uploadFileInDs(
+				{
+					datasource_id: datasourceId,
+					files: [
+						{
+							file_url: data.url,
+						},
+					],
+				},
+				{
+					onSuccess: () => {
+						setFiles((prev) =>
+							prev.map((f) => {
+								if (f.id === file.id) {
+									const newF = {
+										...f,
+										status: FILE_STATUS.PROCESSING,
+									};
+									return newF;
+								}
+								return f;
+							}),
+						);
+						refetchDatasourceDetails();
+					},
+					onError: (error) => {
+						setFiles((prev) =>
+							prev.map((f) => {
+								if (f.id === file.id) {
+									const newF = {
+										...f,
+										status: FILE_STATUS.UPLOADING_FAILED,
+										message: error?.response?.data?.message,
+									};
+									return newF;
+								}
+								return f;
+							}),
+						);
+					},
+				},
+			);
+		} catch (err) {
+			setFiles((prev) =>
+				prev.map((f) => {
+					if (f.id === file.id) {
+						const newF = {
+							...f,
+							status: FILE_STATUS.UPLOADING_FAILED,
+							message: err?.response?.data?.message || err?.message,
+						};
+						return newF;
+					}
+					return f;
+				}),
+			);
+		}
+	};
+
+	const uploadFiles = async () => {
+		const updatedUploadQueue = [...uploadQueue];
+
+		while (updatedUploadQueue.length > 0) {
+			const file = updatedUploadQueue.shift();
+
+			uploadSingleFile(file);
+		}
+		setUploadQueue([...updatedUploadQueue]);
+	};
+
+	useEffect(() => {
+		if (uploadQueue.length > 0) {
+			uploadFiles();
+		}
+	}, [uploadQueue]);
+
+	const canSaveDatasource = files.some((f) =>
+		[
+			FILE_STATUS.SUCCESS,
+			FILE_STATUS.PROCESSING,
+			FILE_STATUS.AI_PROCESSING,
+		].includes(f.status),
+	);
+
+	const createDataSource = async () => {
+		try {
+			if (!canSaveDatasource) {
+				return;
+			}
+
+			setIsLoading(true);
+
+			let uploadingFileCount = 0;
+			let failedFileCount = 0;
+
+			files.forEach((f) => {
+				if (f.status === FILE_STATUS.FAILED) {
+					failedFileCount++;
+				} else if (
+					[FILE_STATUS.UPLOADED, FILE_STATUS.UPLOADING].includes(f.status)
+				) {
+					uploadingFileCount++;
+				}
+			});
+
+			if (failedFileCount > 0 && uploadingFileCount > 0) {
+				const ok = await confirm({
+					header: 'Save datasource',
+					description:
+						'This action is permanent and cannot be undone. Files with error and uploading files will be removed!',
+					primaryCtaText: 'Save',
+					primaryCtaVariant: 'default',
+				});
+				if (!ok) return;
+			} else if (failedFileCount > 0) {
+				const ok = await confirm({
+					header: 'Save datasource',
+					description:
+						'This action is permanent and cannot be undone. Files with error will be removed!',
+					primaryCtaText: 'Save',
+					primaryCtaVariant: 'default',
+				});
+				if (!ok) return;
+			} else if (uploadingFileCount > 0) {
+				const ok = await confirm({
+					header: 'Save datasource',
+					description:
+						'This action is permanent and cannot be undone. Uploading files will not be stored!',
+					primaryCtaText: 'Save',
+					primaryCtaVariant: 'default',
+				});
+				if (!ok) return;
+			}
+
+			trackEvent(
+				EVENTS_ENUM.SAVE_DATASET_CLICKED,
+				EVENTS_REGISTRY.SAVE_DATASET_CLICKED,
+				() => ({
+					files_count: files.length,
+					files_type: files.map((file) => file.type),
+					analysis_chosen: [...dataSourceIntent],
+					dataset_name: datasourceName,
+					is_description_filled: !!description,
+				}),
+			);
+
+			const data = {
+				datasourceId,
+				name: datasourceName,
+				description: description,
+				intent: [...dataSourceIntent],
+			};
+
+			await saveDatasource(data);
+
+			queryClient.invalidateQueries(['data-sources-v2']);
+			toast.success('Data source created successfully');
+			if (files.some((f) => f.status !== FILE_STATUS.SUCCESS)) {
+				handleUploadCardClossClick();
+			} else {
+				startChatting();
+			}
+
+			trackEvent(
+				EVENTS_ENUM.SAVE_DATASET_SUCCESSFUL,
+				EVENTS_REGISTRY.SAVE_DATASET_SUCCESSFUL,
+				() => ({
+					files_count: files.length,
+					files_type: files.map((file) => file.type),
+					analysis_chosen: [...dataSourceIntent],
+					dataset_id: datasourceId,
+					dataset_name: datasourceName,
+					is_description_filled: !!description,
+					// size in mb
+					total_dataset_size: (
+						files?.reduce((total, file) => {
+							return total + (file.size || 0);
+						}, 0) /
+						(1024 * 1024)
+					).toFixed(2),
+				}),
+			);
+		} catch (error) {
+			const errorMessage =
+				error.response?.data?.message || 'Error creating data source';
+			toast.error(errorMessage);
+			logError(error, {
+				feature: 'configuration',
+				action: 'create-datasource',
+			});
+			trackEvent(
+				EVENTS_ENUM.SAVE_DATASET_FAILED,
+				EVENTS_REGISTRY.SAVE_DATASET_FAILED,
+				() => ({
+					files_count: files.length,
+					files_type: files.map((file) => file.type),
+					total_dataset_size:
+						files?.reduce((total, file) => {
+							return total + (file.size || 0);
+						}, 0) /
+						(1024 * 1024),
+					...getErrorAnalyticsProps(error),
+				}),
+			);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleSelectUseCase = (value) => {
+		if (dataSourceIntent.includes(value)) {
+			setDataSourceIntent((prev) => prev.filter((item) => item !== value));
+		} else {
+			setDataSourceIntent((prev) => [...prev, value]);
+		}
+	};
+
+	const startChatting = () => {
+		navigate(
+			`/app/new-chat/?step=3&datasource_id=${datasourceId}&source=configuration`,
+		);
+	};
+
+	useEffect(() => {
+		setFormErrors((prev) => ({
+			...prev,
+			datasourceName: '',
+		}));
+	}, [datasourceName]);
+
+	useEffect(() => {
+		const initialIntents = intent.slice(0, 5).map((item) => item.value);
+		setDataSourceIntent(initialIntents);
+	}, []);
+
+	const handleInputClick = (e) => {
+		e.preventDefault();
+		trackEvent(
+			EVENTS_ENUM.UPLOAD_DATASET_CLICKED,
+			EVENTS_REGISTRY.UPLOAD_DATASET_CLICKED,
+			() => ({
+				source: query?.source || 'url',
+			}),
+		);
+		// if (!isAllFilesUploaded() || isLoading) return;
+		inputRef.current.click();
+	};
+
+	const handleUploadCardClossClick = () => {
+		setDescription('');
+		setDatasourceName('');
+		setFiles([]);
+		setUploadQueue([]);
+		setDatasourceId('');
+		setSearchParams({});
+	};
+
+	const renderUploadButtons = () => {
+		return (
+			<div className="flex gap-2 items-center">
+				{showForm ? (
+					<div className="flex gap-4">
+						<Button
+							className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+							onClick={() => {
+								createDataSource();
+							}}
+							disabled={
+								isLoading ||
+								formErrors.datasourceName ||
+								!datasourceName ||
+								!canSaveDatasource
+							}
+						>
+							Save Dataset
+						</Button>
+
+						<Button
+							variant="outline"
+							className="!p-2"
+							onClick={handleUploadCardClossClick}
+						>
+							<X className="size-5" />
+						</Button>
+					</div>
+				) : (
+					<Button
+						className={` w-full hover:bg-purple-100 hover:text-white hover:opacity-80 rounded-lg ${
+							isLoading
+								? 'cursor-not-allowed opacity-80'
+								: 'cursor-pointer'
+						}`}
+						onClick={handleInputClick}
+					>
+						<label
+							htmlFor="file-upload"
+							className=" block text-center cursor-pointer px-4"
+						>
+							Upload Dataset
+						</label>
+					</Button>
+				)}
+
+				<Input
+					type="file"
+					multiple
+					ref={inputRef}
+					onClick={(e) => (e.target.value = null)}
+					className="absolute top-0 w-0 -z-1 opacity-0"
+					onChange={(e) => handleFileChange(e)}
+					id="file-upload"
+					accept=".csv,.xlsx,.pdf,.xlsb"
+				/>
+			</div>
+		);
+	};
+
+	const removeFilesFromState = (fileObjs) => {
+		// Cancel any ongoing upload requests for the files being removed
+		fileObjs.forEach((fileObj) => {
+			if (fileObj?.cancelToken) {
+				fileObj.cancelToken.cancel('File upload cancelled due to removal');
+			}
+		});
+
+		// Remove files from files state
+		setFiles((prev) => {
+			return prev.filter((file) => {
+				return !fileObjs.some((fileObj) => fileObj.id === file.id);
+			});
+		});
+
+		// Remove files from uploadQueue
+		setUploadQueue((prev) => {
+			return prev.filter((file) => {
+				return !fileObjs.some((fileObj) => fileObj.id === file.id);
+			});
+		});
+
+		// Remove files from deletingFiles state
+		setDeletingFiles((prev) => {
+			const fileIdsToRemove = fileObjs.map((f) => f.id);
+			return prev.filter((fileId) => !fileIdsToRemove.includes(fileId));
+		});
+	};
+
+	const handleRemoveFiles = async (fileObjs, confirmBeforeDelete = true) => {
+		try {
+			setDeletingFiles((prev) => {
+				return [...prev, fileObjs?.map((f) => f.id)];
+			});
+
+			// remove file from ds
+			const filesToDeleteFromDs = datasourceDetails?.files?.filter((f) => {
+				return fileObjs.some((fileObj) => {
+					return f.filename === fileObj.name;
+				});
+			});
+
+			// confirmation modal
+			if (confirmBeforeDelete) {
+				if (filesToDeleteFromDs?.length === 1) {
+					const ok = await confirm({
+						header: 'Delete file?',
+						description:
+							'This action is permanent and cannot be undone. ',
+					});
+					if (!ok) return;
+				} else if (filesToDeleteFromDs?.length > 1) {
+					const ok = await confirm({
+						header: `Delete ${filesToDeleteFromDs?.length} files?`,
+						description:
+							'This action is permanent and cannot be undone. ',
+					});
+					if (!ok) return;
+				} else {
+					const ok = await confirm({
+						header: 'Remove file?',
+						description:
+							'This action will stop the process and permanently remove the selected file.',
+						primaryCtaText: 'Remove',
+					});
+					if (!ok) return;
+				}
+			}
+
+			if (filesToDeleteFromDs?.length > 0) {
+				await removeFileFromDs({
+					datasourceId: datasourceId,
+					fileIds: filesToDeleteFromDs?.map((f) => f.id),
+				});
+				refetchDatasourceDetails();
+			}
+
+			removeFilesFromState(fileObjs);
+
+			toast.success(
+				`File${filesToDeleteFromDs.length > 1 ? 's' : ''} deleted successfully`,
+			);
+			const newFiles = files.filter((file) => {
+				return !fileObjs?.some((f) => f.id === file.id);
+			});
+			if (newFiles.length === 0) {
+				handleUploadCardClossClick();
+			}
+		} catch (error) {
+			toast.error(
+				`Failed to delete file${fileObjs.length > 1 ? 's' : ''}: ${error?.response?.data?.message}`,
+			);
+			logError(error, {
+				feature: 'configuration',
+				action: 'delete-files',
+				fileCount: fileObjs.length,
+			});
+		} finally {
+			setDeletingFiles((prev) => {
+				return prev.filter(
+					(fileId) => !fileObjs.some((fileObj) => fileObj.id === fileId),
+				);
+			});
+		}
+	};
+
+	useEffect(() => {
+		const idFromUrl = searchParams.get('datasource_id');
+
+		if (idFromUrl) {
+			setDatasourceId(idFromUrl);
+		} else {
+			handleUploadCardClossClick();
+		}
+	}, [searchParams]);
+
+	useEffect(() => {
+		onShowFormChange(files.length !== 0);
+	}, [files]);
+
+	const handleDeleteSheet = async (file, sheet, isLastSheet) => {
+		const fileId = file.serverId || file.id;
+		const fileName = file.name || file.filename;
+		const sheetName = sheet.worksheet;
+
+		if (!fileId) {
+			toast.error('Unable to delete sheet - file ID not found');
+			return;
+		}
+
+		let confirmHeader, confirmDescription;
+		if (isLastSheet) {
+			confirmHeader = 'Delete last sheet?';
+			confirmDescription = `This is the last sheet in "${fileName}". Deleting it will also delete the entire file. This action is permanent and cannot be undone.`;
+		} else {
+			confirmHeader = 'Delete sheet?';
+			confirmDescription = `Are you sure you want to delete sheet "${sheetName}" from "${fileName}"? This action is permanent and cannot be undone.`;
+		}
+
+		const confirmed = await confirm({
+			header: confirmHeader,
+			description: confirmDescription,
+		});
+
+		if (!confirmed) return;
+
+		// Add sheet to deleting state
+		setDeletingSheets((prev) => new Set([...prev, sheet.id]));
+
+		try {
+			if (isLastSheet) {
+				// Delete the entire file if it's the last sheet
+				handleRemoveFiles([file], false);
+			} else {
+				// Delete just the sheet
+				await removeSheets(fileId, [sheetName]);
+				toast.success(`Sheet "${sheetName}" deleted successfully`);
+				refetchDatasourceDetails();
+			}
+		} catch (error) {
+			console.error('Error deleting sheet:', error);
+			const errorMessage =
+				error.message || `Failed to delete sheet "${sheetName}"`;
+			toast.error(errorMessage);
+			logError(error, {
+				feature: 'configuration',
+				action: 'delete-sheet',
+				fileId,
+			});
+		} finally {
+			// Remove sheet from deleting state
+			setDeletingSheets((prev) => {
+				const newSet = new Set(prev);
+				newSet.delete(sheet.id);
+				return newSet;
+			});
+		}
+	};
+
+	return (
+		<div
+			className={cn(
+				'border rounded-2xl py-4 px-6 shadow-1xl h-full',
+				isInitializingUpload && 'flex items-center justify-center',
+			)}
+		>
+			<ConfirmationDialog />
+			{isLoading && (
+				<div>
+					{' '}
+					<BackdropLoader />
+				</div>
+			)}
+			{isInitializingUpload ? (
+				<div className="flex items-center gap-2 justify-center ">
+					<CircularLoader size="sm" />
+					<p className="text-primary80 text-sm">Initializing upload</p>
+				</div>
+			) : (
+				<>
+					<div className="flex flex-row gap-4 justify-between items-center">
+						<div>
+							<h3 className="text-primary80 font-semibold text-xl">
+								Connect New Dataset
+							</h3>
+							<p className="text-primary40 text-sm">
+								Securely upload your dataset.
+								<span className="ml-1 text-primary30 text-xs">
+									Upload{' '}
+									<span className="font-semibold text-primary60">
+										one type of file
+									</span>{' '}
+									(.xlsx/.xlsb/.csv or .pdf) at a time.
+								</span>
+							</p>
+						</div>
+
+						{renderUploadButtons()}
+					</div>
+
+					{showForm && (
+						<div className="mt-4 space-y-6 mb-10">
+							<div className="grid grid-cols-2 gap-4">
+								<InputText
+									placeholder="Enter name here"
+									label="Data Set Name"
+									value={datasourceName}
+									setValue={(e) => setDatasourceName(e)}
+									error={!!formErrors.datasourceName}
+									errorText={formErrors.datasourceName}
+									labelClassName="text-sm font-medium text-primary40"
+								/>
+
+								<InputText
+									placeholder="Add Description here"
+									label="What do you want to do with this Data Set"
+									value={description}
+									setValue={(e) => setDescription(e)}
+									error={!!formErrors.description}
+									errorText={formErrors.description}
+									labelClassName="text-sm font-medium text-primary40"
+								/>
+							</div>
+
+							<div>
+								<p className="text-sm font-medium text-primary40 mb-3">
+									Choose Analysis Type
+								</p>
+								<div className="flex flex-wrap gap-2">
+									{Array.isArray(intent) &&
+										intent.map((useCase, index) => (
+											<span
+												key={useCase.value}
+												onClick={() =>
+													handleSelectUseCase(
+														useCase.value,
+													)
+												}
+												className={`text-sm font-normal text-black/60 px-3 py-1.5 border border-black/10 rounded-[30px] cursor-pointer hover:bg-purple-8 hover:text-purple-100 ${
+													dataSourceIntent.includes(
+														useCase.value,
+													)
+														? 'bg-purple-8 text-purple-100 border-[0.075rem] border-primary'
+														: ''
+												}`}
+											>
+												{useCase?.label}
+											</span>
+										))}
+								</div>
+							</div>
+
+							{files.length !== 0 && (
+								<FileListing
+									files={files}
+									onRemoveFiles={handleRemoveFiles}
+									onDeleteSheet={handleDeleteSheet}
+									onFileSelect={handleFilesSelect}
+									deletingSheets={deletingSheets}
+									deletingFiles={deletingFiles}
+								/>
+							)}
+						</div>
+					)}
+				</>
+			)}
+
+			{/* Render Files and their progress */}
+			{/* <div className="flex-1 overflow-y-auto">
+				{Array.isArray(files) &&
+					files?.map((file, idx) => {
+						const uploadedMeta = uploadedMetadata[file.id];
+						const fileUrl = uploadedMeta?.url || file.url;
+						return (
+							<div
+								className="px-4 py-2.5 z-10 bg-purple-4 rounded-lg mt-2"
+								key={file.name}
+							>
+								<div className="flex justify-between">
+									<div className="flex gap-2 items-center">
+										<img
+											src={getFileIcon(file?.name)}
+											alt="file-icon"
+											className="size-6"
+										/>
+										<div className="text-sm text-purple-100 flex">
+											{file.name || file.file_name}
+											&nbsp;
+											{file.size ? (
+												<p className="text-sm font-medium text-primary80">{`(${formatFileSize(
+													file?.size,
+												)})`}</p>
+											) : null}
+										</div>
+									</div>
+									<div className="flex items-center text-sm font-medium">
+										{progress[file.name] < 100 ? (
+											<p className="mr-4">uploading...</p>
+										) : null}
+										{fileUrl && (
+											<div
+												onClick={(e) =>
+													handleRemoveFile(e, file, idx)
+												}
+												className="text-md px-2 py-1 rounded-md bg-purple-8  hover:bg-purple-8 ml-2"
+											>
+												<i className="bi-x text-xl text-primary80  font-semibold cursor-pointer"></i>
+											</div>
+										)}
+									</div>
+								</div>
+								{progress[file.name] <= 99 ? (
+									<div className="mt-4 h-2 w-full bg-gray-200 rounded-lg overflow-hidden">
+										<div
+											className="h-full bg-purple-100"
+											style={{
+												width: `${progress[file.name]}%`,
+											}}
+										></div>
+									</div>
+								) : null}
+							</div>
+						);
+					})}
+			</div> */}
+		</div>
+	);
+};
+
+export default CreateDatasource;

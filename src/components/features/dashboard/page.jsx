@@ -67,7 +67,6 @@ const Dashboard = () => {
 			}
 		} catch (error) {
 			setIsLoading(false);
-			console.log('dashboard create error', error);
 			logError(error, {
 				feature: 'dashboard',
 				action: 'create-dashboard',

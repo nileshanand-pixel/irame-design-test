@@ -606,6 +606,32 @@
 	.sidenav-transition {
 		transition: all 0.3s ease-in-out;
 	}
+
+	.processing-border {
+		animation: border-angle-rotate 5s infinite linear;
+		border: 0.2rem solid transparent;
+		position: relative;
+
+		background: linear-gradient(white, white) padding-box,
+      conic-gradient(
+          from var(--border-angle),
+          white 5%, #6A12CD0A 50%,
+		  #6A12CD
+        )
+        border-box;
+	}
+
+	@keyframes border-angle-rotate {
+		from { --border-angle: 0deg; }
+		to { --border-angle: 360deg; }
+	}
+
+	@property --border-angle {
+		syntax: "<angle>";
+		initial-value: 0deg;
+		inherits: false;
+	}
+	  
 	
 	@-webkit-keyframes spinner-fade {
 		0% {

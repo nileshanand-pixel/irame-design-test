@@ -17,7 +17,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import InputText from './elements/InputText';
-import { getDataSources } from './features/configuration/service/configuration.service';
+import { getDataSourcesV2 } from './features/configuration/service/configuration.service';
 import { resetChatStore, updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
 import Spinner from './elements/loading/Spinner';
@@ -88,7 +88,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			group: '',
 			items: [
 				{
-					link: '/app/business-process',
+					link: '/app/business-process?source=side_bar',
 					text: 'Business Process',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/workflow_icon.svg',
 					// beta: true,
@@ -111,7 +111,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						),
 				},
 				{
-					link: '/app/reports/datasources',
+					link: '/app/reports/datasources?source=side_bar',
 					text: 'Reports',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/report-icon.svg',
 					// beta: true,
@@ -136,7 +136,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	];
 
 	const fetchDataSources = async () => {
-		const data = await getDataSources();
+		const data = await getDataSourcesV2();
 		dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
 		return Array.isArray(data) ? data : [];
 	};
@@ -157,7 +157,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		if (sessionId === session.session_id) return;
 		dispatch(resetChatStore());
 		navigate(
-			`/app/new-chat/session?sessionId=${session.session_id}&source=side_bar&dataSourceId=${session.datasource_id}`,
+			`/app/new-chat/session?sessionId=${session.session_id}&source=side_bar&datasource_id=${session.datasource_id}`,
 		);
 		dispatch(
 			updateChatStoreProp([
@@ -454,11 +454,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							]),
 						);
 						navigate(
-							`/app/new-chat/session/?sessionId=${workflow.session_id}&source=side_bar&dataSourceId=${workflow.datasource_id}`,
+							`/app/new-chat/session/?sessionId=${workflow.session_id}&source=side_bar&datasource_id=${workflow.datasource_id}`,
 						);
 					} else {
 						navigate(
-							`/app/business-process/${workflow.business_process_id}/workflows/${workflow.workflow_check_id}?run_id=${workflow.external_id}`,
+							`/app/business-process/${workflow.business_process_id}/workflows/${workflow.workflow_check_id}?run_id=${workflow.external_id}&datasource_id=${workflow.datasource_id}`,
 						);
 					}
 				}}
@@ -624,7 +624,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 										to={option.link}
 										key={optionKey}
 										onClick={() => {
-											setActiveTab(option.link);
+											setActiveTab(option.link.split('?')[0]);
 											option?.trackingCall &&
 												option.trackingCall();
 										}}

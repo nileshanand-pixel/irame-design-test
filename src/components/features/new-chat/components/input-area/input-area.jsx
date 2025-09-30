@@ -26,8 +26,8 @@ import { useMentions } from './hooks/use-mentions';
 import { useModalManagement } from './hooks/use-modal-management';
 import { useInputHandlers } from './hooks/use-input-handlers';
 import { pxToRem } from '@/utils/unit-convertor';
-import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 import { useSessionId } from '@/hooks/use-session-id';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	// Refs
@@ -44,13 +44,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 		useInputModes();
 	const [prompt, setPrompt] = useState('');
 
-	const { data: datasourceData } = useDatasourceDetails();
-	const { processedFiles } = useMemo(() => {
-		const ds = datasourceData;
-		return {
-			processedFiles: ds?.processed_files?.files || [],
-		};
-	}, [datasourceData]);
+	const { data: datasourceData } = useDatasourceDetailsV2();
 
 	useEffect(() => {
 		setPrompt('');
@@ -152,8 +146,8 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 						onPromptChange={handlePromptChange}
 						onKeyDown={(event) => handleKeyDown(event, firstActionRef)}
 						disabled={disabled || isEnhancing}
-						files={processedFiles}
-						filesLoading={!processedFiles?.length}
+						files={datasourceData?.files}
+						filesLoading={!datasourceData?.files?.length}
 						dispatch={dispatch}
 						utilReducer={utilReducer}
 						updateUtilProp={updateUtilProp}
@@ -208,7 +202,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 
 				<InputToolbar
 					disabled={disabled}
-					filesLoading={!processedFiles?.length}
+					filesLoading={!datasourceData?.files?.length}
 					isEnhancing={isEnhancing}
 					showStream={showStream}
 					disablePromptEnhancer={disablePromptEnhancer}
