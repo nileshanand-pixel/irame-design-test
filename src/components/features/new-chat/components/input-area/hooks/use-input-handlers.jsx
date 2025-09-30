@@ -34,7 +34,11 @@ export const useInputHandlers = ({
 	);
 
 	const handleSend = useCallback(async () => {
-		if (isEnhancing && mode === 'single') return;
+		if (
+			(isEnhancing && mode === 'single') ||
+			import.meta.env.VITE_QNA_DISABLED === 'true'
+		)
+			return;
 
 		try {
 			const cleanedPrompt = transformMentions(prompt);

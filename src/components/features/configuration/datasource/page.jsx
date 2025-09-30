@@ -286,24 +286,26 @@ const DataSource = () => {
 						<DownloadSimple className="size-5" />
 					)}
 				</Button> */}
-				<Button
-					variant="secondary1"
-					onClick={() => {
-						trackEvent(
-							EVENTS_ENUM.DATASET_START_QUERING_CLICKED,
-							EVENTS_REGISTRY.DATASET_START_QUERING_CLICKED,
-							() => ({
-								dataset_id: datasourceQuery?.data?.datasource_id,
-								dataset_name: datasourceQuery?.data?.name,
-							}),
-						);
-						navigate(
-							`/app/new-chat/?step=3&datasource_id=${query?.id}&source=configuration`,
-						);
-					}}
-				>
-					Start Querying
-				</Button>
+				{!(import.meta.env.VITE_QNA_DISABLED === 'true') && (
+					<Button
+						variant="secondary1"
+						onClick={() => {
+							trackEvent(
+								EVENTS_ENUM.DATASET_START_QUERING_CLICKED,
+								EVENTS_REGISTRY.DATASET_START_QUERING_CLICKED,
+								() => ({
+									dataset_id: datasourceQuery?.data?.datasource_id,
+									dataset_name: datasourceQuery?.data?.name,
+								}),
+							);
+							navigate(
+								`/app/new-chat/?step=3&datasource_id=${query?.id}&source=configuration`,
+							);
+						}}
+					>
+						Start Querying
+					</Button>
+				)}
 				<Button
 					className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
 					onClick={handleEditDataSource}

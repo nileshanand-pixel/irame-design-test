@@ -67,6 +67,7 @@ const Workspace = ({
 					status={answerResp?.status}
 					workspaceHasChanges={workspaceHasChanges}
 					setWorkspaceHasChanges={setWorkspaceHasChanges}
+					canEdit={canEdit}
 				/>
 			),
 		};

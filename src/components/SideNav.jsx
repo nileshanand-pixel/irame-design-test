@@ -581,31 +581,33 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			</div>
 
 			{/* Ask IRA Button */}
-			<div className="flex-none mt-6 mb-6 mx-4">
-				<Hint
-					label="Ask Ira"
-					side="right"
-					align="start"
-					show={!isSideNavOpen}
-				>
-					<Link
-						to={'/app/new-chat?source=side_bar'}
-						onClick={askIra}
-						className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
-							isSideNavOpen
-								? 'rounded-[12.5rem] px-5 py-3'
-								: 'rounded-full px-2 mx-auto py-2'
-						} bg-purple-4`}
+			{!(import.meta.env.VITE_QNA_DISABLED === 'true') && (
+				<div className="flex-none mt-6 mb-6 mx-4">
+					<Hint
+						label="Ask Ira"
+						side="right"
+						align="start"
+						show={!isSideNavOpen}
 					>
-						<img
-							src="https://d2vkmtgu2mxkyq.cloudfront.net/plus.svg"
-							alt="ask-ira"
-							className="size-6"
-						/>
-						{isSideNavOpen && <p>Ask IRA</p>}
-					</Link>
-				</Hint>
-			</div>
+						<Link
+							to={'/app/new-chat?source=side_bar'}
+							onClick={askIra}
+							className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
+								isSideNavOpen
+									? 'rounded-[12.5rem] px-5 py-3'
+									: 'rounded-full px-2 mx-auto py-2'
+							} bg-purple-4`}
+						>
+							<img
+								src="https://d2vkmtgu2mxkyq.cloudfront.net/plus.svg"
+								alt="ask-ira"
+								className="size-6"
+							/>
+							{isSideNavOpen && <p>Ask IRA</p>}
+						</Link>
+					</Hint>
+				</div>
+			)}
 
 			{/* Main Navigation Menu */}
 			<div className="flex-none m-4">

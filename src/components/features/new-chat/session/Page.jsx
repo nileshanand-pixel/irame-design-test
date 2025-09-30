@@ -824,9 +824,10 @@ const Workzone = () => {
 									(item) => item?.query_id === activeQueryId,
 								) || answers?.[0]
 							}
-							canEdit={answers.every(
-								(item) => item?.status === 'done',
-							)}
+							canEdit={
+								!(import.meta.env.VITE_QNA_DISABLED === 'true') &&
+								answers.every((item) => item?.status === 'done')
+							}
 							setWorkspace={setWorkspace}
 						/>
 					</div>

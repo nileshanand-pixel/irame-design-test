@@ -11,6 +11,7 @@ const BulkInputMode = ({
 	onSwitchToSimpleMode,
 }) => {
 	const inputRefs = useRef([]);
+	const isQnaDisabled = import.meta.env.VITE_QNA_DISABLED === 'true';
 
 	useEffect(() => {
 		inputRefs.current = inputRefs.current.slice(0, queries.length);
@@ -101,7 +102,7 @@ const BulkInputMode = ({
 							placeholder="Enter your query here..."
 							ref={(el) => (inputRefs.current[index] = el)}
 							autoFocus={index === queries.length - 1}
-							disabled={disabled}
+							disabled={disabled || isQnaDisabled}
 						/>
 					</div>
 				))}

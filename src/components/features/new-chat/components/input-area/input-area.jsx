@@ -39,6 +39,9 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	const dispatch = useDispatch();
 	const sessionId = useSessionId();
 
+	// QNA Disabled check
+	const isQnaDisabled = import.meta.env.VITE_QNA_DISABLED === 'true';
+
 	// Custom hooks - Core functionality
 	const { mode, queries, setMode, setQueries, handleQueryChange, resetQueries } =
 		useInputModes();
@@ -201,7 +204,7 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 				{renderInputByMode()}
 
 				<InputToolbar
-					disabled={disabled}
+					disabled={disabled || isQnaDisabled}
 					filesLoading={!datasourceData?.files?.length}
 					isEnhancing={isEnhancing}
 					showStream={showStream}

@@ -38,6 +38,7 @@ const SingleInputMode = ({
 	const localInputRef = useRef(null);
 	const actualInputRef = inputRef || localInputRef;
 	const inputContainerRef = useRef(null);
+	const isQnaDisabled = import.meta.env.VITE_QNA_DISABLED === 'true';
 
 	// Observe and reposition suggestions list when it appears
 	useEffect(() => {
@@ -76,11 +77,11 @@ const SingleInputMode = ({
 					onChange={(e) => onPromptChange(e.target.value)}
 					onKeyDown={onKeyDown}
 					placeholder={
-						!disabled
+						!(disabled || isQnaDisabled)
 							? CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER
 							: CHAT_CONSTANTS.IRA_GENERATING_RESPONSE
 					}
-					disabled={disabled}
+					disabled={disabled || isQnaDisabled}
 					inputRef={actualInputRef}
 					className="mentions-input"
 					suggestionsPortalHost={document.getElementById(
