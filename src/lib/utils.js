@@ -7,6 +7,7 @@ import pdfIcon from '@/assets/icons/pdf_icon.svg';
 import imageIcon from '@/assets/icons/image-icon.png';
 import { pdfjs } from 'react-pdf';
 import { supportedChartTypes } from '@/config/supported-graph-types';
+import { logError } from './logger';
 
 export function cn(...inputs) {
 	return twMerge(clsx(inputs));
@@ -94,7 +95,10 @@ export const getPdfPageCount = async (url) => {
 		const pdf = await pdfjs.getDocument(url).promise;
 		return pdf.numPages;
 	} catch (error) {
-		console.error('Error fetching PDF page count:', error);
+		logError(error, {
+			feature: 'utils',
+			action: 'get_pdf_page_count',
+		});
 		return 0; // Fallback in case of an error
 	}
 };

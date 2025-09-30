@@ -11,6 +11,7 @@ import ReportSummary from './ReportSummary';
 import axios from 'axios';
 import axiosClientV1 from '@/lib/axios';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import ActivityTrail from '../components/activity-trail';
 import ReportComments from '../components/report-comments';
 
@@ -78,8 +79,12 @@ const SingleReportPage = () => {
 			link.remove();
 			window.URL.revokeObjectURL(url);
 		} catch (error) {
-			console.error('Failed:', error);
-			toast.success('PDF Download failed', error.message);
+			logError(error, {
+				feature: 'reports',
+				action: 'generate-pdf',
+				reportId,
+			});
+			toast.error('PDF Download failed', error.message);
 		}
 	};
 

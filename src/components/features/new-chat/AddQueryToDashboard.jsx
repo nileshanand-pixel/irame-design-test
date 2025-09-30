@@ -18,6 +18,7 @@ import { useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from '@/hooks/useRouter';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
 import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
@@ -96,6 +97,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 				}));
 			})
 			.catch((err) => {
+				logError(err, { feature: 'chat', action: 'add-query-to-dashboard' });
 				toast.error('Something went wrong while adding query to dashboard');
 			})
 			.finally(() => {

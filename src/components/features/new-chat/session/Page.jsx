@@ -28,6 +28,7 @@ import { WorkspaceEnum } from '../types/new-chat.enum';
 import ReportGenerationDialog from './components/ReportGenerationDialog';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
+import { logError } from '@/lib/logger';
 import AddQueryFlow from '../../reports/components/AddQueryFlow';
 import { getLocalStorage, setLocalStorage } from '@/utils/local-storage';
 import { sendChatSessionStartedEvent } from '@/utils/chat';
@@ -50,11 +51,7 @@ const Workzone = () => {
 	const [doingScience, setDoingScience] = useState([]);
 
 	// React Query for fetching session data
-	const {
-		data: sessionQueriesData,
-		isLoading: isQueriesLoading,
-		error: queriesError,
-	} = useQuery({
+	const { data: sessionQueriesData, isLoading: isQueriesLoading } = useQuery({
 		queryKey: ['chat', 'session', currentSessionId, 'queries'],
 		queryFn: () => getSessionQueries(currentSessionId),
 		enabled: !!currentSessionId,
@@ -67,6 +64,22 @@ const Workzone = () => {
 			return hasPendingQueries ? 5000 : false;
 		},
 		refetchIntervalInBackground: true,
+		onError: (error) => {
+			logError(error, {
+				feature: 'chat',
+				action: 'fetch-session-queries',
+			});
+			resetDoingScience(false);
+			setIsGraphLoading(false);
+			setInputDisabled(false);
+			setBanners((prevState) => ({
+				...prevState,
+				showDelay: false,
+				showFailedResponse: true,
+			}));
+			clearPolling();
+			navigate('/app/new-chat');
+		},
 	});
 
 	// Process session data callback
@@ -385,6 +398,7 @@ const Workzone = () => {
 			setPrompt('');
 		} catch (error) {
 			console.log(error);
+			logError(error, { feature: 'chat', action: 'append-query' });
 			setPrompt('');
 		} finally {
 			setInputDisabled(false);
@@ -460,6 +474,7 @@ const Workzone = () => {
 			}));
 		} catch (error) {
 			console.log(error);
+			logError(error, { feature: 'chat', action: 'regenerate-response' });
 		}
 	};
 
@@ -499,6 +514,7 @@ const Workzone = () => {
 		} catch (error) {
 			setDashboard((prev) => ({ ...prev, isCreating: false }));
 			console.log('dashboard create error', error);
+			logError(error, { feature: 'chat', action: 'create-dashboard' });
 			toast.error('Something went wrong while creating dashboard');
 		}
 	};

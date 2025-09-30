@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { logError } from '@/lib/logger';
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
 import {
@@ -88,13 +89,25 @@ const PreviewTable = ({
 
 					setPreviewData(formattedData);
 				} else {
-					console.error(`Worksheet "${sheetName}" not found in the file.`);
+					logError(
+						new Error(`Worksheet "${sheetName}" not found in the file.`),
+						{
+							feature: 'configuration',
+							action: 'previewtable-sheet-missing',
+						},
+					);
 				}
 			} else {
-				console.error('Unsupported file type.');
+				logError(new Error('Unsupported file type.'), {
+					feature: 'configuration',
+					action: 'previewtable-unsupported-file',
+				});
 			}
 		} catch (error) {
-			console.error('Error fetching data:', error);
+			logError(error, {
+				feature: 'configuration',
+				action: 'previewtable-fetch-data',
+			});
 		}
 	};
 

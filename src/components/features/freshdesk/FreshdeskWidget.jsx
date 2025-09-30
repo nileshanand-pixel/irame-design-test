@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getFreshdeskToken } from './service/freshdesk.service';
 import useAuth from '@/hooks/useAuth';
+import { logError } from '@/lib/logger';
 
 const WIDGET_ID = import.meta.env.VITE_WIDGET_ID;
 const WIDGET_SCRIPT_URL = `https://ind-widget.freshworks.com/widgets/${WIDGET_ID}.js`;
@@ -46,7 +47,11 @@ const FreshdeskWidget = () => {
 			try {
 				return await getFreshdeskToken();
 			} catch (error) {
-				console.error('Failed to authenticate', error);
+				logError(error, {
+					feature: 'freshdesk',
+					action: 'authenticate',
+					extra: { errorMessage: error.message },
+				});
 				return null;
 			}
 		};

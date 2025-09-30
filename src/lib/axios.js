@@ -2,6 +2,7 @@ import axios from 'axios';
 import { ensureCleanup } from '@/components/features/login/service/auth.service';
 import { serviceUrlMap } from '@/config/url.config';
 import { STAGE_APP_TOKEN } from '@/config';
+import { logError } from './logger';
 
 let isLoggingOut = false;
 
@@ -33,6 +34,20 @@ const setupInterceptors = (axiosClient) => {
 			return response;
 		},
 		async (error) => {
+			// Log HTTP errors to Sentry (except 401 as they're expected for auth flow)
+			if (error.response && error.response.status !== 401) {
+				logError(error, {
+					feature: 'http_client',
+					action: 'api_request_failed',
+					extra: {
+						status: error.response?.status,
+						statusText: error.response?.statusText,
+						method: error.config?.method,
+						baseURL: error.config?.baseURL,
+					},
+				});
+			}
+
 			if (error.response && error.response.status === 401 && !isLoggingOut) {
 				isLoggingOut = true;
 				await ensureCleanup();

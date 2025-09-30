@@ -8,6 +8,7 @@ import EmptyState from '@/components/elements/EmptyState';
 import { getBusinessProcesses } from './service/workflow.service';
 import BusinessProcessPageSkeleton from './BusinessProcessPageSkeleton';
 import BusinessProcessCard from './BusinessProcessCard';
+import { logError } from '@/lib/logger';
 
 const SearchBar = ({ value, onChange }) => (
 	<div className="flex items-center bg-white border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300 w-[18.75rem]">
@@ -37,6 +38,16 @@ const BusinessProcessPage = () => {
 	const { data, isLoading } = useQuery({
 		queryKey: ['get-business-processes'],
 		queryFn: () => getBusinessProcesses(),
+		onError: (error) => {
+			logError(error, {
+				feature: 'businessProcess',
+				action: 'fetchBusinessProcesses',
+				extra: {
+					errorMessage: error.message,
+					status: error.response?.status,
+				},
+			});
+		},
 	});
 
 	useEffect(() => {

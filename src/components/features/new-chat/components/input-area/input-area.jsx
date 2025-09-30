@@ -9,6 +9,7 @@ import React, {
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { createPortal } from 'react-dom';
 
 import SingleInputMode from './modes/single-input-mode';
@@ -189,7 +190,10 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 									setShowModal(false);
 								}
 							} catch (error) {
-								console.error('Error selecting template:', error);
+								logError(error, {
+									feature: 'chat',
+									action: 'select-template',
+								});
 								toast.error(
 									'Failed to load template. Please try again.',
 								);
@@ -212,7 +216,10 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 						try {
 							enhancePrompt(prompt, setPrompt);
 						} catch (error) {
-							console.error('Error enhancing prompt:', error);
+							logError(error, {
+								feature: 'chat',
+								action: 'enhance-prompt',
+							});
 							toast.error(
 								'Failed to enhance prompt. Please try again.',
 							);

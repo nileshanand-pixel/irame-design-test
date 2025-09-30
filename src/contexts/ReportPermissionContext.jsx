@@ -1,4 +1,5 @@
 import React, { createContext, useContext } from 'react';
+import { logError } from '@/lib/logger';
 
 const ReportPermissionContext = createContext({
 	isOwner: false,
@@ -11,7 +12,11 @@ export const ReportPermissionProvider = ({ report, children }) => {
 		const authData = localStorage.getItem('userDetails');
 		user = authData ? JSON.parse(authData) : null;
 	} catch (error) {
-		console.error('Error parsing userDetails', error);
+		logError(error, {
+			feature: 'reportPermission',
+			action: 'parseUserDetails',
+			extra: { errorMessage: error.message },
+		});
 	}
 
 	// Each report has a user_id and the logged in user's id is in auth-user-data.user_id

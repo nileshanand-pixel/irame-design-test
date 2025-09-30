@@ -6,6 +6,7 @@ import { toast } from '@/lib/toast';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { RISK_LEVEL_CONFIG } from '@/config/risks';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
+import { logError } from '@/lib/logger';
 
 export const RiskLevelDropdown = ({ value, riskTypes, reportId, reportCardId }) => {
 	const [riskLevel, setRiskLevel] = useState(value);
@@ -17,7 +18,18 @@ export const RiskLevelDropdown = ({ value, riskTypes, reportId, reportCardId }) 
 			queryClient.invalidateQueries(['report-details', reportId]);
 			toast.success('Query risks updated');
 		},
-		onError: () => toast.error('Failed to update query risks'),
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'updateRiskLevel',
+				extra: {
+					reportId,
+					reportCardId,
+					errorMessage: error.message,
+				},
+			});
+			toast.error('Failed to update query risks');
+		},
 	});
 
 	const handleRiskLevelChange = (newRiskLevel) => {

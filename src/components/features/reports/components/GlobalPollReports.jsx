@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getReports } from '@/components/features/reports/service/reports.service';
 import useAuth from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { logError } from '@/lib/logger';
 
 const GlobalPollReports = () => {
 	const [previousReports, setPreviousReports] = useState([]);
@@ -64,6 +65,10 @@ const GlobalPollReports = () => {
 				// Update the previous reports reference with the latest data
 				setPreviousReports([...currentReports]);
 			} catch (error) {
+				logError(error, {
+					feature: 'reports',
+					action: 'poll-reports',
+				});
 				console.log(error);
 			}
 		};

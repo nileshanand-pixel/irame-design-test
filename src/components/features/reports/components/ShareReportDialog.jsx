@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getReportAccessDetails, shareReport } from '../service/reports.service';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import AccessSkeletonList from './AccessSkeleton';
 import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
@@ -62,6 +63,11 @@ const ShareReportDialog = React.memo(() => {
 			handleClose();
 		},
 		onError: (err) => {
+			logError(err, {
+				feature: 'reports',
+				action: 'share-report',
+				reportId,
+			});
 			toast.error('Something went wrong while sharing report');
 		},
 	});
@@ -125,6 +131,11 @@ const ShareReportDialog = React.memo(() => {
 				updateAuthStoreProp([{ key: 'user_id', value: currentuser_id }]),
 			);
 		if (selectedReport?.user_id !== currentuser_id) {
+			logError(new Error('User attempted to share report they do not own'), {
+				feature: 'reports',
+				action: 'share-report-unauthorized',
+				reportId,
+			});
 			toast.error('You are not authorized for this operation!');
 			setInvitedEmails([]);
 			return;

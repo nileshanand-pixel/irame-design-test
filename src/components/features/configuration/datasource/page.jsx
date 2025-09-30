@@ -10,6 +10,7 @@ import {
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { queryClient } from '@/lib/react-query';
 import DataSourceSkeleton from './DatasourceSkeleton';
 import BackdropLoader from '@/components/elements/loading/BackDropLoader';
@@ -52,6 +53,11 @@ const DataSource = () => {
 			navigate('/app/configuration?source=configuration');
 		},
 		onError: (err) => {
+			logError(err, {
+				feature: 'configuration',
+				action: 'delete-datasource',
+				datasource_id: datasourceQuery?.data?.datasource_id,
+			});
 			trackEvent(
 				EVENTS_ENUM.DATASET_DELETION_FAILED,
 				EVENTS_REGISTRY.DATASET_DELETION_FAILED,
@@ -62,7 +68,13 @@ const DataSource = () => {
 					...getErrorAnalyticsProps(err),
 				}),
 			);
-			console.error('Error deleting data source', err);
+			logError(err, {
+				feature: 'datasource',
+				action: 'delete_datasource',
+				extra: {
+					datasource_id: datasourceQuery?.data?.datasource_id,
+				},
+			});
 			toast.error('Something went wrong while deleting Data source');
 		},
 	});
@@ -151,6 +163,13 @@ const DataSource = () => {
 				}),
 			);
 			// console.log('Error updating data source', err);
+			logError(err, {
+				feature: 'datasource',
+				action: 'update_datasource',
+				extra: {
+					datasource_id: datasourceQuery?.data?.datasource_id,
+				},
+			});
 			toast.error(
 				'Something went wrong while updating Data source ' + err.message,
 			);

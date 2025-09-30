@@ -5,18 +5,23 @@
  */
 
 import axiosClientV1 from './axios';
+import { logError } from './logger';
 
-export async function getFileMeta(file_url) {
+export const getFileMetadata = async (fileUrl) => {
 	try {
-		const response = await axiosClientV1.get('/files/file-metadata', {
-			params: { file_url: file_url },
-		});
-		return { size: response?.data?.content_length || 0 };
+		const response = await axiosClientV1.head(fileUrl);
+		return {
+			size: response.headers['content-length'],
+			type: response.headers['content-type'],
+		};
 	} catch (err) {
-		console.error('Error fetching file metadata:', err);
-		return { size: null, type: '' };
+		logError(err, {
+			feature: 'file_utils',
+			action: 'get_file_metadata',
+		});
+		throw err;
 	}
-}
+};
 
 /**
  * Converts a file type to a human-readable label.

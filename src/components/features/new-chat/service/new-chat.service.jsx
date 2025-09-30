@@ -1,5 +1,6 @@
 import axiosClientV1 from '@/lib/axios';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import axios from 'axios';
 import FormData from 'form-data';
 import { DEFAULT_ENHANCE_MODE, rolesConfig } from '@/config/enhance-prompt';
@@ -60,6 +61,7 @@ export const deleteSession = async (sessionId) => {
 
 		return response.data;
 	} catch (error) {
+		logError(error, { feature: 'chat', action: 'delete-session' });
 		toast.error('Failed to delete session');
 		throw error;
 	}
@@ -76,6 +78,7 @@ export const getQueriesOfSession = async (sessionId) => {
 		});
 		return response.data;
 	} catch (error) {
+		logError(error, { feature: 'chat', action: 'get-session' });
 		toast.error('Failed to get session');
 		throw error;
 	}
@@ -95,6 +98,7 @@ export const getTemplate = async (templateId) => {
 		});
 		return response.data;
 	} catch (error) {
+		logError(error, { feature: 'chat', action: 'get-template' });
 		toast.error('Failed to get session');
 		throw error;
 	}
@@ -107,6 +111,7 @@ export const saveTemplate = async (data) => {
 		});
 		return response.data;
 	} catch (error) {
+		logError(error, { feature: 'chat', action: 'save-template' });
 		toast.error('Failed to save template');
 		throw error;
 	}
@@ -119,6 +124,7 @@ export const getTemplates = async () => {
 		});
 		return response.data;
 	} catch (error) {
+		logError(error, { feature: 'chat', action: 'get-templates' });
 		toast.error('Failed to get saved Templates');
 		throw error;
 	}
@@ -135,6 +141,7 @@ export const editTemplate = async (templateId, data) => {
 		);
 		return response.data;
 	} catch (error) {
+		logError(error, { feature: 'chat', action: 'edit-template' });
 		toast.error('Failed to update Template');
 		throw error;
 	}
@@ -147,6 +154,7 @@ export const deleteTemplate = async (templateId) => {
 		});
 		return response.data;
 	} catch (error) {
+		logError(error, { feature: 'chat', action: 'delete-template' });
 		toast.error('Failed to delete Template');
 		throw error;
 	}
@@ -173,6 +181,7 @@ export const enhancePrompt = async (userInput, mode = DEFAULT_ENHANCE_MODE) => {
 		return response.data;
 	} catch (error) {
 		console.log(error);
+		logError(error, { feature: 'chat', action: 'enhance-prompt' });
 		toast.error('Failed to enhance query');
 		throw error;
 	}

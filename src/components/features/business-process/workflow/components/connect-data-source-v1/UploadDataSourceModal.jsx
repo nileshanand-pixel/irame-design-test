@@ -9,6 +9,7 @@ import axios from 'axios';
 import PropTypes from 'prop-types';
 
 import { uploadFile as uploadFileHelper } from '@/components/features/configuration/service/configuration.service';
+import { logError } from '@/lib/logger';
 const gradientStyle = {
 	background: `
 linear-gradient(180deg, rgba(106, 18, 205, 0.02) 0%, rgba(106, 18, 205, 0.08) 100%)`,
@@ -112,7 +113,10 @@ export default function UploadDataSourceModal({
 			setUploadedMetadata((prev) => ({ ...prev, [file.name]: data }));
 		} catch (err) {
 			if (!axios.isCancel(err)) {
-				console.error(`Error uploading file ${file.name}`, err);
+				logError(err, {
+					feature: 'UploadDataSourceModal',
+					action: 'uploadFile',
+				});
 				setProgress((prev) => ({ ...prev, [file.name]: 0 }));
 			}
 		}

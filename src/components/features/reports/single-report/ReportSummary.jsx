@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import GradientSpinner from '@/components/elements/loading/GradientSpinner';
 import { generateReportSummary, getReportSummary } from '../service/reports.service';
 import { useReportId } from '../hooks/useReportId';
@@ -71,6 +72,11 @@ export default function ReportSummary() {
 			refetchReport();
 		},
 		onError: (err) => {
+			logError(err, {
+				feature: 'reports',
+				action: 'generate-summary',
+				reportId,
+			});
 			toast.error('Failed to start summary', { description: err.message });
 			setStatus('error');
 		},

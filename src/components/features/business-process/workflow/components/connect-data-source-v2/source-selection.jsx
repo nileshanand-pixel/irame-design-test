@@ -36,12 +36,13 @@ import {
 	restartWorkflowCheckV2,
 } from '../../../service/workflow.service';
 import { queryClient } from '@/lib/react-query';
-import { getFileMeta, labelForType } from '@/lib/file';
+import { getFileMetadata, labelForType } from '@/lib/file';
 import { useWorkflowRunId } from '../../../hooks/use-workflow-run-id';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useBusinessProcessId } from '../../../hooks/use-business-process-id';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import useDatasourceDetails from '@/api/datasource/hooks/useDataSourceDetails';
 
 // ---------------------  generic helpers  ------------------------------
@@ -179,7 +180,7 @@ export const SourceSelection = ({
 			// A. flatten files from AI datasource
 			const aiFiles = await Promise.all(
 				(aiDatasource.processed_files?.files ?? []).map(async (f) => {
-					const fileMeta = await getFileMeta(f.url);
+					const fileMeta = await getFileMetadata(f.url);
 
 					// Determine type based on metadata
 					const fileType = getFileType(f);
@@ -342,7 +343,7 @@ export const SourceSelection = ({
 		const files = ds?.processed_files?.files || [];
 		const dsFiles = await Promise.all(
 			files.map(async (file) => {
-				const meta = await getFileMeta(file.url);
+				const meta = await getFileMetadata(file.url);
 				const fileType = getFileType(file);
 
 				return {
@@ -438,7 +439,14 @@ export const SourceSelection = ({
 				);
 			}
 		},
-		onError: (err) => toast.error(`Workflow check failed: ${err.message}`),
+		onError: (err) => {
+			logError(err, {
+				feature: 'workflow',
+				action: 'validate-workflow-check',
+				workflowId,
+			});
+			toast.error(`Workflow check failed: ${err.message}`);
+		},
 	});
 
 	const handleValidate = () => {

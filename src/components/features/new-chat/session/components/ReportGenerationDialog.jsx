@@ -51,6 +51,7 @@ const ReportGenerationDialog = React.memo(({ open, setOpen, closeModal }) => {
 		},
 		onError: (err) => {
 			console.log('Error in Generating Report', err);
+			logError(err, { feature: 'chat', action: 'generate-report' });
 			toast.error('Something went wrong while generating report');
 			queryClient.invalidateQueries(['get-session-reports'], {
 				refetchActive: true,

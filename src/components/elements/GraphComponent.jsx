@@ -9,6 +9,7 @@ import GraphRenderer from './GraphRenderer';
 import ScrollList from './ScrollList';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { logError } from '@/lib/logger';
 import { getSupportedGraphs } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import { RESPONSE_CARD_VIEWS } from '@/constants/chat.constant';
@@ -66,7 +67,14 @@ const GraphComponent = ({
 					setLoadedData(csvData);
 					setColumns(generateColumns(Object.keys(csvData[0])));
 				} catch (error) {
-					console.error('Error loading CSV data:', error);
+					logError(error, {
+						feature: 'graphComponent',
+						action: 'loadCSVData',
+						extra: {
+							url,
+							errorMessage: error.message,
+						},
+					});
 				} finally {
 					setIsGraphLoading(false);
 				}

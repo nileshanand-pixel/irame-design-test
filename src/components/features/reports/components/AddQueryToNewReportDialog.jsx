@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { useMutation } from '@tanstack/react-query';
 import CustomSelect from '@/components/elements/CustomSelect';
 import { createReportAndAddQuery } from '../service/reports.service';
@@ -81,7 +82,12 @@ const AddQueryToNewReportDialog = ({
 			onSuccessCloseAll();
 		},
 
-		onError: () => {
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'create-report-and-add-query',
+				queryId,
+			});
 			toast.error('Failed to create report!');
 		},
 	});

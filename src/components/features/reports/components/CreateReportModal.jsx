@@ -12,6 +12,7 @@ import { closeModal } from '@/redux/reducer/modalReducer';
 import { Label } from '@/components/ui/label';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { Loader2 } from 'lucide-react'; // assuming you're using lucide-react for icons
 import { createReport } from '../service/reports.service';
 import { queryClient } from '@/lib/react-query';
@@ -38,7 +39,11 @@ const CreateReportModal = () => {
 			queryClient.invalidateQueries(['user-reports']);
 			// TODO: navigate to report page
 		},
-		onError: () => {
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'create-report',
+			});
 			toast.error('Something went wrong while creating report');
 		},
 	});

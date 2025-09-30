@@ -6,6 +6,8 @@ import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import TooltipWrapper from '@/components/elements/TooltipWrapper';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 import { queryClient } from '@/lib/react-query';
 import MultiGraphCard from './MultiGraphCard';
 import { trackEvent } from '@/lib/mixpanel';
@@ -30,6 +32,14 @@ const DashboardDetailsPage = () => {
 	const dashboardDetailsQuery = useQuery({
 		queryKey: ['dashboard-details'],
 		queryFn: () => getDashboardContent(query.id),
+		onError: (error) => {
+			logError(error, {
+				feature: 'dashboard',
+				action: 'fetch-dashboard-content',
+				id: query?.id,
+			});
+			toast.error('Something went wrong while loading dashboard content');
+		},
 	});
 	const handleItemClick = (item) => {
 		scrollToElement();
