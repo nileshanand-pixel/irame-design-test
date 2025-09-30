@@ -30,16 +30,6 @@ const Dashboard = () => {
 	const userDashboardQuery = useQuery({
 		queryKey: ['user-dashboard'],
 		queryFn: () => getUserDashboard(),
-		onError: (error) => {
-			logError(error, {
-				feature: 'dashboard',
-				action: 'fetchUserDashboard',
-				extra: {
-					errorMessage: error.message,
-					status: error.response?.status,
-				},
-			});
-		},
 	});
 
 	const handleCreateNewDashboard = async () => {
@@ -95,6 +85,20 @@ const Dashboard = () => {
 			setDashboard(userDashboardQuery.data || []);
 		}
 	}, [refetch, userDashboardQuery.data]);
+
+	// Handle user dashboard query errors
+	useEffect(() => {
+		if (userDashboardQuery.error) {
+			logError(userDashboardQuery.error, {
+				feature: 'dashboard',
+				action: 'fetchUserDashboard',
+				extra: {
+					errorMessage: userDashboardQuery.error.message,
+					status: userDashboardQuery.error.response?.status,
+				},
+			});
+		}
+	}, [userDashboardQuery.error]);
 
 	useEffect(() => {
 		setErrors({});

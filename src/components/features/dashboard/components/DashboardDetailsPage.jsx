@@ -32,14 +32,6 @@ const DashboardDetailsPage = () => {
 	const dashboardDetailsQuery = useQuery({
 		queryKey: ['dashboard-details'],
 		queryFn: () => getDashboardContent(query.id),
-		onError: (error) => {
-			logError(error, {
-				feature: 'dashboard',
-				action: 'fetch-dashboard-content',
-				id: query?.id,
-			});
-			toast.error('Something went wrong while loading dashboard content');
-		},
 	});
 	const handleItemClick = (item) => {
 		scrollToElement();
@@ -139,6 +131,18 @@ const DashboardDetailsPage = () => {
 			});
 		};
 	}, [query, dashboardDetailsQuery.data]);
+
+	// Handle dashboard details query errors
+	useEffect(() => {
+		if (dashboardDetailsQuery.error) {
+			logError(dashboardDetailsQuery.error, {
+				feature: 'dashboard',
+				action: 'fetch-dashboard-content',
+				id: query?.id,
+			});
+			toast.error('Something went wrong while loading dashboard content');
+		}
+	}, [dashboardDetailsQuery.error]);
 
 	return (
 		<div className="w-full h-full px-8" ref={elementRef}>

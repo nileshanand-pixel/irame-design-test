@@ -25,48 +25,18 @@ const ReportFolders = () => {
 		queryKey: ['get-datasources-reports'],
 		queryFn: () => getDatasourcesByReports(),
 		refetchInterval: 10000,
-		onError: (error) => {
-			logError(error, {
-				feature: 'reports',
-				action: 'fetchDatasources',
-				extra: {
-					errorMessage: error.message,
-					status: error.response?.status,
-				},
-			});
-		},
 	});
 
 	const sharedReportsQuery = useQuery({
 		queryKey: ['get-shared-reports'],
 		queryFn: () => getSharedReports(),
 		refetchInterval: 600000,
-		onError: (error) => {
-			logError(error, {
-				feature: 'reports',
-				action: 'fetchSharedReports',
-				extra: {
-					errorMessage: error.message,
-					status: error.response?.status,
-				},
-			});
-		},
 	});
 
 	const userAuditReports = useQuery({
 		queryKey: ['user-reports'],
 		queryFn: () => getUserReports(),
 		refetchInterval: 600000,
-		onError: (error) => {
-			logError(error, {
-				feature: 'reports',
-				action: 'fetchUserReports',
-				extra: {
-					errorMessage: error.message,
-					status: error.response?.status,
-				},
-			});
-		},
 	});
 
 	const filteredList = useMemo(() => {
@@ -107,6 +77,48 @@ const ReportFolders = () => {
 
 		setDatasources(folders);
 	}, [datasourcesQuery.data, sharedReportsQuery.data, userAuditReports.data]);
+
+	// Handle datasources query errors
+	useEffect(() => {
+		if (datasourcesQuery.error) {
+			logError(datasourcesQuery.error, {
+				feature: 'reports',
+				action: 'fetchDatasources',
+				extra: {
+					errorMessage: datasourcesQuery.error.message,
+					status: datasourcesQuery.error.response?.status,
+				},
+			});
+		}
+	}, [datasourcesQuery.error]);
+
+	// Handle shared reports query errors
+	useEffect(() => {
+		if (sharedReportsQuery.error) {
+			logError(sharedReportsQuery.error, {
+				feature: 'reports',
+				action: 'fetchSharedReports',
+				extra: {
+					errorMessage: sharedReportsQuery.error.message,
+					status: sharedReportsQuery.error.response?.status,
+				},
+			});
+		}
+	}, [sharedReportsQuery.error]);
+
+	// Handle user audit reports query errors
+	useEffect(() => {
+		if (userAuditReports.error) {
+			logError(userAuditReports.error, {
+				feature: 'reports',
+				action: 'fetchUserReports',
+				extra: {
+					errorMessage: userAuditReports.error.message,
+					status: userAuditReports.error.response?.status,
+				},
+			});
+		}
+	}, [userAuditReports.error]);
 
 	const emptyStateConfig = {
 		image: 'https://d2vkmtgu2mxkyq.cloudfront.net/empty-state.svg',

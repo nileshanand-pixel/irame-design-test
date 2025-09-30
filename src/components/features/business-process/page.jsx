@@ -35,10 +35,20 @@ const BusinessProcessPage = () => {
 	const [search, setSearch] = useState('');
 	const navigate = useNavigate();
 
-	const { data, isLoading } = useQuery({
+	const { data, isLoading, error } = useQuery({
 		queryKey: ['get-business-processes'],
 		queryFn: () => getBusinessProcesses(),
-		onError: (error) => {
+	});
+
+	useEffect(() => {
+		if (data) {
+			setProcesses(data.processes || []);
+		}
+	}, [data]);
+
+	// Handle business processes query errors
+	useEffect(() => {
+		if (error) {
 			logError(error, {
 				feature: 'businessProcess',
 				action: 'fetchBusinessProcesses',
@@ -47,14 +57,8 @@ const BusinessProcessPage = () => {
 					status: error.response?.status,
 				},
 			});
-		},
-	});
-
-	useEffect(() => {
-		if (data) {
-			setProcesses(data.processes || []);
 		}
-	}, [data]);
+	}, [error]);
 
 	const filteredProcesses = useMemo(() => {
 		if (!search) return processes;

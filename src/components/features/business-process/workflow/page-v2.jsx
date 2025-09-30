@@ -13,7 +13,6 @@ import {
 import Breadcrumb from './components/BreadCrumb';
 import WorkflowDetails from './components/WorkflowDetails';
 import { logError } from '@/lib/logger';
-import DataSourceCard from './components/connect-data-source-v2/data-source-card';
 import WorkflowPlan from './components/WorkflowPlan';
 import { queryClient } from '@/lib/react-query';
 import { toast } from '@/lib/toast';

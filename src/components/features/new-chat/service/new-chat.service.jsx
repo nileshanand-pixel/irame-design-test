@@ -78,17 +78,9 @@ export const getQueriesOfSession = async (sessionId) => {
 		});
 		return response.data;
 	} catch (error) {
-		logError(error, { feature: 'chat', action: 'get-session' });
 		toast.error('Failed to get session');
 		throw error;
 	}
-};
-
-export const getSessionQueries = async (sessionId) => {
-	if (!sessionId) {
-		throw new Error('Session ID is required');
-	}
-	return await getQueriesOfSession(sessionId);
 };
 
 export const getTemplate = async (templateId) => {

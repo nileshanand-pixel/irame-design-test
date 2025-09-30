@@ -244,19 +244,6 @@ const NewChat = () => {
 	} = useQuery({
 		queryKey: ['data-sources'],
 		queryFn: () => getDataSourcesV2(),
-		onSuccess: (data) => {
-			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
-		},
-		onError: (error) => {
-			logError(error, {
-				feature: 'chat',
-				action: 'fetchDataSources',
-				extra: {
-					errorMessage: error.message,
-					status: error.response?.status,
-				},
-			});
-		},
 	});
 
 	const findDataSourceById = useMemo(() => {
@@ -347,6 +334,27 @@ const NewChat = () => {
 			setDoingScience(true);
 		}
 	}, [utilReducer?.dataSources, utilReducer?.resetChat]);
+
+	// Handle data sources query success
+	useEffect(() => {
+		if (dataSources) {
+			dispatch(updateUtilProp([{ key: 'dataSources', value: dataSources }]));
+		}
+	}, [dataSources, dispatch]);
+
+	// Handle data sources query errors
+	useEffect(() => {
+		if (error) {
+			logError(error, {
+				feature: 'chat',
+				action: 'fetchDataSources',
+				extra: {
+					errorMessage: error.message,
+					status: error.response?.status,
+				},
+			});
+		}
+	}, [error]);
 
 	return (
 		<div className="flex flex-col relative w-[70%] pt-10">

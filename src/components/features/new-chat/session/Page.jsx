@@ -3,7 +3,7 @@ import { useRouter } from '@/hooks/useRouter';
 import { cn, getInitials } from '@/lib/utils';
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { createQuery, getSessionQueries } from '../service/new-chat.service';
+import { createQuery, getQueriesOfSession } from '../service/new-chat.service';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -51,9 +51,13 @@ const Workzone = () => {
 	const [doingScience, setDoingScience] = useState([]);
 
 	// React Query for fetching session data
-	const { data: sessionQueriesData, isLoading: isQueriesLoading } = useQuery({
+	const {
+		data: sessionQueriesData,
+		isLoading: isQueriesLoading,
+		error: sessionQueryError,
+	} = useQuery({
 		queryKey: ['chat', 'session', currentSessionId, 'queries'],
-		queryFn: () => getSessionQueries(currentSessionId),
+		queryFn: () => getQueriesOfSession(currentSessionId),
 		enabled: !!currentSessionId,
 		refetchInterval: (query) => {
 			// If there are any queries that are not 'done', keep polling
@@ -64,22 +68,6 @@ const Workzone = () => {
 			return hasPendingQueries ? 5000 : false;
 		},
 		refetchIntervalInBackground: true,
-		onError: (error) => {
-			logError(error, {
-				feature: 'chat',
-				action: 'fetch-session-queries',
-			});
-			resetDoingScience(false);
-			setIsGraphLoading(false);
-			setInputDisabled(false);
-			setBanners((prevState) => ({
-				...prevState,
-				showDelay: false,
-				showFailedResponse: true,
-			}));
-			clearPolling();
-			navigate('/app/new-chat');
-		},
 	});
 
 	// Process session data callback
@@ -184,6 +172,26 @@ const Workzone = () => {
 		}
 	}, [sessionQueriesData, processSessionData]);
 
+	// Handle session query errors
+	useEffect(() => {
+		if (sessionQueryError) {
+			logError(sessionQueryError, {
+				feature: 'chat',
+				action: 'fetch-session-queries',
+			});
+			resetDoingScience(false);
+			setIsGraphLoading(false);
+			setInputDisabled(false);
+			setBanners((prevState) => ({
+				...prevState,
+				showDelay: false,
+				showFailedResponse: true,
+			}));
+			clearPolling();
+			navigate('/app/new-chat');
+		}
+	}, [sessionQueryError]);
+
 	const intervalRef = useRef();
 	const scrollRef = useRef();
 
@@ -248,6 +256,18 @@ const Workzone = () => {
 	};
 
 	const { data: datasourceData } = useDatasourceDetailsV2();
+	const { rawFiles } = useMemo(() => {
+		const ds = datasourceData;
+		return {
+			rawFiles:
+				ds?.files.map((file) => ({
+					name: file.filename,
+					type: file.type,
+					id: file.id,
+					url: file.url,
+				})) || [],
+		};
+	}, [datasourceData]);
 
 	const handleTabClick = (tab) => {
 		if (tab === 'planner') {
