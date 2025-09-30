@@ -30,6 +30,16 @@ const ExcelFileContent = ({
 
 	const { data: datasourceData } = useDatasourceDetailsV2();
 
+	const getDefaultSelectedColumns = () => {
+		const keysToCheck = file?.sheetKeys || [file?.id];
+		for (const key of keysToCheck) {
+			if (selectedColumns[key] && selectedColumns[key].length > 0) {
+				return selectedColumns[key];
+			}
+		}
+		return [];
+	};
+
 	return (
 		<div className="flex flex-wrap gap-2 mt-4 rounded-lg py-2.5">
 			<MultiSelect
@@ -37,7 +47,7 @@ const ExcelFileContent = ({
 					label: column.name,
 					value: column.name,
 				}))}
-				defaultValue={selectedColumns[file?.id]}
+				defaultValue={getDefaultSelectedColumns()}
 				onValueChange={(newSelectedColumns) => {
 					if (!canEdit || editDisabled) return;
 					const newEditedFileNames = [...editedFileNames];
@@ -163,6 +173,11 @@ const SourceComponent = ({
 							filename: `${file?.filename?.split('.')?.[0]}(${sheet?.worksheet}).csv`,
 							...sheet,
 							id: file?.filename + ' - ' + sheet?.worksheet,
+							sheetKeys: [
+								sheet?.id,
+								file?.filename + ' - ' + sheet?.worksheet,
+								sheet?.worksheet,
+							],
 						};
 					});
 				} else {
