@@ -84,7 +84,6 @@ const ResponseCard = ({
 		const isQueryDone = answerResp?.status === 'done';
 		const isQnaEnabled = !(import.meta.env.VITE_QNA_DISABLED === 'true');
 		const isNotProcessing = !doingScience;
-		const isLastQuery = isLastQuery;
 
 		return {
 			// Content availability

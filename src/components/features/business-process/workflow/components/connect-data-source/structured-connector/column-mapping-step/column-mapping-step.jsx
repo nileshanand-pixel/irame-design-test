@@ -52,7 +52,7 @@ const buildUploadedFileList = (
 	fileMapping,
 	aiDS /* full datasource */,
 ) => {
-	return requiredFiles.flatMap((req) => {
+	const result = requiredFiles.flatMap((req) => {
 		const uploaded = fileMapping.csv_files?.[req.file_name] ?? [];
 		return uploaded.map((u) => {
 			const meta = getFileMeta(aiDS, u.file_id);
@@ -62,16 +62,26 @@ const buildUploadedFileList = (
 				fileId: u.file_id,
 				fileName: meta?.worksheet ?? u.file_id,
 				headers:
-					meta?.columns?.map((c) => ({
-						name: c.name,
-						description: c.description,
-						colId: `${u.file_id}${c.name}`,
-					})) ?? [],
+					meta?.columns
+						?.filter((c) => c.name && c.name.trim()) // Only filter out empty names
+						.map((c, index) => ({
+							name: c.name.trim(),
+							description: c.description || '',
+							colId: `${u.file_id}_${c.name.trim()}_${index}`, // More unique ID
+						})) ?? [],
 				/** backend may already have mappings for this file */
 				backendColumns: u.columns ?? [],
 			};
 		});
 	});
+
+	// Remove any duplicate files by fileId (in case the mapping has duplicates)
+	const uniqueResult = result.filter(
+		(file, index, arr) =>
+			arr.findIndex((f) => f.fileId === file.fileId) === index,
+	);
+
+	return uniqueResult;
 };
 
 /** ---------------------------------------------------------------- */
@@ -127,7 +137,7 @@ export const ColumnMappingStep = ({
 	const [columnMappings, setColumnMappings] = useState({}); // initialised below
 	const [openFileId, setOpenFileId] = useState(null);
 	const [openCombobox, setOpenCombobox] = useState(null);
-	const [searchQuery, setSearchQuery] = useState('');
+	const [searchQueries, setSearchQueries] = useState({}); // Changed to object to store per-combobox search
 
 	// Inline error state for column mapping step
 	const [inlineError, setInlineError] = useState('');
@@ -157,6 +167,14 @@ export const ColumnMappingStep = ({
 
 		setColumnMappings(initial);
 	}, [uploadedFiles]);
+
+	// Cleanup search queries when component unmounts
+	useEffect(() => {
+		return () => {
+			setSearchQueries({});
+			setOpenCombobox(null);
+		};
+	}, []);
 
 	/* ----------------------------------------------------------------
      Mutations
@@ -198,10 +216,81 @@ export const ColumnMappingStep = ({
 		return data.length;
 	};
 
-	// whether all required columns for a file are mapped
-	const isFileFullyMapped = (file) =>
-		mappedCountForFile(file) === file.requiredColumns.length &&
-		file.requiredColumns.length > 0;
+	const isFileFullyMapped = (file) => {
+		return mappedCountForFile(file) === file.requiredColumns.length;
+	};
+
+	// Utility function to highlight search matches
+	const highlightSearchMatch = (text, query) => {
+		if (!query || !text) return text;
+
+		const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const regex = new RegExp(escapedQuery, 'gi');
+
+		const toNbsp = (value) => value.replace(/ /g, '\u00A0');
+
+		const renderSegment = (segment, key) => {
+			if (!segment) return null;
+			const leadingSpaces = segment.match(/^\s+/)?.[0] ?? '';
+			const trailingSpaces = segment.match(/\s+$/)?.[0] ?? '';
+			const core = segment.slice(
+				leadingSpaces.length,
+				segment.length - trailingSpaces.length,
+			);
+			const leading = toNbsp(leadingSpaces);
+			const trailing = toNbsp(trailingSpaces);
+			return (
+				<React.Fragment key={key}>
+					{leading}
+					{core}
+					{trailing}
+				</React.Fragment>
+			);
+		};
+
+		const renderHighlightSegment = (segment, key) => {
+			if (!segment) return null;
+			return (
+				<span key={key} className="font-semibold text-purple-600">
+					{toNbsp(segment)}
+				</span>
+			);
+		};
+
+		let result = [];
+		let lastIndex = 0;
+		let match;
+
+		while ((match = regex.exec(text)) !== null) {
+			// Add text before the match
+			if (match.index > lastIndex) {
+				const before = renderSegment(
+					text.slice(lastIndex, match.index),
+					`pre-${match.index}`,
+				);
+				if (before) result.push(before);
+			}
+
+			// Add the highlighted match
+			const highlighted = renderHighlightSegment(match[0], match.index);
+			if (highlighted) result.push(highlighted);
+
+			lastIndex = match.index + match[0].length;
+
+			// Prevent infinite loop for zero-length matches
+			if (match.index === regex.lastIndex) {
+				regex.lastIndex++;
+			}
+		}
+
+		// Add remaining text after the last match
+		if (lastIndex < text.length) {
+			const after = renderSegment(text.slice(lastIndex), `post-${lastIndex}`);
+			if (after) result.push(after);
+		}
+
+		return result.length > 0 ? result : text;
+	};
 
 	const handleMappingChange = (
 		aiColMappings,
@@ -470,10 +559,28 @@ export const ColumnMappingStep = ({
 												const comboKey = `${file.fileId}-${reqCol.name}`;
 												const open =
 													openCombobox === comboKey;
-												const setOpen = (v) =>
+												const setOpen = (v) => {
 													setOpenCombobox(
 														v ? comboKey : null,
 													);
+													// Reset search when opening or closing
+													setSearchQueries((prev) => ({
+														...prev,
+														[comboKey]: '',
+													}));
+												};
+
+												// Get search query for this specific combobox
+												const currentSearchQuery =
+													searchQueries[comboKey] || '';
+												const setCurrentSearchQuery = (
+													query,
+												) => {
+													setSearchQueries((prev) => ({
+														...prev,
+														[comboKey]: query,
+													}));
+												};
 
 												return (
 													<div
@@ -535,15 +642,19 @@ export const ColumnMappingStep = ({
 																	</Button>
 																</PopoverTrigger>
 																<PopoverContent className="w-full p-0">
-																	<Command>
+																	<Command
+																		key={
+																			comboKey
+																		}
+																	>
 																		<CommandInput
 																			placeholder="Search column..."
 																			className="h-9"
 																			value={
-																				searchQuery
+																				currentSearchQuery
 																			}
 																			onValueChange={
-																				setSearchQuery
+																				setCurrentSearchQuery
 																			}
 																		/>
 																		<CommandList>
@@ -558,10 +669,17 @@ export const ColumnMappingStep = ({
 																						(
 																							h,
 																						) =>
+																							h.name &&
+																							h.name.trim(),
+																					) // Remove empty/undefined names
+																					.filter(
+																						(
+																							h,
+																						) =>
 																							h.name
 																								.toLowerCase()
 																								.includes(
-																									searchQuery.toLowerCase(),
+																									currentSearchQuery.toLowerCase(),
 																								),
 																					)
 																					.map(
@@ -592,9 +710,10 @@ export const ColumnMappingStep = ({
 																									);
 																								}}
 																							>
-																								{
-																									h.name
-																								}
+																								{highlightSearchMatch(
+																									h.name,
+																									currentSearchQuery,
+																								)}
 																								<Check
 																									className={cn(
 																										'ml-auto size-4 text-purple-100',
