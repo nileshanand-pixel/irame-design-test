@@ -24,7 +24,10 @@ export const useInputHandlers = ({
 			if (!value) {
 				setShowModal(false);
 				resetSecondaryModalData();
-			} else if (chatCommandInitiator(value)) {
+			} else if (
+				import.meta.env?.VITE_ENABLE_BULK_INPUT_MODE === 'true' &&
+				chatCommandInitiator(value)
+			) {
 				setShowModal(true);
 			} else {
 				setShowModal(false);

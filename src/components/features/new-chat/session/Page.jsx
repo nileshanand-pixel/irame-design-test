@@ -256,19 +256,6 @@ const Workzone = () => {
 	};
 
 	const { data: datasourceData } = useDatasourceDetailsV2();
-	const { rawFiles } = useMemo(() => {
-		const ds = datasourceData;
-		return {
-			rawFiles:
-				ds?.files.map((file) => ({
-					name: file.filename,
-					type: file.type,
-					id: file.id,
-					url: file.url,
-				})) || [],
-		};
-	}, [datasourceData]);
-
 	const handleTabClick = (tab) => {
 		if (tab === 'planner') {
 			trackEvent(
@@ -666,7 +653,7 @@ const Workzone = () => {
 		const markerAnswer =
 			answers.find((item) => item?.query_id === activeQueryId) || answers?.[0];
 		const hasClarification = !!markerAnswer?.answer?.clarification;
-		const isAllDocuments = isUnstructuredData(rawFiles);
+		const isAllDocuments = isUnstructuredData(datasourceData?.files);
 		return workspace.show && !hasClarification && !isAllDocuments;
 	};
 
