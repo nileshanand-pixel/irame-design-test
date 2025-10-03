@@ -73,7 +73,7 @@ const DataCard = ({ data, form, setForm, addChangeForTracking, isEditing }) => {
 		};
 
 		fetchFileData();
-	}, [form?.files]);
+	}, []);
 
 	// const handleFullScreen = (e, file) => {
 	// 	if (e) e.stopPropagation();

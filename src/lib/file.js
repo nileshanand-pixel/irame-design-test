@@ -9,10 +9,12 @@ import { logError } from './logger';
 
 export const getFileMetadata = async (fileUrl) => {
 	try {
-		const response = await axiosClientV1.head(fileUrl);
+		const response = await axiosClientV1.get(
+			`files/file-metadata?file_url=${fileUrl}`,
+		);
+
 		return {
-			size: response.headers['content-length'],
-			type: response.headers['content-type'],
+			size: response.data.content_length,
 		};
 	} catch (err) {
 		logError(err, {

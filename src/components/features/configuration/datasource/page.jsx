@@ -105,70 +105,70 @@ const DataSource = () => {
 			toast.success('Dataset updated successfully');
 			// Invalidate and refetch to force fresh data
 			queryClient.invalidateQueries(getDatasourceDetailsQueryKey(query?.id));
-			const eventProperties = {
-				dataset_id: datasourceQuery?.data?.datasource_id,
-				dataset_name: datasourceQuery?.data?.name,
-				changes: changesForTracking,
-			};
+			// const eventProperties = {
+			// 	dataset_id: datasourceQuery?.data?.datasource_id,
+			// 	dataset_name: datasourceQuery?.data?.name,
+			// 	changes: changesForTracking,
+			// };
 
-			const oldDataSourceData = datasourceQuery?.data;
+			// const oldDataSourceData = datasourceQuery?.data;
 
-			if (changesForTracking.includes('name')) {
-				eventProperties.old_name = oldDataSourceData?.name;
-				eventProperties.new_name = form.name;
-			}
+			// if (changesForTracking.includes('name')) {
+			// 	eventProperties.old_name = oldDataSourceData?.name;
+			// 	eventProperties.new_name = form.name;
+			// }
 
-			if (changesForTracking.includes('description')) {
-				eventProperties.old_desc = oldDataSourceData?.description;
-				eventProperties.new_desc = form?.description;
-			}
+			// if (changesForTracking.includes('description')) {
+			// 	eventProperties.old_desc = oldDataSourceData?.description;
+			// 	eventProperties.new_desc = form?.description;
+			// }
 
-			if (changesForTracking.includes('column_desc')) {
-				const oldColumns =
-					oldDataSourceData?.files?.flatMap((file) =>
-						file.columns.map((col) => ({
-							...col,
-							file_name: file.filename,
-						})),
-					) || [];
-				const newColumns =
-					form?.files?.flatMap((file) =>
-						file.columns.map((col) => ({
-							...col,
-							file_name: file.filename,
-						})),
-					) || [];
-				const changedColumns = newColumns.filter((newCol, index) => {
-					const oldCol = oldColumns[index];
-					return !areStringObjectsEqual(newCol, oldCol);
-				});
-				eventProperties.changed_columns = changedColumns.map((col) => ({
-					file_name: col.file_name,
-					name: col.name,
-					old_desc: oldColumns.find(
-						(oldCol) =>
-							oldCol.name === col.name &&
-							oldCol.file_name === col.file_name,
-					)?.description,
-					new_desc: col.description,
-				}));
-			}
+			// if (changesForTracking.includes('column_desc')) {
+			// 	const oldColumns =
+			// 		oldDataSourceData?.files?.flatMap((file) =>
+			// 			file.columns.map((col) => ({
+			// 				...col,
+			// 				file_name: file.filename,
+			// 			})),
+			// 		) || [];
+			// 	const newColumns =
+			// 		form?.files?.flatMap((file) =>
+			// 			file.columns.map((col) => ({
+			// 				...col,
+			// 				file_name: file.filename,
+			// 			})),
+			// 		) || [];
+			// 	const changedColumns = newColumns.filter((newCol, index) => {
+			// 		const oldCol = oldColumns[index];
+			// 		return !areStringObjectsEqual(newCol, oldCol);
+			// 	});
+			// 	eventProperties.changed_columns = changedColumns.map((col) => ({
+			// 		file_name: col.file_name,
+			// 		name: col.name,
+			// 		old_desc: oldColumns.find(
+			// 			(oldCol) =>
+			// 				oldCol.name === col.name &&
+			// 				oldCol.file_name === col.file_name,
+			// 		)?.description,
+			// 		new_desc: col.description,
+			// 	}));
+			// }
 
-			const newGlossariesTerms = (form?.glossary?.items || []).map(
-				(glossary) => glossary.term,
-			);
-			const oldGlossariesTerms = (
-				oldDataSourceData?.glossary?.items || []
-			).map((glossary) => glossary.term);
+			// const newGlossariesTerms = (form?.glossary?.items || []).map(
+			// 	(glossary) => glossary.term,
+			// );
+			// const oldGlossariesTerms = (
+			// 	oldDataSourceData?.glossary?.items || []
+			// ).map((glossary) => glossary.term);
 
-			eventProperties.old_glossary_terms = oldGlossariesTerms;
-			eventProperties.new_glossary_terms = newGlossariesTerms;
+			// eventProperties.old_glossary_terms = oldGlossariesTerms;
+			// eventProperties.new_glossary_terms = newGlossariesTerms;
 
-			trackEvent(
-				EVENTS_ENUM.DATASET_UPDATION_SUCCESSFUL,
-				EVENTS_REGISTRY.DATASET_UPDATION_SUCCESSFUL,
-				() => eventProperties,
-			);
+			// trackEvent(
+			// 	EVENTS_ENUM.DATASET_UPDATION_SUCCESSFUL,
+			// 	EVENTS_REGISTRY.DATASET_UPDATION_SUCCESSFUL,
+			// 	() => eventProperties,
+			// );
 		},
 		onError: (err) => {
 			trackEvent(

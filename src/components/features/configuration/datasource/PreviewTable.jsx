@@ -25,21 +25,21 @@ const PreviewTable = ({
 	showAllRows = false,
 	isEditing,
 }) => {
-	const [columns, setColumns] = useState();
-	const [previewData, setPreviewData] = useState([]);
+	const [columns, setColumns] = useState({});
+	const [previewData, setPreviewData] = useState({});
 	const [selectedSheet, setSelectedSheet] = useState(data?.sheets?.[0]);
 	const [editColumnIndex, setEditColumnIndex] = useState(null);
 	const [loading, setLoading] = useState(false); // Loading state added
 
 	useEffect(() => {
 		if (data?.type === 'csv') {
-			setColumns(data?.columns);
-			const { processed_url, url } = data;
-			fetchCsvFileData(processed_url || url);
+			setColumns((prev) => ({ ...prev, [data?.id]: data?.columns }));
+			const { processed_url, url, sample_url, id } = data;
+			fetchCsvFileData(sample_url || processed_url || url, id);
 		}
 	}, [data]);
 
-	const fetchCsvFileData = async (url) => {
+	const fetchCsvFileData = async (url, id) => {
 		try {
 			setLoading(true);
 			const fileExtension = url?.split('?')[0]?.split('.').pop().toLowerCase();
@@ -50,7 +50,10 @@ const PreviewTable = ({
 			const response = await fetch(url);
 			const text = await response.text();
 			const { data } = Papa.parse(text, { header: true });
-			setPreviewData(showAllRows ? data : data?.slice(0, 10)); // Preview first 10 rows
+			setPreviewData((prev) => ({
+				...prev,
+				[id]: showAllRows ? data : data?.slice(0, 10),
+			})); // Preview first 10 rows
 		} catch (error) {
 			logError(error, {
 				feature: 'configuration',
@@ -63,8 +66,20 @@ const PreviewTable = ({
 
 	useEffect(() => {
 		if (selectedSheet && selectedSheet?.url) {
-			setColumns(selectedSheet?.columns);
-			fetchCsvFileData(selectedSheet?.url);
+			const {
+				processed_url,
+				url,
+				sample_url,
+				columns: cols,
+				id,
+			} = selectedSheet;
+			if (!columns[id]?.length) {
+				setColumns((prev) => ({ ...prev, [id]: cols }));
+			}
+
+			if (!previewData[id] || !previewData[id]?.length) {
+				fetchCsvFileData(sample_url || processed_url || url, id);
+			}
 		}
 	}, [selectedSheet]);
 
@@ -151,7 +166,7 @@ const PreviewTable = ({
 	// };
 
 	const handleDescriptionChange = (colIndex, newDescription) => {
-		const updatedColumns = [...columns];
+		const updatedColumns = [...columns[selectedSheet?.id || data?.id]];
 
 		trackEvent(
 			EVENTS_ENUM.DATASET_COLUMN_DESCRIPTION_UPDATED,
@@ -168,17 +183,25 @@ const PreviewTable = ({
 		);
 		addChangeForTracking('column_desc');
 		updatedColumns[colIndex].description = newDescription;
-		setColumns(updatedColumns);
+		setColumns((prev) => ({
+			...prev,
+			[selectedSheet?.id || data?.id]: updatedColumns,
+		}));
 
 		setForm((prev) => {
 			const newForm = JSON.parse(JSON.stringify(prev));
+			const selectedFileIndex = newForm?.files?.findIndex(
+				(file) => file?.id === data?.id,
+			);
+
 			if (!selectedSheet) {
-				newForm.columns = updatedColumns;
-			} else {
-				const selectedFileIndex = newForm?.files?.findIndex(
-					(file) => file?.id === data?.id,
-				);
 				newForm.files[selectedFileIndex].columns = updatedColumns;
+			} else {
+				const selectedSheetIndex = data?.sheets?.findIndex(
+					(sheet) => sheet?.id === selectedSheet?.id,
+				);
+				newForm.files[selectedFileIndex].sheets[selectedSheetIndex].columns =
+					updatedColumns;
 			}
 			newForm.hasChanges = true;
 			return { ...newForm };
@@ -197,7 +220,6 @@ const PreviewTable = ({
 	};
 
 	// const dataToShow = !showAllRows ? (fileExtension === "csv" ? previewData?.slice(0, 10) : previewData?.slice(1,11)) : previewData;
-
 	return (
 		<div className="w-full max-h-full overflow-x-scroll pb-4 show-scrollbar h-full text-primary80">
 			{data.type === 'excel' && data?.sheets?.length > 0 && (
@@ -228,65 +250,75 @@ const PreviewTable = ({
 					<Table className="w-full border overflow-x-scroll  border-gray-300">
 						<TableHeader className="bg-purple-4 text-primary80">
 							<TableRow>
-								{columns?.map((column, index) => (
-									<TableHead
-										key={index}
-										className={`text-left text-sm text-primary80 font-semibold px-4 border border-gray-300 !w-[${width}]`}
-									>
-										<span className="truncate">
-											{column.name}
-										</span>
-									</TableHead>
-								))}
+								{columns[selectedSheet?.id || data?.id]?.map(
+									(column, index) => (
+										<TableHead
+											key={index}
+											className={`text-left text-sm text-primary80 font-semibold px-4 border border-gray-300 !w-[${width}]`}
+										>
+											<span className="truncate">
+												{column.name}
+											</span>
+										</TableHead>
+									),
+								)}
 							</TableRow>
 							<TableRow>
-								{columns?.map((column, index) => (
-									<TableHead
-										key={index}
-										onClick={() => handleColumnEdit(index)}
-										className={`text-left ${editColumnIndex === index ? 'px-0 border-none' : 'px-4 border border-gray-300 cursor-pointer'} text-primary80 !w-[${width}]`}
-									>
-										{editColumnIndex === index ? (
-											<textarea
-												value={column.description}
-												onChange={(e) =>
-													handleDescriptionChange(
-														index,
-														e.target.value,
-													)
-												}
-												onBlur={() =>
-													handleColumnBlur(column, index)
-												}
-												autoFocus
-												className="mt-1 w-full h-full text-wrap p-2 bg-blue-50 resize-none"
-											/>
-										) : (
-											<div>
-												<span className="truncate">
-													{column.description}
-												</span>
-											</div>
-										)}
-									</TableHead>
-								))}
+								{columns[selectedSheet?.id || data?.id]?.map(
+									(column, index) => (
+										<TableHead
+											key={index}
+											onClick={() => handleColumnEdit(index)}
+											className={`text-left ${editColumnIndex === index ? 'px-0 border-none' : 'px-4 border border-gray-300 cursor-pointer'} text-primary80 !w-[${width}]`}
+										>
+											{editColumnIndex === index ? (
+												<textarea
+													value={column.description}
+													onChange={(e) =>
+														handleDescriptionChange(
+															index,
+															e.target.value,
+														)
+													}
+													onBlur={() =>
+														handleColumnBlur(
+															column,
+															index,
+														)
+													}
+													className="mt-1 w-full h-full text-wrap p-2 bg-blue-50 resize-none"
+												/>
+											) : (
+												<div>
+													<span className="truncate">
+														{column.description}
+													</span>
+												</div>
+											)}
+										</TableHead>
+									),
+								)}
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{previewData.map((row, rowIndex) => (
-								<TableRow key={rowIndex}>
-									{columns?.map((column, colIndex) => (
-										<TableCell
-											key={colIndex}
-											className="px-4 py-2 border border-gray-300"
-										>
-											<span className="truncate">
-												{row[column.name]}
-											</span>
-										</TableCell>
-									))}
-								</TableRow>
-							))}
+							{previewData[selectedSheet?.id || data?.id]?.map(
+								(row, rowIndex) => (
+									<TableRow key={rowIndex}>
+										{columns[selectedSheet?.id || data?.id]?.map(
+											(column, colIndex) => (
+												<TableCell
+													key={colIndex}
+													className="px-4 py-2 border border-gray-300"
+												>
+													<span className="truncate">
+														{row[column.name]}
+													</span>
+												</TableCell>
+											),
+										)}
+									</TableRow>
+								),
+							)}
 						</TableBody>
 					</Table>
 				)}
