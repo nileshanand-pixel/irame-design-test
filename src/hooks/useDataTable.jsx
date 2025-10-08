@@ -23,6 +23,7 @@ export const useDataTable = ({
 	setRowSelection,
 	defaultSort,
 	onSortingChange = () => {},
+	enableSorting = true,
 }) => {
 	const config = {
 		data,
@@ -39,6 +40,7 @@ export const useDataTable = ({
 				}
 			: {}),
 		enableRowSelection,
+		enableSorting,
 		getCoreRowModel: getCoreRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),

@@ -35,6 +35,7 @@ export const FilesList = ({
 	selectedDataSources,
 	onBulkDelete,
 	deletingSheets = new Set(),
+	highlightErrors = false,
 }) => {
 	// Multi-select state management
 	const [selectType, setSelectType] = useState(SELECT_TYPES.NONE);
@@ -49,6 +50,27 @@ export const FilesList = ({
 		(f) => !['success', 'error'].includes(f.status),
 	);
 	const errorFiles = files.filter((f) => f.status === 'error');
+
+	// Helper function to check if a file has errors (file-level or sheet-level)
+	const getFileErrorStatus = (file) => {
+		// Check file-level error
+		const hasFileError = file.status === 'error' || file.status === 'failed';
+
+		// Check sheet-level errors
+		const hasSheetError =
+			file.meta?.sheets &&
+			Array.isArray(file.meta.sheets) &&
+			file.meta.sheets.some(
+				(sheet) => sheet.status === 'FAILED' || sheet.status === 'ERROR',
+			);
+
+		return {
+			hasError: hasFileError || hasSheetError,
+			hasFileError,
+			hasSheetError,
+			shouldExpand: hasSheetError && highlightErrors, // Auto-expand if sheet has error and highlighting is enabled
+		};
+	};
 
 	// Multi-select logic
 	useEffect(() => {
@@ -278,6 +300,9 @@ export const FilesList = ({
 							return selectedFileId === fileId;
 						});
 
+						// Get error status for highlighting
+						const errorStatus = getFileErrorStatus(file);
+
 						columns[colIdx].push(
 							<FileItemWithSheets
 								key={file.name + idx}
@@ -291,6 +316,10 @@ export const FilesList = ({
 								isDataSourceFile={isDataSourceFile}
 								dataSourceName={dataSourceName}
 								deletingSheets={deletingSheets}
+								highlightError={
+									highlightErrors && errorStatus.hasError
+								}
+								forceExpand={errorStatus.shouldExpand}
 							/>,
 						);
 					});

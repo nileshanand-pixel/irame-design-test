@@ -387,7 +387,11 @@ const NewChat = () => {
 			<div className="mt-[1rem] overflow-auto w-full">{renderComponent()}</div>
 			{completedSteps.includes(2) || completedSteps.includes(3) ? (
 				<div className="mt-auto w-full flex flex-col items-center justify-center z-20">
-					<InputArea config={config} onAppendQuery={handleCreateSession} />
+					<InputArea
+						config={config}
+						onAppendQuery={handleCreateSession}
+						promptInitialValue={prompt}
+					/>
 					<p className="text-xs text-primary40 font-normal">
 						Irame.ai may display inaccurate info, including about people,
 						so double-check its responses.

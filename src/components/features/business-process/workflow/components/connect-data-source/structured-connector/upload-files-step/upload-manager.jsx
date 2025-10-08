@@ -17,7 +17,11 @@ import { toast } from '@/lib/toast';
 import { useStructuredDatasourceId } from '../hooks/datasource-context';
 import { getFileType } from '@/utils/file';
 
-export const UploadManager = ({ onManagerReady, onItemsChange }) => {
+export const UploadManager = ({
+	onManagerReady,
+	onItemsChange,
+	highlightErrors,
+}) => {
 	const { datasourceId, isCreating, isReady } = useStructuredDatasourceId();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 	const [deletingSheets, setDeletingSheets] = useState(new Set());
@@ -380,6 +384,7 @@ export const UploadManager = ({ onManagerReady, onItemsChange }) => {
 						onChooseExisting={handleChooseExisting}
 						creatingDS={isCreating}
 						deletingSheets={deletingSheets}
+						highlightErrors={highlightErrors}
 					/>
 				</>
 			) : (

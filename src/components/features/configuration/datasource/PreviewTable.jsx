@@ -14,6 +14,8 @@ import TableLoader from '@/components/elements/loading/TableLoader';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ChevronDown } from 'lucide-react';
 
 const PreviewTable = ({
 	data,
@@ -24,11 +26,11 @@ const PreviewTable = ({
 	addChangeForTracking,
 	showAllRows = false,
 	isEditing,
+	isCollapsed,
 }) => {
 	const [columns, setColumns] = useState({});
 	const [previewData, setPreviewData] = useState({});
 	const [selectedSheet, setSelectedSheet] = useState(data?.sheets?.[0]);
-	const [editColumnIndex, setEditColumnIndex] = useState(null);
 	const [loading, setLoading] = useState(false); // Loading state added
 
 	useEffect(() => {
@@ -37,7 +39,7 @@ const PreviewTable = ({
 			const { processed_url, url, sample_url, id } = data;
 			fetchCsvFileData(sample_url || processed_url || url, id);
 		}
-	}, [data]);
+	}, []);
 
 	const fetchCsvFileData = async (url, id) => {
 		try {
@@ -208,37 +210,39 @@ const PreviewTable = ({
 		});
 	};
 
-	const handleColumnEdit = (index) => {
-		if (!isEditing) {
-			return;
-		}
-		setEditColumnIndex(index);
-	};
+	// const handleColumnEdit = (index) => {
+	// 	if (!isEditing) {
+	// 		return;
+	// 	}
+	// 	setEditColumnIndex(index);
+	// };
 
-	const handleColumnBlur = () => {
-		setEditColumnIndex(null);
-	};
+	// const handleColumnBlur = () => {
+	// 	setEditColumnIndex(null);
+	// };
 
 	// const dataToShow = !showAllRows ? (fileExtension === "csv" ? previewData?.slice(0, 10) : previewData?.slice(1,11)) : previewData;
 	return (
 		<div className="w-full max-h-full overflow-x-scroll pb-4 show-scrollbar h-full text-primary80">
-			{data.type === 'excel' && data?.sheets?.length > 0 && (
-				<div className="flex border-b-2">
-					{data?.sheets?.map((sheet) => (
-						<div
-							className={cn(
-								'text-[#5F5F5F] py-2 px-4 flex gap-2 items-center cursor-pointer',
-								selectedSheet?.id === sheet?.id &&
-									'text-[#6A12CD] border-b-2 border-b-[#6A12CD]',
-							)}
-							key={sheet?.id}
-							onClick={() => setSelectedSheet(sheet)}
-						>
-							<span>{sheet?.worksheet}</span>
-						</div>
-					))}
-				</div>
-			)}
+			<div>
+				{data.type === 'excel' && data?.sheets?.length > 0 && (
+					<div className="flex">
+						{data?.sheets?.map((sheet) => (
+							<div
+								className={cn(
+									'text-[#5F5F5F] py-2 px-4 flex gap-2 items-center cursor-pointer',
+									selectedSheet?.id === sheet?.id &&
+										'text-[#6A12CD] border-b-2 border-b-[#6A12CD]',
+								)}
+								key={sheet?.id}
+								onClick={() => setSelectedSheet(sheet)}
+							>
+								<span>{sheet?.worksheet}</span>
+							</div>
+						))}
+					</div>
+				)}
+			</div>
 			<div className="mt-2">
 				{loading ? (
 					<TableLoader
@@ -254,11 +258,11 @@ const PreviewTable = ({
 									(column, index) => (
 										<TableHead
 											key={index}
-											className={`text-left text-sm text-primary80 font-semibold px-4 border border-gray-300 !w-[${width}]`}
+											className={`text-left text-sm text-primary80 font-semibold px-4 border border-gray-300`}
 										>
-											<span className="truncate">
+											<div className="w-[21.875rem]">
 												{column.name}
-											</span>
+											</div>
 										</TableHead>
 									),
 								)}
@@ -269,9 +273,9 @@ const PreviewTable = ({
 										<TableHead
 											key={index}
 											onClick={() => handleColumnEdit(index)}
-											className={`text-left ${editColumnIndex === index ? 'px-0 border-none' : 'px-4 border border-gray-300 cursor-pointer'} text-primary80 !w-[${width}]`}
+											className={`text-left border border-gray-300 ${isEditing ? 'px-0' : 'px-4  '} text-primary80`}
 										>
-											{editColumnIndex === index ? (
+											{isEditing ? (
 												<textarea
 													value={column.description}
 													onChange={(e) =>
@@ -280,19 +284,11 @@ const PreviewTable = ({
 															e.target.value,
 														)
 													}
-													onBlur={() =>
-														handleColumnBlur(
-															column,
-															index,
-														)
-													}
-													className="mt-1 w-full h-full text-wrap p-2 bg-blue-50 resize-none"
+													className="mt-1 w-full h-full text-wrap bg-blue-50 p-2 resize-none"
 												/>
 											) : (
-												<div>
-													<span className="truncate">
-														{column.description}
-													</span>
+												<div className="w-[21.875rem]">
+													{column.description}
 												</div>
 											)}
 										</TableHead>
@@ -300,12 +296,14 @@ const PreviewTable = ({
 								)}
 							</TableRow>
 						</TableHeader>
-						<TableBody>
-							{previewData[selectedSheet?.id || data?.id]?.map(
-								(row, rowIndex) => (
-									<TableRow key={rowIndex}>
-										{columns[selectedSheet?.id || data?.id]?.map(
-											(column, colIndex) => (
+						{!isCollapsed && (
+							<TableBody>
+								{previewData[selectedSheet?.id || data?.id]?.map(
+									(row, rowIndex) => (
+										<TableRow key={rowIndex}>
+											{columns[
+												selectedSheet?.id || data?.id
+											]?.map((column, colIndex) => (
 												<TableCell
 													key={colIndex}
 													className="px-4 py-2 border border-gray-300"
@@ -314,12 +312,12 @@ const PreviewTable = ({
 														{row[column.name]}
 													</span>
 												</TableCell>
-											),
-										)}
-									</TableRow>
-								),
-							)}
-						</TableBody>
+											))}
+										</TableRow>
+									),
+								)}
+							</TableBody>
+						)}
 					</Table>
 				)}
 			</div>

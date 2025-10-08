@@ -2,12 +2,6 @@ import { useState } from 'react';
 import { Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { CheckCircle, Warning } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '@/components/ui/tooltip';
 
 export const SheetItem = ({
 	sheet,
@@ -25,7 +19,8 @@ export const SheetItem = ({
 
 	const getStatusText = () => {
 		if (sheet.status === 'FAILED' || sheet.status === 'ERROR') {
-			return 'Processing Failed';
+			// Show actual error message if available, otherwise fallback
+			return sheet.message || 'Processing Failed';
 		}
 		return '';
 	};
@@ -36,25 +31,15 @@ export const SheetItem = ({
 
 	const StatusDisplay = () => {
 		const hasError = sheet.status === 'FAILED' || sheet.status === 'ERROR';
-		const errorMessage = sheet.message || 'An error occurred during processing';
 
 		if (hasError) {
 			return (
-				<TooltipProvider>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<div className="flex gap-1 items-center cursor-help">
-								{getStatusIcon()}
-								<span className="text-xs text-destructive font-normal">
-									{getStatusText()}
-								</span>
-							</div>
-						</TooltipTrigger>
-						<TooltipContent>
-							<p>{errorMessage}</p>
-						</TooltipContent>
-					</Tooltip>
-				</TooltipProvider>
+				<div className="flex gap-1 items-center">
+					{getStatusIcon()}
+					<span className="text-xs text-destructive font-normal">
+						{getStatusText()}
+					</span>
+				</div>
 			);
 		}
 

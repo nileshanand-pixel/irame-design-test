@@ -34,6 +34,7 @@ import { DataTablePagination } from './data-table/components/data-table-paginati
  * @property {any} [FloatingBarContent]
  * @property {Object} [selectedRow]
  * @property {any} [defaultSort]
+ * @property {boolean} [enableSorting]
  */
 
 /**
@@ -59,6 +60,7 @@ export function DataTable({
 	FloatingBarContent,
 	selectedRow,
 	onSortingChange,
+	enableSorting = false,
 }) {
 	const { table } = useDataTable({
 		data,
@@ -74,6 +76,7 @@ export function DataTable({
 		setRowSelection,
 		defaultSort,
 		onSortingChange,
+		enableSorting,
 	});
 
 	return (

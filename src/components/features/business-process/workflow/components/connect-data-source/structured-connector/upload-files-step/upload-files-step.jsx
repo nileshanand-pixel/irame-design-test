@@ -23,6 +23,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 	const [showInlineError, setShowInlineError] = useState(false);
 	const errorTimeoutRef = useRef(null);
 	const [currentItems, setCurrentItems] = useState([]);
+	const [highlightErrors, setHighlightErrors] = useState(false);
 
 	// Save datasource mutation
 	const saveDatasourceMutation = useMutation({
@@ -38,6 +39,9 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 			if (response?.datasource_id && datasourceId !== response.datasource_id) {
 				updateDatasourceId(response.datasource_id);
 			}
+
+			// Reset error highlighting on success
+			setHighlightErrors(false);
 
 			// Move to next step
 			stepper.next();
@@ -109,6 +113,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 
 	const handleContinue = async () => {
 		setShowInlineError(true);
+		setHighlightErrors(true); // Enable error highlighting
 		// Get current upload state from UploadManager
 		if (!uploadManagerRef) {
 			setInlineError('Upload manager not ready. Please try again.');
@@ -146,6 +151,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 		if (dsDetails?.status && dsDetails.status !== 'draft') {
 			setInlineError('');
 			setShowInlineError(false);
+			setHighlightErrors(false); // Reset error highlighting on success
 			stepper.next();
 			return;
 		}
@@ -167,6 +173,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 		if (validation.isValid) {
 			setInlineError('');
 			setShowInlineError(false);
+			setHighlightErrors(false); // Reset error highlighting when errors are resolved
 		}
 	}, [currentItems, showInlineError]);
 
@@ -192,6 +199,7 @@ export const UploadFilesStep = ({ requiredFiles, stepper }) => {
 					<UploadManager
 						onManagerReady={setUploadManagerRef}
 						onItemsChange={setCurrentItems}
+						highlightErrors={highlightErrors}
 					/>
 				</div>
 			</div>

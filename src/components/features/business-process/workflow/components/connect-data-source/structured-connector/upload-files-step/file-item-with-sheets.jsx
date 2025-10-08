@@ -1,15 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, ChevronUp, Trash2, X } from 'lucide-react';
 import { CheckCircle, Warning } from '@phosphor-icons/react';
 // import { Checkbox } from '@/components/ui/checkbox';
 import CustomCheckbox from '@/components/elements/custom-checkbox';
 import { Button } from '@/components/ui/button';
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { SheetItem } from './sheet-item';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
 import { getFileSize } from '@/utils/file';
@@ -25,6 +19,8 @@ export const FileItemWithSheets = ({
 	isDataSourceFile,
 	dataSourceName,
 	deletingSheets = new Set(), // Set of sheet IDs being deleted
+	highlightError = false, // Whether to highlight this file with error styling
+	forceExpand = false, // Whether to force expand this file (for sheet errors)
 }) => {
 	const [isExpanded, setIsExpanded] = useState(false);
 
@@ -54,6 +50,27 @@ export const FileItemWithSheets = ({
 		file.meta.sheets.length > 0;
 	const sheetCount = hasSheets ? file.meta.sheets.length : 0;
 
+	// Check for sheet-level errors
+	const hasSheetErrors =
+		hasSheets &&
+		file.meta.sheets.some(
+			(sheet) => sheet.status === 'FAILED' || sheet.status === 'ERROR',
+		);
+
+	// Get the first sheet error message for display
+	const firstSheetError = hasSheetErrors
+		? file.meta.sheets.find(
+				(sheet) => sheet.status === 'FAILED' || sheet.status === 'ERROR',
+			)?.message
+		: null;
+
+	// Auto-expand if forceExpand is true or if there are sheet errors
+	useEffect(() => {
+		if ((forceExpand && hasSheets) || hasSheetErrors) {
+			setIsExpanded(true);
+		}
+	}, [forceExpand, hasSheets, hasSheetErrors]);
+
 	// Status colors and icons
 	// const getStatusColor = () => {
 	// 	if (isError) return 'text-red-500 bg-red-50 border-red-200';
@@ -64,7 +81,7 @@ export const FileItemWithSheets = ({
 	// };
 
 	const getStatusIcon = () => {
-		if (isError)
+		if (isError || hasSheetErrors)
 			return <Warning weight="fill" className="w-4 h-4 text-red-500" />;
 		if (isProcessing) {
 			return <CircularLoader size="xs" />;
@@ -73,36 +90,27 @@ export const FileItemWithSheets = ({
 	};
 
 	const getStatusText = () => {
-		if (isError) return 'Processing Failed';
+		if (isError) {
+			// Show actual file error message if available
+			const errorMessage =
+				file.error?.message || file.errorMessage || 'Processing Failed';
+			return errorMessage;
+		}
+		if (hasSheetErrors) return 'Error in some sheets';
 		if (isProcessing) return 'Processing...';
 		if (isUploading) return `Uploading... ${fileProgress}%`;
 		return '';
 	};
 
-	// Get error details for tooltip
-	const errorMessage =
-		file.error?.message ||
-		file.errorMessage ||
-		'An error occurred during processing';
-
 	const StatusDisplay = () => {
-		if (isError) {
+		if (isError || hasSheetErrors) {
 			return (
-				<TooltipProvider>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<div className="flex gap-1 items-center cursor-help">
-								{getStatusIcon()}
-								<span className="text-xs text-destructive font-normal">
-									{getStatusText()}
-								</span>
-							</div>
-						</TooltipTrigger>
-						<TooltipContent>
-							<p>{errorMessage}</p>
-						</TooltipContent>
-					</Tooltip>
-				</TooltipProvider>
+				<div className="flex gap-1 items-center">
+					{getStatusIcon()}
+					<span className="text-xs text-destructive font-normal">
+						{getStatusText()}
+					</span>
+				</div>
 			);
 		}
 		return (
@@ -126,7 +134,7 @@ export const FileItemWithSheets = ({
 	};
 
 	return (
-		<div className="border rounded-lg">
+		<div className="border border-gray-200 rounded-lg transition-colors duration-200">
 			{/* /* Main file row */}
 			<div className="flex items-center justify-between px-3 py-2">
 				<div className="flex items-center gap-3 flex-1">
@@ -230,17 +238,25 @@ export const FileItemWithSheets = ({
 				<div className="border-t border-gray-100">
 					<div className="px-3 py-1">
 						<div className="flex flex-col space-y-3">
-							{file.meta.sheets.map((sheet) => (
-								<SheetItem
-									key={sheet.id}
-									sheet={sheet}
-									fileId={file.id || file.serverId}
-									fileName={file.name || file.filename}
-									isLastSheet={file.meta.sheets.length === 1}
-									onDeleteSheet={handleSheetDelete}
-									isDeleting={deletingSheets.has(sheet.id)}
-								/>
-							))}
+							{file.meta.sheets.map((sheet) => {
+								const hasSheetError =
+									sheet.status === 'FAILED' ||
+									sheet.status === 'ERROR';
+								return (
+									<SheetItem
+										key={sheet.id}
+										sheet={sheet}
+										fileId={file.id || file.serverId}
+										fileName={file.name || file.filename}
+										isLastSheet={file.meta.sheets.length === 1}
+										onDeleteSheet={handleSheetDelete}
+										isDeleting={deletingSheets.has(sheet.id)}
+										highlightError={
+											highlightError && hasSheetError
+										}
+									/>
+								);
+							})}
 						</div>
 					</div>
 				</div>

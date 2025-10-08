@@ -7,11 +7,9 @@ export const uploadInit = async (data) => {
 };
 
 export const getPresignedUrl = async ({ fileName, datasourceId }) => {
-	const response = await axiosClientV1.get(`/datasources/presigned-url`, {
-		params: {
-			datasource_id: datasourceId,
-			file_name: fileName,
-		},
+	const response = await axiosClientV1.post(`/datasources/presigned-url`, {
+		// datasource_id: datasourceId,
+		file_name: fileName,
 	});
 
 	return response.data;

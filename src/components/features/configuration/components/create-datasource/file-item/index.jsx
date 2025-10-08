@@ -5,14 +5,8 @@ import { Warning } from '@phosphor-icons/react';
 import CustomCheckbox from '@/components/elements/custom-checkbox';
 import { ChevronDown, ChevronUp, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SheetItem } from './sheet-item';
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { getFileSize } from '@/utils/file';
 
 export default function FileItem({
@@ -59,31 +53,31 @@ export default function FileItem({
 
 		if (
 			fileObj?.status === FILE_STATUS.FAILED ||
-			fileObj?.status === FILE_STATUS.UPLOADING_FAILED
+			fileObj?.status === FILE_STATUS.UPLOADING_FAILED ||
+			hasSheetErrors
 		) {
+			let errorText = '';
+			let iconComponent = (
+				<Warning weight="fill" className="w-4 h-4 text-destructive" />
+			);
+
+			if (fileObj?.status === FILE_STATUS.FAILED) {
+				// Show actual file error message
+				errorText = fileObj.message || 'Processing Failed';
+			} else if (fileObj?.status === FILE_STATUS.UPLOADING_FAILED) {
+				errorText = fileObj.message || 'Uploading Failed';
+			} else if (hasSheetErrors) {
+				// Show sheet error indicator
+				errorText = 'Error in some sheets';
+			}
+
 			return (
-				<TooltipProvider delayDuration={0}>
-					<Tooltip>
-						<TooltipTrigger className="ms-2">
-							<div className="flex gap-1 items-center cursor-pointer">
-								<Warning
-									weight="fill"
-									className="w-4 h-4 text-destructive"
-								/>
-								<span className="text-xs text-destructive font-normal">
-									{fileObj?.status === FILE_STATUS.FAILED
-										? 'Processing Failed'
-										: 'Uploading Failed'}
-								</span>
-							</div>
-						</TooltipTrigger>
-						{fileObj.message && (
-							<TooltipContent className="max-w-[20rem]">
-								{fileObj.message}
-							</TooltipContent>
-						)}
-					</Tooltip>
-				</TooltipProvider>
+				<div className="flex gap-1 items-center">
+					{iconComponent}
+					<span className="text-xs text-destructive font-normal">
+						{errorText}
+					</span>
+				</div>
 			);
 		}
 	};
@@ -93,6 +87,20 @@ export default function FileItem({
 		Array.isArray(fileObj?.sheets) &&
 		fileObj.sheets.length > 0;
 	const sheetCount = hasSheets ? fileObj.sheets.length : 0;
+
+	// Check for sheet-level errors
+	const hasSheetErrors =
+		hasSheets &&
+		fileObj.sheets.some(
+			(sheet) => sheet.status === 'FAILED' || sheet.status === 'ERROR',
+		);
+
+	// Auto-expand if there are sheet errors
+	useEffect(() => {
+		if (hasSheetErrors) {
+			setIsExpanded(true);
+		}
+	}, [hasSheetErrors]);
 
 	const handleExpandToggle = () => {
 		if (hasSheets) {
@@ -174,16 +182,27 @@ export default function FileItem({
 						className="hover:text-destructive p-1 h-auto"
 					>
 						{deletingFiles.includes(fileObj.id) ? (
-							<TooltipProvider delayDuration={0}>
-								<Tooltip>
-									<TooltipTrigger className="ms-2">
-										<CircularLoader size="sm" />
-									</TooltipTrigger>
-									<TooltipContent className="max-w-[20rem]">
-										Deleting File...
-									</TooltipContent>
-								</Tooltip>
-							</TooltipProvider>
+							<div className="w-4 h-4">
+								<svg
+									className="animate-spin w-4 h-4 text-gray-400"
+									fill="none"
+									viewBox="0 0 24 24"
+								>
+									<circle
+										className="opacity-25"
+										cx="12"
+										cy="12"
+										r="10"
+										stroke="currentColor"
+										strokeWidth="4"
+									></circle>
+									<path
+										className="opacity-75"
+										fill="currentColor"
+										d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+									></path>
+								</svg>
+							</div>
 						) : [
 								FILE_STATUS.PROCESSING,
 								FILE_STATUS.UPLOADED,
@@ -206,7 +225,7 @@ export default function FileItem({
 								<SheetItem
 									key={sheet.id}
 									sheet={sheet}
-									fileId={fileObj.id || fileObj.serverId}
+									fileId={fileObj.serverId || fileObj.id}
 									fileName={fileObj.name || fileObj.filename}
 									isLastSheet={fileObj.sheets.length === 1}
 									onDeleteSheet={handleSheetDelete}

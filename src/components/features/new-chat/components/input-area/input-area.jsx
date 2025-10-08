@@ -29,7 +29,12 @@ import { pxToRem } from '@/utils/unit-convertor';
 import { useSessionId } from '@/hooks/use-session-id';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
-const InputArea = ({ config, onAppendQuery, disabled = false }) => {
+const InputArea = ({
+	config,
+	onAppendQuery,
+	disabled = false,
+	promptInitialValue = '',
+}) => {
 	// Refs
 	const firstActionRef = useRef(null);
 	const singleInputRef = useRef(null);
@@ -45,7 +50,12 @@ const InputArea = ({ config, onAppendQuery, disabled = false }) => {
 	// Custom hooks - Core functionality
 	const { mode, queries, setMode, setQueries, handleQueryChange, resetQueries } =
 		useInputModes();
-	const [prompt, setPrompt] = useState('');
+
+	const [prompt, setPrompt] = useState(promptInitialValue);
+
+	useEffect(() => {
+		setPrompt(promptInitialValue);
+	}, [promptInitialValue]);
 
 	const { data: datasourceData } = useDatasourceDetailsV2();
 

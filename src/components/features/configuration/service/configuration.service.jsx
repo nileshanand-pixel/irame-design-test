@@ -4,13 +4,10 @@ import { logError } from '@/lib/logger';
 import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
 
 export const getPresignedUrl = async (fileName, datasourceId) => {
-	const dsId = datasourceId || uuidv4();
-	const response = await axiosClientV1.get(
-		`/datasources/presigned-url?file_name=${fileName}&datasource_id=${dsId}`,
-		{
-			headers: {},
-		},
-	);
+	// const dsId = datasourceId || uuidv4();
+	const response = await axiosClientV1.post(`/datasources/presigned-url`, {
+		file_name: fileName,
+	});
 	return response.data;
 };
 

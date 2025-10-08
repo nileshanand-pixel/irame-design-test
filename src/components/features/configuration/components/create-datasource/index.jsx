@@ -93,11 +93,15 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 			if (datasourceFiles?.length > 0) {
 				if (files.length === 0) {
+					// On page refresh, files array is empty but datasource has files
+					// Create frontend-compatible file objects with consistent IDs
 					setFiles(
 						datasourceFiles?.map((f) => {
 							return {
 								...f,
 								name: f.filename,
+								// Keep backend ID as main ID since serverId won't exist after refresh
+								// This ensures file operations work correctly
 							};
 						}),
 					);
@@ -128,6 +132,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 									if (datasourceFile?.filename === file.name) {
 										return {
 											...file,
+											id: datasourceFile.id,
 											status: datasourceFile?.status,
 											sheets: datasourceFile?.sheets,
 											message: datasourceFile?.message,
@@ -679,7 +684,9 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 			// remove file from ds
 			const filesToDeleteFromDs = datasourceDetails?.files?.filter((f) => {
 				return fileObjs.some((fileObj) => {
-					return f.filename === fileObj.name;
+					// Match by filename (for newly uploaded) or by backend ID (after refresh)
+					const fileBackendId = fileObj.serverId || fileObj.id;
+					return f.filename === fileObj.name || f.id === fileBackendId;
 				});
 			});
 
@@ -762,8 +769,13 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	}, [files]);
 
 	const handleDeleteSheet = async (file, sheet, isLastSheet) => {
-		const fileId = file.serverId || file.id;
+		// After page refresh, file.id will be the backend ID from server response
+		// For newly uploaded files, file.serverId contains the backend ID
 		const fileName = file.name || file.filename;
+		const backendFile = datasourceDetails?.files?.find(
+			(f) => f.filename === fileName,
+		);
+		const fileId = backendFile?.id || file.serverId || file.id;
 		const sheetName = sheet.worksheet;
 
 		if (!fileId) {
@@ -797,6 +809,23 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 			} else {
 				// Delete just the sheet
 				await removeSheets(fileId, [sheetName]);
+
+				// Update frontend state immediately for better UX
+				setFiles((prev) =>
+					prev.map((f) => {
+						// Match by backend ID (after refresh) or name (fallback)
+						const isMatchingFile =
+							(f.serverId || f.id) === fileId || f.name === fileName;
+						if (isMatchingFile && f.sheets) {
+							return {
+								...f,
+								sheets: f.sheets.filter((s) => s.id !== sheet.id),
+							};
+						}
+						return f;
+					}),
+				);
+
 				toast.success(`Sheet "${sheetName}" deleted successfully`);
 				refetchDatasourceDetails();
 			}
