@@ -79,7 +79,7 @@ const Layout = ({ children }) => {
 				</div>
 				<GlobalPollReports />
 			</main>
-			{/* <FreshdeskWidget /> */}
+			<FreshdeskWidget />
 			<Modals />
 		</div>
 	);
