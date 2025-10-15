@@ -31,6 +31,7 @@ import { useRouter } from '@/hooks/useRouter';
 import { useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useSearchParams } from 'react-router-dom';
+import useConfirmDialog from '@/hooks/use-confirm-dialog';
 
 const TABS = [
 	{
@@ -56,6 +57,7 @@ export default function ExistingDataSources({ showForm }) {
 
 	const { navigate } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
+	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
 	const fetchDataSources = async () => {
 		const data = await getDataSourcesV2();
@@ -77,7 +79,11 @@ export default function ExistingDataSources({ showForm }) {
 					return source;
 				}
 			});
-			if (!confirm('Are you sure you want to delete this datasource?')) return;
+			const confirmed = await confirm({
+				header: 'Delete Datasource?',
+				description: `This will permanently delete "${source.name}" and all its data. This action cannot be undone.`,
+			});
+			if (!confirmed) return;
 			await deleteDataSource(dataSourceId);
 			trackEvent(
 				EVENTS_ENUM.DATASET_DELETION_SUCCESSFUL,
@@ -182,6 +188,7 @@ export default function ExistingDataSources({ showForm }) {
 				!showForm && 'overflow-y-hidden',
 			)}
 		>
+			<ConfirmationDialog />
 			<div className="flex flex-none px-8 flex-row gap-4 justify-between items-center pb-4">
 				<div>
 					<h3 className="text-primary80 font-semibold text-xl">
@@ -286,17 +293,17 @@ export default function ExistingDataSources({ showForm }) {
 														isProcessing &&
 															'processing-border',
 													)}
+													onClick={() => {
+														handleDatasourceClick(
+															source,
+														);
+													}}
 													key={source.datasource_id}
 												>
 													<p
 														className={cn(
-															'text-primary80 font-medium w-[calc(100%-2.85rem)] flex items-center',
+															'text-primary80 font-medium w-[calc(100%-2.85rem)] flex items-center ',
 														)}
-														onClick={() => {
-															handleDatasourceClick(
-																source,
-															);
-														}}
 													>
 														<img
 															src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
@@ -369,7 +376,10 @@ export default function ExistingDataSources({ showForm }) {
 																<DropdownMenuContent align="start">
 																	<DropdownMenuItem
 																		className="text-primary80 font-medium hover:!bg-purple-4"
-																		onClick={() => {
+																		onClick={(
+																			e,
+																		) => {
+																			e.stopPropagation();
 																			navigate(
 																				`datasource?id=${source.datasource_id}`,
 																			);

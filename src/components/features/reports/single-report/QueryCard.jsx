@@ -29,6 +29,7 @@ import { QuerySources } from './QuerySources';
 import ReportComments from '../components/report-comments';
 import useS3File from '@/hooks/useS3File';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
+import useConfirmDialog from '@/hooks/use-confirm-dialog';
 
 export const QueryCard = ({ report, card, pdfMode }) => {
 	const queryNumber = card?.order_no || 1;
@@ -43,6 +44,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 	const [showGraphs, setShowGraphs] = useState(true);
 
 	const { isDownloading, downloadS3File } = useS3File();
+	const [ConfirmationDialog, confirm] = useConfirmDialog();
 	const deleteMutation = useMutation({
 		mutationFn: deleteReportCard,
 		onSuccess: () => {
@@ -100,9 +102,13 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 		{
 			type: 'item',
 			label: 'Delete',
-			onClick: () => {
-				const ok = confirm('Are you sure you want to remove this card?');
-				if (!ok) return;
+			onClick: async () => {
+				const confirmed = await confirm({
+					header: 'Remove Query Card?',
+					description:
+						'This will permanently remove this query card from the report. This action cannot be undone.',
+				});
+				if (!confirmed) return;
 				deleteMutation.mutate({
 					reportId: report.report_id,
 					reportCardId: card.external_id,
@@ -119,6 +125,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 
 	return (
 		<Card className="rounded-xl px-5 py-4 border shadow-sm bg-[#f9f8ff]">
+			<ConfirmationDialog />
 			<CardHeader className="p-0">
 				<div className="flex flex-row flex-wrap items-center gap-3 mb-2">
 					<Badge

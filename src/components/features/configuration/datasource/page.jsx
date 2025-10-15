@@ -28,6 +28,7 @@ import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV
 import CircularLoader from '@/components/elements/loading/CircularLoader';
 import { DownloadSimple } from '@phosphor-icons/react';
 import useS3File from '@/hooks/useS3File';
+import useConfirmDialog from '@/hooks/use-confirm-dialog';
 
 const tabs = [
 	{ name: 'Data Card', component: DataCard },
@@ -42,6 +43,7 @@ const DataSource = () => {
 	const [changesForTracking, setChangesForTracking] = useState([]);
 
 	const { isDownloading, downloadS3File } = useS3File();
+	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
 	const datasourceQuery = useDatasourceDetailsV2({
 		datasourceId: query?.id,
@@ -224,24 +226,31 @@ const DataSource = () => {
 		setSelectedTab(tabName);
 	};
 
-	const handleEditDataSource = () => {
+	const handleEditDataSource = async () => {
 		if (!query?.id) return;
 		const payload = {
 			...form,
 		};
 		delete payload.hasChanges;
-		if (
-			!confirm(
+		const confirmed = await confirm({
+			header: 'Save Changes?',
+			description:
 				'Are you sure you want to save these changes to your data source?',
-			)
-		)
-			return;
+			primaryCtaText: 'Save Changes',
+			primaryCtaVariant: 'default',
+		});
+		if (!confirmed) return;
 		editMutation.mutateAsync({ id: query?.id, payload });
 	};
 
-	const handleDeleteDatasource = () => {
+	const handleDeleteDatasource = async () => {
 		if (!query?.id) return;
-		if (!confirm('Are you sure you want to delete this data source?')) return;
+		const confirmed = await confirm({
+			header: 'Delete Data Source?',
+			description:
+				'This will permanently delete this data source and all its data. This action cannot be undone.',
+		});
+		if (!confirmed) return;
 		deleteMutation.mutateAsync(query.id);
 	};
 
@@ -370,6 +379,7 @@ const DataSource = () => {
 
 	return (
 		<div className="flex flex-col w-full px-8 relative h-full pt-2">
+			<ConfirmationDialog />
 			{(editMutation.isPending || deleteMutation.isPending) && (
 				<BackdropLoader />
 			)}

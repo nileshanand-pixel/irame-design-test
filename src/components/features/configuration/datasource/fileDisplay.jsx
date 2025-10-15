@@ -30,7 +30,7 @@ export default function FileDisplay({
 	fileSizes,
 }) {
 	const { isDownloading, downloadS3File } = useS3File();
-	const [isCollapsed, setIsCollapsed] = useState(false);
+	const [isCollapsed, setIsCollapsed] = useState(true);
 
 	const handleDownloadFile = (file) => {
 		// if (e) e.stopPropagation();

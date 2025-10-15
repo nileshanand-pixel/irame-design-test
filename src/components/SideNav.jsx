@@ -38,6 +38,7 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
 import { useSessionId } from '@/hooks/use-session-id';
 import { queryClient } from '@/lib/react-query';
+import useConfirmDialog from '@/hooks/use-confirm-dialog';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -48,6 +49,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const [sessionTitle, setSessionTitle] = useState('');
 	const [expandedBusinessProcesses, setExpandedBusinessProcesses] = useState([]);
 	const sessionId = useSessionId();
+	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
 	const { pathname, navigate } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -187,7 +189,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			const updatedList = utilReducer?.sessionHistory.filter(
 				(session) => session.session_id !== sessionId,
 			);
-			if (!confirm('Are you sure you want to delete this session?')) return;
+			const confirmed = await confirm({
+				header: 'Delete Session?',
+				description:
+					'This will permanently delete this chat session and all its messages. This action cannot be undone.',
+			});
+			if (!confirmed) return;
 			await deleteSession(sessionId);
 			trackEvent(
 				EVENTS_ENUM.SIDE_BAR_CHAT_DELETED,
@@ -230,7 +237,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	) => {
 		e.stopPropagation();
 		try {
-			if (!confirm('Are you sure you want to delete this session?')) return;
+			const confirmed = await confirm({
+				header: 'Delete Workflow Session?',
+				description:
+					'This will permanently delete this workflow session and all its progress. This action cannot be undone.',
+			});
+			if (!confirmed) return;
 			await deleteRunningWorkflow(runId);
 			trackEvent(
 				EVENTS_ENUM.SIDE_BAR_CHAT_DELETED,
@@ -344,7 +356,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							className="flex bg-transparent border-none text-primary80 font-medium"
 						/>
 					) : (
-						<p className="flex ml-3">{session.title}</p>
+						<p className="ml-3 truncate">{session.title}</p>
 					)}
 				</div>
 				<DropdownMenu>
@@ -570,6 +582,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					: 'w-[4.5rem] min-w-[4.5rem]'
 			} border-r bg-purple-8`}
 		>
+			<ConfirmationDialog />
 			{/* SideNav Expand Collapse | Hamburger */}
 			<div className="flex-none m-4">
 				<img

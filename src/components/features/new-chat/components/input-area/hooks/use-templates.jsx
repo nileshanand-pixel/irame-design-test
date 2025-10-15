@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from '@/lib/toast';
 import { logError } from '@/lib/logger';
 import { deleteTemplate, getTemplates } from '../../../service/new-chat.service';
+import useConfirmDialog from '@/hooks/use-confirm-dialog';
 
 export const useTemplates = () => {
 	const [savedQueryReference, setSavedQueryReference] = useState({
@@ -16,6 +17,7 @@ export const useTemplates = () => {
 		id: '',
 		isEditing: false,
 	});
+	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
 	// Query to fetch templates
 	const templatesQuery = useQuery({
@@ -40,8 +42,13 @@ export const useTemplates = () => {
 		},
 	});
 
-	const handleDeleteTemplate = (templateId) => {
-		if (confirm('Are you sure that you want to delete this template?')) {
+	const handleDeleteTemplate = async (templateId) => {
+		const confirmed = await confirm({
+			header: 'Delete Template?',
+			description:
+				'This will permanently delete this template. This action cannot be undone.',
+		});
+		if (confirmed) {
 			deleteTemplateMutation.mutate(templateId);
 		}
 	};
@@ -122,5 +129,6 @@ export const useTemplates = () => {
 		editTemplateData,
 		setEditTemplateData,
 		resetEditTemplateData,
+		ConfirmationDialog,
 	};
 };
