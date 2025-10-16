@@ -112,7 +112,7 @@ export const UploadManager = ({
 
 		if (isInvalidFilePresent) {
 			toast.error(
-				`Unsupported file type. Please upload only .csv or .xlsx files.`,
+				`Unsupported file type. Please upload only .csv, .xlsx or .xlsb files.`,
 				{ position: 'bottom-center' },
 			);
 			return;
@@ -370,7 +370,7 @@ export const UploadManager = ({
 						ref={fileInputRef}
 						style={{ display: 'none' }}
 						onChange={handleFilesListInput}
-						accept=".csv,.xlsx"
+						accept=".csv,.xlsx,.xlsb"
 					/>
 					<FilesList
 						files={items}
