@@ -134,6 +134,11 @@ const Workzone = () => {
 				setAnswers([]);
 				setActiveQueryId('');
 				setDoingScience([]);
+				setWorkspace({
+					show: true,
+					activeTab: 'planner',
+					visitedTabs: { planner: true },
+				});
 			}
 		},
 		[currentSessionId],
@@ -168,7 +173,7 @@ const Workzone = () => {
 		if (sessionQueriesData?.query_list) {
 			processSessionData(sessionQueriesData);
 			// Scroll to bottom when session data loads
-			scrollToBottom();
+			//scrollToBottom();
 		}
 	}, [sessionQueriesData, processSessionData]);
 
@@ -200,6 +205,7 @@ const Workzone = () => {
 		activeTab: 'planner',
 		visitedTabs: { planner: true },
 	});
+
 	const [prompt, setPrompt] = useState('');
 	const [bulkPrompt, setBulkPrompt] = useState([
 		{ id: 1, text: 'Hi' },
@@ -239,7 +245,7 @@ const Workzone = () => {
 						document.getElementById('scroll-dummy-bottom');
 					if (dummyElement) {
 						dummyElement.scrollIntoView({
-							behavior: 'smooth',
+							// behavior: 'smooth',
 							block: 'end',
 							inline: 'nearest',
 						});
@@ -247,7 +253,7 @@ const Workzone = () => {
 						// Fallback to scrollTo method
 						scrollRef.current.scrollTo({
 							top: scrollRef.current.scrollHeight,
-							behavior: 'smooth',
+							// behavior: 'smooth',
 						});
 					}
 				}
@@ -481,10 +487,16 @@ const Workzone = () => {
 
 	const toggleIra = (targetQueryId) => {
 		if (!targetQueryId) return;
-		if (targetQueryId === activeQueryId) {
-			setWorkspace((prevState) => ({ ...prevState, show: !prevState.show }));
+
+		if (!workspace.show) {
+			setWorkspace((prev) => ({ ...prev, show: true }));
+			setActiveQueryId(targetQueryId);
+		} else if (targetQueryId === activeQueryId) {
+			setWorkspace((prev) => ({ ...prev, show: false }));
+			setActiveQueryId('');
+		} else {
+			setActiveQueryId(targetQueryId);
 		}
-		setActiveQueryId(targetQueryId);
 	};
 
 	const handleCreateNewDashboard = async () => {
@@ -579,10 +591,11 @@ const Workzone = () => {
 									src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
 									className="me-1 size-5"
 								/>
-								{(workspace.show && activeQueryId === query?.id) ||
-								!activeQueryId
-									? 'Hide'
-									: 'Show'}{' '}
+								{!workspace.show
+									? 'Show'
+									: activeQueryId === query?.id
+										? 'Hide'
+										: 'Show'}{' '}
 								Workspace
 							</Button>
 						)}
@@ -674,28 +687,33 @@ const Workzone = () => {
 			return;
 		}
 
-		if (!activeQueryId && answers && answers?.length) {
-			setActiveQueryId(answers?.[answers?.length - 1]?.query_id);
+		// Auto-activate last query if none is active
+		if (!activeQueryId && answers?.length) {
+			setActiveQueryId(answers[answers.length - 1].query_id);
 		}
-	}, [doingScience, answers, activeQueryId]);
+	}, [doingScience, answers]);
+
+	// useEffect(() => {
+	// 	scrollToBottom();
+	// }, []);
 
 	// Update session ID when URL changes
 	useEffect(() => {
 		if (query?.sessionId && query.sessionId !== currentSessionId) {
 			changeSession(query.sessionId);
 			setPrompt('');
-			setInputDisabled(true);
 			setBanners({
 				showFailedResponse: false,
 				showDelay: false,
 			});
+			scrollToBottom();
 		}
 	}, [query?.sessionId, currentSessionId, changeSession]);
 
 	// Reset when queries length changes
 	useEffect(() => {
+		setInputDisabled(queries.length > 0);
 		if (queries.length > 0) {
-			setInputDisabled(true);
 			setActivateGraphOnLast(false);
 		}
 	}, [queries.length]);
@@ -815,12 +833,13 @@ const Workzone = () => {
 							</div>
 							<i
 								className="bi-x text-2xl cursor-pointer"
-								onClick={() =>
+								onClick={() => {
 									setWorkspace((prevState) => ({
 										...prevState,
 										show: false,
-									}))
-								}
+									}));
+									setActiveQueryId('');
+								}}
 							></i>
 						</div>
 						<Workspace
