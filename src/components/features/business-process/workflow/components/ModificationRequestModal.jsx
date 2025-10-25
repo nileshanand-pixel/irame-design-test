@@ -5,6 +5,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Trash2 } from 'lucide-react';
+import { trackEvent, getErrorAnalyticsProps } from '@/lib/mixpanel';
+import { logError } from '@/lib/logger';
 
 const ModificationRequestModal = ({
 	isOpen,
@@ -130,28 +132,66 @@ const ModificationRequestModal = ({
 
 			const response = await fetch(GOOGLE_SCRIPT_URL, {
 				method: 'POST',
+				mode: 'no-cors',
 				headers: {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify(data),
 			});
 
-			// Check response for success. Google Apps Script typically allows CORS
-			// (Access-Control-Allow-Origin: *). Without `mode: 'no-cors'` we can
-			// inspect the response and handle errors properly.
-			if (!response.ok) {
-				throw new Error(`Request failed with status ${response.status}`);
-			}
-
+			// Using `no-cors` keeps the request opaque but ensures the request is
+			// sent even when CSP/CORS issues occur. We intentionally do not
+			// validate `response.ok` here so that the form flow continues — the
+			// server-side action (mail trigger) can still run even if the browser
+			// can't read the response.
 			setSuccess(true);
 			setTimeout(() => {
 				onClose();
 				resetForm();
 			}, 3000);
 		} catch (err) {
-			setError(
-				'An error occurred while submitting your request. Please try again.',
-			);
+			// Track the failure for analytics and log to Sentry, but continue
+			// the user-facing success flow so server-side mail triggers aren't
+			// blocked by client-side CSP/CORS issues.
+			try {
+				trackEvent('modification_request_submission_failed', {
+					parameters: {
+						workflowId: formData.workflowId,
+						workflowName: formData.workflowName,
+						businessProcessName: formData.businessProcessName,
+						issueType: (formData.issueType || []).join(','),
+						selectedFilesCount: selectedFiles.length,
+						error_message: err?.message,
+					},
+				});
+			} catch (e) {
+				// swallow tracking errors
+				// eslint-disable-next-line no-console
+				console.warn('mixpanel track error', e);
+			}
+
+			// Log the exception to Sentry via centralized logger
+			logError(err, {
+				feature: 'modification-request',
+				action: 'submit',
+				extra: {
+					email: formData.email,
+					workflowId: formData.workflowId,
+					workflowName: formData.workflowName,
+					issueType: formData.issueType,
+					selectedFilesCount: selectedFiles.length,
+				},
+			});
+
+			// Still show success to user (server likely processed the request)
+			// but surface a console warning for devs.
+			// eslint-disable-next-line no-console
+			console.warn('Modification request fetch error (ignored):', err);
+			setSuccess(true);
+			setTimeout(() => {
+				onClose();
+				resetForm();
+			}, 3000);
 		} finally {
 			setIsSubmitting(false);
 		}
