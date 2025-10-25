@@ -130,15 +130,19 @@ const ModificationRequestModal = ({
 
 			const response = await fetch(GOOGLE_SCRIPT_URL, {
 				method: 'POST',
-				mode: 'no-cors',
 				headers: {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify(data),
 			});
 
-			// With no-cors mode, we can't read the response
-			// But if the request completes without error, we assume success
+			// Check response for success. Google Apps Script typically allows CORS
+			// (Access-Control-Allow-Origin: *). Without `mode: 'no-cors'` we can
+			// inspect the response and handle errors properly.
+			if (!response.ok) {
+				throw new Error(`Request failed with status ${response.status}`);
+			}
+
 			setSuccess(true);
 			setTimeout(() => {
 				onClose();
