@@ -18,12 +18,17 @@ import { queryClient } from '@/lib/react-query';
 import { toast } from '@/lib/toast';
 import { useWorkflowRunId } from '../hooks/use-workflow-run-id';
 import DataSourceCard from './components/connect-data-source/data-source-card';
+import ModificationRequestModal from './components/ModificationRequestModal';
+import useAuth from '@/hooks/useAuth';
 
 export default function WorkflowPageV2() {
 	const { businessProcessId, workflowId } = useParams();
 	const navigate = useNavigate();
 	const runId = useWorkflowRunId();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
+	const [isModalOpen, setIsModalOpen] = useState(false);
+
+	const { userDetails } = useAuth();
 
 	// Data fetching
 	const { data: workflowDetails, isLoading: isWorkflowLoading } = useQuery({
@@ -127,6 +132,7 @@ export default function WorkflowPageV2() {
 								workflowDetails={workflowDetails}
 								sidebarOpen={sidebarOpen}
 								onViewHistory={() => setSidebarOpen(true)}
+								onRequestModification={() => setIsModalOpen(true)}
 							/>
 
 							<DataSourceCard />
@@ -169,6 +175,17 @@ export default function WorkflowPageV2() {
 					)}
 				</PanelGroup>
 			</div>
+
+			{import.meta.env.VITE_GOOGLE_SCRIPT_URL && (
+				<ModificationRequestModal
+					isOpen={isModalOpen}
+					onClose={() => setIsModalOpen(false)}
+					workflowId={workflowDetails?.external_id}
+					userEmail={userDetails?.email}
+					workflowName={workflowDetails?.name}
+					businessProcessName={businessProcess?.name}
+				/>
+			)}
 		</div>
 	);
 }
