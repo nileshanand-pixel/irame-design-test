@@ -81,6 +81,7 @@ const Workzone = () => {
 			question: item?.query,
 			type: item?.type,
 			metadata: item?.metadata,
+			status: item?.status,
 		}));
 		setQueries(tempQueries);
 		setSessionMode(res[0]?.type || 'single');
@@ -712,11 +713,20 @@ const Workzone = () => {
 
 	// Reset when queries length changes
 	useEffect(() => {
-		setInputDisabled(queries.length > 0);
 		if (queries.length > 0) {
 			setActivateGraphOnLast(false);
 		}
 	}, [queries.length]);
+
+	useEffect(() => {
+		if (queries.length > 0) {
+			queries.some((query) => query.status !== 'done')
+				? setInputDisabled(true)
+				: setInputDisabled(false);
+		} else {
+			setInputDisabled(false);
+		}
+	}, [queries]);
 
 	// useEffect(() => {}, [utilReducer?.isGenerateReportModalOpen]);
 
