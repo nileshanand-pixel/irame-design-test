@@ -120,6 +120,12 @@ const NewChat = () => {
 		}
 	};
 
+	useEffect(() => {
+		if (!datasourceId || !query?.step || query.step !== '3') {
+			navigate('/home');
+		}
+	}, [datasourceId, query]);
+
 	const handleCreateSession = (
 		prompt,
 		queries,

@@ -298,19 +298,19 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 									</div>
 								</li>
 							)}
-							{savedQueries.length > 0 && (
-								<li
-									key="saved_queries"
-									className={`${
-										activeTab === 'Saved Queries'
-											? 'text-purple-100 border-purple-40 bg-purple-4'
-											: 'text-black/60 border-black/10'
-									} text-sm font-medium border rounded-3xl px-3 py-2 cursor-pointer min-w-fit max-w-[19.25rem]`}
-									onClick={() => handleActiveTab('Saved Queries')}
-								>
-									<div className="min-w-fit">Saved Queries</div>
-								</li>
-							)}
+							{/* {savedQueries.length > 0 && ( */}
+							<li
+								key="saved_queries"
+								className={`${
+									activeTab === 'Saved Queries'
+										? 'text-purple-100 border-purple-40 bg-purple-4'
+										: 'text-black/60 border-black/10'
+								} text-sm font-medium border rounded-3xl px-3 py-2 cursor-pointer min-w-fit max-w-[19.25rem]`}
+								onClick={() => handleActiveTab('Saved Queries')}
+							>
+								<div className="min-w-fit">Saved Queries</div>
+							</li>
+							{/* )} */}
 							{/* Show a skeleton-shaped tab for suggestions while they are loading */}
 							{suggestionsLoading && (
 								<li
@@ -356,93 +356,101 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 					activeTab === 'Saved Queries' ? (
 						<ScrollList>
 							<div className="w-full overflow-x-scroll horizontal-scrollbar pb-1 flex gap-4 mt-4">
-								{savedQueries?.length > 0 ? (
-									savedQueries.map((query, index) => (
-										<div
-											key={query.id || index}
-											className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] min-h-[10.5rem] p-4 hover:bg-purple-8 mb-3 flex flex-col justify-between"
-										>
-											<div
-												className="overflow-y-auto text-sm font-medium text-primary80 mb-2"
-												onClick={() =>
-													handlePrompt(
-														query.question,
-														index,
-														savedQueries,
-													)
-												}
-											>
-												<li className="flex items-center gap-2 hover:cursor-pointer hover:text-purple-80 !line-clamp-5">
-													{query.question}
-												</li>
-											</div>
-											<div className="flex gap-2 justify-end w-full">
-												<div
-													className={`cursor-pointer p-1 rounded-full${deletingTemplates.has(query.id) ? ' opacity-60 pointer-events-none' : ' bg-white hover:bg-gray-100'}`}
-													aria-label="Delete saved query"
-													aria-busy={deletingTemplates.has(
-														query.id,
-													)}
-													onClick={(e) => {
-														e.stopPropagation();
-														if (
-															!deletingTemplates.has(
-																query.id,
-															)
-														) {
-															handleDeleteQuery(
-																query.id,
-																index,
-															);
-														}
-													}}
-													tabIndex={0}
-													role="button"
-												>
-													{deletingTemplates.has(
-														query.id,
-													) ? (
-														<div className="w-4 h-4">
-															<svg
-																className="animate-spin w-4 h-4 text-gray-400"
-																fill="none"
-																viewBox="0 0 24 24"
-															>
-																<circle
-																	className="opacity-25"
-																	cx="12"
-																	cy="12"
-																	r="10"
-																	stroke="currentColor"
-																	strokeWidth="4"
-																></circle>
-																<path
-																	className="opacity-75"
-																	fill="currentColor"
-																	d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-																></path>
-															</svg>
-														</div>
-													) : (
-														<Trash2 className="size-5 text-primary80" />
-													)}
-												</div>
-												<div
-													className="cursor-pointer p-1 rounded-full bg-white hover:bg-gray-100"
-													onClick={(e) => {
-														e.stopPropagation();
-														setPrompt(query.question);
-													}}
-												>
-													<img
-														src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
-														alt="edit-prompt"
-														className="size-5"
-													/>
-												</div>
-											</div>
+								{!isLoadingSavedQueries ? (
+									savedQueries?.length === 0 ? (
+										<div className="text-sm font-medium text-primary80">
+											No saved queries found
 										</div>
-									))
+									) : (
+										savedQueries.map((query, index) => (
+											<div
+												key={query.id || index}
+												className="relative bg-purple-4 rounded-xl min-w-[15rem] max-w-[19.25rem] min-h-[10.5rem] p-4 hover:bg-purple-8 mb-3 flex flex-col justify-between"
+											>
+												<div
+													className="overflow-y-auto text-sm font-medium text-primary80 mb-2"
+													onClick={() =>
+														handlePrompt(
+															query.question,
+															index,
+															savedQueries,
+														)
+													}
+												>
+													<li className="flex items-center gap-2 hover:cursor-pointer hover:text-purple-80 !line-clamp-5">
+														{query.question}
+													</li>
+												</div>
+												<div className="flex gap-2 justify-end w-full">
+													<div
+														className={`cursor-pointer p-1 rounded-full${deletingTemplates.has(query.id) ? ' opacity-60 pointer-events-none' : ' bg-white hover:bg-gray-100'}`}
+														aria-label="Delete saved query"
+														aria-busy={deletingTemplates.has(
+															query.id,
+														)}
+														onClick={(e) => {
+															e.stopPropagation();
+															if (
+																!deletingTemplates.has(
+																	query.id,
+																)
+															) {
+																handleDeleteQuery(
+																	query.id,
+																	index,
+																);
+															}
+														}}
+														tabIndex={0}
+														role="button"
+													>
+														{deletingTemplates.has(
+															query.id,
+														) ? (
+															<div className="w-4 h-4">
+																<svg
+																	className="animate-spin w-4 h-4 text-gray-400"
+																	fill="none"
+																	viewBox="0 0 24 24"
+																>
+																	<circle
+																		className="opacity-25"
+																		cx="12"
+																		cy="12"
+																		r="10"
+																		stroke="currentColor"
+																		strokeWidth="4"
+																	></circle>
+																	<path
+																		className="opacity-75"
+																		fill="currentColor"
+																		d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+																	></path>
+																</svg>
+															</div>
+														) : (
+															<Trash2 className="size-5 text-primary80" />
+														)}
+													</div>
+													<div
+														className="cursor-pointer p-1 rounded-full bg-white hover:bg-gray-100"
+														onClick={(e) => {
+															e.stopPropagation();
+															setPrompt(
+																query.question,
+															);
+														}}
+													>
+														<img
+															src="https://d2vkmtgu2mxkyq.cloudfront.net/draw.svg"
+															alt="edit-prompt"
+															className="size-5"
+														/>
+													</div>
+												</div>
+											</div>
+										))
+									)
 								) : (
 									<div className="flex space-x-2">
 										{[...Array(4)].map((_, index) => (
