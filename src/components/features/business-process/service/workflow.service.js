@@ -1,5 +1,6 @@
 import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
 import { toast } from '@/lib/toast';
+import { logError } from '@/lib/logger';
 
 export const getBusinessProcesses = async () => {
 	const response = await axiosClientV1.get(`/business-processes`, {
@@ -144,4 +145,48 @@ export const deleteRunningWorkflow = async (runId) => {
 		toast.error('Failed to delete session');
 		throw error;
 	}
+};
+
+export const getFeaturedWorkflows = async ({ pageParam }) => {
+	const params = {
+		limit: 10,
+	};
+	if (pageParam) {
+		params.cursor = pageParam;
+	}
+	const response = await axiosClientV1.get(`/workflow-checks`, {
+		headers: {},
+		params,
+	});
+	return {
+		workflow_checks: response.data?.workflow_checks,
+		cursor: response.data?.cursor,
+	};
+};
+
+export const getWorkflowsForDashboard = async ({ queryKey, pageParam }) => {
+	const dateRange = queryKey[1];
+	const workflowType = queryKey[2];
+	const businessProcessId = queryKey[3];
+
+	const params = {
+		limit: 10,
+		type: workflowType,
+	};
+	if (pageParam) {
+		params.cursor = pageParam;
+	}
+	if (dateRange?.startDate) {
+		params.start_date = dateRange.startDate;
+	}
+	if (dateRange?.endDate) {
+		params.end_date = dateRange.endDate;
+	}
+	if (businessProcessId && businessProcessId !== 'all') {
+		params.business_process_id = businessProcessId;
+	}
+	const response = await axiosClientV1.get(`/workflows/list-workflows`, {
+		params,
+	});
+	return response.data;
 };

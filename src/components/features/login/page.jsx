@@ -18,6 +18,8 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { grantType } from '@/config/auth.config';
 import { createOrUpdateUserSession } from '../user-session-manager/helper';
 
+const REDIRECTION_URL_AFTER_LOGIN = '/app/home?source=login';
+
 const SignInSignUp = () => {
 	const navigate = useNavigate();
 	const router = useRouter();
@@ -99,7 +101,7 @@ const SignInSignUp = () => {
 			);
 			trackUser(authUserData);
 			createOrUpdateUserSession('/app/new-chat');
-			navigate('/app/new-chat?source=login');
+			navigate(REDIRECTION_URL_AFTER_LOGIN);
 		} catch (error) {
 			logError(error, { feature: 'login', action: 'email-login' });
 			trackEvent(
@@ -158,7 +160,7 @@ const SignInSignUp = () => {
 							team_name: authUserData.team_name,
 						}),
 					);
-					navigate('/app/new-chat');
+					navigate(REDIRECTION_URL_AFTER_LOGIN);
 				} else {
 					const params = new URLSearchParams(window.location.search);
 					params.delete('code');
@@ -178,7 +180,7 @@ const SignInSignUp = () => {
 						'Login failed. Please check your credentials and try again.',
 					);
 					createSession();
-					navigate('/app/new-chat?source=login');
+					navigate(REDIRECTION_URL_AFTER_LOGIN);
 				}
 			})
 			.catch((error) => {
@@ -228,7 +230,7 @@ const SignInSignUp = () => {
 
 	useEffect(() => {
 		if (!hasCode && isAuthenticated) {
-			navigate('/app/new-chat');
+			navigate(REDIRECTION_URL_AFTER_LOGIN);
 		} else if (!hasCode && !isAuthenticated) {
 			trackEvent(
 				EVENTS_ENUM.SIGN_IN_PAGE_LOADED,

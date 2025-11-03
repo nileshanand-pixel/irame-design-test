@@ -37,7 +37,7 @@ function AppProvider({ children }) {
 					</ErrorBoundary>
 				</Router>
 			</Provider>
-			<ReactQueryDevtools buttonPosition="bottom-left" initialIsOpen={false} />
+			{/* <ReactQueryDevtools buttonPosition="bottom-left" initialIsOpen={false} /> */}
 		</QueryClientProvider>
 	);
 }

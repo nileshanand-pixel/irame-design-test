@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Header from './Header';
 import SideNav from './SideNav';
 import PropTypes from 'prop-types';
@@ -13,6 +13,7 @@ import Modals from './Modals';
 import FreshdeskWidget from './features/freshdesk/FreshdeskWidget';
 import { CHAT_SESSION_STARTED_EVENT_DATA_KEY } from '@/constants/chat.constant';
 import { removeFromLocalStorage } from '@/utils/local-storage';
+import ChooseDataSourceDialog from './ChooseDataSourceDialog';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 	'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -23,6 +24,7 @@ const Layout = ({ children }) => {
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const dispatch = useDispatch();
 	const { pathname, query } = useRouter();
+	const [selectedDataSource, setSelectedDataSource] = useState('');
 
 	useEffect(() => {
 		if (pathname && pathname !== '/app/new-chat/session') {
@@ -56,6 +58,18 @@ const Layout = ({ children }) => {
 
 	return (
 		<div className={`flex items-start h-screen justify-between`}>
+			<ChooseDataSourceDialog
+				open={utilReducer?.isDatasourceSelectionModalOpen}
+				setOpen={(value) =>
+					dispatch(
+						updateUtilProp([
+							{ key: 'isDatasourceSelectionModalOpen', value },
+						]),
+					)
+				}
+				selectedDataSource={selectedDataSource}
+				setSelectedDataSource={setSelectedDataSource}
+			/>
 			<SideNav
 				toggleSideNav={toggleSideNav}
 				isSideNavOpen={utilReducer?.isSideNavOpen}

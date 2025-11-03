@@ -2,9 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
 	isSideNavOpen: true,
-	suggestionData: {},
+	isDatasourceSelectionModalOpen: false,
 	dataSources: [],
-	sessionHistory: [],
 	resetChat: false,
 	answerFromHistory: {},
 	isGenerateReportModalOpen: false,

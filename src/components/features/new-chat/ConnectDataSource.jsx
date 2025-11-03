@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import UploadInput from './UploadInput';
 import PropTypes from 'prop-types';
-import ChooseDataSourceDialog from './ChooseDataSourceDialog';
+// import ChooseDataSourceDialog from '../../ChooseDataSourceDialog';
 import { useState } from 'react';
 
 const ConnectDataSource = ({
@@ -34,13 +34,13 @@ const ConnectDataSource = ({
 					</Button>
 				) : null}
 			</div>
-			<ChooseDataSourceDialog
+			{/* <ChooseDataSourceDialog
 				open={open}
 				setOpen={setOpen}
 				selectedDataSource={selectedDataSource}
 				setSelectedDataSource={setSelectedDataSource}
 				handleNextStep={handleNextStep}
-			/>
+			/> */}
 		</div>
 	);
 };

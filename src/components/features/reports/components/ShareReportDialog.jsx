@@ -124,12 +124,15 @@ const ShareReportDialog = React.memo(() => {
 	const handleSave = useCallback(() => {
 		let currentuser_id = authStoreReducer?.user_id;
 		if (!currentuser_id) {
-			currentuser_id = utilReducer?.sessionHistory?.[0]?.user_id;
+			logError(new Error('user_id not found in authStore'), {
+				feature: 'reports',
+				action: 'share-report-no-userid',
+				reportId,
+			});
+			toast.error('User session expired. Please refresh the page.');
+			setInvitedEmails([]);
+			return;
 		}
-		if (!authStoreReducer?.user_id)
-			dispatch(
-				updateAuthStoreProp([{ key: 'user_id', value: currentuser_id }]),
-			);
 		if (selectedReport?.user_id !== currentuser_id) {
 			logError(new Error('User attempted to share report they do not own'), {
 				feature: 'reports',

@@ -19,6 +19,7 @@ import { useRouter } from '@/hooks/useRouter';
 import { useSelector } from 'react-redux';
 import { cn } from '@/lib/utils';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
+import { Activity, Code, FileSearch } from 'lucide-react';
 
 const Workspace = ({
 	handleTabClick,
@@ -50,14 +51,20 @@ const Workspace = ({
 			[WorkspaceEnum.Planner]: () => (
 				<PlannerComponent
 					data={answerResp?.answer?.[WorkspaceEnum.Planner]}
-					canEdit={canEdit && answerResp?.type !== 'workflow'}
+					canEdit={
+						canEdit &&
+						answerResp?.type !== 'workflow' &&
+						!answerResp?.answer?.clarification
+					}
 					workspaceHasChanges={workspaceHasChanges}
 					setWorkspaceHasChanges={setWorkspaceHasChanges}
+					queryId={answerResp?.query_id}
 				/>
 			),
 			[WorkspaceEnum.Coder]: () => (
 				<CoderComponent
 					data={answerResp?.answer?.[WorkspaceEnum.Coder]?.tool_data?.text}
+					queryId={answerResp?.query_id}
 				/>
 			),
 			[WorkspaceEnum.Reference]: () => (
@@ -67,7 +74,8 @@ const Workspace = ({
 					status={answerResp?.status}
 					workspaceHasChanges={workspaceHasChanges}
 					setWorkspaceHasChanges={setWorkspaceHasChanges}
-					canEdit={canEdit}
+					canEdit={canEdit && !answerResp?.answer?.clarification}
+					queryId={answerResp?.query_id}
 				/>
 			),
 		};
@@ -87,12 +95,21 @@ const Workspace = ({
 			));
 		}
 
+		const iconMap = {
+			[WorkspaceEnum.Planner]: <Activity className="w-4 h-4 " />,
+			[WorkspaceEnum.Reference]: <FileSearch className="w-4 h-4 " />,
+			[WorkspaceEnum.Coder]: <Code className="w-4 h-4 " />,
+		};
+
 		return availableTabs.map((tab, index) => (
 			<li
 				key={index}
-				className={`!pb-0 flex items-center gap-2 ${workspace.activeTab === tab ? 'active-tab' : 'default-tab'}`}
+				className={`!pb-1 flex items-center gap-2 cursor-pointer ${
+					workspace.activeTab === tab ? 'active-tab' : 'default-tab'
+				}`}
 				onClick={() => handleTabClick(tab)}
 			>
+				{iconMap[tab]}
 				{workSpaceMap[tab]}
 				{!workspace.visitedTabs[tab] && (
 					<span className="relative flex size-2">
@@ -105,7 +122,10 @@ const Workspace = ({
 	};
 
 	const showRegenerateAction =
-		!editDisabled && workspaceHasChanges && answerResp?.type !== 'workflow';
+		!editDisabled &&
+		workspaceHasChanges &&
+		answerResp?.type !== 'workflow' &&
+		!answerResp?.answer?.clarification;
 
 	return (
 		<div className="rounded-2xl mt-3 flex-1 w-full h-full overflow-hidden relative flex flex-col gap-4">
@@ -142,8 +162,7 @@ const Workspace = ({
 											dataset_id:
 												datasourceData?.datasource_id,
 											dataset_name: datasourceData?.name,
-											query_id:
-												chatStoreReducer?.activeQueryId,
+											query_id: answerResp?.query_id,
 										}),
 									);
 									regenerateResponse(answerResp);

@@ -23,6 +23,7 @@ const ExcelFileContent = ({
 	setEditedFileNames,
 	editedFileNames,
 	canEdit,
+	queryId,
 }) => {
 	const { query } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -64,7 +65,7 @@ const ExcelFileContent = ({
 							chat_session_id: query?.sessionId,
 							dataset_id: datasourceData?.datasource_id,
 							dataset_name: datasourceData?.name,
-							query_id: chatStoreReducer?.activeQueryId,
+							query_id: queryId,
 						}),
 					);
 					setWorkspaceHasChanges(true);
@@ -104,6 +105,7 @@ const SourceComponent = ({
 	workspaceHasChanges,
 	setWorkspaceHasChanges,
 	canEdit,
+	queryId,
 }) => {
 	const [selectedPDF, setSelectedPDF] = useState(null);
 	const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
@@ -154,7 +156,7 @@ const SourceComponent = ({
 	useEffect(() => {
 		if (workspaceHasChanges) return;
 		setInitialState();
-	}, [chatStoreReducer?.activeQueryId]);
+	}, [queryId]);
 	const handleViewPDF = (file, pages) => {
 		setSelectedPDF(file);
 		setUsedPages(pages);
@@ -225,6 +227,7 @@ const SourceComponent = ({
 								setEditedFileNames={setEditedFileNames}
 								editedFileNames={editedFileNames}
 								canEdit={canEdit}
+								queryId={queryId}
 							/>
 						)}
 					</div>

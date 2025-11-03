@@ -20,37 +20,13 @@ import ReportCoverPage from '@/components/features/reports/export/cover/Page';
 import ReportContentPage from '@/components/features/reports/export/Page';
 import HelpMenu from '@/components/elements/HelpMenu';
 import WorkflowPageV2 from '@/components/features/business-process/workflow/page-v2';
-import * as Sentry from '@sentry/react';
-import { useEffect } from 'react';
-import {
-	useLocation,
-	useNavigationType,
-	createRoutesFromChildren,
-	matchRoutes,
-} from 'react-router-dom';
+import Home from '@/components/features/home';
 
 const AppRoutes = () => {
-	// Add React Router v6 integration for Sentry
-	useEffect(() => {
-		if (import.meta.env.VITE_SENTRY_DSN) {
-			Sentry.addIntegration(
-				Sentry.reactRouterV6BrowserTracingIntegration({
-					useEffect,
-					useLocation,
-					useNavigationType,
-					createRoutesFromChildren,
-					matchRoutes,
-				}),
-			);
-		}
-	}, []);
-
-	const SentryRoutes = Sentry.withSentryReactRouterV6Routing(Routes);
-
 	return (
 		<>
 			<TermsModal />
-			<SentryRoutes>
+			<Routes>
 				<Route exact path="/*" element={<SignInSignUp />} />
 				<Route
 					path="/app/*"
@@ -58,9 +34,10 @@ const AppRoutes = () => {
 						<Layout>
 							<Routes>
 								<Route
-									path="/"
-									element={<Navigate to="new-chat" />}
+									path="/home"
+									element={<ProtectedRoute element={<Home />} />}
 								/>
+								<Route path="/" element={<Navigate to="/home" />} />
 								<Route
 									path="new-chat/session"
 									element={
@@ -70,14 +47,7 @@ const AppRoutes = () => {
 								<Route
 									path="new-chat/*"
 									element={
-										<ProtectedRoute
-											element={
-												import.meta.env.VITE_QNA_DISABLED ===
-												'true' ? null : (
-													<NewChat />
-												)
-											}
-										/>
+										<ProtectedRoute element={<NewChat />} />
 									}
 								/>
 								<Route
@@ -185,7 +155,7 @@ const AppRoutes = () => {
 					element={<ReportCoverPage />}
 				/>
 				<Route path="test" element={<TestRoute />} />
-			</SentryRoutes>
+			</Routes>
 			{/* {!window.location.pathname.includes('export') && <HelpMenu />} */}
 		</>
 	);

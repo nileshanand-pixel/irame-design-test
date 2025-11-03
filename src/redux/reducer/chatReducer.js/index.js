@@ -18,7 +18,6 @@ const initialState = {
 	initialQuery: { id: '', question: '' },
 	inputPrompt: '',
 	refreshChat: false,
-	activeQueryId: '',
 	resetIra: false,
 	activateGraphOnLatest: false,
 };

@@ -34,7 +34,7 @@ const FollowUpQuestions = ({
 					chat_session_id: query?.sessionId,
 					dataset_id: datasourceData?.datasource_id,
 					dataset_name: datasourceData?.name,
-					query_id: chatStoreReducer?.activeQueryId,
+					query_id: answerResp?.query_id,
 					question: question,
 					clicked_on: index + 1,
 				}),
@@ -71,7 +71,6 @@ const FollowUpQuestions = ({
 							value: !chatStoreReducer?.refreshChat,
 						},
 						{ key: 'queries', value: updatedQueries },
-						{ key: 'activeQueryId', value: res?.query_id },
 					]),
 				);
 				queryClient.invalidateQueries(['chat-history']);
@@ -83,7 +82,7 @@ const FollowUpQuestions = ({
 						chat_session_id: query?.sessionId,
 						dataset_id: datasourceData?.datasource_id,
 						dataset_name: datasourceData?.name,
-						query_id: chatStoreReducer?.activeQueryId,
+						query_id: res?.query_id,
 						message_type: 'user',
 						message_source: 'follow_up',
 						message_text: question,

@@ -80,14 +80,17 @@ export function DataTable({
 	});
 
 	return (
-		<div className="w-full space-y-2.5 overflow-auto">
+		<div className="w-full space-y-2.5 overflow-auto ">
 			<div className="text-primary100  w-full overflow-auto">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id} className="p-2">
+									<TableHead
+										key={header.id}
+										className="p-2 text-sm font-semibold text-primary80 bg-purple-4"
+									>
 										{header.isPlaceholder
 											? null
 											: flexRender(
@@ -132,6 +135,7 @@ export function DataTable({
 												selectedRow?._id ===
 													row.original?._id &&
 												'bg-slate-100',
+											'text-xs font-normal textprimary80',
 										)}
 									>
 										{row.getVisibleCells().map((cell) => (

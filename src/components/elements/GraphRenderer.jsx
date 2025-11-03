@@ -56,7 +56,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 	};
 
 	const truncateLabel = (label, maxLength = 15) => {
-		return label.length > maxLength ? `${label.slice(0, maxLength)}...` : label;
+		return label?.length > maxLength ? `${label.slice(0, maxLength)}...` : label;
 	};
 
 	const getCircularChartDatasets = (data) => {

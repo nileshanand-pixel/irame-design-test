@@ -235,3 +235,24 @@ export const addReportCardComment = async (reportId, reportCardId, payload) => {
 	);
 	return response.data;
 };
+
+export const getUserReportsForDashboard = async ({ queryKey, pageParam }) => {
+	const dateRange = queryKey[1];
+	const params = {
+		limit: 10,
+	};
+	if (dateRange?.startDate) {
+		params.start_date = dateRange.startDate;
+	}
+	if (dateRange?.endDate) {
+		params.end_date = dateRange.endDate;
+	}
+	if (pageParam) {
+		params.cursor = pageParam;
+	}
+	const response = await axiosClientV1.get('/reports', {
+		headers: {},
+		params,
+	});
+	return response.data;
+};

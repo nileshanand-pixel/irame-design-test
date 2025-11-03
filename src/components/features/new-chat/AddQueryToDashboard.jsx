@@ -26,7 +26,7 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
-const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
+const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds, queryId }) => {
 	const [dashboards, setDashboards] = useState([]);
 	const [search, setSearch] = useState('');
 	const [selectedDashboard, setSelectedDashboard] = useState(null);
@@ -45,7 +45,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 	const handleAddQueryToDashboard = () => {
 		setIsLoading(true);
 		createDashboardContent(selectedDashboard.dashboard_id, {
-			query_id: chatStoreReducer?.activeQueryId,
+			query_id: queryId,
 		})
 			.then((res) => {
 				trackEvent(
@@ -55,7 +55,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 						chat_session_id: query?.sessionId,
 						dataset_id: datasourceData?.datasource_id,
 						dataset_name: datasourceData?.name,
-						query_id: chatStoreReducer?.activeQueryId,
+						query_id: queryId,
 						dashboard_id: res?.dashboard_id,
 						dashboard_name: selectedDashboard?.title,
 						dashboard_type: newDashboardIds.includes(res?.dashboard_id)
@@ -78,7 +78,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds }) => {
 										chat_session_id: query?.sessionId,
 										dataset_id: datasourceData?.datasource_id,
 										dataset_name: datasourceData?.name,
-										query_id: chatStoreReducer?.activeQueryId,
+										query_id: queryId,
 										dashboard_id: res?.dashboard_id,
 										dashboard_name: selectedDashboard?.title,
 									}),

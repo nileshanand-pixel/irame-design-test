@@ -6,7 +6,7 @@ import { Editor } from '@monaco-editor/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-const CoderComponent = ({ data }) => {
+const CoderComponent = ({ data, queryId }) => {
 	const [fontSize, setFontSize] = useState(0);
 	const editorRef = useRef(null);
 	const { query } = useRouter();
@@ -25,7 +25,7 @@ const CoderComponent = ({ data }) => {
 					chat_session_id: query?.sessionId,
 					dataset_id: datasourceData?.datasource_id,
 					dataset_name: datasourceData?.name,
-					query_id: chatStoreReducer?.activeQueryId,
+					query_id: queryId,
 				}),
 			);
 		}

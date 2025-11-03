@@ -61,7 +61,7 @@ const MultiGraphCard = ({ data, isGraphLoading }) => {
 						))}
 					</ScrollList>
 
-					<div className="rounded-3xl border w-full overflow-x-scroll border-primary4 bg-purple-4 p-4 mt-2">
+					<div className="rounded-3xl border w-full overflow-x-scroll  border-primary4 bg-purple-4 p-4 mt-2">
 						{supportedGraphsData?.map(
 							(graph) =>
 								activeGraphTab === graph.id && (

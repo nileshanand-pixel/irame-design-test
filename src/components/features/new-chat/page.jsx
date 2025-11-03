@@ -5,7 +5,7 @@ import ConnectDataSource from './ConnectDataSource';
 import SelectPrompt from './SelectPromt';
 import AnalysisData from './AnalysisData';
 import { useRouter } from '@/hooks/useRouter';
-import { createQuerySession, getUserSession } from './service/new-chat.service';
+import { createQuerySession } from './service/new-chat.service';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { getDataSourcesV2 } from '../configuration/service/configuration.service';
@@ -177,7 +177,6 @@ const NewChat = () => {
 									mode: res?.type,
 								},
 							},
-							{ key: 'activeQueryId', value: res?.query_id },
 						]),
 					);
 					trackEvent(
@@ -220,23 +219,6 @@ const NewChat = () => {
 		}
 	};
 
-	const fetchUserSession = () => {
-		try {
-			// if (utilReducer?.sessionHistory?.length > 0) return;
-			getUserSession().then((res) => {
-				dispatch(updateUtilProp([{ key: 'sessionHistory', value: res }]));
-				if (!authStoreReducer?.user_id)
-					dispatch(
-						updateAuthStoreProp([
-							{ key: 'user_id', value: res?.[0]?.user_id },
-						]),
-					);
-			});
-		} catch (error) {
-			logError(error, { feature: 'chat', action: 'fetch-user-session' });
-		}
-	};
-
 	const {
 		data: dataSources,
 		isLoading,
@@ -265,10 +247,6 @@ const NewChat = () => {
 		createDashboard: { enabled: false },
 		savedQueries: { enabled: true },
 	};
-
-	useEffect(() => {
-		fetchUserSession();
-	}, []);
 
 	useEffect(() => {
 		if (dataSources) {

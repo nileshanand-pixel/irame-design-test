@@ -87,22 +87,6 @@ const GraphComponent = ({
 		}
 	}, [data, loadedData.length, setIsGraphLoading]);
 
-	useEffect(() => {
-		if (
-			chatStoreReducer?.activateGraphOnLast &&
-			chatStoreReducer?.activeQueryId === queryId
-		) {
-			dispatch(
-				updateChatStoreProp([
-					{
-						key: 'activateGraphOnLast',
-						value: false,
-					},
-				]),
-			);
-		}
-	}, [chatStoreReducer?.activateGraphOnLast]);
-
 	const onSortingChange = () => {
 		trackEvent(
 			EVENTS_ENUM.TABLE_VIEW_CHANGED,
@@ -111,14 +95,12 @@ const GraphComponent = ({
 				chat_session_id: query?.sessionId,
 				dataset_id: datasourceData?.datasource_id,
 				dataset_name: datasourceData?.name,
-				query_id: chatStoreReducer?.activeQueryId,
-				change_type: 'sorting',
+				query_id: queryId,
 			}),
 		);
 	};
-
 	return (
-		<div className="mb-4">
+		<div className="">
 			{isGraphLoading ? (
 				<div className="darkSoul-glowing-button2 mb-10">
 					<button className="darkSoul-button2" type="button">
@@ -132,7 +114,7 @@ const GraphComponent = ({
 						{Object.values(RESPONSE_CARD_VIEWS).map((item, indx) => (
 							<li
 								key={`${queryId}_${indx}`}
-								className={`!pb-0 ${
+								className={`!py-0 ${
 									activeTab === item ? 'active-tab' : 'default-tab'
 								}`}
 								onClick={() => {
@@ -145,8 +127,7 @@ const GraphComponent = ({
 												dataset_id:
 													datasourceData?.datasource_id,
 												dataset_name: datasourceData?.name,
-												query_id:
-													chatStoreReducer?.activeQueryId,
+												query_id: queryId,
 											}),
 										);
 									} else if (
@@ -160,8 +141,7 @@ const GraphComponent = ({
 												dataset_id:
 													datasourceData?.datasource_id,
 												dataset_name: datasourceData?.name,
-												query_id:
-													chatStoreReducer?.activeQueryId,
+												query_id: queryId,
 											}),
 										);
 									}
@@ -182,7 +162,7 @@ const GraphComponent = ({
 											activeGraphTab === graph.id
 												? 'text-purple-100 border-purple-40 tabActiveBg'
 												: 'text-black/60 border-black/10'
-										} text-sm font-medium border rounded-3xl px-3 h-full py-2 my-3 cursor-pointer min-w-fit whitespace-nowrap`}
+										} text-sm font-medium border rounded-2xl px-3 h-full py-2 mb-2 cursor-pointer min-w-fit whitespace-nowrap`}
 										onClick={() => {
 											setActiveGraphTab(graph.id);
 											trackEvent(
@@ -195,8 +175,7 @@ const GraphComponent = ({
 														datasourceData?.datasource_id,
 													dataset_name:
 														datasourceData?.name,
-													query_id:
-														chatStoreReducer?.activeQueryId,
+													query_id: queryId,
 													graph_id: graph.id,
 													graph_name: graph.title,
 													graph_type: graph.type,
@@ -209,7 +188,7 @@ const GraphComponent = ({
 								))}
 							</ScrollList>
 
-							<div className="rounded-3xl border w-full overflow-x-scroll border-primary4 bg-purple-4 p-4 mt-2">
+							<div className="rounded-3xl border w-full overflow-x-scroll  border-primary4">
 								{supportedGraphsData?.map(
 									(graph) =>
 										activeGraphTab === graph.id && (
@@ -226,14 +205,12 @@ const GraphComponent = ({
 						</>
 					)}
 					{activeTab === RESPONSE_CARD_VIEWS.TABULAR_VIEW && (
-						<div className="rounded-3xl border w-full overflow-x-scroll border-primary4 bg-purple-4 p-4 mt-2">
-							<div className="bg-white rounded-3xl py-2">
-								<TableComponent
-									data={loadedData}
-									columns={columns}
-									onSortingChange={onSortingChange}
-								/>
-							</div>
+						<div className="rounded-2xl border w-full custom-scrollbar-graph border-primary4">
+							<TableComponent
+								data={loadedData}
+								columns={columns}
+								onSortingChange={onSortingChange}
+							/>
 						</div>
 					)}
 				</>

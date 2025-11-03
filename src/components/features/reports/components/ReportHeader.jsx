@@ -46,7 +46,11 @@ export default function ReportHeader({ report, onDownload }) {
 
 	const handleShare = () => {
 		dispatch(updateReportStoreProp([{ key: 'selectedReport', value: report }]));
-		dispatch(openModal('shareReport'));
+		dispatch(
+			openModal({
+				modalName: 'shareReport',
+			}),
+		);
 	};
 
 	const handleCopy = () => {

@@ -20,6 +20,7 @@ import InputText from './elements/InputText';
 import { getDataSourcesV2 } from './features/configuration/service/configuration.service';
 import { resetChatStore, updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
+import useInfiniteScroll from '@/hooks/useInfiniteScroll';
 import Spinner from './elements/loading/Spinner';
 import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
@@ -39,6 +40,9 @@ import { trackEvent } from '@/lib/mixpanel';
 import { useSessionId } from '@/hooks/use-session-id';
 import { queryClient } from '@/lib/react-query';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
+import SessionSkeleton from './elements/SessionSkeleton';
+import { Share2 } from 'lucide-react';
+import homeIcon from '@/assets/icons/home.svg';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -56,29 +60,35 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const dispatch = useDispatch();
 
-	const fetchUserSession = async () => {
-		try {
-			const data = await getUserSession();
-			dispatch(
-				updateAuthStoreProp([{ key: 'user_id', value: data?.[0]?.user_id }]),
-			);
-			return data;
-		} catch (error) {
-			logError(error, {
-				feature: 'sidenav',
-				action: 'fetchUserSession',
-				extra: {
-					errorMessage: error.message,
-				},
-			});
-		}
-	};
-
-	const { data, isLoading } = useQuery({
+	const {
+		data: sessionsData,
+		isLoading,
+		isFetchingNextPage,
+		hasNextPage,
+		fetchNextPage,
+		Sentinel,
+	} = useInfiniteScroll({
 		queryKey: ['chat-history'],
-		queryFn: fetchUserSession,
-		refetchInterval: 20000,
+		queryFn: getUserSession,
+		paginationType: 'cursor',
+		options: {
+			limit: 20, // Back to original limit
+			refetchInterval: 20000,
+		},
 	});
+
+	useEffect(() => {
+		if (sessionsData && sessionsData.length > 0 && sessionsData[0]?.user_id) {
+			dispatch(
+				updateAuthStoreProp([
+					{
+						key: 'user_id',
+						value: sessionsData[0].user_id,
+					},
+				]),
+			);
+		}
+	}, [sessionsData, dispatch]);
 
 	const { data: recentWorkflowRuns, isLoading: isBusinessLoading } = useQuery({
 		queryKey: ['get-business-processes-home-page'],
@@ -90,7 +100,13 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			group: '',
 			items: [
 				{
-					link: '/app/business-process?source=side_bar',
+					link: '/app/home',
+					text: 'Home',
+					icon: homeIcon,
+					showHint: true,
+				},
+				{
+					link: '/app/business-process',
 					text: 'Business Process',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/workflow_icon.svg',
 					// beta: true,
@@ -167,7 +183,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					key: 'activeChatSession',
 					value: { id: session.session_id, title: session.title },
 				},
-				{ key: 'activeQueryId', value: '' },
 				{ key: 'refreshChat', value: true },
 				{ key: 'resetIra', value: !chatStoreReducer?.resetIra },
 			]),
@@ -179,6 +194,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	const handleRedirectionAfterDeletion = (threadSessionId, threadWorkflowId) => {
 		if (sessionId === threadSessionId || pathname.includes(threadWorkflowId)) {
+			dispatch(resetChatStore());
 			navigate('/app/new-chat');
 		}
 	};
@@ -186,15 +202,15 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const handleDeleteChatSession = async (e, sessionId, threadType, workflowId) => {
 		e.stopPropagation();
 		try {
-			const updatedList = utilReducer?.sessionHistory.filter(
-				(session) => session.session_id !== sessionId,
-			);
 			const confirmed = await confirm({
 				header: 'Delete Session?',
 				description:
 					'This will permanently delete this chat session and all its messages. This action cannot be undone.',
 			});
 			if (!confirmed) return;
+
+			handleRedirectionAfterDeletion(sessionId, workflowId);
+
 			await deleteSession(sessionId);
 			trackEvent(
 				EVENTS_ENUM.SIDE_BAR_CHAT_DELETED,
@@ -205,16 +221,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					workflow_id: workflowId,
 				}),
 			);
-			dispatch(
-				updateUtilProp([{ key: 'sessionHistory', value: updatedList }]),
-			);
+			// Invalidate queries to trigger re-fetch with updated data
 			if (threadType === 'workflow') {
 				queryClient.invalidateQueries(['get-business-processes-home-page']);
 			} else {
 				queryClient.invalidateQueries(['chat-history']);
 			}
-
-			handleRedirectionAfterDeletion(sessionId, workflowId);
 		} catch (error) {
 			logError(error, {
 				feature: 'sidenav',
@@ -243,6 +255,9 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					'This will permanently delete this workflow session and all its progress. This action cannot be undone.',
 			});
 			if (!confirmed) return;
+
+			handleRedirectionAfterDeletion(sessionId, workflowId);
+
 			await deleteRunningWorkflow(runId);
 			trackEvent(
 				EVENTS_ENUM.SIDE_BAR_CHAT_DELETED,
@@ -254,7 +269,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				}),
 			);
 			queryClient.invalidateQueries(['get-business-processes-home-page']);
-			handleRedirectionAfterDeletion(sessionId, workflowId);
 		} catch (error) {
 			logError(error, {
 				feature: 'sidenav',
@@ -269,15 +283,15 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		}
 	};
 
-	const askIra = (e) => {
-		if (e) e.preventDefault();
+	const handleAskIraClick = (e) => {
+		e.preventDefault();
 		trackEvent(
 			EVENTS_ENUM.SIDE_BAR_ASK_IRA_CLICKED,
 			EVENTS_REGISTRY.SIDE_BAR_ASK_IRA_CLICKED,
 		);
-		dispatch(resetChatStore());
-		dispatch(updateUtilProp([{ key: 'answerFromHistory', value: {} }]));
-		navigate('/app/new-chat?source=side_bar');
+		dispatch(
+			updateUtilProp([{ key: 'isDatasourceSelectionModalOpen', value: true }]),
+		);
 	};
 
 	const groupItemsByDate = (items) => {
@@ -304,7 +318,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	const renderSession = (session) => {
 		const isActiveSession = sessionId === session.session_id;
-		let showSpinner = session?.status !== 'done';
+		let showSpinner = session.status === 'in_progress';
 		const sessionIconUrl = session?.metadata?.workflow_run_id
 			? 'https://d2vkmtgu2mxkyq.cloudfront.net/sidenav_workflow_icon.svg'
 			: 'https://d2vkmtgu2mxkyq.cloudfront.net/chat.svg';
@@ -333,36 +347,46 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			>
 				<div
 					className={cn(
-						'flex items-center max-w-[12.5rem] truncate',
-						isEditing === session.session_id ? '' : ' px-2 py-1',
+						'flex items-center w-48',
+						isEditing === session.session_id ? '' : 'px-2 py-1',
 					)}
 				>
-					{showSpinner ? (
-						<GradientSpinner tailwindBg="bg-[#E6D7F7]" width="1" />
-					) : (
-						<img
-							src={sessionIconUrl}
-							alt="ask-ira"
-							className={`${isWorkflow ? 'size-6' : 'size-5'}`}
-						/>
-					)}
-					{isEditing === session.session_id ? (
-						<InputText
-							value={sessionTitle}
-							setValue={(value, e) => {
-								e.stopPropagation();
-								setSessionTitle(value);
-							}}
-							className="flex bg-transparent border-none text-primary80 font-medium"
-						/>
-					) : (
-						<p className="ml-3 truncate">{session.title}</p>
-					)}
+					<div className="flex-shrink-0">
+						{showSpinner ? (
+							<GradientSpinner tailwindBg="bg-[#E6D7F7]" width="1" />
+						) : session.metadata?.shared ? (
+							<Share2 className="h-4 w-4 text-primary80" />
+						) : (
+							<img
+								src={sessionIconUrl}
+								alt="ask-ira"
+								className={isWorkflow ? 'size-6' : 'size-5'}
+							/>
+						)}
+					</div>
+
+					<div className="ml-3 min-w-0 flex-1">
+						{isEditing === session.session_id ? (
+							<InputText
+								value={sessionTitle}
+								setValue={(value, e) => {
+									e.stopPropagation();
+									setSessionTitle(value);
+								}}
+								className="w-full bg-transparent border-none text-primary80 font-medium truncate"
+							/>
+						) : (
+							<p className="truncate text-primary80 font-medium">
+								{session.title}
+							</p>
+						)}
+					</div>
 				</div>
+
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<i
-							className="bi-three-dots-vertical ms-3 me-3 items-end hover:bg-purple-4 rounded-[0.25rem] py-1"
+							className="bi-three-dots-vertical me-3 items-end hover:bg-purple-4 rounded-[0.25rem] py-1"
 							onClick={(e) => e.stopPropagation()}
 						></i>
 					</DropdownMenuTrigger>
@@ -533,7 +557,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		);
 	};
 
-	const sessions = data || [];
+	const sessions = sessionsData || [];
 	const businessProcesses = recentWorkflowRuns?.business_processes || [];
 	const items = [
 		...sessions.map((session) => ({
@@ -570,10 +594,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		}
 	}, [pathname]);
 
-	useEffect(() => {
-		dispatch(updateUtilProp([{ key: 'sessionHistory', value: data || [] }]));
-	}, [data]);
-
 	return (
 		<div
 			className={`fixed flex flex-col h-screen sidenav-transition ${
@@ -604,7 +624,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					>
 						<Link
 							to={'/app/new-chat?source=side_bar'}
-							onClick={askIra}
+							onClick={handleAskIraClick}
 							className={`flex gap-4 items-center cursor-pointer text-primary80 text-sm font-medium ${
 								isSideNavOpen
 									? 'rounded-[12.5rem] px-5 py-3'
@@ -748,8 +768,18 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 								)}
 							</>
 						)}
+						{isFetchingNextPage && (
+							<div className="space-y-1">
+								<SessionSkeleton />
+								<SessionSkeleton />
+								<SessionSkeleton />
+								<SessionSkeleton />
+							</div>
+						)}
 					</div>
 				)}
+				{/* Sentinel at the very bottom of scrollable area */}
+				{isSideNavOpen && <Sentinel />}
 			</div>
 		</div>
 	);

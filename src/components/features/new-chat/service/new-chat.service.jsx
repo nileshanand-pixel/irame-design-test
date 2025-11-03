@@ -38,11 +38,40 @@ export const getUserDetails = async () => {
 	return response.data;
 };
 
-export const getUserSession = async () => {
+export const getUserSession = async (params = {}) => {
 	const response = await axiosClientV1.get(`/sessions`, {
 		headers: {},
+		params,
 	});
-	return response.data?.session_list;
+	return response.data;
+};
+
+export const getSession = async (sessionId) => {
+	const response = await axiosClientV1.get(`/sessions/${sessionId}`, {
+		headers: {},
+	});
+	return response.data;
+};
+
+export const getUserSessionForDashboard = async ({ queryKey, pageParam }) => {
+	const dateRange = queryKey[1];
+	const params = {
+		limit: 10,
+	};
+	if (dateRange?.startDate) {
+		params.start_date = dateRange.startDate;
+	}
+	if (dateRange?.endDate) {
+		params.end_date = dateRange.endDate;
+	}
+	if (pageParam) {
+		params.cursor = pageParam;
+	}
+	const response = await axiosClientV1.get(`/sessions`, {
+		headers: {},
+		params,
+	});
+	return response.data;
 };
 
 export const createQuery = async (data) => {

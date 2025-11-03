@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -9,31 +8,29 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import { useEffect, useState } from 'react';
-import { getDataSourcesV2 } from '../configuration/service/configuration.service';
+import { getDataSourcesV2 } from './features/configuration/service/configuration.service';
 import { useNavigate } from 'react-router-dom';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import useLocalStorage from '@/hooks/useLocalStorage';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useQuery } from '@tanstack/react-query';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { cn } from '@/lib/utils';
+import { Input } from './ui/input';
+import redirectIcon from '@/assets/icons/redirect.svg';
 
 const ChooseDataSourceDialog = ({
 	open,
 	setOpen,
 	setSelectedDataSource,
 	selectedDataSource,
-	handleNextStep,
 }) => {
 	const [dataSources, setDataSources] = useState([]);
-
 	const navigate = useNavigate();
-
 	const dispatch = useDispatch();
-	const utilReducer = useSelector((state) => state.utilReducer);
-	const [value, setValue] = useLocalStorage('dataSource');
+	const [search, setSearch] = useState('');
 
 	const handleSelect = () => {
 		if (!selectedDataSource) return;
@@ -56,7 +53,6 @@ const ChooseDataSourceDialog = ({
 		navigate(
 			`/app/new-chat/?step=3&datasource_id=${selectedDataSource}&source=homepage`,
 		);
-		handleNextStep(3);
 		setOpen(false);
 	};
 	const handleSelectedDS = (dataSourceId) => {
@@ -90,16 +86,14 @@ const ChooseDataSourceDialog = ({
 		}
 	}, [data]);
 
+	const dataToShow = dataSources.filter((source) =>
+		source.name.toLowerCase().includes(search.toLowerCase()),
+	);
+
 	return (
 		<Dialog
 			open={open}
 			onOpenChange={(value) => {
-				if (!value) {
-					trackEvent(
-						EVENTS_ENUM.SELECT_FROM_LIBRARY_CROSS_CLICKED,
-						EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CROSS_CLICKED,
-					);
-				}
 				setOpen(value);
 			}}
 		>
@@ -110,19 +104,45 @@ const ChooseDataSourceDialog = ({
 						You can always change it later from the data source page
 					</DialogDescription>
 				</DialogHeader>
-				<div className="space-y-2 max-h-[50vh] overflow-auto">
-					{dataSourceFetch && dataSources.length <= 0 ? (
+				<div>
+					<div className="flex items-center border rounded-lg h-11 pl-4 pr-6 transition-width duration-300">
+						<i className="bi-search text-primary40 me-2"></i>
+						<Input
+							placeholder="Search"
+							className={cn(
+								'border-none rounded-sm px-0 font-medium bg-transparent',
+							)}
+							value={search}
+							onChange={(e) => setSearch(e.target.value)}
+						/>
+					</div>
+
+					<Button
+						size="sm"
+						variant="outline"
+						className="mt-4 rounded-lg flex gap-2 !text-[#26064ACC] border border-[#26064ACC]"
+						onClick={() => {
+							navigate('/app/configuration');
+							setOpen(false);
+						}}
+					>
+						<span>Configure New Data Set</span>
+						<img src={redirectIcon} alt="redirect" className="size-4" />
+					</Button>
+				</div>
+				<div className="space-y-2 h-[50vh] overflow-auto">
+					{dataSourceFetch && dataToShow.length <= 0 ? (
 						<div className="flex items-center justify-center">
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>
-					) : dataSources?.length ? (
+					) : dataToShow?.length ? (
 						<RadioGroup
 							className="w-full"
 							onValueChange={(value) => {
 								handleSelectedDS(value);
 							}}
 						>
-							{dataSources?.map((source) => {
+							{dataToShow?.map((source) => {
 								return (
 									<div
 										className="rounded-xl bg-purple-4 p-4 flex items-center gap-4"
@@ -155,24 +175,6 @@ const ChooseDataSourceDialog = ({
 							<div className="text-primary40 text-sm">
 								No data sources found
 							</div>
-							<Button
-								onClick={() => {
-									trackEvent(
-										EVENTS_ENUM.SELECT_FROM_LIBRARY_UPLOAD_DATASET_CLICKED,
-										EVENTS_REGISTRY.SELECT_FROM_LIBRARY_UPLOAD_DATASET_CLICKED,
-									);
-									setOpen(false);
-									navigate('/app/configuration?source=qna');
-								}}
-								variant="outline"
-								className="text-xs flex gap-2"
-								size="sm"
-							>
-								<span class="material-symbols-outlined text-2xl">
-									database_upload
-								</span>
-								Upload new dataset
-							</Button>
 						</div>
 					)}
 				</div>

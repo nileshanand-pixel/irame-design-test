@@ -4,7 +4,31 @@ export const getUserDashboard = async () => {
 	const response = await axiosClientV1.get(`/dashboards`, {
 		headers: {},
 	});
-	return response.data?.dashboard_list;
+	return response.data.dashboard_list;
+};
+
+export const getUserDashboardsForDashboard = async ({ queryKey, pageParam }) => {
+	const dateRange = queryKey[1];
+	const params = {
+		limit: 10,
+	};
+	if (dateRange?.startDate) {
+		params.start_date = dateRange.startDate;
+	}
+	if (dateRange?.endDate) {
+		params.end_date = dateRange.endDate;
+	}
+	if (pageParam) {
+		params.cursor = pageParam;
+	}
+	const response = await axiosClientV1.get(`/dashboards`, {
+		headers: {},
+		params,
+	});
+	return {
+		dashboard_list: response.data.dashboard_list,
+		cursor: response.data.cursor,
+	};
 };
 
 export const deleteUserDashboard = async (id) => {

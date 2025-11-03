@@ -152,7 +152,14 @@ const ReportsInDatasource = () => {
 						variant="secondary"
 						className="w-fit rounded-lg bg-purple-8 hover:bg-purple-16 text-purple-100 font-medium"
 						disabled={false}
-						onClick={() => dispatch(openModal('createReport'))}
+						onClick={() =>
+							dispatch(
+								openModal({
+									modalName: 'createReport',
+									revalidateQuery: ['user-reports'],
+								}),
+							)
+						}
 					>
 						Create Report
 					</Button>

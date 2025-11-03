@@ -20,6 +20,7 @@ const PlannerComponent = ({
 	canEdit,
 	workspaceHasChanges,
 	setWorkspaceHasChanges,
+	queryId,
 }) => {
 	const { query } = useRouter();
 	const { segments, setSegments, changeSets, setChangesets, editDisabled } =
@@ -51,7 +52,7 @@ const PlannerComponent = ({
 	useEffect(() => {
 		if (workspaceHasChanges) return;
 		setInitialSegments();
-	}, [chatStoreReducer?.activeQueryId]);
+	}, [queryId]);
 
 	const handleEdit = (index) => {
 		setIsEditing(true);
@@ -83,7 +84,7 @@ const PlannerComponent = ({
 				chat_session_id: query.sessionId,
 				dataset_id: datasourceData?.datasource_id,
 				dataset_name: datasourceData?.name,
-				query_id: chatStoreReducer?.activeQueryId,
+				query_id: queryId,
 				type_change: [
 					...editRef.current.innerHTML.matchAll(/<b>(.*?)<\/b>/g),
 				]?.[0]?.[1],

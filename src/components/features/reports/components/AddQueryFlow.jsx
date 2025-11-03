@@ -4,11 +4,8 @@ import { useSelector } from 'react-redux';
 import AddQueryToNewReportDialog from './AddQueryToNewReportDialog';
 import AddQueryToReportDialog from './AddQueryToReportDialog';
 import ChooseReportDialog from './ChooseReportDialog';
-import { use } from 'react';
 
-function AddQueryFlow({ isOpen, onClose }) {
-	const queryId = useSelector((state) => state.chatStoreReducer.activeQueryId);
-
+function AddQueryFlow({ isOpen, onClose, queryId }) {
 	const [addQueryOpen, setAddQueryOpen] = useState(false);
 	const [createReportOpen, setCreateReportOpen] = useState(false);
 	const [selectedReport, setSelectedReport] = useState(null);

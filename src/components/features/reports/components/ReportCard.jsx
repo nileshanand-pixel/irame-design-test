@@ -36,7 +36,11 @@ const ReportCard = ({ report }) => {
 	const handleShareClick = (e) => {
 		if (e) e.stopPropagation();
 		dispatch(updateReportStoreProp([{ key: 'selectedReport', value: report }]));
-		dispatch(openModal('shareReport'));
+		dispatch(
+			openModal({
+				modalName: 'shareReport',
+			}),
+		);
 	};
 
 	useEffect(() => {

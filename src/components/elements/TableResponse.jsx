@@ -81,7 +81,7 @@ const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) =>
 	}, [data, loadedData.length]);
 
 	return (
-		<div className="mb-4">
+		<div className="">
 			{isGraphLoading ? (
 				<div className="darkSoul-glowing-button2 mb-10">
 					<button className="darkSoul-button2" type="button">
@@ -95,11 +95,11 @@ const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) =>
 						<TableComponent data={loadedData} columns={columns} />
 					) : (
 						<>
-							<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
+							<ul className="ghost-tabs relative col-span-12 mb-2 mt-6 inline-flex w-full border-b border-black-10">
 								{['Tabular View'].map((item, indx) => (
 									<li
 										key={indx}
-										className={`!pb-0 ${
+										className={`!py-0 ${
 											activeTab === item
 												? 'active-tab'
 												: 'default-tab'
@@ -110,14 +110,7 @@ const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) =>
 									</li>
 								))}
 							</ul>
-							<div className="rounded-3xl border border-primary4 bg-purple-4 p-4 mt-2">
-								<div className="bg-white rounded-3xl py-2">
-									<TableComponent
-										data={loadedData}
-										columns={columns}
-									/>
-								</div>
-							</div>
+							<TableComponent data={loadedData} columns={columns} />
 						</>
 					)}
 				</>

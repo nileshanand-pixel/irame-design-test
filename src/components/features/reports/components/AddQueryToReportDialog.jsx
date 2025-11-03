@@ -66,7 +66,7 @@ const AddQueryToReportDialog = ({
 					chat_session_id: query?.sessionId,
 					dataset_id: datasourceData?.datasource_id,
 					dataset_name: datasourceData?.datasource_id,
-					query_id: chatStoreReducer?.activeQueryId,
+					query_id: queryId,
 					report_id: report.report_id,
 					report_name: report.name,
 					report_type: 'old',

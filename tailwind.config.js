@@ -109,6 +109,8 @@ module.exports = {
 				warning: {
 					50: 'rgba(255, 250, 235, 1)',
 					700: 'rgba(181, 71, 8, 1)',
+					900: 'rgba(219, 119, 7, 1)',
+					200: 'rgba(219, 119, 7, 0.16)',
 				},
 			},
 			keyframes: {
@@ -199,6 +201,13 @@ module.exports = {
 				'.show-scrollbar::-webkit-scrollbar-thumb': {
 					backgroundColor: '#a0aec0',
 					borderRadius: '6px',
+				},
+				'.scrollbar-hide': {
+					'scrollbar-width': 'none',
+					'-ms-overflow-style': 'none',
+				},
+				'.scrollbar-hide::-webkit-scrollbar': {
+					display: 'none',
 				},
 			});
 		},

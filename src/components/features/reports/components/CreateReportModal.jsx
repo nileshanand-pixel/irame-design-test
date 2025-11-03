@@ -16,11 +16,16 @@ import { logError } from '@/lib/logger';
 import { Loader2 } from 'lucide-react'; // assuming you're using lucide-react for icons
 import { createReport } from '../service/reports.service';
 import { queryClient } from '@/lib/react-query';
+import { useSelector } from 'react-redux';
 
 const CreateReportModal = () => {
 	const dispatch = useDispatch();
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
+
+	const revalidateQuery = useSelector(
+		(state) => state.modalReducer.revalidateQuery,
+	);
 
 	const handleClose = () => {
 		if (createReportMutation.isLoading) return;
@@ -36,7 +41,8 @@ const CreateReportModal = () => {
 		onSuccess: () => {
 			toast.success('Report created successfully');
 			handleClose();
-			queryClient.invalidateQueries(['user-reports']);
+			// queryClient.invalidateQueries(['user-reports']);
+			queryClient.invalidateQueries(revalidateQuery);
 			// TODO: navigate to report page
 		},
 		onError: (error) => {
