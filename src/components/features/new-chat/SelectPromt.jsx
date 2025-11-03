@@ -34,6 +34,7 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 	const [savedQueries, setSavedQueries] = useState([]);
 	const [deletingTemplates, setDeletingTemplates] = useState(new Set());
 	const { query, navigate } = useRouter();
+	const [isLoadingSavedQueries, setIsLoadingSavedQueries] = useState(false);
 
 	const dispatch = useDispatch();
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -55,7 +56,6 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 
 	// Determine whether saved queries are currently loaded or still loading
 	const savedQueriesAvailable = savedQueries.length > 0;
-	const savedQueriesLoading = !savedQueriesAvailable;
 
 	const handleActiveTab = (selectedTab) => {
 		trackEvent(
@@ -211,6 +211,7 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 	useEffect(() => {
 		const fetchSavedQueries = async () => {
 			try {
+				setIsLoadingSavedQueries(true);
 				const resp = await getTemplates();
 				const formattedQueries =
 					resp?.saved_queries?.map((item) => ({
@@ -222,6 +223,8 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 				console.log('Fetched saved queries:', formattedQueries);
 			} catch (error) {
 				console.error('Failed to fetch saved queries:', error);
+			} finally {
+				setIsLoadingSavedQueries(false);
 			}
 		};
 		fetchSavedQueries();
@@ -282,7 +285,7 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 				<div className="w-full flex gap-4">
 					{savedQueries.length > 0 || data?.suggestion?.length > 0 ? (
 						<ScrollList>
-							{savedQueriesLoading && (
+							{isLoadingSavedQueries && (
 								<li
 									key="saved_queries_loading"
 									className={`text-black/60 text-sm font-medium rounded-3xl px-0 py-0 min-w-fit max-w-[19.25rem]`}
