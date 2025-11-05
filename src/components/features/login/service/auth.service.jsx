@@ -93,3 +93,32 @@ export const authUserDetails = async () => {
 	data['user_name'] = data['name'];
 	return data;
 };
+
+export const sendOtpToEmail = async (data) => {
+	const response = await axiosClientV1.post(
+		'/users/reset-password/request-otp',
+		data,
+	);
+	return response.data;
+};
+
+export const verifyOtp = async (data) => {
+	const response = await axiosClientV1.post(
+		'/users/reset-password/verify-otp',
+		data,
+	);
+	return response.data;
+};
+
+export const resendOtp = async (data) => {
+	const response = await axiosClientV1.post(
+		'/users/reset-password/resend-otp',
+		data,
+	);
+	return response.data;
+};
+
+export const resetPassword = async (data) => {
+	const response = await axiosClientV1.post('/users/reset-password/reset', data);
+	return response.data;
+};

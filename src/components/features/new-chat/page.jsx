@@ -23,6 +23,7 @@ import { useMemo } from 'react';
 import InputArea from './components/input-area/input-area';
 import StepThreeContent from './components/step-three-content';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
+import { REDIRECTION_URL_AFTER_LOGIN } from '@/constants/login-constants';
 
 const NewChat = () => {
 	const [value, updateValue] = useLocalStorage('userDetails');
@@ -216,7 +217,7 @@ const NewChat = () => {
 				})
 				.catch((error) => {
 					logError(error, { feature: 'chat', action: 'create-session' });
-					navigate('/app/new-chat?source=chat');
+					navigate(REDIRECTION_URL_AFTER_LOGIN);
 					toast.error('Error Creating Session, Please Try Again');
 				});
 		} catch (error) {

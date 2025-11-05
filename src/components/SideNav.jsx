@@ -195,7 +195,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const handleRedirectionAfterDeletion = (threadSessionId, threadWorkflowId) => {
 		if (sessionId === threadSessionId || pathname.includes(threadWorkflowId)) {
 			dispatch(resetChatStore());
-			navigate('/app/new-chat');
+			navigate('/app/home');
 		}
 	};
 

@@ -53,6 +53,7 @@ import {
 } from './utils/conversationPath';
 import SiblingNavigation from './components/SiblingNavigation';
 import QueryActions from './components/QueryActions';
+import { REDIRECTION_URL_AFTER_LOGIN } from '@/constants/login-constants';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -356,7 +357,7 @@ const Workzone = () => {
 				showFailedResponse: true,
 			}));
 			clearPolling();
-			navigate('/app/new-chat');
+			navigate(REDIRECTION_URL_AFTER_LOGIN);
 		}
 	}, [sessionQueryError]);
 
@@ -805,7 +806,7 @@ const Workzone = () => {
 				toast.success('Dashboard created successfully');
 				setNewDashboardIds((prev) => [...prev, resp.dashboard_id]);
 				if (pathname.includes('/app/dashboard')) {
-					navigate(`/app/new-chat?source=dashboard`);
+					navigate(REDIRECTION_URL_AFTER_LOGIN);
 				} else if (pathname.includes('/app/new-chat/')) {
 					queryClient.invalidateQueries(['user-dashboard'], {
 						refetchActive: true,
