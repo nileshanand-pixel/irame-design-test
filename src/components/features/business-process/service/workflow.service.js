@@ -190,3 +190,10 @@ export const getWorkflowsForDashboard = async ({ queryKey, pageParam }) => {
 	});
 	return response.data;
 };
+
+export const continuePdfWorkflow = async ({ workflowCheckId, datasourceId }) => {
+	const response = await axiosClientV2.post(
+		`/workflow-checks/${workflowCheckId}/continue/${datasourceId}`,
+	);
+	return response.data;
+};
