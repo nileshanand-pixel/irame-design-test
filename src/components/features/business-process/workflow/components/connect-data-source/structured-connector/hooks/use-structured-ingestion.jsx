@@ -5,7 +5,10 @@ import { useWorkflowRunId } from '@/components/features/business-process/hooks/u
 import {
 	getDatasourceV2,
 	getDataSourcesV2,
+	getBulkPresignedUrls,
 } from '@/components/features/configuration/service/configuration.service';
+import axiosClientV1 from '@/lib/axios';
+import { logError } from '@/lib/logger';
 
 const SERVER_TO_UI_STATUS = {
 	PROCESSING: 'processing',
@@ -17,6 +20,51 @@ const SERVER_TO_UI_STATUS = {
 function mapServerStatus(status) {
 	return SERVER_TO_UI_STATUS[status] || 'processing';
 }
+
+// Helper function to split array into batches
+const createBatches = (array, batchSize) => {
+	const batches = [];
+	for (let i = 0; i < array.length; i += batchSize) {
+		batches.push(array.slice(i, i + batchSize));
+	}
+	return batches;
+};
+
+// Upload a single file to S3 with presigned URL
+const uploadSingleFileToS3 = async ({
+	file,
+	presignedUrl,
+	fileUrl,
+	onProgress,
+	cancelToken,
+}) => {
+	try {
+		await axiosClientV1.put(presignedUrl, file, {
+			headers: {
+				'Content-Type': file.type,
+			},
+			onUploadProgress: (progressEvent) => {
+				const total = progressEvent.total ?? 0;
+				const loaded = progressEvent.loaded ?? 0;
+				const pct =
+					total > 0 ? Math.min(99, Math.round((loaded / total) * 100)) : 0;
+				if (typeof onProgress === 'function') onProgress(pct);
+			},
+			cancelToken,
+		});
+
+		return { url: fileUrl, file_url: fileUrl, name: file.name };
+	} catch (err) {
+		if (!axios.isCancel(err)) {
+			logError(err, {
+				feature: 'structured-datasource-upload',
+				action: 'upload-file-to-s3',
+				file_name: file.name,
+			});
+		}
+		throw err;
+	}
+};
 
 export function useDatasourceIngest({
 	initialDatasourceId,
@@ -324,98 +372,206 @@ export function useDatasourceIngest({
 		setUploadQueue((q) => q.filter((x) => x !== id));
 	}, []);
 
-	const runNextUpload = useCallback(() => {
-		if (activeUploadsRef.current >= uploadConcurrency) return;
-		const nextId = queueRef.current[0];
-		if (!nextId) return;
+	// Process a batch of files: get presigned URLs and upload to S3
+	const processBatch = useCallback(
+		async (batchItems) => {
+			try {
+				// Step 1: Get bulk presigned URLs for this batch
+				const fileNames = batchItems.map((item) => item.name);
+				const presignedUrlsResponse = await getBulkPresignedUrls(fileNames);
 
-		setUploadQueue((q) => q.slice(1));
-		activeUploadsRef.current += 1;
+				// Extract the files object from response
+				// Response structure: { files: { "filename.csv": { presigned_url, url }, ... } }
+				const filesObject = presignedUrlsResponse?.files;
 
-		setItems((currentItems) => {
-			const item = currentItems.find((it) => it.id === nextId);
+				if (!filesObject) {
+					throw new Error('No presigned URLs received from server');
+				}
 
-			if (!item || item.status !== 'uploading' || !item.meta?.localFile) {
-				activeUploadsRef.current -= 1;
-				return currentItems;
-			}
+				// Step 2: Upload all files in this batch concurrently to S3
+				const uploadPromises = batchItems.map((item) => {
+					const { presigned_url, url } = filesObject[item.name];
+					if (!presigned_url || !url) {
+						throw new Error(`No presigned URL for file: ${item.name}`);
+					}
 
-			const source = axios.CancelToken.source();
-			cancelTokensRef.current[nextId] = source;
+					const source = axios.CancelToken.source();
+					cancelTokensRef.current[item.id] = source;
 
-			const onProgress = (pct) => {
-				markProgress(nextId, pct);
-			};
+					const onProgress = (pct) => {
+						markProgress(item.id, pct);
+					};
 
-			uploadFile(item.meta.localFile, onProgress, source.token, datasourceId)
-				.then((uploadMeta) => {
-					markStatus(nextId, 'uploaded', {
-						progress: 100,
-						meta: { ...(item.meta || {}), ...(uploadMeta || {}) },
-					});
-					if (!autoAddAfterUpload) return null;
-					const file_url = uploadMeta?.url || uploadMeta?.file_url;
-					if (!file_url)
-						throw new Error('uploadFile did not return a url');
-					return addFilesToDatasource({
-						datasource_id: datasourceId,
-						files: [{ file_url }],
-					});
-				})
-				.then((addResp) => {
-					if (!addResp) return;
-					const f = Array.isArray(addResp.files) ? addResp.files[0] : null;
-					if (!f)
-						throw new Error(
-							'addFilesToDatasource: no files in response',
-						);
-					const serverId = f.external_id;
-					const status = mapServerStatus(f.status);
-					markStatus(nextId, status, {
-						serverId,
-						error:
-							status === 'error'
-								? {
-										stage: 'add',
-										message: f.error_message || 'Add failed',
-									}
-								: undefined,
-					});
-				})
-				.catch((err) => {
-					if (axios.isCancel(err)) return;
-					const stage = (item.progress || 0) > 0 ? 'add' : 'upload';
-					markStatus(nextId, 'error', {
-						error: {
-							stage,
-							message: err?.message || 'Upload/Add error',
-						},
-					});
-				})
-				.finally(() => {
-					delete cancelTokensRef.current[nextId];
-					activeUploadsRef.current -= 1;
-					queueMicrotask(runNextUpload);
+					return uploadSingleFileToS3({
+						file: item.meta.localFile,
+						presignedUrl: presigned_url,
+						fileUrl: url,
+						onProgress,
+						cancelToken: source.token,
+					})
+						.then((uploadMeta) => {
+							markStatus(item.id, 'uploaded', {
+								progress: 100,
+								meta: {
+									...(item.meta || {}),
+									...(uploadMeta || {}),
+								},
+							});
+							return { itemId: item.id, uploadMeta };
+						})
+						.catch((err) => {
+							if (!axios.isCancel(err)) {
+								markStatus(item.id, 'error', {
+									error: {
+										stage: 'upload',
+										message: err.message || 'Upload failed',
+									},
+								});
+							}
+							return { itemId: item.id, error: err };
+						})
+						.finally(() => {
+							delete cancelTokensRef.current[item.id];
+						});
 				});
 
-			return currentItems;
+				const uploadResults = await Promise.allSettled(uploadPromises);
+
+				// Step 3: Collect successfully uploaded files and add to datasource
+				if (autoAddAfterUpload) {
+					const successfulUploads = uploadResults
+						.filter(
+							(result) =>
+								result.status === 'fulfilled' &&
+								result.value?.uploadMeta &&
+								!result.value?.error,
+						)
+						.map((result) => result.value);
+
+					if (successfulUploads.length > 0) {
+						const filesToAdd = successfulUploads.map((upload) => ({
+							file_url:
+								upload.uploadMeta?.url ||
+								upload.uploadMeta?.file_url,
+						}));
+
+						try {
+							const addResp = await addFilesToDatasource({
+								datasource_id: datasourceId,
+								files: filesToAdd,
+							});
+
+							// Update status for each successfully added file
+							if (addResp?.files && Array.isArray(addResp.files)) {
+								addResp.files.forEach((f, index) => {
+									const upload = successfulUploads[index];
+									if (!upload) return;
+
+									const serverId = f.external_id;
+									const status = mapServerStatus(f.status);
+									markStatus(upload.itemId, status, {
+										serverId,
+										error:
+											status === 'error'
+												? {
+														stage: 'add',
+														message:
+															f.error_message ||
+															'Add failed',
+													}
+												: undefined,
+									});
+								});
+							}
+						} catch (err) {
+							// Mark files as error if adding to datasource failed
+							successfulUploads.forEach((upload) => {
+								markStatus(upload.itemId, 'error', {
+									error: {
+										stage: 'add',
+										message:
+											err.message ||
+											'Failed to add to datasource',
+									},
+								});
+							});
+							logError(err, {
+								feature: 'structured-datasource-upload',
+								action: 'add-files-to-datasource',
+								batch_size: successfulUploads.length,
+							});
+						}
+					}
+				}
+			} catch (error) {
+				console.error('Error processing batch:', error);
+				logError(error, {
+					feature: 'structured-datasource-upload',
+					action: 'process-batch',
+					batch_size: batchItems.length,
+					error_message: error.message,
+				});
+
+				// Mark all files in batch as failed if presigned URL fetching fails
+				batchItems.forEach((item) => {
+					markStatus(item.id, 'error', {
+						error: {
+							stage: 'upload',
+							message: error.message || 'Failed to get presigned URLs',
+						},
+					});
+				});
+			}
+		},
+		[
+			datasourceId,
+			markProgress,
+			markStatus,
+			autoAddAfterUpload,
+			addFilesToDatasource,
+		],
+	);
+
+	// Main upload orchestrator - processes batches
+	const runNextUpload = useCallback(() => {
+		if (activeUploadsRef.current > 0) return; // Only process one batch at a time
+		if (queueRef.current.length === 0) return;
+
+		// Get items to upload from the queue
+		const itemsToUpload = [];
+		const currentItems = items.filter((it) => queueRef.current.includes(it.id));
+
+		for (const item of currentItems) {
+			if (
+				item.status === 'uploading' &&
+				item.meta?.localFile &&
+				itemsToUpload.length < 10
+			) {
+				// Batch size of 10
+				itemsToUpload.push(item);
+			}
+		}
+
+		if (itemsToUpload.length === 0) return;
+
+		// Remove these items from queue
+		const idsToProcess = itemsToUpload.map((it) => it.id);
+		setUploadQueue((q) => q.filter((id) => !idsToProcess.includes(id)));
+
+		activeUploadsRef.current = 1; // Mark as active
+
+		processBatch(itemsToUpload).finally(() => {
+			activeUploadsRef.current = 0; // Mark as inactive
+			queueMicrotask(runNextUpload); // Process next batch
 		});
-	}, [
-		uploadConcurrency,
-		uploadFile,
-		addFilesToDatasource,
-		datasourceId,
-		autoAddAfterUpload,
-		markProgress,
-		markStatus,
-	]);
+	}, [items, processBatch]);
 
 	useEffect(() => {
 		if (!autoStartUploads) return;
-		if (activeUploadsRef.current < uploadConcurrency && uploadQueue.length > 0) {
+		if (activeUploadsRef.current === 0 && uploadQueue.length > 0) {
 			runNextUpload();
 		}
-	}, [uploadQueue, uploadConcurrency, autoStartUploads]);
+	}, [uploadQueue, autoStartUploads, runNextUpload]);
 
 	const startUploads = useCallback((ids) => {
 		if (!ids || !ids.length) return;

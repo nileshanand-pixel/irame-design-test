@@ -24,6 +24,7 @@ import {
 	removeSheets,
 	uploadFile,
 	uploadInit,
+	getBulkPresignedUrls,
 } from '@/components/features/upload/service';
 import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 import { useSearchParams } from 'react-router-dom';
@@ -274,53 +275,53 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		}
 	};
 
-	const uploadSingleFile = async (file) => {
-		if (!file) return;
+	// Helper function to split array into batches
+	const createBatches = (array, batchSize) => {
+		const batches = [];
+		for (let i = 0; i < array.length; i += batchSize) {
+			batches.push(array.slice(i, i + batchSize));
+		}
+		return batches;
+	};
 
+	// Upload a single file to S3 with presigned URL
+	const uploadSingleFileToS3 = async (file, presignedUrl, fileUrl) => {
 		const source = axios.CancelToken.source();
-		setFiles((prev) => {
-			return prev.map((currentFile) => {
-				if (currentFile.id === file.id) {
-					const newFile = {
-						...currentFile,
-						cancelToken: source,
-					};
-					return newFile;
-				} else {
-					return currentFile;
-				}
-			});
-		});
+
+		// Set cancel token for this file
+		setFiles((prev) =>
+			prev.map((f) => (f.id === file.id ? { ...f, cancelToken: source } : f)),
+		);
 
 		try {
-			const data = await uploadFile({
-				file: file.rawFile,
-				updateProgress: (progress) => {
-					setFiles((prev) => {
-						return prev.map((currentFile) => {
-							if (currentFile.id === file.id) {
-								const newFile = {
-									...currentFile,
-									uploadProgress: progress,
-								};
-								return newFile;
-							} else {
-								return currentFile;
-							}
-						});
-					});
+			await axios.put(presignedUrl, file.rawFile, {
+				headers: {
+					'Content-Type': file.type,
+				},
+				onUploadProgress: (progressEvent) => {
+					const uploadProgress = Math.min(
+						99,
+						Math.round(
+							(progressEvent.loaded / progressEvent.total) * 100,
+						),
+					);
+					setFiles((prev) =>
+						prev.map((f) =>
+							f.id === file.id ? { ...f, uploadProgress } : f,
+						),
+					);
 				},
 				cancelToken: source.token,
-				datasourceId,
 			});
 
+			// Update file status to UPLOADED
 			setFiles((prev) =>
 				prev.map((f) => {
 					if (f.id === file.id) {
 						const newF = {
 							...f,
 							status: FILE_STATUS.UPLOADED,
-							url: data?.url,
+							url: fileUrl,
 						};
 						delete newF.cancelToken;
 						return newF;
@@ -329,74 +330,167 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				}),
 			);
 
-			uploadFileInDs(
-				{
-					datasource_id: datasourceId,
-					files: [
-						{
-							file_url: data.url,
-						},
-					],
-				},
-				{
-					onSuccess: () => {
-						setFiles((prev) =>
-							prev.map((f) => {
-								if (f.id === file.id) {
-									const newF = {
-										...f,
-										status: FILE_STATUS.PROCESSING,
-									};
-									return newF;
-								}
-								return f;
-							}),
-						);
-						refetchDatasourceDetails();
-					},
-					onError: (error) => {
-						setFiles((prev) =>
-							prev.map((f) => {
-								if (f.id === file.id) {
-									const newF = {
-										...f,
-										status: FILE_STATUS.UPLOADING_FAILED,
-										message: error?.response?.data?.message,
-									};
-									return newF;
-								}
-								return f;
-							}),
-						);
-					},
-				},
-			);
+			return { fileId: file.id, fileUrl };
 		} catch (err) {
+			if (!axios.isCancel(err)) {
+				// Mark file as failed
+				setFiles((prev) =>
+					prev.map((f) =>
+						f.id === file.id
+							? {
+									...f,
+									status: FILE_STATUS.UPLOADING_FAILED,
+									message:
+										err?.response?.data?.message || err?.message,
+								}
+							: f,
+					),
+				);
+				logError(err, {
+					feature: 'configuration',
+					action: 'upload-file-to-s3',
+					file_name: file.name,
+				});
+			}
+		}
+	};
+
+	// Process a batch of files: get presigned URLs and upload to S3
+	const processBatch = async (batch) => {
+		try {
+			// Step 1: Get bulk presigned URLs for this batch
+			const fileNames = batch.map((file) => file.name);
+
+			const presignedUrlsResponse = await getBulkPresignedUrls({ fileNames });
+
+			// Extract the files object from response
+			// Response structure: { files: { "filename.pdf": { presigned_url, url }, ... } }
+			const filesObject = presignedUrlsResponse?.files;
+
+			// Validate that all requested files have presigned URLs
+			const missingFiles = fileNames.filter(
+				(fileName) => !filesObject[fileName],
+			);
+
+			if (missingFiles.length > 0) {
+				console.warn('Missing presigned URLs for files:', missingFiles);
+			}
+
+			// Step 2: Upload all files in this batch concurrently to S3
+			const uploadPromises = batch.map((file) => {
+				const fileData = filesObject[file.name];
+				if (!fileData) {
+					return Promise.reject(
+						new Error(`No presigned URL for ${file.name}`),
+					);
+				}
+				const { presigned_url, url } = fileData;
+				return uploadSingleFileToS3(file, presigned_url, url);
+			});
+
+			const uploadedFiles = await Promise.allSettled(uploadPromises);
+
+			// Step 3: Collect successfully uploaded files
+			const successfulUploads = uploadedFiles
+				.filter((result) => result.status === 'fulfilled' && result.value)
+				.map((result) => result.value);
+
+			// Step 4: Add successfully uploaded files to datasource
+			if (successfulUploads.length > 0) {
+				uploadFileInDs(
+					{
+						datasource_id: datasourceId,
+						files: successfulUploads.map((upload) => ({
+							file_url: upload.fileUrl,
+						})),
+					},
+					{
+						onSuccess: () => {
+							// Get all uploaded file URLs from the batch
+							const uploadedFileUrls = successfulUploads.map(
+								(u) => u.fileUrl,
+							);
+
+							// Mark all files in the batch as PROCESSING
+							setFiles((prev) =>
+								prev.map((f) => {
+									if (uploadedFileUrls.includes(f.url)) {
+										return {
+											...f,
+											status: FILE_STATUS.PROCESSING,
+										};
+									}
+									return f;
+								}),
+							);
+							refetchDatasourceDetails();
+						},
+						onError: (error) => {
+							// Get all uploaded file URLs from the batch
+							const uploadedFileUrls = successfulUploads.map(
+								(u) => u.fileUrl,
+							);
+							logError(error, {
+								feature: 'configuration',
+								action: 'add-files-to-datasource',
+								file_count: uploadedFileUrls.length,
+							});
+
+							// Mark all files in the batch as FAILED
+							setFiles((prev) =>
+								prev.map((f) => {
+									if (uploadedFileUrls.includes(f.url)) {
+										return {
+											...f,
+											status: FILE_STATUS.UPLOADING_FAILED,
+											message: error?.response?.data?.message,
+										};
+									}
+									return f;
+								}),
+							);
+						},
+					},
+				);
+			}
+		} catch (error) {
+			console.error('Error processing batch:', error);
+			logError(error, {
+				feature: 'configuration',
+				action: 'process-batch',
+				batch_size: batch.length,
+				error_message: error.message,
+			});
+
+			// Mark all files in batch as failed if presigned URL fetching fails
+			const fileIds = batch.map((f) => f.id);
 			setFiles((prev) =>
-				prev.map((f) => {
-					if (f.id === file.id) {
-						const newF = {
-							...f,
-							status: FILE_STATUS.UPLOADING_FAILED,
-							message: err?.response?.data?.message || err?.message,
-						};
-						return newF;
-					}
-					return f;
-				}),
+				prev.map((f) =>
+					fileIds.includes(f.id)
+						? {
+								...f,
+								status: FILE_STATUS.UPLOADING_FAILED,
+								message:
+									error?.response?.data?.message || error?.message,
+							}
+						: f,
+				),
 			);
 		}
 	};
 
+	// Main upload orchestrator - processes all batches
 	const uploadFiles = async () => {
-		const updatedUploadQueue = [...uploadQueue];
+		const filesToUpload = [...uploadQueue];
+		setUploadQueue([]); // Clear queue immediately
 
-		while (updatedUploadQueue.length > 0) {
-			const file = updatedUploadQueue.shift();
+		// Split files into batches of 10
+		const batches = createBatches(filesToUpload, 10);
 
-			uploadSingleFile(file);
+		// Process batches sequentially (each batch uploads 10 files concurrently)
+		for (const batch of batches) {
+			await processBatch(batch);
 		}
-		setUploadQueue([...updatedUploadQueue]);
 	};
 
 	useEffect(() => {

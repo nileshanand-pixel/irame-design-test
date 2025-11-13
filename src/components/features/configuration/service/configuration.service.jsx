@@ -11,6 +11,13 @@ export const getPresignedUrl = async (fileName, datasourceId) => {
 	return response.data;
 };
 
+export const getBulkPresignedUrls = async (fileNames) => {
+	const response = await axiosClientV1.post(`/datasources/bulk-presigned-url`, {
+		files: fileNames,
+	});
+	return response.data;
+};
+
 export const uploadFile = async (
 	file,
 	setProgress,
