@@ -997,14 +997,16 @@ const Workzone = () => {
 							<div className="flex items-start space-x-3 w-full max-w-full overflow-hidden">
 								<img src={ira} alt="ira" className="size-10" />
 
-								{currentDoingScience ? (
-									<QueueStatus
-										text={
-											answerElem?.status_text ||
-											'Doing Science'
-										}
-									/>
-								) : (
+								<div className="w-full max-w-full">
+									{currentDoingScience && (
+										<QueueStatus
+											text={
+												answerElem?.status_text ||
+												'Doing Science'
+											}
+										/>
+									)}
+
 									<div className="flex-1 min-w-0">
 										<ResponseCard
 											answerResp={answerElem}
@@ -1039,7 +1041,7 @@ const Workzone = () => {
 											updatedAt={query?.updated_at}
 										/>
 									</div>
-								)}
+								</div>
 							</div>
 						)}
 					</div>

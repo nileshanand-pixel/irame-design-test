@@ -436,19 +436,21 @@ const ResponseCard = ({
 					<div>
 						<div className="flex justify-between items-start group gap-2">
 							{displayLogic.hasText && (
-								<div className="mb-2">
-									<p
-										className="text-primary80 font-medium cursor-default"
-										style={{ whiteSpace: 'pre-wrap' }}
-										dangerouslySetInnerHTML={{
-											__html: safeHTML,
-										}}
-									></p>
-								</div>
+								<>
+									<div className="mb-2">
+										<p
+											className="text-primary80 font-medium cursor-default"
+											style={{ whiteSpace: 'pre-wrap' }}
+											dangerouslySetInnerHTML={{
+												__html: safeHTML,
+											}}
+										></p>
+									</div>
+									<span className="text-base text-primary80 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+										{formatTimestamp(updatedAt)}
+									</span>
+								</>
 							)}
-							<span className="text-base text-primary80 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-								{formatTimestamp(updatedAt)}
-							</span>
 						</div>
 
 						{answerResp?.status === 'done' && !doingScience && (
