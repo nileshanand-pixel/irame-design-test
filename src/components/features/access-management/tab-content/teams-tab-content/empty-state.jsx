@@ -31,7 +31,11 @@ export default function EmptyState() {
 				</div>
 			</div>
 
-			{EMPTY_STATE_CONFIG?.cta && <EMPTY_STATE_CONFIG.cta />}
+			<div>
+				{EMPTY_STATE_CONFIG?.cta && (
+					<EMPTY_STATE_CONFIG.cta text="Create Your First Team" />
+				)}
+			</div>
 		</div>
 	);
 }
