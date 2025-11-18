@@ -1,35 +1,44 @@
 import { useState } from 'react';
+import TeamTabContent from './tab-content/team-tab-content';
+import UserTabContent from './tab-content/user-tab-content';
+import RolePermissionTabContent from './tab-content/role-permission-tab-content';
+import ApprovalTabContent from './tab-content/approval-tab-content';
+import LogsTabContent from './tab-content/logs-tab-content';
 
 const USER_MAMANGEMENT_TABS = [
 	{
 		label: 'Users',
 		key: 'users',
-		component: <div>users tab content</div>,
+		component: UserTabContent,
 	},
 	{
 		label: 'Teams',
 		key: 'teams',
-		component: <div>teams tab content</div>,
+		component: TeamTabContent,
 	},
 	{
 		label: 'Roles & Permissions',
 		key: 'roles-permissions',
-		component: <div>roles & permissions tab content</div>,
+		component: RolePermissionTabContent,
 	},
 	{
 		label: 'Approvals',
 		key: 'approvals',
-		component: <div>approvals tab content</div>,
+		component: ApprovalTabContent,
 	},
 	{
 		label: 'Logs',
 		key: 'logs',
-		component: <div>logs tab content</div>,
+		component: LogsTabContent,
 	},
 ];
 
 const AccessManagementPage = () => {
 	const [activeTab, setActiveTab] = useState(USER_MAMANGEMENT_TABS[0].key);
+
+	const ActiveComponent = USER_MAMANGEMENT_TABS.find(
+		(tab) => tab.key === activeTab,
+	)?.component;
 
 	return (
 		<div className="w-full h-full px-6 pt-4 pb-6">
@@ -48,11 +57,9 @@ const AccessManagementPage = () => {
 					</div>
 				))}
 			</div>
+
 			<div className="mt-6 h-[calc(100%-4rem)] overflow-auto">
-				{
-					USER_MAMANGEMENT_TABS.find((tab) => tab.key === activeTab)
-						?.component
-				}
+				{ActiveComponent && <ActiveComponent />}
 			</div>
 		</div>
 	);
