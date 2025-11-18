@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import TeamTabContent from './tab-content/team-tab-content';
+import TeamTabContent from './tab-content/teams-tab-content';
 import UserTabContent from './tab-content/user-tab-content';
 import RolePermissionTabContent from './tab-content/role-permission-tab-content';
 import ApprovalTabContent from './tab-content/approval-tab-content';
@@ -34,7 +34,7 @@ const USER_MAMANGEMENT_TABS = [
 ];
 
 const AccessManagementPage = () => {
-	const [activeTab, setActiveTab] = useState(USER_MAMANGEMENT_TABS[0].key);
+	const [activeTab, setActiveTab] = useState(USER_MAMANGEMENT_TABS[1].key);
 
 	const ActiveComponent = USER_MAMANGEMENT_TABS.find(
 		(tab) => tab.key === activeTab,
@@ -58,7 +58,7 @@ const AccessManagementPage = () => {
 				))}
 			</div>
 
-			<div className="mt-6 h-[calc(100%-4rem)] overflow-auto">
+			<div className="mt-6 h-[calc(100%-4rem)]">
 				{ActiveComponent && <ActiveComponent />}
 			</div>
 		</div>
