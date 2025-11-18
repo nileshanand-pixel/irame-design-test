@@ -527,7 +527,21 @@ const Header = () => {
 				{showDataSourceName ? (
 					<DataSourceSwitcher />
 				) : (
-					<span className="font-medium text-lg">{'Irame.ai'}</span>
+					<span className="font-medium text-lg">
+						{pathname.includes('access-management') ? (
+							<div className="space-y-[0.125rem]">
+								<div className="text-[#26064A] font-semibold">
+									Access Management
+								</div>
+								<div className="text-[#26064ACC] text-sm font-normal">
+									Manage users, roles, and permissions across your
+									organization
+								</div>
+							</div>
+						) : (
+							'Irame.ai'
+						)}
+					</span>
 				)}
 				{/* {renderGenerateSessionReport()} */}
 			</div>

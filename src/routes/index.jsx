@@ -21,7 +21,7 @@ import ReportContentPage from '@/components/features/reports/export/Page';
 import HelpMenu from '@/components/elements/HelpMenu';
 import WorkflowPageV2 from '@/components/features/business-process/workflow/page-v2';
 import Home from '@/components/features/home';
-import UsersPage from '@/components/features/access-management/users/page';
+import AccessManagementPage from '@/components/features/access-management/page';
 
 const AppRoutes = () => {
 	return (
@@ -146,16 +146,9 @@ const AppRoutes = () => {
 								<Route
 									path="access-management"
 									element={
-										<Navigate
-											to="access-management/users"
-											replace
+										<ProtectedRoute
+											element={<AccessManagementPage />}
 										/>
-									}
-								/>
-								<Route
-									path="access-management/users"
-									element={
-										<ProtectedRoute element={<UsersPage />} />
 									}
 								/>
 							</Routes>
