@@ -411,6 +411,8 @@ const Header = () => {
 	const [isHelpSubmenuOpen, setIsHelpSubmenuOpen] = useState(false);
 	const helpCenterRef = useRef(null);
 
+	const navigate = useNavigate();
+
 	// const dispatch = useDispatch();
 	const renderAvatar = () => {
 		return (
@@ -498,8 +500,7 @@ const Header = () => {
 			title: 'Access Management',
 			icon: <img src={shieldIcon} className="size-4 mr-3" />,
 			onClick: () => {
-				// Add navigation logic for Access Management
-				console.log('Access Management clicked');
+				navigate('/app/access-management/users');
 			},
 		},
 		{
