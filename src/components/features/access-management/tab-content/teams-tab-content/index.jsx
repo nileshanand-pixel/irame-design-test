@@ -6,6 +6,8 @@ import { DataTable } from '@/components/elements/DataTable';
 import DotsDropdown from '@/components/elements/DotsDropdown';
 import editIcon from '@/assets/icons/edit.svg';
 import userPlusIcon from '@/assets/icons/user-plus.svg';
+import EditTeamModal from './edit-team-modal';
+import ManageUsersModal from './manage-users-modal';
 
 export default function TeamTabContent() {
 	const [teams, setTeams] = useState([
@@ -127,15 +129,18 @@ export default function TeamTabContent() {
 		pageIndex: 0,
 		pageSize: 10,
 	});
+	const [selectedTeam, setSelectedTeam] = useState(null);
+	const [isEditingTeam, setIsEditingTeam] = useState(false);
+	const [isManageUsersModalOpen, setIsManageUsersModalOpen] = useState(false);
 
 	const handleEditTeam = (team) => {
-		console.log('Edit team:', team);
-		// TODO: Implement edit team functionality
+		setSelectedTeam(team);
+		setIsEditingTeam(true);
 	};
 
 	const handleManageUsers = (team) => {
-		console.log('Manage members:', team);
-		// TODO: Implement manage members functionality
+		setSelectedTeam(team);
+		setIsManageUsersModalOpen(true);
 	};
 
 	const columns = [
@@ -227,6 +232,18 @@ export default function TeamTabContent() {
 					</div>
 				</div>
 			)}
+
+			<EditTeamModal
+				open={!!isEditingTeam}
+				setOpen={setIsEditingTeam}
+				team={selectedTeam}
+			/>
+
+			<ManageUsersModal
+				open={!!isManageUsersModalOpen}
+				setOpen={setIsManageUsersModalOpen}
+				team={selectedTeam}
+			/>
 		</div>
 	);
 }

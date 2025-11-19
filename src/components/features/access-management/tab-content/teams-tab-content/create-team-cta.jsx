@@ -4,7 +4,7 @@ import { useState } from 'react';
 import CreateTeamDrawer from './create-team-drawer';
 
 export default function CreateTeamCta({ text = 'Create Team' }) {
-	const [open, setOpen] = useState(true);
+	const [open, setOpen] = useState(false);
 
 	return (
 		<div>
