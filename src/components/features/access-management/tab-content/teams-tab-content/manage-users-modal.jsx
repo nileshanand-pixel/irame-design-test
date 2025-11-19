@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import plusIconWhite from '@/assets/icons/user-plus-white.svg';
+import deleteIcon from '@/assets/icons/delete.svg';
 
 export default function ManageUsersModal({ open, setOpen, team }) {
 	const [currentMembers, setCurrentMembers] = useState([]);
@@ -79,19 +80,34 @@ export default function ManageUsersModal({ open, setOpen, team }) {
 									currentMembers.map((user, index) => (
 										<div
 											key={user.id}
-											className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${
+											className={`flex items-center gap-3 px-4 py-3 ${
 												index !== currentMembers.length - 1
 													? 'border-b border-gray-200'
 													: ''
 											}`}
 										>
-											<div className="flex-1 min-w-0">
-												<div className="text-[#26064A] font-medium text-sm truncate">
-													{user.name}
+											<div className="flex-1 min-w-0 flex items-center justify-between">
+												<div>
+													<div className="text-[#26064A] font-medium text-sm truncate">
+														{user.name}
+													</div>
+													<div className="text-gray-500 text-xs truncate">
+														{user.email}
+													</div>
 												</div>
-												<div className="text-gray-500 text-xs truncate">
-													{user.email}
-												</div>
+
+												<Button
+													variant="ghost"
+													className="gap-1 items-center"
+												>
+													<img
+														src={deleteIcon}
+														className="size-4"
+													/>
+													<span className="text-sm text-[#26064A] font-normal">
+														Remove
+													</span>
+												</Button>
 											</div>
 										</div>
 									))
