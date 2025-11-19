@@ -1,20 +1,20 @@
 import { useState } from 'react';
-import TeamTabContent from './tab-content/teams-tab-content';
-import UserTabContent from './tab-content/user-tab-content';
 import RolePermissionTabContent from './tab-content/role-permission-tab-content';
 import ApprovalTabContent from './tab-content/approval-tab-content';
 import LogsTabContent from './tab-content/logs-tab-content';
+import TeamsTabContent from './tab-content/teams-tab-content';
+import UsersTabContent from './tab-content/users-tab-content';
 
 const USER_MAMANGEMENT_TABS = [
 	{
 		label: 'Users',
 		key: 'users',
-		component: UserTabContent,
+		component: UsersTabContent,
 	},
 	{
 		label: 'Teams',
 		key: 'teams',
-		component: TeamTabContent,
+		component: TeamsTabContent,
 	},
 	{
 		label: 'Roles & Permissions',
@@ -34,7 +34,7 @@ const USER_MAMANGEMENT_TABS = [
 ];
 
 const AccessManagementPage = () => {
-	const [activeTab, setActiveTab] = useState(USER_MAMANGEMENT_TABS[1].key);
+	const [activeTab, setActiveTab] = useState(USER_MAMANGEMENT_TABS[0].key);
 
 	const ActiveComponent = USER_MAMANGEMENT_TABS.find(
 		(tab) => tab.key === activeTab,

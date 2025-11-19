@@ -1,15 +1,27 @@
 import { useState } from 'react';
-import EmptyState from './empty-state';
-import CreateTeamCta from './create-team-cta';
 import SearchBar from '../../search-bar';
 import { DataTable } from '@/components/elements/DataTable';
 import DotsDropdown from '@/components/elements/DotsDropdown';
 import editIcon from '@/assets/icons/edit.svg';
 import userPlusIcon from '@/assets/icons/user-plus.svg';
-import EditTeamModal from './edit-team-modal';
-import ManageUsersModal from './manage-users-modal';
+import EmptyState from '../empty-state';
+import teamsEmpty from '@/assets/icons/teams-empty.svg';
+import CreateTeamCta from './create-team-cta';
+import EditTeamDrawer from './edit-team-drawer';
+import ManageUsersDrawer from './manage-users-drawer';
 
-export default function TeamTabContent() {
+const EMPTY_STATE_CONFIG = {
+	image: teamsEmpty,
+	heading: 'Build Your Dream Team',
+	descriptionLines: [
+		'Collaborate with colleagues, assign roles, and streamline',
+		'workflows by creating your first team.',
+	],
+	cta: CreateTeamCta,
+	ctaText: 'Create Your First Team',
+};
+
+export default function TeamsTabContent() {
 	const [teams, setTeams] = useState([
 		{
 			id: 1,
@@ -131,7 +143,7 @@ export default function TeamTabContent() {
 	});
 	const [selectedTeam, setSelectedTeam] = useState(null);
 	const [isEditingTeam, setIsEditingTeam] = useState(false);
-	const [isManageUsersModalOpen, setIsManageUsersModalOpen] = useState(false);
+	const [isManageUsersDrawerOpen, setIsManageUsersDrawerOpen] = useState(false);
 
 	const handleEditTeam = (team) => {
 		setSelectedTeam(team);
@@ -140,7 +152,7 @@ export default function TeamTabContent() {
 
 	const handleManageUsers = (team) => {
 		setSelectedTeam(team);
-		setIsManageUsersModalOpen(true);
+		setIsManageUsersDrawerOpen(true);
 	};
 
 	const columns = [
@@ -204,7 +216,7 @@ export default function TeamTabContent() {
 	return (
 		<div className="w-full h-full">
 			{teams?.length === 0 ? (
-				<EmptyState />
+				<EmptyState config={EMPTY_STATE_CONFIG} />
 			) : (
 				<div className="space-y-5">
 					<div className="flex justify-between items-center">
@@ -233,15 +245,15 @@ export default function TeamTabContent() {
 				</div>
 			)}
 
-			<EditTeamModal
+			<EditTeamDrawer
 				open={!!isEditingTeam}
 				setOpen={setIsEditingTeam}
 				team={selectedTeam}
 			/>
 
-			<ManageUsersModal
-				open={!!isManageUsersModalOpen}
-				setOpen={setIsManageUsersModalOpen}
+			<ManageUsersDrawer
+				open={!!isManageUsersDrawerOpen}
+				setOpen={setIsManageUsersDrawerOpen}
 				team={selectedTeam}
 			/>
 		</div>

@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
-export default function EditTeamModal({ open, setOpen, team }) {
+export default function EditTeamDrawer({ open, setOpen, team }) {
 	const [teamName, setTeamName] = useState(team?.teamName);
 
 	return (

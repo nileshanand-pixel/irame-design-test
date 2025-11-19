@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import plusIconWhite from '@/assets/icons/user-plus-white.svg';
 import deleteIcon from '@/assets/icons/delete.svg';
 
-export default function ManageUsersModal({ open, setOpen, team }) {
+export default function ManageUsersDrawer({ open, setOpen, team }) {
 	const [currentMembers, setCurrentMembers] = useState([]);
 	const [availableUsers, setAvailableUsers] = useState([]);
 	const [selectedUsers, setSelectedUsers] = useState([]);
