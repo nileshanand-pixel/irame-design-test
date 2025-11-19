@@ -1,7 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import EmptyState from '../empty-state';
 import usersEmpty from '@/assets/icons/users-empty.svg';
 import InviteUserCta from './invite-user-cta';
+import { DataTable } from '@/components/elements/DataTable';
+import DotsDropdown from '@/components/elements/DotsDropdown';
+import editIcon from '@/assets/icons/edit.svg';
+import SearchBar from '../../search-bar';
+import deleteIcon from '@/assets/icons/delete.svg';
+import userCrossIcon from '@/assets/icons/user-cross.svg';
+import resendIcon from '@/assets/icons/resend.svg';
+import EditUserDrawer from './edit-user-drawer';
 
 const EMPTY_STATE_CONFIG = {
 	image: usersEmpty,
@@ -15,19 +23,352 @@ const EMPTY_STATE_CONFIG = {
 	ctaText: 'Invite Your First User',
 };
 
+const getStatusConfig = (status) => {
+	switch (status) {
+		case 'active':
+			return {
+				label: 'Active',
+				textColor: '#047A48',
+				dotColor: '#047A48',
+				bgColor: '#ECFEF3',
+			};
+		case 'invite-pending':
+			return {
+				label: 'Invite Pending',
+				textColor: '#AE4408',
+				dotColor: '#A74108',
+				bgColor: '#FFFAEB',
+			};
+		case 'inactive-expire':
+		case 'inactive':
+			return {
+				label: 'Inactive Expire',
+				textColor: '#374151',
+				dotColor: '#374151',
+				bgColor: '#F3F4F6',
+			};
+		default:
+			return {
+				label: 'Active',
+				textColor: '#047A48',
+				dotColor: '#047A48',
+				bgColor: '#ECFEF3',
+			};
+	}
+};
+
 export default function UsersTabContent() {
 	const [users, setUsers] = useState([]);
+	const [search, setSearch] = useState('');
+	const [pagination, setPagination] = useState({
+		pageIndex: 0,
+		pageSize: 10,
+	});
+	const [isEditUserDrawerOpen, setIsEditUserDrawerOpen] = useState(false);
+	const [selectedUser, setSelectedUser] = useState(null);
+
+	// Mock users data - replace with actual API call
+	useEffect(() => {
+		const mockUsers = [
+			{
+				id: 1,
+				name: 'Aarav Mehta',
+				email: 'aarav.mehta@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 2,
+				name: 'Liam Johnson',
+				email: 'liam.johnson@example.com',
+				role: 'Viewer',
+				status: 'invite-pending',
+			},
+			{
+				id: 3,
+				name: 'Ethan Brown',
+				email: 'ethan.brown@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 4,
+				name: 'Ethan Brown',
+				email: 'ethan.brown@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 5,
+				name: 'Ethan Brown',
+				email: 'ethan.brown@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 6,
+				name: 'Zara Khan',
+				email: 'zara.khan@example.com',
+				role: 'Admin',
+				status: 'inactive-expire',
+			},
+			{
+				id: 7,
+				name: 'Maya Choudhury',
+				email: 'maya.choudhury@example.com',
+				role: 'Admin',
+				status: 'inactive',
+			},
+			{
+				id: 1,
+				name: 'Aarav Mehta',
+				email: 'aarav.mehta@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 2,
+				name: 'Liam Johnson',
+				email: 'liam.johnson@example.com',
+				role: 'Viewer',
+				status: 'invite-pending',
+			},
+			{
+				id: 3,
+				name: 'Ethan Brown',
+				email: 'ethan.brown@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 4,
+				name: 'Ethan Brown',
+				email: 'ethan.brown@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 5,
+				name: 'Ethan Brown',
+				email: 'ethan.brown@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 6,
+				name: 'Zara Khan',
+				email: 'zara.khan@example.com',
+				role: 'Admin',
+				status: 'inactive-expire',
+			},
+			{
+				id: 7,
+				name: 'Maya Choudhury',
+				email: 'maya.choudhury@example.com',
+				role: 'Admin',
+				status: 'inactive',
+			},
+			{
+				id: 1,
+				name: 'Aarav Mehta',
+				email: 'aarav.mehta@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 2,
+				name: 'Liam Johnson',
+				email: 'liam.johnson@example.com',
+				role: 'Viewer',
+				status: 'invite-pending',
+			},
+			{
+				id: 3,
+				name: 'Ethan Brown',
+				email: 'ethan.brown@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 4,
+				name: 'Ethan Brown',
+				email: 'ethan.brown@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 5,
+				name: 'Ethan Brown',
+				email: 'ethan.brown@example.com',
+				role: 'Admin',
+				status: 'active',
+			},
+			{
+				id: 6,
+				name: 'Zara Khan',
+				email: 'zara.khan@example.com',
+				role: 'Admin',
+				status: 'inactive-expire',
+			},
+			{
+				id: 7,
+				name: 'Maya Choudhury',
+				email: 'maya.choudhury@example.com',
+				role: 'Admin',
+				status: 'inactive',
+			},
+		];
+		setUsers(mockUsers);
+	}, []);
+
+	const filteredUsers = useMemo(() => {
+		return users.filter(
+			(user) =>
+				user.name.toLowerCase().includes(search.toLowerCase()) ||
+				user.email.toLowerCase().includes(search.toLowerCase()),
+		);
+	}, [users, search]);
+
+	const handleEditUser = (user) => {
+		setSelectedUser(user);
+		setIsEditUserDrawerOpen(true);
+	};
+
+	const columns = useMemo(
+		() => [
+			{
+				accessorKey: 'name',
+				header: 'Name',
+				cell: ({ row }) => (
+					<div>
+						<div className="text-[#26064A] font-medium text-sm">
+							{row.original.name}
+						</div>
+						<div className="text-gray-500 text-xs mt-0.5">
+							@{row.original.email}
+						</div>
+					</div>
+				),
+			},
+			{
+				accessorKey: 'role',
+				header: 'Roles',
+				cell: ({ row }) => (
+					<span className="text-[#26064A] text-sm">
+						{row.original.role}
+					</span>
+				),
+			},
+			{
+				accessorKey: 'status',
+				header: 'Status',
+				cell: ({ row }) => {
+					const statusConfig = getStatusConfig(row.original.status);
+					return (
+						<div
+							className="inline-flex items-center gap-2 px-2 py-1 rounded-full"
+							style={{ backgroundColor: statusConfig.bgColor }}
+						>
+							<div
+								className={`size-2 rounded-full`}
+								style={{ backgroundColor: statusConfig.dotColor }}
+							/>
+							<span
+								className={`text-sm`}
+								style={{ color: statusConfig.textColor }}
+							>
+								{statusConfig.label}
+							</span>
+						</div>
+					);
+				},
+			},
+			{
+				id: 'actions',
+				header: 'Action',
+				cell: ({ row }) => {
+					const user = row.original;
+					const actionOptions = [
+						{
+							type: 'item',
+							label: 'Edit User',
+							onClick: () => handleEditUser(user),
+							show: true,
+							icon: <img src={editIcon} className="size-4" />,
+						},
+						{
+							type: 'item',
+							label: 'Removed User',
+							onClick: () => console.log('Removed user', user),
+							show: true,
+							icon: <img src={deleteIcon} className="size-4" />,
+						},
+						{
+							type: 'item',
+							label: 'Revoke Invitation',
+							onClick: () => console.log('Revoke invitation', user),
+							show: true,
+							icon: <img src={userCrossIcon} className="size-4" />,
+						},
+						{
+							type: 'item',
+							label: 'Resend Invite',
+							onClick: () => console.log('Revoke invitation', user),
+							show: true,
+							icon: <img src={resendIcon} className="size-4" />,
+						},
+					];
+
+					return (
+						<DotsDropdown
+							options={actionOptions}
+							labelClassName="text-sm text-[#26064A] font-normal"
+						/>
+					);
+				},
+			},
+		],
+		[],
+	);
 
 	return (
 		<div className="w-full h-full">
 			{users.length === 0 ? (
 				<EmptyState config={EMPTY_STATE_CONFIG} />
 			) : (
-				<div>
-					<div>
-						{/* <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} /> */}
+				<div className="space-y-5">
+					<div className="flex justify-between items-center">
+						<div>
+							<SearchBar
+								value={search}
+								onChange={(e) => setSearch(e.target.value)}
+							/>
+						</div>
+						<div>
+							<InviteUserCta text="Invite User" />
+						</div>
+					</div>
+
+					<div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+						<DataTable
+							data={filteredUsers}
+							columns={columns}
+							totalCount={filteredUsers.length}
+							pagination={pagination}
+							setPagination={setPagination}
+							isServerSide={false}
+							simplePagination={true}
+						/>
 					</div>
 				</div>
+			)}
+
+			{isEditUserDrawerOpen && (
+				<EditUserDrawer
+					open={!!isEditUserDrawerOpen}
+					setOpen={setIsEditUserDrawerOpen}
+					user={selectedUser}
+				/>
 			)}
 		</div>
 	);

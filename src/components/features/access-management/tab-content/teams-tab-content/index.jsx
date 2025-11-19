@@ -139,7 +139,7 @@ export default function TeamsTabContent() {
 	const [search, setSearch] = useState('');
 	const [pagination, setPagination] = useState({
 		pageIndex: 0,
-		pageSize: 10,
+		pageSize: 5,
 	});
 	const [selectedTeam, setSelectedTeam] = useState(null);
 	const [isEditingTeam, setIsEditingTeam] = useState(false);
@@ -245,17 +245,21 @@ export default function TeamsTabContent() {
 				</div>
 			)}
 
-			<EditTeamDrawer
-				open={!!isEditingTeam}
-				setOpen={setIsEditingTeam}
-				team={selectedTeam}
-			/>
+			{isEditingTeam && (
+				<EditTeamDrawer
+					open={!!isEditingTeam}
+					setOpen={setIsEditingTeam}
+					team={selectedTeam}
+				/>
+			)}
 
-			<ManageUsersDrawer
-				open={!!isManageUsersDrawerOpen}
-				setOpen={setIsManageUsersDrawerOpen}
-				team={selectedTeam}
-			/>
+			{isManageUsersDrawerOpen && (
+				<ManageUsersDrawer
+					open={!!isManageUsersDrawerOpen}
+					setOpen={setIsManageUsersDrawerOpen}
+					team={selectedTeam}
+				/>
+			)}
 		</div>
 	);
 }
