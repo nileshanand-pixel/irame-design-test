@@ -500,7 +500,7 @@ const Header = () => {
 			title: 'Access Management',
 			icon: <img src={shieldIcon} className="size-4 mr-3" />,
 			onClick: () => {
-				navigate('/app/access-management/users');
+				navigate('/app/access-management');
 			},
 		},
 		{

@@ -35,6 +35,7 @@ import { DataTablePagination } from './data-table/components/data-table-paginati
  * @property {Object} [selectedRow]
  * @property {any} [defaultSort]
  * @property {boolean} [enableSorting]
+ * @property {boolean} [simplePagination]
  */
 
 /**
@@ -61,6 +62,7 @@ export function DataTable({
 	selectedRow,
 	onSortingChange,
 	enableSorting = false,
+	simplePagination = false,
 }) {
 	const { table } = useDataTable({
 		data,
@@ -89,7 +91,7 @@ export function DataTable({
 								{headerGroup.headers.map((header) => (
 									<TableHead
 										key={header.id}
-										className="p-2 text-sm font-semibold text-primary80 bg-purple-4"
+										className="px-4 py-3 text-sm font-semibold text-primary80 bg-purple-4"
 									>
 										{header.isPlaceholder
 											? null
@@ -135,11 +137,14 @@ export function DataTable({
 												selectedRow?._id ===
 													row.original?._id &&
 												'bg-slate-100',
-											'text-xs font-normal textprimary80',
+											'text-sm font-normal text-primary80',
 										)}
 									>
 										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id} className="p-2">
+											<TableCell
+												key={cell.id}
+												className="px-4 py-3"
+											>
 												{flexRender(
 													cell.column.columnDef.cell,
 													cell.getContext(),
@@ -163,8 +168,11 @@ export function DataTable({
 				</Table>
 			</div>
 			{!hidePagination && (
-				<div className="space-y-2.5">
-					<DataTablePagination table={table} />
+				<div className={cn('space-y-2.5', simplePagination && 'pb-5')}>
+					<DataTablePagination
+						table={table}
+						simpleMode={simplePagination}
+					/>
 				</div>
 			)}
 			{FloatingBarContent && (

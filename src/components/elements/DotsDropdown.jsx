@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import {
 	DropdownMenu,
@@ -7,7 +8,7 @@ import {
 	DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 
-const DotsDropdown = ({ options, align = 'end' }) => {
+const DotsDropdown = ({ options, align = 'end', labelClassName }) => {
 	return (
 		<DropdownMenu className="relative">
 			<DropdownMenuTrigger asChild>
@@ -34,7 +35,12 @@ const DotsDropdown = ({ options, align = 'end' }) => {
 									onClick={onClick}
 								>
 									{Icon ? Icon : null}
-									<span className="font-medium text-base">
+									<span
+										className={cn(
+											'font-medium text-base',
+											labelClassName,
+										)}
+									>
 										{label}
 									</span>
 								</DropdownMenuItem>
