@@ -41,8 +41,10 @@ import { useSessionId } from '@/hooks/use-session-id';
 import { queryClient } from '@/lib/react-query';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
 import SessionSkeleton from './elements/SessionSkeleton';
-import { Share2 } from 'lucide-react';
+import { Check, Share2 } from 'lucide-react';
 import homeIcon from '@/assets/icons/home.svg';
+import sidenavIcon from '@/assets/icons/sidenav.svg';
+import chevronDownIcon from '@/assets/icons/chevron-down.svg';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -54,11 +56,41 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const [expandedBusinessProcesses, setExpandedBusinessProcesses] = useState([]);
 	const sessionId = useSessionId();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
+	const [selectedTeam, setSelectedTeam] = useState('1'); // Store team ID as string
+	const [teamSearchQuery, setTeamSearchQuery] = useState('');
 
 	const { pathname, navigate } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
 	const dispatch = useDispatch();
+
+	// Mock teams data - replace with API call if needed
+	const teams = [
+		{
+			id: '1',
+			name: 'Development Team Development TeamDevelopment TeamDevelopment TeamDevelopment Team',
+		},
+		{ id: '2', name: 'Marketing Team' },
+		{ id: '3', name: 'Development Team' },
+		{ id: '4', name: 'Design Team' },
+		{ id: '1', name: 'Development Team' },
+		{ id: '2', name: 'Marketing Team' },
+		{ id: '3', name: 'Development Team' },
+		{ id: '4', name: 'Design Team' },
+		{ id: '1', name: 'Development Team' },
+		{ id: '2', name: 'Marketing Team' },
+		{ id: '3', name: 'Development Team' },
+		{ id: '4', name: 'Design Team' },
+	];
+
+	// Get selected team name
+	const selectedTeamData = teams.find((team) => team.id === selectedTeam);
+	const selectedTeamName = selectedTeamData?.name || 'Development Team';
+
+	// Filter teams based on search query
+	const filteredTeams = teams.filter((team) =>
+		team.name.toLowerCase().includes(teamSearchQuery.toLowerCase()),
+	);
 
 	const {
 		data: sessionsData,
@@ -604,13 +636,125 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		>
 			<ConfirmationDialog />
 			{/* SideNav Expand Collapse | Hamburger */}
-			<div className="flex-none m-4">
-				<img
-					src="https://d2vkmtgu2mxkyq.cloudfront.net/hamburger_menu.svg"
-					alt="menu"
-					className="size-10 cursor-pointer hover:bg-purple-4 rounded-full p-2"
-					onClick={toggleSideNav}
-				/>
+			<div className="m-4 flex items-start">
+				<div
+					className={cn(
+						'w-full flex gap-3 items-start',
+						!isSideNavOpen && 'justify-center',
+					)}
+				>
+					<div>
+						<img
+							src={sidenavIcon}
+							className="size-5 mt-1"
+							onClick={toggleSideNav}
+						/>
+					</div>
+
+					{isSideNavOpen && (
+						<div className="w-[calc(100%-1.75rem)]">
+							<DropdownMenu
+								onOpenChange={(open) => {
+									if (!open) {
+										setTeamSearchQuery('');
+									}
+								}}
+							>
+								<DropdownMenuTrigger
+									asChild
+									className="!p-0 hover:bg-transparent"
+								>
+									<div className="w-full cursor-pointer rounded-lg hover:bg-purple-4 p-1 -ml-1 outline-none">
+										<div className="flex justify-between items-start w-full">
+											<div className="flex-1 min-w-0">
+												<div className="text-sm text-[#26064ACC] font-medium truncate text-left">
+													{selectedTeamName}
+													{selectedTeamName}
+													{selectedTeamName}
+												</div>
+												<div className="text-xs text-[#26064A] font-semibold text-left">
+													Irame.ai
+												</div>
+											</div>
+											<img
+												src={chevronDownIcon}
+												className="size-6 ml-2 shrink-0"
+											/>
+										</div>
+									</div>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent
+									className="w-[18rem] p-0"
+									align="start"
+									side="bottom"
+								>
+									{/* Header */}
+									<div className="px-3 py-3 border-b border-gray-200">
+										{/* Search Input */}
+										<div className="relative">
+											<i className="bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+											<input
+												type="text"
+												placeholder="Search Team"
+												value={teamSearchQuery}
+												onChange={(e) =>
+													setTeamSearchQuery(
+														e.target.value,
+													)
+												}
+												className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 placeholder:text-gray-400"
+												onClick={(e) => e.stopPropagation()}
+											/>
+										</div>
+									</div>
+
+									{/* Teams List */}
+									<div className="py-1 max-h-64 overflow-y-auto">
+										{filteredTeams.length > 0 ? (
+											filteredTeams.map((team) => {
+												const isSelected =
+													selectedTeam === team.id;
+												return (
+													<DropdownMenuItem
+														key={team.id}
+														className="cursor-pointer focus:bg-purple-4 hover:!bg-purple-4 px-3 py-3 outline-none"
+														onClick={() => {
+															setSelectedTeam(team.id);
+															setTeamSearchQuery('');
+														}}
+													>
+														<div className="flex items-center justify-between w-full">
+															<span className="text-[#26064A] text-sm font-medium truncate">
+																{team.name}
+															</span>
+															{isSelected && (
+																<div className="size-4 rounded-full bg-purple-100 flex items-center justify-center shrink-0 ml-2">
+																	<Check
+																		className="size-2 text-white"
+																		strokeWidth={
+																			4
+																		}
+																	/>
+																</div>
+															)}
+															{!isSelected && (
+																<div className="size-4 rounded-full border-2 border-gray-300 shrink-0 ml-2"></div>
+															)}
+														</div>
+													</DropdownMenuItem>
+												);
+											})
+										) : (
+											<div className="px-3 py-8 text-center text-gray-500 text-sm">
+												No teams found
+											</div>
+										)}
+									</div>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+					)}
+				</div>
 			</div>
 
 			{/* Ask IRA Button */}
