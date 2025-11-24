@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -41,8 +41,13 @@ const SearchBar = ({ search, setSearch, isFocused, setIsFocused }) => (
 const SingleBusinessProcessPage = () => {
 	const navigate = useNavigate();
 	const { businessProcessId } = useParams();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const [search, setSearch] = useState('');
 	const [isFocused, setIsFocused] = useState(false);
+	const [highlightedWorkflowId, setHighlightedWorkflowId] = useState(null);
+	const [isHighlightVisible, setIsHighlightVisible] = useState(false);
+	const workflowListRef = useRef(null);
+	const highlightedWorkflowRef = useRef(null);
 
 	// Fetch business processes
 	const { data: businessProcessesData, isLoading: isBusinessLoading } = useQuery({
@@ -50,11 +55,13 @@ const SingleBusinessProcessPage = () => {
 		queryFn: () => getBusinessProcesses(),
 	});
 
-	// Fetch workflows
+	// Fetch workflows with polling every 20 seconds
 	const { data: workflowsData, isLoading: isWorkflowsLoading } = useQuery({
 		queryKey: ['get-workflows-by-business-process', businessProcessId],
 		queryFn: () => getWorkflowsByBusinessProcess(businessProcessId),
 		enabled: !!businessProcessId,
+		refetchInterval: 20000, // Poll every 20 seconds
+		refetchIntervalInBackground: false, // Only poll when tab is active
 	});
 
 	// Find matching business process
@@ -81,6 +88,70 @@ const SingleBusinessProcessPage = () => {
 				),
 		);
 	}, [workflows, search]);
+
+	// Handle workflow highlighting from URL parameter
+	useEffect(() => {
+		const workflowId = searchParams.get('highlightWorkflow');
+		if (workflowId && workflows.length > 0) {
+			// Find the workflow that matches the ID (could be external_id or workflow_check_id)
+			const targetWorkflow = workflows.find(
+				(workflow) =>
+					String(workflow.external_id) === String(workflowId) ||
+					String(workflow.workflow_check_id) === String(workflowId),
+			);
+
+			if (targetWorkflow) {
+				setHighlightedWorkflowId(targetWorkflow.external_id);
+				setIsHighlightVisible(false); // Reset visibility state
+
+				// Scroll to bottom smoothly after a short delay to ensure DOM is ready
+				setTimeout(() => {
+					if (workflowListRef.current) {
+						workflowListRef.current.scrollTo({
+							top: workflowListRef.current.scrollHeight,
+							behavior: 'smooth',
+						});
+					}
+
+					// Remove highlight after 5 seconds (2.5s animation x 2 iterations)
+					setTimeout(() => {
+						setHighlightedWorkflowId(null);
+						setIsHighlightVisible(false);
+						// Clear URL parameter
+						setSearchParams((params) => {
+							params.delete('highlightWorkflow');
+							return params;
+						});
+					}, 5000);
+				}, 300);
+			}
+		}
+	}, [searchParams, workflows, setSearchParams]);
+
+	// Intersection Observer for highlighted workflow
+	useEffect(() => {
+		if (!highlightedWorkflowId || !highlightedWorkflowRef.current) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						setIsHighlightVisible(true);
+					}
+				});
+			},
+			{
+				threshold: 0.1, // Trigger when 10% of the element is visible
+				root: workflowListRef.current,
+			},
+		);
+
+		observer.observe(highlightedWorkflowRef.current);
+
+		return () => {
+			observer.disconnect();
+		};
+	}, [highlightedWorkflowId]);
 
 	// Skeleton components
 	const BreadcrumbSkeleton = () => (
@@ -153,7 +224,10 @@ const SingleBusinessProcessPage = () => {
 					</div>
 				</div>
 
-				<div className="px-4 py-2 mb-4 flex-1 flex flex-col gap-4 overflow-y-auto">
+				<div
+					ref={workflowListRef}
+					className="px-4 py-2 mb-4 flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar"
+				>
 					{isWorkflowsLoading ? (
 						<>
 							<WorkflowSkeleton />
@@ -167,6 +241,18 @@ const SingleBusinessProcessPage = () => {
 							<WorkflowCard
 								key={workflow.external_id}
 								workflow={workflow}
+								isHighlighted={
+									highlightedWorkflowId === workflow.external_id
+								}
+								isHighlightVisible={
+									isHighlightVisible &&
+									highlightedWorkflowId === workflow.external_id
+								}
+								highlightedRef={
+									highlightedWorkflowId === workflow.external_id
+										? highlightedWorkflowRef
+										: null
+								}
 							/>
 						))
 					) : (

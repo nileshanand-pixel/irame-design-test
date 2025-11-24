@@ -49,6 +49,7 @@ import {
 	submitFeedback,
 } from '@/api/feedback/feedback.service';
 import { cn } from '@/lib/utils';
+import { getURLSearchParams } from '@/utils/url';
 
 const OptionsClarification = ({ question, onConfirm }) => {
 	const [customValue, setCustomValue] = useState('');
@@ -105,6 +106,7 @@ export function AddToDropdown({
 	handleAddToWorkflow,
 }) {
 	const [open, setOpen] = useState(false);
+	const isWorkflowQuery = answerResp?.type === 'workflow';
 
 	return (
 		<DropdownMenu open={open} onOpenChange={setOpen}>
@@ -151,14 +153,16 @@ export function AddToDropdown({
 					/>
 				)}
 
-				{/* <AddToDropdownItem
-					icon={Plus}
-					label="Workflows"
-					onClick={() => {
-						handleAddToWorkflow();
-						setOpen(false);
-					}}
-				/> */}
+				{!isWorkflowQuery && (
+					<AddToDropdownItem
+						icon={Plus}
+						label="Workflows"
+						onClick={() => {
+							handleAddToWorkflow();
+							setOpen(false);
+						}}
+					/>
+				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
@@ -217,6 +221,15 @@ const ResponseCard = ({
 
 		fetchFeedbacks();
 	}, [query?.sessionId, answerResp?.query_id]);
+
+	// Check if workflowRefId is in URL params and open modal
+	useEffect(() => {
+		const urlParams = getURLSearchParams();
+		const workflowRefId = urlParams.get('workflowRefId');
+		if (workflowRefId) {
+			setWorkflowModal(true);
+		}
+	}, []);
 
 	const { data: datasourceData } = useDatasourceDetailsV2();
 	const mainItems = Object.entries(answerResp?.answer || {}).filter(

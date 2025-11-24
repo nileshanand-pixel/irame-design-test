@@ -1,16 +1,9 @@
 import axiosClientV1 from '@/lib/axios';
-import { toast } from '@/lib/toast';
 import { useState } from 'react';
 
 export const getBusinessProcesses = async () => {
-	try {
-		const response = await axiosClientV1.get('/business-processes/raw');
-		return response.data?.processes || [];
-	} catch (error) {
-		console.error('Error fetching business processes:', error);
-		toast.error('Failed to fetch business processes');
-		throw error;
-	}
+	const response = await axiosClientV1.get('/business-processes/raw');
+	return response.data?.processes || [];
 };
 
 export const useInitWorkflow = () => {
@@ -24,14 +17,6 @@ export const useInitWorkflow = () => {
 		workflow_description,
 	}) => {
 		setLoading(true);
-
-		console.log({
-			queryId,
-			businessProcessId,
-			businessProcessName,
-			tags,
-			workflow_description,
-		});
 
 		try {
 			const payload = businessProcessId
@@ -51,12 +36,7 @@ export const useInitWorkflow = () => {
 				payload,
 			);
 
-			toast.success('Workflow initialized successfully');
 			return response.data;
-		} catch (error) {
-			console.error('Error initializing workflow:', error);
-			toast.error('Failed to initialize workflow');
-			throw error;
 		} finally {
 			setLoading(false);
 		}
@@ -66,48 +46,57 @@ export const useInitWorkflow = () => {
 };
 
 export const getExistingBusinessProcesses = async (queryId) => {
-	try {
-		const response = await axiosClientV1.get(
-			`/queries/${queryId}/business-processes`,
-		);
+	const response = await axiosClientV1.get(
+		`/queries/${queryId}/business-processes`,
+	);
 
-		const processes = response.data.business_processes.map((bp) => ({
-			external_id: bp.external_id,
-			name: bp.name,
-			summary: bp.description,
-			status: bp.status,
-		}));
+	const processes = response.data.business_processes.map((bp) => ({
+		external_id: bp.external_id,
+		name: bp.name,
+		description: bp.description,
+		summary: bp.description,
+		status: bp.status,
+		workflow_check_id: bp.workflow_check_id,
+		workflow_check_status: bp.workflow_check_status,
+		reference_id: bp.reference_id,
+	}));
 
-		return processes;
-	} catch (error) {
-		console.error('Error fetching business processes:', error);
-		toast.error('Failed to fetch existing business processes');
-		return [];
-	}
+	return processes;
 };
 
-export const saveWorkflow = async ({ queryId, workflowCheckId, requiredFiles }) => {
-	try {
-		const payload = {
-			workflow_check_id: workflowCheckId,
-			required_files: {
-				csv_files: requiredFiles.map((file) => ({
-					required_file_id: file.required_file_id,
-					name: file.name,
-				})),
-			},
-		};
+export const saveWorkflow = async ({
+	queryId,
+	workflowCheckId,
+	requiredFiles,
+	frequency,
+	name,
+	description,
+}) => {
+	const payload = {
+		workflow_check_id: workflowCheckId,
+		required_files: {
+			csv_files: requiredFiles.map((file) => ({
+				required_file_id: file.required_file_id,
+				name: file.name,
+			})),
+		},
+		frequency,
+	};
 
-		const response = await axiosClientV1.put(
-			`/queries/${queryId}/add-workflow/save`,
-			payload,
-		);
-
-		toast.success('Workflow saved successfully');
-		return response.data;
-	} catch (error) {
-		console.error('Error saving workflow:', error);
-		toast.error('Failed to save workflow');
-		throw error;
+	if (name !== undefined) {
+		payload.name = name;
 	}
+
+	if (description !== undefined) {
+		payload.description = description;
+	}
+
+	const response = await axiosClientV1.put(
+		`/queries/${queryId}/add-workflow/save`,
+		payload,
+	);
+
+	// success toast will be handled by the calling component so that
+	// we can attach contextual actions/links (eg. view business process)
+	return response.data;
 };
