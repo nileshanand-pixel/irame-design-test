@@ -196,7 +196,7 @@ export default function FileListing({
 				<input
 					ref={inputRef}
 					type="file"
-					accept=".csv,.xlsx,.pdf,.xlsb"
+					accept=".csv,.xlsx,.pdf"
 					multiple
 					className="hidden"
 					id="file-upload"

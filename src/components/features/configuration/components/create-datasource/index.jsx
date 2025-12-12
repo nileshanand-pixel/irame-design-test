@@ -227,7 +227,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				const type = uniqueTypes[i];
 				if (!allowedTypes.includes(type)) {
 					toast.error(
-						'Unsupported file type. Please upload only PDF, Excel (.xlsx/.xlsb), or CSV files.',
+						'Unsupported file type. Please upload only PDF, Excel (.xlsx), or CSV files.',
 					);
 					return;
 				}
@@ -734,7 +734,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 					className="absolute top-0 w-0 -z-1 opacity-0"
 					onChange={(e) => handleFileChange(e)}
 					id="file-upload"
-					accept=".csv,.xlsx,.pdf,.xlsb"
+					accept=".csv,.xlsx,.pdf"
 				/>
 			</div>
 		);
@@ -976,7 +976,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 									<span className="font-semibold text-primary60">
 										one type of file
 									</span>{' '}
-									(.xlsx/.xlsb/.csv or .pdf) at a time.
+									(.xlsx/.csv or .pdf) at a time.
 								</span>
 							</p>
 						</div>

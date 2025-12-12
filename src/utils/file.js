@@ -19,12 +19,8 @@ export function getFileType(file) {
 	// Check for PDF files
 	if (mime === 'application/pdf') return 'pdf';
 
-	// Check for Excel files (.xlsx, .xlsb)
-	if (
-		mime ===
-			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-		mime === 'application/vnd.ms-excel.sheet.binary.macroenabled.12'
-	)
+	// Check for Excel files (.xlsx)
+	if (mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 		return 'excel';
 
 	// Check for CSV files

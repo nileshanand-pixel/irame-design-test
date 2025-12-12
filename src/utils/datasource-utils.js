@@ -1,9 +1,9 @@
 export const UNSTRUCTURED_TYPES = ['.pdf', '.doc', '.docx', '.jpeg', '.jpg', '.png'];
-export const STRUCTURED_TYPES = ['.csv', '.xlsx', '.xls', '.xlsb', '.xlsm'];
+export const STRUCTURED_TYPES = ['.csv', '.xlsx', '.xls', '.xlsm'];
 
 /**
  * Checks if all files in the provided array are of structured data types.
- * Structured types typically include formats such as .csv, .xlsx, .xls, .xlsb, .xlsm.
+ * Structured types typically include formats such as .csv, .xlsx, .xls, .xlsm.
  *
  * @param {Array<{file_name: string}>} rawFiles - Array of file objects, each containing a file_name property.
  * @returns {boolean} Returns true if all files are structured types, false otherwise.
