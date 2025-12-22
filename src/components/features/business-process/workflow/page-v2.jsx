@@ -108,7 +108,7 @@ export default function WorkflowPageV2() {
 		return <WorkflowPageSkeleton />;
 	}
 
-	const mainContentClasses = `h-[calc(100vh-4rem)] overflow-x-scroll ${
+	const mainContentClasses = `h-[calc(100%-2.625rem)] overflow-x-scroll ${
 		sidebarOpen ? 'w-full' : 'w-3/5 mx-auto'
 	} transition-all duration-300 ${
 		runWorkFlowMutation.isPending ? 'overflow-y-hidden' : 'overflow-y-auto'
