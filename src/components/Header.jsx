@@ -46,6 +46,7 @@ import { getDataSourcesV2 } from './features/configuration/service/configuration
 import { ShareChatModal } from './ShareChatModal';
 import bellIcon from '@/assets/icons/bell.svg';
 import NotificationDrawer from './features/notification/components/notification-drawer';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 
 export function useDataSources() {
 	const { data, isLoading, error } = useQuery({
@@ -182,7 +183,16 @@ export const DataSourceSwitcher = () => {
 										className="flex-shrink-0 w-4 h-4 text-primary60"
 										strokeWidth={2.5}
 									/>
-									<span className="truncate">{ds.name}</span>
+									<span className="truncate flex-1">
+										{ds.name}
+									</span>
+									{ds.datasource_type ===
+										DATASOURCE_TYPES.SQL_GENERATED && (
+										<span className="flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0">
+											<span className="size-1.5 bg-green-600 rounded-full animate-pulse"></span>
+											Live
+										</span>
+									)}
 								</button>
 							))
 						) : (
@@ -504,12 +514,15 @@ const Header = () => {
 
 			<div className="flex gap-6 items-center">
 				{/* <ThemeToggle /> */}
-				{enabled && datasourceDetails?.files?.length > 0 && (
-					<DownloadFilesDropdown
-						files={datasourceDetails.files}
-						dataSourceName={datasourceDetails.name}
-					/>
-				)}
+				{enabled &&
+					datasourceDetails?.files?.length > 0 &&
+					datasourceDetails?.datasource_type !==
+						DATASOURCE_TYPES.SQL_GENERATED && (
+						<DownloadFilesDropdown
+							files={datasourceDetails.files}
+							dataSourceName={datasourceDetails.name}
+						/>
+					)}
 
 				{enabled && !sessionData?.metadata?.workflow_run_id && (
 					<Button

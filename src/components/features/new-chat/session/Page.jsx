@@ -54,6 +54,7 @@ import {
 import SiblingNavigation from './components/SiblingNavigation';
 import QueryActions from './components/QueryActions';
 import { REDIRECTION_URL_AFTER_LOGIN } from '@/constants/login-constants';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -990,6 +991,7 @@ const Workzone = () => {
 											answers[answers.length - 1]?.query_id
 										}
 										updatedAt={query?.updated_at}
+										sessionQueriesData={sessionQueriesData}
 									/>
 								</div>
 							</div>
@@ -1369,6 +1371,7 @@ const Workzone = () => {
 								answers.every((item) => item?.status === 'done')
 							}
 							setWorkspace={() => {}}
+							sessionQueriesData={sessionQueriesData}
 						/>
 					</WorkspaceEditProvider>
 				) : (
@@ -1400,27 +1403,33 @@ const Workzone = () => {
 								</button>
 							)}
 
-							{displayedTabs.includes('reference') && (
-								<button
-									onClick={() =>
-										expandWorkspace(currentQueryId, 'reference')
-									}
-									className="flex flex-col items-center focus:outline-none"
-								>
-									{isLoading ? (
-										<LoadingContainer width={2.5}>
-											<FileSearch className="h-5 w-5 text-primary100" />
-										</LoadingContainer>
-									) : (
-										<span className="p-2 rounded-full border flex items-center justify-center">
-											<FileSearch className="h-5 w-5 text-primary100" />
-										</span>
-									)}
-									<p className="mt-2 text-sm text-primary80">
-										Reference
-									</p>
-								</button>
-							)}
+							{displayedTabs.includes('reference') &&
+								sessionQueriesData?.datasource_details
+									?.datasource_type !==
+									DATASOURCE_TYPES.SQL_GENERATED && (
+									<button
+										onClick={() =>
+											expandWorkspace(
+												currentQueryId,
+												'reference',
+											)
+										}
+										className="flex flex-col items-center focus:outline-none"
+									>
+										{isLoading ? (
+											<LoadingContainer width={2.5}>
+												<FileSearch className="h-5 w-5 text-primary100" />
+											</LoadingContainer>
+										) : (
+											<span className="p-2 rounded-full border flex items-center justify-center">
+												<FileSearch className="h-5 w-5 text-primary100" />
+											</span>
+										)}
+										<p className="mt-2 text-sm text-primary80">
+											Reference
+										</p>
+									</button>
+								)}
 
 							{displayedTabs.includes('coder') && (
 								<button
