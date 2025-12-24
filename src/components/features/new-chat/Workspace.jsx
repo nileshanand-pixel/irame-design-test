@@ -46,8 +46,10 @@ const Workspace = ({
 			(tab) => answerResp?.answer?.[tab]?.tool_space === 'secondary',
 		);
 
-		// if(sessionQueriesData?.datasource_details?.datasource_type === DATASOURCE_TYPES.SQL_GENERATED) {
-		if (true) {
+		if (
+			sessionQueriesData?.datasource_details?.datasource_type ===
+			DATASOURCE_TYPES.SQL_GENERATED
+		) {
 			return tabs.filter((tab) => tab !== WorkspaceEnum.Reference);
 		}
 
