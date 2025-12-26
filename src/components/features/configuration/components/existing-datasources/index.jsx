@@ -46,7 +46,7 @@ const TABS = [
 		type: DATASOURCE_TYPES.SYSTEM_GENERATED,
 	},
 	{
-		label: 'SQL Generated',
+		label: 'Live',
 		description: 'These are the dataset generated for your SQL queries.',
 		type: DATASOURCE_TYPES.SQL_GENERATED,
 	},
