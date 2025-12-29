@@ -12,6 +12,16 @@ import resendIcon from '@/assets/icons/resend.svg';
 import EditUserDrawer from './edit-user-drawer';
 import { userService } from '@/api/gatekeeper/user.service';
 import { toast } from 'react-toastify';
+import { useUsers } from '@/hooks/use-users';
+import { useDebounce } from '@/hooks/use-debounce';
+import { cn } from '@/lib/utils';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 
 const EMPTY_STATE_CONFIG = {
 	image: usersEmpty,
@@ -23,6 +33,21 @@ const EMPTY_STATE_CONFIG = {
 	],
 	cta: InviteUserCta,
 	ctaText: 'Invite Your First User',
+};
+
+const STATUS_OPTIONS = {
+	active: [
+		{ label: 'Active', value: 'active' },
+		{ label: 'Inactive', value: 'inactive' },
+	],
+	invitations: [
+		{ label: 'Pending', value: 'PENDING' },
+		{ label: 'Accepted', value: 'ACCEPTED' },
+		{ label: 'Expired', value: 'EXPIRED' },
+		{ label: 'Revoked', value: 'REVOKED' },
+		{ label: 'Declined', value: 'DECLINED' },
+	],
+	all: [],
 };
 
 const getStatusConfig = (status) => {
@@ -83,70 +108,60 @@ const getStatusConfig = (status) => {
 };
 
 export default function UsersTabContent() {
-	const [users, setUsers] = useState([]);
-	const [loading, setLoading] = useState(true);
 	const [search, setSearch] = useState('');
-	const [filterType, setFilterType] = useState('active'); // 'active', 'invited', 'all'
+	const debouncedSearch = useDebounce(search, 500);
+	const [filterType, setFilterType] = useState('active'); // 'active', 'invitations', 'all'
+	const [statusFilter, setStatusFilter] = useState('');
 	const [pagination, setPagination] = useState({
 		pageIndex: 0,
 		pageSize: 10,
 	});
-	const [totalCount, setTotalCount] = useState(0);
 	const [isEditUserDrawerOpen, setIsEditUserDrawerOpen] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
 
-	const fetchUsers = async () => {
-		try {
-			setLoading(true);
-			const params = {
-				type: filterType, // 'active', 'invited', or 'all'
-				page: pagination.pageIndex,
-				limit: pagination.pageSize,
-			};
-			if (search.trim()) {
-				params.search = search.trim();
-			}
-			const response = await userService.getUsers(params);
-
-			if (response.success) {
-				// Map API response to UI format
-				const mappedUsers = response.data.map((user) => {
-					// Determine if this is an invitation or a real user
-					// Invitations have invitedAt field, users have createdAt
-					const isInvitation = !!user.invitedAt;
-
-					return {
-						id: user.userId,
-						name: user.name || 'Unknown User',
-						email: user.email,
-						role: user.role ? user.role.name : 'No Role',
-						status: user.status || 'active',
-						teams: user.teams || [],
-						invitedAt: user.invitedAt,
-						expiresAt: user.expiresAt,
-						createdAt: user.createdAt,
-						isInvitation, // Flag to identify invitation vs user
-					};
-				});
-				setUsers(mappedUsers);
-				setTotalCount(response.pagination.total || mappedUsers.length);
-			}
-		} catch (error) {
-			console.error('Failed to fetch users:', error);
-			toast.error('Failed to load users');
-		} finally {
-			setLoading(false);
+	const queryParams = useMemo(() => {
+		const params = {
+			type: filterType,
+			page: pagination.pageIndex,
+			limit: pagination.pageSize,
+		};
+		if (debouncedSearch.trim()) {
+			params.search = debouncedSearch.trim();
 		}
-	};
+		if (statusFilter !== '') {
+			params.status = statusFilter;
+		}
+		return params;
+	}, [
+		filterType,
+		statusFilter,
+		debouncedSearch,
+		pagination.pageIndex,
+		pagination.pageSize,
+	]);
 
-	useEffect(() => {
-		fetchUsers();
-	}, [pagination.pageIndex, pagination.pageSize, filterType, search]);
+	const { data, isLoading, isFetching, refetch } = useUsers(queryParams);
 
-	// Note: Search is now handled server-side, so no need for client-side filtering
-	const filteredUsers = useMemo(() => {
-		return users;
-	}, [users]);
+	const users = useMemo(() => {
+		if (!data?.success || !data?.data) return [];
+		return data.data.map((user) => {
+			const isInvitation = !!user.invitedAt;
+			return {
+				id: user.userId,
+				name: user.name || 'Unknown User',
+				email: user.email,
+				role: user.role ? user.role.name : 'No Role',
+				status: user.status || 'active',
+				teams: user.teams || [],
+				invitedAt: user.invitedAt,
+				expiresAt: user.expiresAt,
+				createdAt: user.createdAt,
+				isInvitation,
+			};
+		});
+	}, [data]);
+
+	const totalCount = data?.pagination?.total || 0;
 
 	const handleEditUser = (user) => {
 		setSelectedUser(user);
@@ -157,7 +172,7 @@ export default function UsersTabContent() {
 		try {
 			await userService.suspendUser(user.id);
 			toast.success('User suspended successfully');
-			fetchUsers();
+			refetch();
 		} catch (error) {
 			toast.error('Failed to suspend user');
 		}
@@ -167,7 +182,7 @@ export default function UsersTabContent() {
 		try {
 			await userService.disableUser(user.id);
 			toast.success('User disabled successfully');
-			fetchUsers();
+			refetch();
 		} catch (error) {
 			toast.error('Failed to disable user');
 		}
@@ -177,7 +192,7 @@ export default function UsersTabContent() {
 		try {
 			await userService.enableUser(user.id);
 			toast.success('User enabled successfully');
-			fetchUsers();
+			refetch();
 		} catch (error) {
 			toast.error('Failed to enable user');
 		}
@@ -291,73 +306,113 @@ export default function UsersTabContent() {
 
 	return (
 		<div className="w-full h-full">
-			{loading && users.length === 0 ? (
-				<div className="flex items-center justify-center h-64">
-					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#26064A]"></div>
-				</div>
-			) : users.length === 0 ? (
-				<EmptyState config={EMPTY_STATE_CONFIG} />
-			) : (
-				<div className="space-y-5">
-					<div className="flex justify-between items-center gap-4">
-						<div className="flex items-center gap-3">
-							<SearchBar
-								value={search}
-								onChange={(e) => setSearch(e.target.value)}
-								placeholder="Search by name or email..."
-							/>
-							<div className="flex items-center gap-2">
-								<label className="text-sm font-medium text-gray-700">
-									Show:
-								</label>
-								<select
-									value={filterType}
-									onChange={(e) => {
-										setFilterType(e.target.value);
-										setPagination({
-											...pagination,
-											pageIndex: 0,
-										});
-									}}
-									className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#26064A]"
-								>
-									<option value="active">Active Users</option>
-									<option value="invited">Invitations</option>
-									<option value="all">
-										All Users & Invitations
-									</option>
-								</select>
-							</div>
+			<div className="space-y-5">
+				<div className="flex justify-between items-center gap-4">
+					<SearchBar
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+						placeholder="Search by name or email..."
+					/>
+					<div className="flex items-center gap-3">
+						<div className="flex items-center gap-2">
+							<label className="text-sm font-medium text-gray-700">
+								Type:
+							</label>
+							<Select
+								value={filterType}
+								onValueChange={(value) => {
+									setFilterType(value);
+									setStatusFilter('');
+									setPagination({
+										...pagination,
+										pageIndex: 0,
+									});
+								}}
+							>
+								<SelectTrigger className="w-[180px]">
+									<SelectValue placeholder="Select type" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="active">Users</SelectItem>
+									<SelectItem value="invitations">
+										Invitations
+									</SelectItem>
+								</SelectContent>
+							</Select>
 						</div>
-						<div>
-							<InviteUserCta
-								text="Invite User"
-								onSuccess={fetchUsers}
-							/>
-						</div>
-					</div>
 
+						<div className="flex items-center gap-2">
+							<label className="text-sm font-medium text-gray-700">
+								Status:
+							</label>
+							<Select
+								value={statusFilter || 'all'}
+								onValueChange={(value) => {
+									setStatusFilter(value === 'all' ? '' : value);
+									setPagination({
+										...pagination,
+										pageIndex: 0,
+									});
+								}}
+							>
+								<SelectTrigger
+									className={cn(
+										'w-[180px]',
+										!statusFilter && 'text-muted-foreground',
+									)}
+								>
+									<SelectValue placeholder="Choose Status" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem disabled value="all">
+										Choose Status
+									</SelectItem>
+									{STATUS_OPTIONS[filterType].map((option) => (
+										<SelectItem
+											key={option.value}
+											value={option.value}
+										>
+											{option.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+						<InviteUserCta text="Invite User" onSuccess={refetch} />
+					</div>
+				</div>
+
+				{isLoading && users.length === 0 ? (
+					<div className="flex items-center justify-center h-64">
+						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#26064A]"></div>
+					</div>
+				) : users.length === 0 &&
+				  !search &&
+				  filterType === 'active' &&
+				  statusFilter === '' ? (
+					<EmptyState config={EMPTY_STATE_CONFIG} />
+				) : (
 					<div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
 						<DataTable
-							data={filteredUsers}
+							data={users}
 							columns={columns}
 							totalCount={totalCount}
 							pagination={pagination}
 							setPagination={setPagination}
 							isServerSide={true}
 							simplePagination={true}
-							isLoading={loading}
+							isLoading={isLoading || isFetching}
 						/>
 					</div>
-				</div>
-			)}
+				)}
+			</div>
 
 			{isEditUserDrawerOpen && (
 				<EditUserDrawer
 					open={!!isEditUserDrawerOpen}
 					setOpen={setIsEditUserDrawerOpen}
 					user={selectedUser}
-					onUpdate={fetchUsers}
+					onUpdate={refetch}
 				/>
 			)}
 		</div>
