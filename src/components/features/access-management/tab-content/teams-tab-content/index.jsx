@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import SearchBar from '../../search-bar';
 import { DataTable } from '@/components/elements/DataTable';
 import DotsDropdown from '@/components/elements/DotsDropdown';
@@ -9,6 +9,8 @@ import teamsEmpty from '@/assets/icons/teams-empty.svg';
 import CreateTeamCta from './create-team-cta';
 import EditTeamDrawer from './edit-team-drawer';
 import ManageUsersDrawer from './manage-users-drawer';
+import { useTeams } from '@/hooks/use-teams';
+import { useDebounce } from '@/hooks/use-debounce';
 
 const EMPTY_STATE_CONFIG = {
 	image: teamsEmpty,
@@ -22,128 +24,48 @@ const EMPTY_STATE_CONFIG = {
 };
 
 export default function TeamsTabContent() {
-	const [teams, setTeams] = useState([
-		{
-			id: 1,
-			teamName: 'Auditors',
-			noOfUsers: 0,
-			createdBy: 'Current User',
-			updatedBy: 'Current User',
-			updatedAt: '12-10-2025',
-		},
-		{
-			id: 2,
-			teamName: 'Financial Analysts',
-			noOfUsers: 2,
-			createdBy: 'Sofia Li',
-			updatedBy: 'Sofia Li',
-			updatedAt: '02-20-2026',
-		},
-		{
-			id: 3,
-			teamName: 'Compliance Officers',
-			noOfUsers: 1,
-			createdBy: 'Ravi Kumar',
-			updatedBy: 'Ravi Kumar',
-			updatedAt: '01-15-2026',
-		},
-		{
-			id: 4,
-			teamName: 'Internal Controllers',
-			noOfUsers: 4,
-			createdBy: 'Tushar Goel',
-			updatedBy: 'Tushar Goel',
-			updatedAt: '03-25-2026',
-		},
-		{
-			id: 5,
-			teamName: 'Internal Controllers',
-			noOfUsers: 3,
-			createdBy: 'Tushar Goel',
-			updatedBy: 'Tushar Goel',
-			updatedAt: '03-25-2026',
-		},
-		{
-			id: 6,
-			teamName: 'External Controllers',
-			noOfUsers: 3,
-			createdBy: 'Tushar Goel',
-			updatedBy: 'Tushar Goel',
-			updatedAt: '03-25-2026',
-		},
-		{
-			id: 7,
-			teamName: 'User Interface Components',
-			noOfUsers: 3,
-			createdBy: 'Tushar Goel',
-			updatedBy: 'Tushar Goel',
-			updatedAt: '03-25-2026',
-		},
-		{
-			id: 1,
-			teamName: 'Auditors',
-			noOfUsers: 0,
-			createdBy: 'Current User',
-			updatedBy: 'Current User',
-			updatedAt: '12-10-2025',
-		},
-		{
-			id: 2,
-			teamName: 'Financial Analysts',
-			noOfUsers: 2,
-			createdBy: 'Sofia Li',
-			updatedBy: 'Sofia Li',
-			updatedAt: '02-20-2026',
-		},
-		{
-			id: 3,
-			teamName: 'Compliance Officers',
-			noOfUsers: 1,
-			createdBy: 'Ravi Kumar',
-			updatedBy: 'Ravi Kumar',
-			updatedAt: '01-15-2026',
-		},
-		{
-			id: 4,
-			teamName: 'Internal Controllers',
-			noOfUsers: 4,
-			createdBy: 'Tushar Goel',
-			updatedBy: 'Tushar Goel',
-			updatedAt: '03-25-2026',
-		},
-		{
-			id: 5,
-			teamName: 'Internal Controllers',
-			noOfUsers: 3,
-			createdBy: 'Tushar Goel',
-			updatedBy: 'Tushar Goel',
-			updatedAt: '03-25-2026',
-		},
-		{
-			id: 6,
-			teamName: 'External Controllers',
-			noOfUsers: 3,
-			createdBy: 'Tushar Goel',
-			updatedBy: 'Tushar Goel',
-			updatedAt: '03-25-2026',
-		},
-		{
-			id: 7,
-			teamName: 'User Interface Components',
-			noOfUsers: 3,
-			createdBy: 'Tushar Goel',
-			updatedBy: 'Tushar Goel',
-			updatedAt: '03-25-2026',
-		},
-	]);
 	const [search, setSearch] = useState('');
+	const debouncedSearch = useDebounce(search, 500);
 	const [pagination, setPagination] = useState({
 		pageIndex: 0,
-		pageSize: 5,
+		pageSize: 10,
 	});
 	const [selectedTeam, setSelectedTeam] = useState(null);
 	const [isEditingTeam, setIsEditingTeam] = useState(false);
 	const [isManageUsersDrawerOpen, setIsManageUsersDrawerOpen] = useState(false);
+
+	const queryParams = useMemo(() => {
+		const params = {
+			page: pagination.pageIndex + 1,
+			limit: pagination.pageSize,
+		};
+		if (debouncedSearch.trim()) {
+			params.name = debouncedSearch.trim();
+		}
+		return params;
+	}, [debouncedSearch, pagination.pageIndex, pagination.pageSize]);
+
+	const { data, isLoading, isFetching } = useTeams(queryParams);
+
+	const teams = useMemo(() => {
+		if (!data?.success || !data?.data) return [];
+		return data.data.map((team) => ({
+			id: team.externalId,
+			teamName: team.name,
+			noOfUsers: team.memberCount || 0,
+			createdBy: team.createdBy || 'Unknown',
+			updatedBy: team.updatedBy || 'Unknown',
+			updatedAt: team.updatedAt
+				? new Date(team.updatedAt).toLocaleDateString('en-GB', {
+						day: '2-digit',
+						month: '2-digit',
+						year: 'numeric',
+					})
+				: 'N/A',
+		}));
+	}, [data]);
+
+	const totalCount = data?.pagination?.total || 0;
 
 	const handleEditTeam = (team) => {
 		setSelectedTeam(team);
@@ -172,8 +94,8 @@ export default function TeamsTabContent() {
 			cell: ({ row }) => row.original.createdBy,
 		},
 		{
-			accessorKey: 'updatedBy',
-			header: 'Updated By',
+			accessorKey: 'updatedAt',
+			header: 'Updated At',
 			cell: ({ row }) => row.original.updatedAt,
 		},
 		{
@@ -208,14 +130,9 @@ export default function TeamsTabContent() {
 		},
 	];
 
-	// Filter teams based on search
-	const filteredTeams = teams.filter((team) =>
-		team.teamName.toLowerCase().includes(search.toLowerCase()),
-	);
-
 	return (
 		<div className="w-full h-full">
-			{teams?.length === 0 ? (
+			{!isLoading && teams?.length === 0 && !search ? (
 				<EmptyState config={EMPTY_STATE_CONFIG} />
 			) : (
 				<div className="space-y-5">
@@ -233,12 +150,13 @@ export default function TeamsTabContent() {
 
 					<div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
 						<DataTable
-							data={filteredTeams}
+							data={teams}
 							columns={columns}
-							totalCount={filteredTeams.length}
+							totalCount={totalCount}
 							pagination={pagination}
 							setPagination={setPagination}
-							isServerSide={false}
+							isServerSide={true}
+							isLoading={isLoading || isFetching}
 							simplePagination={true}
 						/>
 					</div>

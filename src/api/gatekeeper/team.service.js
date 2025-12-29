@@ -11,9 +11,10 @@ export const getUserTeams = async () => {
 
 /**
  * Get all teams for the tenant
+ * @param {Object} params - Query parameters (id, name, page, limit, sortBy, sortOrder)
  * @returns {Promise<Object>} Paginated teams
  */
 export const getTeams = async (params = {}) => {
-	const response = await axiosGatekeeper.get('/teams', { params });
+	const response = await axiosGatekeeper.get('/teams/tenant', { params });
 	return response.data;
 };
