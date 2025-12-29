@@ -26,8 +26,11 @@ const EMPTY_STATE_CONFIG = {
 };
 
 const getStatusConfig = (status) => {
-	switch (status) {
-		case 'active':
+	// Normalize status to handle both invitation statuses and user statuses
+	const normalizedStatus = status?.toUpperCase();
+
+	switch (normalizedStatus) {
+		case 'ACTIVE':
 			return {
 				label: 'Active',
 				textColor: '#047A48',
@@ -43,12 +46,26 @@ const getStatusConfig = (status) => {
 			};
 		case 'EXPIRED':
 			return {
-				label: 'Inactive Expire',
+				label: 'Invite Expired',
 				textColor: '#374151',
 				dotColor: '#374151',
 				bgColor: '#F3F4F6',
 			};
-		case 'inactive':
+		case 'REVOKED':
+			return {
+				label: 'Invite Revoked',
+				textColor: '#DC2626',
+				dotColor: '#DC2626',
+				bgColor: '#FEE2E2',
+			};
+		case 'DECLINED':
+			return {
+				label: 'Invite Declined',
+				textColor: '#DC2626',
+				dotColor: '#DC2626',
+				bgColor: '#FEE2E2',
+			};
+		case 'INACTIVE':
 			return {
 				label: 'Inactive',
 				textColor: '#374151',
@@ -57,10 +74,10 @@ const getStatusConfig = (status) => {
 			};
 		default:
 			return {
-				label: 'Active',
-				textColor: '#047A48',
-				dotColor: '#047A48',
-				bgColor: '#ECFEF3',
+				label: status || 'Unknown',
+				textColor: '#374151',
+				dotColor: '#374151',
+				bgColor: '#F3F4F6',
 			};
 	}
 };
@@ -69,6 +86,7 @@ export default function UsersTabContent() {
 	const [users, setUsers] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [search, setSearch] = useState('');
+	const [filterType, setFilterType] = useState('active'); // 'active', 'invited', 'all'
 	const [pagination, setPagination] = useState({
 		pageIndex: 0,
 		pageSize: 10,
@@ -80,22 +98,36 @@ export default function UsersTabContent() {
 	const fetchUsers = async () => {
 		try {
 			setLoading(true);
-			const response = await userService.getUsers({
+			const params = {
+				type: filterType, // 'active', 'invited', or 'all'
 				page: pagination.pageIndex,
 				limit: pagination.pageSize,
-				include: 'invites',
-			});
+			};
+			if (search.trim()) {
+				params.search = search.trim();
+			}
+			const response = await userService.getUsers(params);
 
 			if (response.success) {
 				// Map API response to UI format
-				const mappedUsers = response.data.map((user) => ({
-					id: user.userId,
-					name: user.name || 'Unknown User',
-					email: user.email,
-					role: user.role ? user.role.name : 'No Role',
-					status: user.status || 'active',
-					teams: user.teams || [],
-				}));
+				const mappedUsers = response.data.map((user) => {
+					// Determine if this is an invitation or a real user
+					// Invitations have invitedAt field, users have createdAt
+					const isInvitation = !!user.invitedAt;
+
+					return {
+						id: user.userId,
+						name: user.name || 'Unknown User',
+						email: user.email,
+						role: user.role ? user.role.name : 'No Role',
+						status: user.status || 'active',
+						teams: user.teams || [],
+						invitedAt: user.invitedAt,
+						expiresAt: user.expiresAt,
+						createdAt: user.createdAt,
+						isInvitation, // Flag to identify invitation vs user
+					};
+				});
 				setUsers(mappedUsers);
 				setTotalCount(response.pagination.total || mappedUsers.length);
 			}
@@ -109,15 +141,12 @@ export default function UsersTabContent() {
 
 	useEffect(() => {
 		fetchUsers();
-	}, [pagination.pageIndex, pagination.pageSize]);
+	}, [pagination.pageIndex, pagination.pageSize, filterType, search]);
 
+	// Note: Search is now handled server-side, so no need for client-side filtering
 	const filteredUsers = useMemo(() => {
-		return users.filter(
-			(user) =>
-				user.name.toLowerCase().includes(search.toLowerCase()) ||
-				user.email.toLowerCase().includes(search.toLowerCase()),
-		);
-	}, [users, search]);
+		return users;
+	}, [users]);
 
 	const handleEditUser = (user) => {
 		setSelectedUser(user);
@@ -208,12 +237,15 @@ export default function UsersTabContent() {
 				header: 'Action',
 				cell: ({ row }) => {
 					const user = row.original;
+					const isInvitation = user.isInvitation;
+					const isPending = user.status === 'PENDING';
+
 					const actionOptions = [
 						{
 							type: 'item',
 							label: 'Edit User',
 							onClick: () => handleEditUser(user),
-							show: true,
+							show: !isInvitation, // Only show for actual users
 							icon: <img src={editIcon} className="size-4" />,
 						},
 						{
@@ -226,21 +258,21 @@ export default function UsersTabContent() {
 								user.status === 'active'
 									? handleSuspendUser(user)
 									: handleEnableUser(user),
-							show: true,
+							show: !isInvitation, // Only show for actual users
 							icon: <img src={userCrossIcon} className="size-4" />,
 						},
 						{
 							type: 'item',
 							label: 'Disable User',
 							onClick: () => handleDisableUser(user),
-							show: true,
+							show: !isInvitation, // Only show for actual users
 							icon: <img src={deleteIcon} className="size-4" />,
 						},
 						{
 							type: 'item',
 							label: 'Resend Invite',
 							onClick: () => console.log('Resend invite', user),
-							show: user.status === 'invite-pending',
+							show: isInvitation && isPending, // Only for pending invitations
 							icon: <img src={resendIcon} className="size-4" />,
 						},
 					];
@@ -267,12 +299,35 @@ export default function UsersTabContent() {
 				<EmptyState config={EMPTY_STATE_CONFIG} />
 			) : (
 				<div className="space-y-5">
-					<div className="flex justify-between items-center">
-						<div>
+					<div className="flex justify-between items-center gap-4">
+						<div className="flex items-center gap-3">
 							<SearchBar
 								value={search}
 								onChange={(e) => setSearch(e.target.value)}
+								placeholder="Search by name or email..."
 							/>
+							<div className="flex items-center gap-2">
+								<label className="text-sm font-medium text-gray-700">
+									Show:
+								</label>
+								<select
+									value={filterType}
+									onChange={(e) => {
+										setFilterType(e.target.value);
+										setPagination({
+											...pagination,
+											pageIndex: 0,
+										});
+									}}
+									className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#26064A]"
+								>
+									<option value="active">Active Users</option>
+									<option value="invited">Invitations</option>
+									<option value="all">
+										All Users & Invitations
+									</option>
+								</select>
+							</div>
 						</div>
 						<div>
 							<InviteUserCta
