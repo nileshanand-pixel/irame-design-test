@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { ensureCleanup } from '@/components/features/login/service/auth.service';
 import { serviceUrlMap } from '@/config/url.config';
-import { STAGE_APP_TOKEN } from '@/config';
+import { STAGE_APP_TOKEN, ENABLE_RBAC } from '@/config';
 import { logError } from './logger';
 
 let isLoggingOut = false;
@@ -28,7 +28,43 @@ const axiosClientV2 = axios.create({
 	withCredentials: true,
 });
 
+// Client for the gatekeeper service v1
+const axiosGatekeeper = axios.create({
+	baseURL: serviceUrlMap.GATEKEEPER_SERVICE_V1,
+	headers: headers,
+	withCredentials: true,
+});
+
 const setupInterceptors = (axiosClient) => {
+	// Request interceptor: attach X-TEAM-ID for GET calls when RBAC enabled
+	axiosClient.interceptors.request.use(
+		(config) => {
+			try {
+				if (
+					ENABLE_RBAC &&
+					config &&
+					config.method &&
+					config.method.toLowerCase() === 'get'
+				) {
+					const raw = localStorage.getItem('userDetails');
+					const user = raw ? JSON.parse(raw) : null;
+					const userId =
+						user && (user.user_id || user.id || user.sub || user.userId);
+					if (userId) {
+						const teamId = localStorage.getItem(`team_${userId}`);
+						if (teamId) {
+							config.headers = config.headers || {};
+							config.headers['X-TEAM-ID'] = teamId;
+						}
+					}
+				}
+			} catch (e) {
+				// ignore and continue without team header
+			}
+			return config;
+		},
+		(error) => Promise.reject(error),
+	);
 	axiosClient.interceptors.response.use(
 		(response) => {
 			return response;
@@ -57,9 +93,10 @@ const setupInterceptors = (axiosClient) => {
 	);
 };
 
-// Attach interceptors to both clients
+// Attach interceptors to all clients
 setupInterceptors(axiosClientV1);
 setupInterceptors(axiosClientV2);
+setupInterceptors(axiosGatekeeper);
 
 export default axiosClientV1;
-export { axiosClientV2 };
+export { axiosClientV2, axiosGatekeeper };

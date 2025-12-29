@@ -26,11 +26,13 @@ import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import GradientSpinner from './elements/loading/GradientSpinner';
-import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
+import { updateAuthStoreProp, setSelectedTeam } from '@/redux/reducer/authReducer';
 import {
 	deleteRunningWorkflow,
 	getRecentWorkflowsRunsHomePage,
 } from './features/business-process/service/workflow.service';
+import { getUserTeams } from '@/api/gatekeeper/team.service';
+import { ENABLE_RBAC } from '@/config';
 import upperFirst from 'lodash.upperfirst';
 import { resetAllStores } from '@/redux/GlobalStore';
 import { Hint } from './Hint';
@@ -56,36 +58,47 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const [expandedBusinessProcesses, setExpandedBusinessProcesses] = useState([]);
 	const sessionId = useSessionId();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
-	const [selectedTeam, setSelectedTeam] = useState('1'); // Store team ID as string
 	const [teamSearchQuery, setTeamSearchQuery] = useState('');
 
 	const { pathname, navigate } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+	// auth slice is registered under `authStoreReducer` in GlobalStore
+	const { user_id, selectedTeamId } = useSelector(
+		(state) => state.authStoreReducer || {},
+	);
 	const dispatch = useDispatch();
 
-	// Mock teams data - replace with API call if needed
-	const teams = [
-		{
-			id: '1',
-			name: 'Development Team Development TeamDevelopment TeamDevelopment TeamDevelopment Team',
-		},
-		{ id: '2', name: 'Marketing Team' },
-		{ id: '3', name: 'Development Team' },
-		{ id: '4', name: 'Design Team' },
-		{ id: '1', name: 'Development Team' },
-		{ id: '2', name: 'Marketing Team' },
-		{ id: '3', name: 'Development Team' },
-		{ id: '4', name: 'Design Team' },
-		{ id: '1', name: 'Development Team' },
-		{ id: '2', name: 'Marketing Team' },
-		{ id: '3', name: 'Development Team' },
-		{ id: '4', name: 'Design Team' },
-	];
+	// Fetch teams from Gatekeeper
+	const { data: teamsData, isLoading: isTeamsLoading } = useQuery({
+		queryKey: ['user-teams', user_id],
+		queryFn: getUserTeams,
+		enabled: ENABLE_RBAC && !!user_id,
+	});
+
+	const teams = teamsData?.data || [];
+
+	// Handle team selection and persistence
+	useEffect(() => {
+		if (ENABLE_RBAC && user_id && teams.length > 0 && !selectedTeamId) {
+			const savedTeamId = localStorage.getItem(`team_${user_id}`);
+			if (
+				savedTeamId &&
+				teams.some((t) => (t.externalId || t.id) === savedTeamId)
+			) {
+				dispatch(setSelectedTeam(savedTeamId));
+			} else {
+				const firstTeamId = teams[0].externalId || teams[0].id;
+				dispatch(setSelectedTeam(firstTeamId));
+			}
+		}
+	}, [user_id, teams, selectedTeamId, dispatch]);
 
 	// Get selected team name
-	const selectedTeamData = teams.find((team) => team.id === selectedTeam);
-	const selectedTeamName = selectedTeamData?.name || 'Development Team';
+	const selectedTeamData = teams.find(
+		(team) => (team.externalId || team.id) === selectedTeamId,
+	);
+	const selectedTeamName = selectedTeamData?.name || 'Select Team';
 
 	// Filter teams based on search query
 	const filteredTeams = teams.filter((team) =>
@@ -651,7 +664,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						/>
 					</div>
 
-					{isSideNavOpen && (
+					{isSideNavOpen && ENABLE_RBAC && teams.length > 0 && (
 						<div className="w-[calc(100%-1.75rem)]">
 							<DropdownMenu
 								onOpenChange={(open) => {
@@ -668,8 +681,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 										<div className="flex justify-between items-start w-full">
 											<div className="flex-1 min-w-0">
 												<div className="text-sm text-[#26064ACC] font-medium truncate text-left">
-													{selectedTeamName}
-													{selectedTeamName}
 													{selectedTeamName}
 												</div>
 												<div className="text-xs text-[#26064A] font-semibold text-left">
@@ -704,6 +715,12 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 												}
 												className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 placeholder:text-gray-400"
 												onClick={(e) => e.stopPropagation()}
+												onMouseDown={(e) =>
+													e.stopPropagation()
+												}
+												onKeyDown={(e) =>
+													e.stopPropagation()
+												}
 											/>
 										</div>
 									</div>
@@ -712,14 +729,20 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 									<div className="py-1 max-h-64 overflow-y-auto">
 										{filteredTeams.length > 0 ? (
 											filteredTeams.map((team) => {
+												const teamId =
+													team.externalId || team.id;
 												const isSelected =
-													selectedTeam === team.id;
+													selectedTeamId === teamId;
 												return (
 													<DropdownMenuItem
-														key={team.id}
+														key={teamId}
 														className="cursor-pointer focus:bg-purple-4 hover:!bg-purple-4 px-3 py-3 outline-none"
 														onClick={() => {
-															setSelectedTeam(team.id);
+															dispatch(
+																setSelectedTeam(
+																	teamId,
+																),
+															);
 															setTeamSearchQuery('');
 														}}
 													>
