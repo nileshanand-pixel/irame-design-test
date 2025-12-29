@@ -1,134 +1,97 @@
-import InputText from '@/components/elements/InputText';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useState, useEffect } from 'react';
 import { Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MultiSelect from '@/components/elements/MultiSelect';
 import { cn } from '@/lib/utils';
+import { roleService } from '@/api/gatekeeper/role.service';
+import { getTeams } from '@/api/gatekeeper/team.service';
+import { userService } from '@/api/gatekeeper/user.service';
+import { toast } from 'react-toastify';
 
-export default function EditUserDrawer({ open, setOpen, user }) {
+export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 	const [teams, setTeams] = useState([]);
 	const [selectedTeams, setSelectedTeams] = useState([]);
 	const [roles, setRoles] = useState([]);
 	const [selectedRole, setSelectedRole] = useState(null);
 	const [expandedRoleIds, setExpandedRoleIds] = useState([]);
 	const [rolePermissions, setRolePermissions] = useState({});
+	const [loading, setLoading] = useState(false);
 
-	// Mock users data - replace with actual API call
 	useEffect(() => {
-		// Mock teams data - replace with actual API call
-		const mockTeams = [
-			{ value: 'engineering', label: 'Engineering' },
-			{ value: 'marketing', label: 'Marketing' },
-			{ value: 'sales', label: 'Sales' },
-			{ value: 'design', label: 'Design' },
-			{ value: 'product', label: 'Product' },
-			{ value: 'hr', label: 'Human Resources' },
-			{ value: 'finance', label: 'Finance' },
-		];
-		setTeams(mockTeams);
+		const fetchData = async () => {
+			if (!user) return;
+			try {
+				setLoading(true);
+				const [rolesRes, teamsRes] = await Promise.all([
+					roleService.getRoles({ limit: 100 }),
+					getTeams({ limit: 100 }),
+				]);
 
-		// Mock roles data - replace with actual API call
-		const mockRoles = [
-			{ id: 'admin', name: 'Admin', description: 'Role Description' },
-			{ id: 'manager', name: 'Manager', description: 'Role Description' },
-			{
-				id: 'ai-trainer',
-				name: 'AI Trainer',
-				description: 'Role Description',
-			},
-			{ id: 'reviewer', name: 'Reviewer', description: 'Role Description' },
-			{ id: 'auditor', name: 'Auditor', description: 'Role Description' },
-			{ id: 'user', name: 'User', description: 'Role Description' },
-			{ id: 'viewer', name: 'Viewer', description: 'Role Description' },
-			{ id: 'editor', name: 'Editor', description: 'Role Description' },
-			{ id: 'creator', name: 'Creator', description: 'Role Description' },
-		];
-		setRoles(mockRoles);
-		setSelectedRole('admin'); // Set default selection
+				if (rolesRes.success) {
+					setRoles(rolesRes.data);
+					// Map permissions for each role
+					const permissionsMap = {};
+					rolesRes.data.forEach((role) => {
+						permissionsMap[role.id] = role.permissions || [];
+					});
+					setRolePermissions(permissionsMap);
+				}
 
-		// Mock permissions data - replace with actual API call
-		const mockPermissions = {
-			admin: [
-				{ permission: 'workflows-read', description: 'View workflows' },
-				{
-					permission: 'workflows-create',
-					description: 'Create new workflows',
-				},
-				{
-					permission: 'workflows-update',
-					description: 'Edit workflow details',
-				},
-				{ permission: 'workflows-delete', description: 'Delete workflows' },
-				{
-					permission: 'users-manage',
-					description: 'Manage users and permissions',
-				},
-				{ permission: 'reports-access', description: 'Access all reports' },
-			],
-			manager: [
-				{ permission: 'workflows-read', description: 'View workflows' },
-				{
-					permission: 'workflows-create',
-					description: 'Create new workflows',
-				},
-				{
-					permission: 'workflows-update',
-					description: 'Edit workflow details',
-				},
-				{ permission: 'reports-access', description: 'Access team reports' },
-			],
-			'ai-trainer': [
-				{ permission: 'workflows-read', description: 'View workflows' },
-				{ permission: 'models-train', description: 'Train AI models' },
-				{
-					permission: 'data-annotate',
-					description: 'Annotate training data',
-				},
-			],
-			reviewer: [
-				{ permission: 'workflows-read', description: 'View workflows' },
-				{
-					permission: 'submissions-review',
-					description: 'Review submissions',
-				},
-				{ permission: 'feedback-provide', description: 'Provide feedback' },
-			],
-			auditor: [
-				{ permission: 'workflows-read', description: 'View workflows' },
-				{ permission: 'logs-access', description: 'Access audit logs' },
-				{
-					permission: 'reports-view',
-					description: 'View compliance reports',
-				},
-			],
-			user: [
-				{ permission: 'workflows-read', description: 'View workflows' },
-				{
-					permission: 'workflows-create',
-					description: 'Create new workflows',
-				},
-			],
-			viewer: [
-				{ permission: 'workflows-read', description: 'View workflows' },
-			],
-			editor: [
-				{ permission: 'workflows-read', description: 'View workflows' },
-				{
-					permission: 'workflows-update',
-					description: 'Edit workflow details',
-				},
-			],
-			creator: [
-				{ permission: 'workflows-read', description: 'View workflows' },
-				{
-					permission: 'workflows-create',
-					description: 'Create new workflows',
-				},
-			],
+				if (teamsRes.success) {
+					const mappedTeams = teamsRes.data.map((team) => ({
+						value: team.id,
+						label: team.name,
+					}));
+					setTeams(mappedTeams);
+				}
+
+				// Set initial selections from user data
+				if (user.role) {
+					// Find role ID by name or use ID if available
+					const userRole = rolesRes.data.find(
+						(r) => r.id === user.role.id || r.name === user.role.name,
+					);
+					if (userRole) setSelectedRole(userRole.id);
+				}
+				if (user.teams) {
+					setSelectedTeams(user.teams.map((t) => t.id));
+				}
+			} catch (error) {
+				console.error('Failed to fetch roles/teams:', error);
+				toast.error('Failed to load roles and teams');
+			} finally {
+				setLoading(false);
+			}
 		};
-		setRolePermissions(mockPermissions);
-	}, []);
+
+		if (open) {
+			fetchData();
+		}
+	}, [open, user]);
+
+	const handleUpdate = async () => {
+		try {
+			setLoading(true);
+			const updateData = {
+				roleId: selectedRole,
+				teamIds: selectedTeams,
+			};
+
+			const response = await userService.updateUser(user.userId, updateData);
+
+			if (response.success) {
+				toast.success('User updated successfully');
+				setOpen(false);
+				if (onUpdate) onUpdate();
+			}
+		} catch (error) {
+			console.error('Failed to update user:', error);
+			toast.error(error.response?.data?.message || 'Failed to update user');
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	return (
 		<Sheet open={open} onOpenChange={setOpen}>
@@ -297,10 +260,25 @@ export default function EditUserDrawer({ open, setOpen, user }) {
 						<Button
 							variant="outline"
 							className="border-[#26064A] !text-[#26064A]"
+							onClick={() => {
+								if (
+									window.confirm(
+										'Are you sure you want to disable this user?',
+									)
+								) {
+									userService.disableUser(user.userId).then(() => {
+										toast.success('User disabled');
+										setOpen(false);
+										if (onUpdate) onUpdate();
+									});
+								}
+							}}
 						>
 							Disable User
 						</Button>
-						<Button>Update</Button>
+						<Button onClick={handleUpdate} disabled={loading}>
+							{loading ? 'Updating...' : 'Update'}
+						</Button>
 					</div>
 				</div>
 			</SheetContent>

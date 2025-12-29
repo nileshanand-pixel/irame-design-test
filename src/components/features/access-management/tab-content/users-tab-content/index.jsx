@@ -10,6 +10,8 @@ import deleteIcon from '@/assets/icons/delete.svg';
 import userCrossIcon from '@/assets/icons/user-cross.svg';
 import resendIcon from '@/assets/icons/resend.svg';
 import EditUserDrawer from './edit-user-drawer';
+import { userService } from '@/api/gatekeeper/user.service';
+import { toast } from 'react-toastify';
 
 const EMPTY_STATE_CONFIG = {
 	image: usersEmpty,
@@ -32,17 +34,23 @@ const getStatusConfig = (status) => {
 				dotColor: '#047A48',
 				bgColor: '#ECFEF3',
 			};
-		case 'invite-pending':
+		case 'PENDING':
 			return {
 				label: 'Invite Pending',
 				textColor: '#AE4408',
 				dotColor: '#A74108',
 				bgColor: '#FFFAEB',
 			};
-		case 'inactive-expire':
-		case 'inactive':
+		case 'EXPIRED':
 			return {
 				label: 'Inactive Expire',
+				textColor: '#374151',
+				dotColor: '#374151',
+				bgColor: '#F3F4F6',
+			};
+		case 'inactive':
+			return {
+				label: 'Inactive',
 				textColor: '#374151',
 				dotColor: '#374151',
 				bgColor: '#F3F4F6',
@@ -59,167 +67,49 @@ const getStatusConfig = (status) => {
 
 export default function UsersTabContent() {
 	const [users, setUsers] = useState([]);
+	const [loading, setLoading] = useState(true);
 	const [search, setSearch] = useState('');
 	const [pagination, setPagination] = useState({
 		pageIndex: 0,
 		pageSize: 10,
 	});
+	const [totalCount, setTotalCount] = useState(0);
 	const [isEditUserDrawerOpen, setIsEditUserDrawerOpen] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
 
-	// Mock users data - replace with actual API call
+	const fetchUsers = async () => {
+		try {
+			setLoading(true);
+			const response = await userService.getUsers({
+				page: pagination.pageIndex,
+				limit: pagination.pageSize,
+				include: 'invites',
+			});
+
+			if (response.success) {
+				// Map API response to UI format
+				const mappedUsers = response.data.map((user) => ({
+					id: user.userId,
+					name: user.name || 'Unknown User',
+					email: user.email,
+					role: user.role ? user.role.name : 'No Role',
+					status: user.status || 'active',
+					teams: user.teams || [],
+				}));
+				setUsers(mappedUsers);
+				setTotalCount(response.pagination.total || mappedUsers.length);
+			}
+		} catch (error) {
+			console.error('Failed to fetch users:', error);
+			toast.error('Failed to load users');
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	useEffect(() => {
-		const mockUsers = [
-			{
-				id: 1,
-				name: 'Aarav Mehta',
-				email: 'aarav.mehta@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 2,
-				name: 'Liam Johnson',
-				email: 'liam.johnson@example.com',
-				role: 'Viewer',
-				status: 'invite-pending',
-			},
-			{
-				id: 3,
-				name: 'Ethan Brown',
-				email: 'ethan.brown@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 4,
-				name: 'Ethan Brown',
-				email: 'ethan.brown@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 5,
-				name: 'Ethan Brown',
-				email: 'ethan.brown@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 6,
-				name: 'Zara Khan',
-				email: 'zara.khan@example.com',
-				role: 'Admin',
-				status: 'inactive-expire',
-			},
-			{
-				id: 7,
-				name: 'Maya Choudhury',
-				email: 'maya.choudhury@example.com',
-				role: 'Admin',
-				status: 'inactive',
-			},
-			{
-				id: 1,
-				name: 'Aarav Mehta',
-				email: 'aarav.mehta@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 2,
-				name: 'Liam Johnson',
-				email: 'liam.johnson@example.com',
-				role: 'Viewer',
-				status: 'invite-pending',
-			},
-			{
-				id: 3,
-				name: 'Ethan Brown',
-				email: 'ethan.brown@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 4,
-				name: 'Ethan Brown',
-				email: 'ethan.brown@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 5,
-				name: 'Ethan Brown',
-				email: 'ethan.brown@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 6,
-				name: 'Zara Khan',
-				email: 'zara.khan@example.com',
-				role: 'Admin',
-				status: 'inactive-expire',
-			},
-			{
-				id: 7,
-				name: 'Maya Choudhury',
-				email: 'maya.choudhury@example.com',
-				role: 'Admin',
-				status: 'inactive',
-			},
-			{
-				id: 1,
-				name: 'Aarav Mehta',
-				email: 'aarav.mehta@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 2,
-				name: 'Liam Johnson',
-				email: 'liam.johnson@example.com',
-				role: 'Viewer',
-				status: 'invite-pending',
-			},
-			{
-				id: 3,
-				name: 'Ethan Brown',
-				email: 'ethan.brown@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 4,
-				name: 'Ethan Brown',
-				email: 'ethan.brown@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 5,
-				name: 'Ethan Brown',
-				email: 'ethan.brown@example.com',
-				role: 'Admin',
-				status: 'active',
-			},
-			{
-				id: 6,
-				name: 'Zara Khan',
-				email: 'zara.khan@example.com',
-				role: 'Admin',
-				status: 'inactive-expire',
-			},
-			{
-				id: 7,
-				name: 'Maya Choudhury',
-				email: 'maya.choudhury@example.com',
-				role: 'Admin',
-				status: 'inactive',
-			},
-		];
-		setUsers(mockUsers);
-	}, []);
+		fetchUsers();
+	}, [pagination.pageIndex, pagination.pageSize]);
 
 	const filteredUsers = useMemo(() => {
 		return users.filter(
@@ -232,6 +122,36 @@ export default function UsersTabContent() {
 	const handleEditUser = (user) => {
 		setSelectedUser(user);
 		setIsEditUserDrawerOpen(true);
+	};
+
+	const handleSuspendUser = async (user) => {
+		try {
+			await userService.suspendUser(user.id);
+			toast.success('User suspended successfully');
+			fetchUsers();
+		} catch (error) {
+			toast.error('Failed to suspend user');
+		}
+	};
+
+	const handleDisableUser = async (user) => {
+		try {
+			await userService.disableUser(user.id);
+			toast.success('User disabled successfully');
+			fetchUsers();
+		} catch (error) {
+			toast.error('Failed to disable user');
+		}
+	};
+
+	const handleEnableUser = async (user) => {
+		try {
+			await userService.enableUser(user.id);
+			toast.success('User enabled successfully');
+			fetchUsers();
+		} catch (error) {
+			toast.error('Failed to enable user');
+		}
 	};
 
 	const columns = useMemo(
@@ -298,23 +218,29 @@ export default function UsersTabContent() {
 						},
 						{
 							type: 'item',
-							label: 'Removed User',
-							onClick: () => console.log('Removed user', user),
-							show: true,
-							icon: <img src={deleteIcon} className="size-4" />,
-						},
-						{
-							type: 'item',
-							label: 'Revoke Invitation',
-							onClick: () => console.log('Revoke invitation', user),
+							label:
+								user.status === 'active'
+									? 'Suspend User'
+									: 'Enable User',
+							onClick: () =>
+								user.status === 'active'
+									? handleSuspendUser(user)
+									: handleEnableUser(user),
 							show: true,
 							icon: <img src={userCrossIcon} className="size-4" />,
 						},
 						{
 							type: 'item',
-							label: 'Resend Invite',
-							onClick: () => console.log('Revoke invitation', user),
+							label: 'Disable User',
+							onClick: () => handleDisableUser(user),
 							show: true,
+							icon: <img src={deleteIcon} className="size-4" />,
+						},
+						{
+							type: 'item',
+							label: 'Resend Invite',
+							onClick: () => console.log('Resend invite', user),
+							show: user.status === 'invite-pending',
 							icon: <img src={resendIcon} className="size-4" />,
 						},
 					];
@@ -333,7 +259,11 @@ export default function UsersTabContent() {
 
 	return (
 		<div className="w-full h-full">
-			{users.length === 0 ? (
+			{loading && users.length === 0 ? (
+				<div className="flex items-center justify-center h-64">
+					<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#26064A]"></div>
+				</div>
+			) : users.length === 0 ? (
 				<EmptyState config={EMPTY_STATE_CONFIG} />
 			) : (
 				<div className="space-y-5">
@@ -345,7 +275,10 @@ export default function UsersTabContent() {
 							/>
 						</div>
 						<div>
-							<InviteUserCta text="Invite User" />
+							<InviteUserCta
+								text="Invite User"
+								onSuccess={fetchUsers}
+							/>
 						</div>
 					</div>
 
@@ -353,11 +286,12 @@ export default function UsersTabContent() {
 						<DataTable
 							data={filteredUsers}
 							columns={columns}
-							totalCount={filteredUsers.length}
+							totalCount={totalCount}
 							pagination={pagination}
 							setPagination={setPagination}
-							isServerSide={false}
+							isServerSide={true}
 							simplePagination={true}
+							isLoading={loading}
 						/>
 					</div>
 				</div>
@@ -368,6 +302,7 @@ export default function UsersTabContent() {
 					open={!!isEditUserDrawerOpen}
 					setOpen={setIsEditUserDrawerOpen}
 					user={selectedUser}
+					onUpdate={fetchUsers}
 				/>
 			)}
 		</div>

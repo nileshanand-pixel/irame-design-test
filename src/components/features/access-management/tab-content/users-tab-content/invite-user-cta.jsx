@@ -3,7 +3,7 @@ import { useState } from 'react';
 import userPlusWhite from '@/assets/icons/user-plus-white.svg';
 import InviteUserDrawer from './invite-user-drawer';
 
-export default function InviteUserCta({ text = 'Invite User' }) {
+export default function InviteUserCta({ text = 'Invite User', onSuccess }) {
 	const [open, setOpen] = useState(false);
 
 	return (
@@ -13,7 +13,7 @@ export default function InviteUserCta({ text = 'Invite User' }) {
 				{text}
 			</Button>
 
-			<InviteUserDrawer open={open} setOpen={setOpen} />
+			<InviteUserDrawer open={open} setOpen={setOpen} onSuccess={onSuccess} />
 		</>
 	);
 }
