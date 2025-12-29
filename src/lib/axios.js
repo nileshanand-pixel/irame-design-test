@@ -36,30 +36,37 @@ const axiosGatekeeper = axios.create({
 });
 
 const setupInterceptors = (axiosClient) => {
-	// Request interceptor: attach X-TEAM-ID for GET calls when RBAC enabled
+	// Request interceptor: attach X-TENANT-ID, X-USER-ID, and X-TEAM-ID when RBAC enabled
 	axiosClient.interceptors.request.use(
 		(config) => {
 			try {
-				if (
-					ENABLE_RBAC &&
-					config &&
-					config.method &&
-					config.method.toLowerCase() === 'get'
-				) {
+				if (ENABLE_RBAC && config) {
 					const raw = localStorage.getItem('userDetails');
 					const user = raw ? JSON.parse(raw) : null;
 					const userId =
 						user && (user.user_id || user.id || user.sub || user.userId);
+					const tenantId = user && (user.tenant_id || user.tenantId);
+
 					if (userId) {
-						const teamId = localStorage.getItem(`team_${userId}`);
-						if (teamId) {
-							config.headers = config.headers || {};
-							config.headers['X-TEAM-ID'] = teamId;
+						config.headers = config.headers || {};
+						config.headers['X-USER-ID'] = userId;
+
+						// Add X-TEAM-ID for GET requests (existing logic)
+						if (config.method && config.method.toLowerCase() === 'get') {
+							const teamId = localStorage.getItem(`team_${userId}`);
+							if (teamId) {
+								config.headers['X-TEAM-ID'] = teamId;
+							}
 						}
+					}
+
+					if (tenantId) {
+						config.headers = config.headers || {};
+						config.headers['X-TENANT-ID'] = tenantId;
 					}
 				}
 			} catch (e) {
-				// ignore and continue without team header
+				// ignore and continue without headers
 			}
 			return config;
 		},
