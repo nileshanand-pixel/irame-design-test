@@ -7,225 +7,26 @@ import deleteIcon from '@/assets/icons/delete.svg';
 import CreateRoleCta from './create-role-cta';
 import CloneRoleDrawer from './clone-role-drawer';
 import EditPermissionsDrawer from './edit-permissions-drawer';
+import { useRoles } from '@/hooks/use-roles';
+import { useDebounce } from '@/hooks/use-debounce';
 
 export default function RolePermissionTabContent() {
-	const [roles, setRoles] = useState([
-		{
-			id: 1,
-			roleName: 'Org Admin',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 2,
-			roleName: 'Manager',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 3,
-			roleName: 'AI Trainer',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 4,
-			roleName: 'Team Lead',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 5,
-			roleName: 'Accountant',
-			noOfUsers: 20,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 6,
-			roleName: 'Auditor',
-			noOfUsers: 10,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 7,
-			roleName: 'Financial Analyst',
-			noOfUsers: 5,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 1,
-			roleName: 'Org Admin',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 2,
-			roleName: 'Manager',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 3,
-			roleName: 'AI Trainer',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 4,
-			roleName: 'Team Lead',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 5,
-			roleName: 'Accountant',
-			noOfUsers: 20,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 6,
-			roleName: 'Auditor',
-			noOfUsers: 10,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 7,
-			roleName: 'Financial Analyst',
-			noOfUsers: 5,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 1,
-			roleName: 'Org Admin',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 2,
-			roleName: 'Manager',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 3,
-			roleName: 'AI Trainer',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 4,
-			roleName: 'Team Lead',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 5,
-			roleName: 'Accountant',
-			noOfUsers: 20,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 6,
-			roleName: 'Auditor',
-			noOfUsers: 10,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 7,
-			roleName: 'Financial Analyst',
-			noOfUsers: 5,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 1,
-			roleName: 'Org Admin',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 2,
-			roleName: 'Manager',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 3,
-			roleName: 'AI Trainer',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 4,
-			roleName: 'Team Lead',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 5,
-			roleName: 'Accountant',
-			noOfUsers: 20,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 6,
-			roleName: 'Auditor',
-			noOfUsers: 10,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 7,
-			roleName: 'Financial Analyst',
-			noOfUsers: 5,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 1,
-			roleName: 'Org Admin',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 2,
-			roleName: 'Manager',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 3,
-			roleName: 'AI Trainer',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 4,
-			roleName: 'Team Lead',
-			noOfUsers: 0,
-			createdBy: 'System',
-		},
-		{
-			id: 5,
-			roleName: 'Accountant',
-			noOfUsers: 20,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 6,
-			roleName: 'Auditor',
-			noOfUsers: 10,
-			createdBy: 'Tushar Goel',
-		},
-		{
-			id: 7,
-			roleName: 'Financial Analyst',
-			noOfUsers: 5,
-			createdBy: 'Tushar Goel',
-		},
-	]);
 	const [search, setSearch] = useState('');
+	const debouncedSearch = useDebounce(search, 500);
 	const [pagination, setPagination] = useState({
 		pageIndex: 0,
 		pageSize: 10,
 	});
+
+	const { data: rolesData, isLoading } = useRoles({
+		page: pagination.pageIndex,
+		limit: pagination.pageSize,
+		search: debouncedSearch,
+	});
+
+	const roles = rolesData?.data || [];
+	const totalCount = rolesData?.pagination?.total || 0;
+
 	const [selectedRole, setSelectedRole] = useState(null);
 	const [isCloneRoleDrawerOpen, setIsCloneRoleDrawerOpen] = useState(false);
 	const [isEditPermissionsDrawerOpen, setIsEditPermissionsDrawerOpen] =
@@ -249,20 +50,20 @@ export default function RolePermissionTabContent() {
 	const columns = useMemo(
 		() => [
 			{
-				accessorKey: 'roleName',
+				accessorKey: 'name',
 				header: 'Role Name',
 				cell: ({ row }) => (
 					<span className="text-[#26064A] text-sm font-medium">
-						{row.original.roleName}
+						{row.original.name}
 					</span>
 				),
 			},
 			{
-				accessorKey: 'noOfUsers',
+				accessorKey: 'userCount',
 				header: 'No. of Users',
 				cell: ({ row }) => (
 					<span className="text-[#26064A] text-sm">
-						{String(row.original.noOfUsers).padStart(2, '0')}
+						{String(row.original.userCount || 0).padStart(2, '0')}
 					</span>
 				),
 			},
@@ -271,7 +72,7 @@ export default function RolePermissionTabContent() {
 				header: 'Created By',
 				cell: ({ row }) => (
 					<span className="text-[#26064A] text-sm">
-						{row.original.createdBy}
+						{row.original.createdBy?.name || 'System'}
 					</span>
 				),
 			},
@@ -303,7 +104,7 @@ export default function RolePermissionTabContent() {
 							type: 'item',
 							label: 'Remove Role',
 							onClick: () => handleRemoveRole(role),
-							show: true,
+							show: !role.isSystem,
 							icon: <img src={deleteIcon} className="size-4" />,
 						},
 					];
@@ -319,13 +120,6 @@ export default function RolePermissionTabContent() {
 		],
 		[],
 	);
-
-	// Filter roles based on search
-	const filteredRoles = useMemo(() => {
-		return roles.filter((role) =>
-			role.roleName.toLowerCase().includes(search.toLowerCase()),
-		);
-	}, [roles, search]);
 
 	return (
 		<div className="w-full h-full">
@@ -344,12 +138,13 @@ export default function RolePermissionTabContent() {
 
 				<div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
 					<DataTable
-						data={filteredRoles}
+						data={roles}
 						columns={columns}
-						totalCount={filteredRoles.length}
+						totalCount={totalCount}
 						pagination={pagination}
 						setPagination={setPagination}
-						isServerSide={false}
+						isServerSide={true}
+						isLoading={isLoading}
 						simplePagination={true}
 					/>
 				</div>

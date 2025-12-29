@@ -15,6 +15,18 @@ export const roleService = {
 	},
 
 	/**
+	 * Get roles with user count
+	 * @param {Object} params - Query parameters
+	 * @returns {Promise<Object>} Paginated roles with user counts
+	 */
+	getRolesWithUserCount: async (params = {}) => {
+		const response = await axiosGatekeeper.get('/roles/with-user-count', {
+			params,
+		});
+		return response.data;
+	},
+
+	/**
 	 * Get role details by ID
 	 * @param {string} roleId - Role ID
 	 * @returns {Promise<Object>} Role details
