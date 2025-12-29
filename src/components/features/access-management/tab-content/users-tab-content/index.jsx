@@ -142,6 +142,8 @@ export default function UsersTabContent() {
 
 	const { data, isLoading, isFetching, refetch } = useUsers(queryParams);
 
+	const isSearching = search !== debouncedSearch;
+
 	const users = useMemo(() => {
 		if (!data?.success || !data?.data) return [];
 		return data.data.map((user) => {
@@ -401,7 +403,7 @@ export default function UsersTabContent() {
 							setPagination={setPagination}
 							isServerSide={true}
 							simplePagination={true}
-							isLoading={isLoading || isFetching}
+							isLoading={isLoading || isFetching || isSearching}
 						/>
 					</div>
 				)}
