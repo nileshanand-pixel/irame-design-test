@@ -34,7 +34,7 @@ const USER_MAMANGEMENT_TABS = [
 ];
 
 const AccessManagementPage = () => {
-	const [activeTab, setActiveTab] = useState(USER_MAMANGEMENT_TABS[4].key);
+	const [activeTab, setActiveTab] = useState(USER_MAMANGEMENT_TABS[0].key);
 
 	const ActiveComponent = USER_MAMANGEMENT_TABS.find(
 		(tab) => tab.key === activeTab,
