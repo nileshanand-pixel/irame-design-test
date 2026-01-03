@@ -7,7 +7,7 @@ export const QueryGraphs = ({ graphs = [], reportCardId }) => {
 	if (visibleGraphs.length === 0) return null;
 
 	return (
-		<div className="grid grid-cols-1 px-4 py-4 rounded-xl gap-6">
+		<div className="grid grid-cols-1 px-4 py-4 rounded-xl gap-6 border ">
 			{visibleGraphs.map((graph, index) => {
 				if (!graph.visible) return;
 				return (

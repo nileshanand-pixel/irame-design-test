@@ -7,6 +7,7 @@ import { getWorkflowDetails } from '../../../service/workflow.service';
 import UnstructuredConnector from './unstructured-connector/unstructured-connector';
 import StructuredConnector from './structured-connector/structured-connector';
 import HybridConnector from './hybrid-connector/hybrid-connector';
+import ExecuteWorkflowModal from './execute-workflow-modal';
 import { X } from 'lucide-react';
 
 export const ConnectDatasourceModal = ({ open, setOpen }) => {
@@ -30,6 +31,17 @@ export const ConnectDatasourceModal = ({ open, setOpen }) => {
 	};
 
 	const workflowType = workflowDetails?.data?.type?.toUpperCase() || 'STRUCTURED';
+
+	// For SQL workflows, render the ExecuteWorkflowModal directly instead of inside this modal
+	if (workflowType === 'SQL_WORKFLOW') {
+		return (
+			<ExecuteWorkflowModal
+				open={open}
+				onClose={handleOpenChange}
+				workflowId={workflowId}
+			/>
+		);
+	}
 
 	const renderSwitcher = () => {
 		switch (workflowType) {

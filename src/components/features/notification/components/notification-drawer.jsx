@@ -8,6 +8,7 @@ import {
 	SheetDescription,
 } from '../../../ui/sheet';
 import { cn } from '@/lib/utils';
+import useS3File from '@/hooks/useS3File';
 import {
 	getAllNotifications,
 	readAllNotifications,
@@ -26,11 +27,13 @@ import {
 import CircularLoader from '@/components/elements/loading/CircularLoader';
 import shareIcon from '@/assets/icons/share.svg';
 import { formatRelativeTime } from '@/utils/date-utils';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Download } from 'lucide-react';
+import { FiRefreshCcw } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/lib/toast';
 import completedIcon from '@/assets/icons/completed.svg';
 import patchNotesIcon from '@/assets/icons/patch-notes.svg';
+import csvIcon from '@/assets/icons/csv_icon.svg';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 export default function NotificationDrawer({ isOpen, setIsOpen }) {
@@ -39,11 +42,13 @@ export default function NotificationDrawer({ isOpen, setIsOpen }) {
 	const [notificationType, setNotificationType] = useState(
 		NOTIFICATION_TABS[0]?.value,
 	);
+	const [downloadingNotificationId, setDownloadingNotificationId] = useState(null);
 
 	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const observerRef = useRef();
 	const scrollContainerRef = useRef();
+	const { downloadS3File } = useS3File();
 
 	// Dynamically calculate rem to px conversion
 	const remToPx = (rem) => {
@@ -208,15 +213,90 @@ export default function NotificationDrawer({ isOpen, setIsOpen }) {
 					toast.error('URL not found');
 				}
 			};
+		} else if (notification.type === NOTIFICATION_TYPES.SESSION_SHARED) {
+			isBtnPresent = true;
+			content = (
+				<>
+					<span>View session</span>
+					<ArrowRight className="size-4" />
+				</>
+			);
+			clickHandler = () => {
+				navigate(
+					`/app/new-chat/session?sessionId=${notification?.metadata?.session_id}&datasource_id=${notification?.metadata?.datasource_id}`,
+				);
+				setIsOpen(false);
+			};
+		} else if (notification.type === NOTIFICATION_TYPES.CSV_EXPORT_READY) {
+			isBtnPresent = true;
+			const isDownloadingThis =
+				downloadingNotificationId === notification.external_id;
+			content = (
+				<>
+					{isDownloadingThis ? (
+						<>
+							<span>Downloading...</span>
+							<CircularLoader className="animate-spin size-4" />
+						</>
+					) : (
+						<>
+							<span>Download CSV</span>
+							<Download className="size-4" />
+						</>
+					)}
+				</>
+			);
+			clickHandler = async () => {
+				if (notification?.metadata?.csv_url) {
+					try {
+						setDownloadingNotificationId(notification.external_id);
+						const fileName =
+							notification?.metadata?.file_name || 'export.csv';
+						await downloadS3File(
+							notification.metadata.csv_url,
+							fileName,
+						);
+					} finally {
+						setDownloadingNotificationId(null);
+					}
+				} else {
+					toast.error('CSV URL not found');
+				}
+			};
+		} else if (
+			notification.type === NOTIFICATION_TYPES.DASHBOARD_REFRESH_COMPLETED
+		) {
+			isBtnPresent = true;
+			content = (
+				<>
+					<span>View dashboard</span>
+					<ArrowRight className="size-4" />
+				</>
+			);
+			clickHandler = () => {
+				if (notification?.metadata?.dashboard_id) {
+					navigate(
+						`/app/dashboard/content?id=${notification?.metadata?.dashboard_id}`,
+					);
+					setIsOpen(false);
+				} else {
+					toast.error('Dashboard not found');
+				}
+			};
 		}
 
 		if (isBtnPresent) {
+			const isCurrentlyDownloading =
+				notification.type === NOTIFICATION_TYPES.CSV_EXPORT_READY &&
+				downloadingNotificationId === notification.external_id;
+
 			return (
 				<div>
 					<Button
 						variant="outline"
 						className="border-1 border-[#D0D5DD] text-[#00000099] flex gap-2"
 						onClick={clickHandler}
+						disabled={isCurrentlyDownloading}
 					>
 						{content}
 					</Button>
@@ -228,12 +308,21 @@ export default function NotificationDrawer({ isOpen, setIsOpen }) {
 	};
 
 	const renderNotificationIcon = (notification) => {
-		if (notification.type === NOTIFICATION_TYPES.REPORT_SHARED) {
+		if (
+			notification.type === NOTIFICATION_TYPES.REPORT_SHARED ||
+			notification.type === NOTIFICATION_TYPES.SESSION_SHARED
+		) {
 			return <img src={shareIcon} className="size-5" />;
 		} else if (notification.type === NOTIFICATION_TYPES.WORKFLOW_RUN_COMPLETED) {
 			return <img src={completedIcon} className="size-5" />;
 		} else if (notification.type === NOTIFICATION_TYPES.PATCH_NOTES) {
 			return <img src={patchNotesIcon} className="size-5" />;
+		} else if (
+			notification.type === NOTIFICATION_TYPES.DASHBOARD_REFRESH_COMPLETED
+		) {
+			return <FiRefreshCcw className="size-5 text-[#6A12CD]" />;
+		} else if (notification.type === NOTIFICATION_TYPES.CSV_EXPORT_READY) {
+			return <img src={csvIcon} className="size-5" />;
 		}
 		return null;
 	};
@@ -280,6 +369,43 @@ export default function NotificationDrawer({ isOpen, setIsOpen }) {
 					<div
 						dangerouslySetInnerHTML={{ __html: notification?.message }}
 					/>
+				</div>
+			);
+		} else if (
+			notification.type === NOTIFICATION_TYPES.DASHBOARD_REFRESH_COMPLETED
+		) {
+			return (
+				<div className="text-sm text-[#000000CC] break-words">
+					<span>Dashboard</span>{' '}
+					<span className="font-semibold break-words">
+						"{notification?.metadata?.dashboard_name}"
+					</span>{' '}
+					<span>has been refreshed successfully.</span>
+				</div>
+			);
+		} else if (notification.type === NOTIFICATION_TYPES.SESSION_SHARED) {
+			return (
+				<div className="text-sm text-[#000000CC] break-words">
+					<span>
+						{capitalizeWords(
+							notification?.metadata?.shared_by_user_name,
+						)}{' '}
+						shared the{' '}
+					</span>
+					<span className="font-semibold break-words">
+						"{notification?.metadata?.session_name}"
+					</span>
+					<span> session with you.</span>
+				</div>
+			);
+		} else if (notification.type === NOTIFICATION_TYPES.CSV_EXPORT_READY) {
+			return (
+				<div className="text-sm text-[#000000CC] break-words">
+					<span>Your CSV export for report</span>{' '}
+					<span className="font-semibold break-words">
+						"{notification?.metadata?.report_name}"
+					</span>
+					<span>is ready to download.</span>
 				</div>
 			);
 		}

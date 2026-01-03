@@ -81,6 +81,26 @@ export const createQuery = async (data) => {
 	return response.data;
 };
 
+export const getQueryById = async (queryId) => {
+	try {
+		const response = await axiosClientV1.get(`/queries/${queryId}`, {
+			headers: {},
+		});
+		return response.data;
+	} catch (error) {
+		logError(error, {
+			feature: 'chat',
+			action: 'get-query-by-id',
+			extra: {
+				errorMessage: error.message,
+				status: error.response?.status,
+				queryId,
+			},
+		});
+		throw error;
+	}
+};
+
 export const deleteSession = async (sessionId) => {
 	try {
 		const response = await axiosClientV1.delete(`/sessions/${sessionId}`, {
@@ -204,6 +224,23 @@ export const enhancePrompt = async (userInput, mode = DEFAULT_ENHANCE_MODE) => {
 		console.log(error);
 		logError(error, { feature: 'chat', action: 'enhance-prompt' });
 		toast.error('Failed to enhance query');
+		throw error;
+	}
+};
+
+export const updateSessionMetadata = async (sessionId, metadata) => {
+	try {
+		const response = await axiosClientV1.patch(
+			`/sessions/${sessionId}/metadata`,
+			metadata,
+			{
+				headers: {},
+			},
+		);
+		return response.data;
+	} catch (error) {
+		logError(error, { feature: 'chat', action: 'update-session-metadata' });
+		toast.error('Failed to update session metadata');
 		throw error;
 	}
 };

@@ -102,7 +102,7 @@ const ReportsInDatasource = () => {
 					<div
 						className="text-2xl font-semibold cursor-pointer"
 						onClick={() => {
-							navigate('/app/reports/datasources');
+							navigate('/app/reports');
 						}}
 					>
 						Reports /

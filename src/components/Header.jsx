@@ -28,6 +28,8 @@ import {
 	DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronDownIcon } from '@radix-ui/react-icons';
 import {
 	ArrowUpDown,
@@ -38,8 +40,11 @@ import {
 	Search,
 	Share2,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { getSession } from './features/new-chat/service/new-chat.service';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+	getSession,
+	updateSessionMetadata,
+} from './features/new-chat/service/new-chat.service';
 import { useNavigate } from 'react-router-dom';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 import { getDataSourcesV2 } from './features/configuration/service/configuration.service';
@@ -343,6 +348,8 @@ const Header = () => {
 	const { pathname, query } = useRouter();
 	const [open, setOpen] = useState(false);
 	const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+	const [isPlanMode, setIsPlanMode] = useState(false);
+	const queryClient = useQueryClient();
 
 	// const dispatch = useDispatch();
 	const renderAvatar = () => {
@@ -354,8 +361,8 @@ const Header = () => {
 		);
 	};
 
-	const validPath = pathname.includes('session');
-	const validSession = !!query.sessionId;
+	const isSessionPage = pathname.includes('session');
+	const isValidSession = !!query.sessionId;
 
 	const { data: datasourceDetails } = useDatasourceDetailsV2();
 
@@ -369,14 +376,43 @@ const Header = () => {
 		refetchInterval: 10000,
 	});
 
-	const { data: sessionData } = useQuery({
+	const { data: sessionData, isLoading: isSessionDataLoading } = useQuery({
 		queryKey: ['session', query.sessionId],
 		queryFn: () => getSession(query.sessionId),
 		enabled: !!query.sessionId,
 		staleTime: 60000,
 	});
 
-	const enabled = validPath && validSession && !sessionData?.metadata?.shared;
+	const updateMetadataMutation = useMutation({
+		mutationFn: ({ sessionId, metadata }) =>
+			updateSessionMetadata(sessionId, metadata),
+		onSuccess: (data, variables) => {
+			// Update state only after successful API call
+			setIsPlanMode(variables.metadata.plan_mode);
+			// Invalidate session query to refetch the updated data
+			queryClient.invalidateQueries(['session', query.sessionId]);
+		},
+	});
+
+	const handlePlanModeChange = (checked) => {
+		if (query.sessionId) {
+			updateMetadataMutation.mutate({
+				sessionId: query.sessionId,
+				metadata: {
+					plan_mode: checked,
+				},
+			});
+		}
+	};
+
+	useEffect(() => {
+		if (sessionData) {
+			setIsPlanMode(sessionData?.metadata?.plan_mode || false);
+		}
+	}, [sessionData]);
+
+	const isDownloadAndShareEnabled =
+		isSessionPage && isValidSession && !sessionData?.metadata?.shared;
 
 	useEffect(() => {
 		if (userDetails) {
@@ -490,7 +526,7 @@ const Header = () => {
 		<header
 			className={cn(
 				'flex justify-between items-center py-2 pt-4 px-5 text-lg text-primary100 shrink-0',
-				pathname.includes('/dashboard') ? 'bg-gray-muted' : 'bg-white',
+				'bg-white',
 			)}
 		>
 			<div className="flex gap-4 items-center">
@@ -504,23 +540,47 @@ const Header = () => {
 
 			<div className="flex gap-6 items-center">
 				{/* <ThemeToggle /> */}
-				{enabled && datasourceDetails?.files?.length > 0 && (
-					<DownloadFilesDropdown
-						files={datasourceDetails.files}
-						dataSourceName={datasourceDetails.name}
-					/>
-				)}
+				{/* {isSessionPage && isValidSession && (
+					<>
+						{isSessionDataLoading ? (
+							<div className="flex items-center gap-3">
+								<Skeleton className="h-5 w-20" />
+								<Skeleton className="h-6 w-11 rounded-full" />
+							</div>
+						) : (
+							<div className="flex items-center gap-3">
+								<span className="text-sm text-[#26064ACC]">
+									Plan Mode
+								</span>
+								<Switch
+									checked={isPlanMode}
+									onCheckedChange={handlePlanModeChange}
+									className="data-[state=checked]:bg-primary"
+									disabled={updateMetadataMutation.isPending}
+								/>
+							</div>
+						)}
+					</>
+				)} */}
+				{isDownloadAndShareEnabled &&
+					datasourceDetails?.files?.length > 0 && (
+						<DownloadFilesDropdown
+							files={datasourceDetails.files}
+							dataSourceName={datasourceDetails.name}
+						/>
+					)}
 
-				{enabled && !sessionData?.metadata?.workflow_run_id && (
-					<Button
-						variant="outline"
-						className="py-2 px-3 text-sm flex items-center font-semibold !text-primary80 rounded-lg"
-						onClick={() => setOpen(true)}
-					>
-						<Share2 className="size-4 mr-2" />
-						Share
-					</Button>
-				)}
+				{isDownloadAndShareEnabled &&
+					!sessionData?.metadata?.workflow_run_id && (
+						<Button
+							variant="outline"
+							className="py-2 px-3 text-sm flex items-center font-semibold !text-primary80 rounded-lg"
+							onClick={() => setOpen(true)}
+						>
+							<Share2 className="size-4 mr-2" />
+							Share
+						</Button>
+					)}
 				<div
 					className="relative p-2 bg-[#F9FAFB] rounded-lg flex items-center justify-center cursor-pointer"
 					onClick={() => setIsNotificationOpen(true)}

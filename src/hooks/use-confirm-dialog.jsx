@@ -55,21 +55,24 @@ export default function useConfirmDialog() {
 	const ConfirmationDialog = useCallback(
 		() => (
 			<Dialog open={promise !== null} onOpenChange={handleClose}>
-				<DialogContent className="max-w-md p-6 rounded-lg gap-0">
+				<DialogContent
+					className="max-w-md p-6 rounded-lg gap-0"
+					onClick={(e) => e.stopPropagation()}
+				>
 					<DialogHeader>
-						<DialogTitle className="text-lg font-semibold text-primary100">
+						<DialogTitle className="text-lg font-semibold text-primary80">
 							{header}
 						</DialogTitle>
-						<DialogDescription className="text-sm text-primary80 font-normal mt-4">
+						<DialogDescription className="mt-4 text-primary80 text-sm font-normal">
 							{description}
 						</DialogDescription>
 					</DialogHeader>
 
-					<DialogFooter className="flex justify-end gap-3 mt-6 text-sm font-medium">
+					<DialogFooter className="flex justify-end gap-1 mt-6 text-sm font-medium">
 						<Button
 							onClick={handleCancel}
 							variant="outline"
-							className="border-primary text-primary hover:bg-purple-50"
+							className="hover:bg-purple-50"
 						>
 							{secondaryCtaText}
 						</Button>

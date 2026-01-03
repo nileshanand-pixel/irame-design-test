@@ -47,6 +47,9 @@ const WorkflowCard = ({
 	// Status badge should use the same styling as other tags (do not change color on failed)
 	const statusBadgeClass = tagBadgeClass;
 
+	const workflowType = workflow?.data?.type?.toUpperCase();
+	const isSqlWorkflow = workflowType === 'SQL_WORKFLOW';
+
 	const handleCardClick = (externalId) => {
 		if (!clickable) return;
 		navigate(
@@ -76,12 +79,22 @@ const WorkflowCard = ({
 							splitscreen_add
 						</span>
 						<div className="flex flex-col gap-1 min-w-0">
-							<p
-								className="text-base font-medium truncate"
-								title={upperFirst(workflow.name)}
-							>
-								{upperFirst(workflow.name)}
-							</p>
+							<div className="flex items-center gap-6">
+								<p
+									className="text-base font-medium truncate"
+									title={upperFirst(workflow.name)}
+								>
+									{upperFirst(workflow.name)}
+								</p>
+								{isSqlWorkflow && (
+									<div className="flex items-center shrink-0">
+										<span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-semibold rounded-full">
+											<span className="size-2 bg-green-600 rounded-full animate-pulse"></span>
+											Live
+										</span>
+									</div>
+								)}
+							</div>
 							<p
 								className="mb-1 text-sm truncate"
 								title={upperFirst(workflow.description)}

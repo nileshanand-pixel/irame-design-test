@@ -35,6 +35,7 @@ import { DataTablePagination } from './data-table/components/data-table-paginati
  * @property {Object} [selectedRow]
  * @property {any} [defaultSort]
  * @property {boolean} [enableSorting]
+ * @property {number} [defaultRowsPerPage]
  */
 
 /**
@@ -61,6 +62,7 @@ export function DataTable({
 	selectedRow,
 	onSortingChange,
 	enableSorting = false,
+	defaultRowsPerPage = 10,
 }) {
 	const { table } = useDataTable({
 		data,
@@ -77,13 +79,14 @@ export function DataTable({
 		defaultSort,
 		onSortingChange,
 		enableSorting,
+		defaultRowsPerPage,
 	});
 
 	return (
-		<div className="w-full space-y-2.5 overflow-auto ">
-			<div className="text-primary100  w-full overflow-auto">
+		<div className="w-full space-y-2.5 overflow-auto h-full">
+			<div className="relative text-primary100  w-full overflow-auto h-[calc(100%-3rem)]">
 				<Table>
-					<TableHeader>
+					<TableHeader className="sticky top-0 bg-white">
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => (
@@ -164,7 +167,10 @@ export function DataTable({
 			</div>
 			{!hidePagination && (
 				<div className="space-y-2.5">
-					<DataTablePagination table={table} />
+					<DataTablePagination
+						table={table}
+						defaultRowsPerPage={defaultRowsPerPage}
+					/>
 				</div>
 			)}
 			{FloatingBarContent && (

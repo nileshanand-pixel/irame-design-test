@@ -128,8 +128,9 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							EVENTS_REGISTRY.SIDE_BAR_DASHBOARD_CLICKED,
 						),
 				},
+
 				{
-					link: '/app/reports/datasources?source=side_bar',
+					link: '/app/reports?source=side_bar',
 					text: 'Reports',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/report-icon.svg',
 					// beta: true,
@@ -139,6 +140,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							EVENTS_REGISTRY.SIDE_BAR_REPORT_CLICKED,
 						),
 				},
+
 				{
 					link: '/app/configuration?source=side_bar',
 					text: 'Configuration',
@@ -586,8 +588,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			setActiveTab(pathname);
 			if (pathname.includes('configuration'))
 				setActiveTab('/app/configuration');
-			if (pathname.includes('reports'))
-				setActiveTab('/app/reports/datasources');
+			if (pathname.includes('reports')) setActiveTab('/app/reports');
 			if (pathname.includes('business-process'))
 				setActiveTab('/app/business-process');
 			if (pathname.includes('dashboard')) setActiveTab('/app/dashboard');

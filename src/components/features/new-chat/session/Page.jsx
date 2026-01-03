@@ -1,5 +1,6 @@
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useRouter } from '@/hooks/useRouter';
+import { QUERY_TYPES } from '@/constants/query-type.constant';
 import { cn, getInitials } from '@/lib/utils';
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useWorkspaceManager } from '@/hooks/useWorkspaceManager';
@@ -17,6 +18,7 @@ import ira from '@/assets/icons/ira_icon.svg';
 import { toast } from '@/lib/toast';
 import Workspace from '../Workspace';
 import AddQueryToDashboard from '../AddQueryToDashboard';
+import AddToDashboardModal from '../add-to-dashboard/AddToDashboardModal';
 import CreateDashboardDialog from '../../dashboard/components/CreateDashboardDialog';
 import { createDashboard } from '../../dashboard/service/dashboard.service';
 import { queryClient } from '@/lib/react-query';
@@ -28,7 +30,7 @@ import CHAT_CONSTANTS, {
 	CHAT_SESSION_STARTED_EVENT_DATA_KEY,
 } from '@/constants/chat.constant';
 import QueryDisplay from './components/QueryDisplay';
-import Clarification from '../Clarification';
+import Clarification, { CLARIFICATION_TYPE } from '../clarification';
 import { WorkspaceEnum } from '../types/new-chat.enum';
 // import InputArea from '../InputArea';
 import ReportGenerationDialog from './components/ReportGenerationDialog';
@@ -54,6 +56,7 @@ import {
 import SiblingNavigation from './components/SiblingNavigation';
 import QueryActions from './components/QueryActions';
 import { REDIRECTION_URL_AFTER_LOGIN } from '@/constants/login-constants';
+import UnderstandingStats from './components/understanding-stats';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -376,6 +379,8 @@ const Workzone = () => {
 		name: '',
 		isCreating: false,
 		showAdd: false,
+		showSelectDashboard: false,
+		selectedDashboard: null,
 		showCreate: false,
 		isAdding: false,
 	});
@@ -392,6 +397,17 @@ const Workzone = () => {
 	const [activeQueryProgress, setActiveQueryProgress] = useState(null);
 	const [newDashboardIds, setNewDashboardIds] = useState([]);
 	const [activateGraphOnLast, setActivateGraphOnLast] = useState(false);
+
+	// Track if this is a SQL workflow session based on workflow type from metadata
+	const isSqlWorkflowSession =
+		currentSessionData?.metadata?.type === 'SQL_WORKFLOW';
+
+	// Detect if redirected from SQL workflow and disable input
+	useEffect(() => {
+		if (isSqlWorkflowSession) {
+			setInputDisabled(true);
+		}
+	}, [isSqlWorkflowSession]);
 
 	// Fetch datasource details (needed by handlers)
 	const { data: datasourceData } = useDatasourceDetailsV2({
@@ -450,7 +466,12 @@ const Workzone = () => {
 					query: tempPrompt,
 					session_id: answer?.session_id,
 					workspace_changes: null,
-					metadata: answer?.metadata || {},
+					metadata: {
+						...(answer?.metadata || {}),
+						...(currentSessionData?.metadata?.plan_mode && {
+							plan_mode: currentSessionData.metadata.plan_mode,
+						}),
+					},
 				};
 
 				createQuery(payload)
@@ -659,7 +680,17 @@ const Workzone = () => {
 			};
 
 			if (mode === 'single' && prompt) payload.query = prompt;
-			if (mode !== 'single' && metadata) payload.metadata = metadata;
+			if (mode !== 'single' && metadata) {
+				payload.metadata = {
+					...metadata,
+				};
+			}
+			if (mode === 'single' && currentSessionData?.metadata?.plan_mode) {
+				payload.metadata = {
+					...payload.metadata,
+					plan_mode: currentSessionData.metadata.plan_mode,
+				};
+			}
 
 			createQuery(payload).then((res) => {
 				updateQuery('', { id: res.query_id, question: tempPrompt });
@@ -738,6 +769,12 @@ const Workzone = () => {
 						.filter((query) => query?.text?.length > 0)
 						.map((item) => ({ query: item?.text })),
 					saved_query_reference: answer?.metadata?.saved_query_reference,
+					...(workspaceChanges && {
+						workspace_id: workspaceChanges?.metadata?.workspace_id,
+					}),
+					...(currentSessionData?.metadata?.plan_mode && {
+						plan_mode: currentSessionData.metadata.plan_mode,
+					}),
 				},
 				type: answer?.type,
 			}).then((res) => {
@@ -818,18 +855,151 @@ const Workzone = () => {
 			setDashboard((prev) => ({ ...prev, isCreating: false }));
 			console.log('dashboard create error', error);
 			logError(error, { feature: 'chat', action: 'create-dashboard' });
-			toast.error('Something went wrong while creating dashboard');
+
+			// Check for duplicate key error
+			if (error.response?.data?.error_code === 'duplicate_key') {
+				const errorMessage =
+					error.response?.data?.message ||
+					'A dashboard with this name already exists';
+				setErrors({ dashboardName: errorMessage });
+				toast.error(errorMessage);
+			} else {
+				toast.error('Something went wrong while creating dashboard');
+			}
 		}
 	};
 
-	const renderConversation = () => {
-		// Extract the active path based on user navigation and in-progress state
+	const addClarificationQuery = async (clarificationPayload, currentQuery) => {
+		if (inputDisabled) return;
+
+		const answer = answers.find((a) => a.query_id === currentQuery?.id);
+		if (!answer) return;
+
+		const newQuery = {
+			id: '',
+			question: '',
+			parentQueryId: answer.query_id,
+		};
+
+		addQuery(newQuery);
+
+		const payload = {
+			type: answer?.type || 'single',
+			child_no: parseInt(answer.child_no) + 1,
+			datasource_id: answer?.datasource_id,
+			parent_query_id: answer.query_id,
+			query: currentQuery?.question,
+			session_id: answer?.session_id,
+			metadata: {
+				...(answer?.metadata || {}),
+				...(currentSessionData?.metadata?.plan_mode && {
+					plan_mode: currentSessionData.metadata.plan_mode,
+				}),
+				is_clarification: true,
+			},
+			clarification: clarificationPayload,
+		};
+
+		try {
+			const res = await createQuery(payload);
+			updateQuery('', { id: res.query_id, question: '' });
+
+			// Mark the parent answer's clarification as clarified locally so UI reflects the change immediately
+			try {
+				setAnswers((prev) =>
+					prev.map((ans) => {
+						if (ans.query_id === answer.query_id) {
+							return {
+								...ans,
+								answer: {
+									...ans.answer,
+									clarification: {
+										...(ans.answer?.clarification || {}),
+										...clarificationPayload,
+										is_clarified: true,
+									},
+								},
+							};
+						}
+						return ans;
+					}),
+				);
+			} catch (e) {
+				console.error('Failed to mark clarification locally', e);
+			}
+			addDoingScience(res?.query_id);
+			// Note: currentQueryId will be updated automatically via selectedPathLeafId sync
+			setUserHasNavigated(false); // Reset to auto-follow new query
+			setDisableAutoScroll(false); // Reset scroll control
+
+			// Scroll to bottom when edited query is added
+			scrollToBottom();
+
+			trackEvent(
+				EVENTS_ENUM.CHAT_MESSAGE_SENT,
+				EVENTS_REGISTRY.CHAT_MESSAGE_SENT,
+				() => ({
+					chat_session_id: currentSessionId,
+					dataset_id: answer?.datasource_id,
+					dataset_name: datasourceData?.name,
+					query_id: res?.query_id,
+					message_type: 'user',
+					message_source: 'clarification',
+					message_text: currentQuery?.query,
+					is_clarification: false,
+					message_number: queries?.length * 2 + 1,
+					first_message_in_chat: false,
+				}),
+			);
+			sendChatSessionStartedEvent({
+				dataset_id: answer?.datasource_id,
+				dataset_name: datasourceData?.name,
+				start_method: 'clarification',
+				chat_session_id: answer?.session_id,
+				chat_session_type: 'old',
+			});
+
+			queryClient.invalidateQueries(['chat-history']);
+			queryClient.invalidateQueries({
+				queryKey: ['chat', 'session', currentSessionId, 'queries'],
+			});
+
+			setResponseTimeElapsed(0);
+			setBanners((prevState) => ({
+				...prevState,
+				showFailedResponse: false,
+				showDelay: false,
+			}));
+			return res;
+		} catch (error) {
+			setQueries((prev) => prev.filter((q) => q !== newQuery));
+			console.error('Edit query failed', error);
+			logError(error, { feature: 'chat', action: 'edit-query' });
+			toast.error('Failed to clarify');
+			throw error;
+		} finally {
+			setEditingQueryId(null);
+		}
+	};
+
+	const [activePathQueries, isLastQueryHasNonTextClarification] = useMemo(() => {
 		const activePathQueries = extractActivePath(
 			answers,
 			activePath,
 			userHasNavigated,
 		);
+		const lastQuery = activePathQueries[activePathQueries.length - 1];
 
+		const hasNonTextClarification =
+			lastQuery?.answer?.clarification &&
+			lastQuery?.answer?.clarification?.tool_data?.type &&
+			lastQuery?.answer?.clarification?.tool_data?.type !==
+				CLARIFICATION_TYPE.TEXT;
+
+		return [activePathQueries, hasNonTextClarification];
+	}, [answers, activePath, userHasNavigated]);
+
+	const renderConversation = () => {
 		if (activePathQueries.length === 0) {
 			return (
 				<div className="mt-8 w-full">
@@ -846,208 +1016,262 @@ const Workzone = () => {
 			);
 		}
 
-		return activePathQueries?.map((answerElem, key) => {
-			const query = queries.find((q) => q.id === answerElem.query_id);
-			const hasClarification = !!answerElem?.answer?.clarification;
-			const currentDoingScience =
-				doingScience.find(
-					(loadingObj) => loadingObj.queryId === answerElem?.query_id,
-				)?.status || false;
-			const isAllDocuments = isUnstructuredData(datasourceData?.files);
+		return (
+			<div className="h-full w-full overflow-auto">
+				{/* <div className="sticky top-0 w-full px-4 pb-2 flex justify-end bg-white z-[10]">
+					<UnderstandingStats
+						activePathQueries={activePathQueries}
+						doingScience={doingScience}
+					/>
+				</div> */}
+				{activePathQueries?.map((answerElem, key) => {
+					const query = queries.find((q) => q.id === answerElem.query_id);
+					const hasClarification = !!answerElem?.answer?.clarification;
+					const isClarificationQuery = query?.metadata?.is_clarification;
+					const currentDoingScience =
+						doingScience.find(
+							(loadingObj) =>
+								loadingObj.queryId === answerElem?.query_id,
+						)?.status || false;
+					const isAllDocuments = isUnstructuredData(datasourceData?.files);
 
-			const showWorkspaceToggle = !hasClarification;
+					const showWorkspaceToggle = !hasClarification;
 
-			// Get sibling information for navigation
-			const siblingInfo = getSiblingInfo(answers, answerElem.query_id);
+					// Get sibling information for navigation
+					const siblingInfo = getSiblingInfo(answers, answerElem.query_id);
 
-			// Handler for sibling navigation
-			const handleNavigate = (newIndex) => {
-				const oldSibling = siblingInfo.siblings[siblingInfo.currentIndex];
-				handleSiblingNavigation(
-					answerElem.parent_query_id,
-					newIndex,
-					oldSibling?.query_id,
-				);
-			};
+					// Handler for sibling navigation
+					const handleNavigate = (newIndex) => {
+						const oldSibling =
+							siblingInfo.siblings[siblingInfo.currentIndex];
+						handleSiblingNavigation(
+							answerElem.parent_query_id,
+							newIndex,
+							oldSibling?.query_id,
+						);
+					};
 
-			return (
-				<div key={query.id} className="my-2 overflow-hidden">
-					<div className={`ml-10 flex gap-2.5 flex-row-reverse`}>
-						{/* <Avatar className="size-9">
-							<AvatarImage src={value?.avatar} />
-							<AvatarFallback>
-								{getInitials(value.user_name)}
-							</AvatarFallback>
-						</Avatar> */}
-						{/* Keep QueryDisplay layout untouched to preserve existing actions and min-width */}
-						<QueryDisplay
-							mode={query?.type}
-							bulkPrompt={query?.metadata?.queries}
-							workflowTitle={
-								query?.metadata?.saved_query_reference?.title ||
-								query?.metadata?.workflow_reference?.name
-							}
-							key={query.id}
-							prompt={query?.question}
-							isEditing={editingQueryId === answerElem.query_id}
-							onSave={handleSaveEdit}
-							onCancel={handleCancelEdit}
-							createdAt={query?.created_at}
-						/>
-					</div>
-					{/* Place sibling navigation in a separate row below the query to avoid disturbing existing action icons */}
-					<div className="mt-1 flex justify-end">
-						<QueryActions
-							siblingInfo={siblingInfo}
-							onNavigate={handleNavigate}
-							onEdit={() => handleEdit(answerElem.query_id)}
-							disabled={inputDisabled}
-							disableEdit={
-								inputDisabled || answerElem?.type === 'workflow'
-							}
-							queryText={query?.question}
-							queryId={answerElem.query_id}
-							savedQueryReference={
-								query?.metadata?.saved_query_reference
-							}
-							onDeleteSuccess={() => {
-								// Refetch queries to update the UI after save/delete
-								queryClient.invalidateQueries([
-									'chat',
-									'session',
-									currentSessionId,
-									'queries',
-									selectedPathLeafId,
-								]);
-							}}
-							setUserHasNavigated={setUserHasNavigated}
-							setDisableAutoScroll={setDisableAutoScroll}
-						/>
-					</div>
-					{/* <div className="mt-4 flex items-center space-x-2">
-						<img src={ira} alt="ira" className="size-10" />
-						{showWorkspaceToggle && (
-							<Button
-								variant="outline"
-								className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
-								onClick={() => {
-									toggleIra(answerElem?.query_id);
-								}}
-								disabled={isAllDocuments}
-							>
-								<img
-									src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
-									className="me-1 size-5"
+					return (
+						<div key={query.id} className="my-2 overflow-hidden">
+							<div className={`ml-10 flex gap-2.5 flex-row-reverse`}>
+								{/* <Avatar className="size-9">
+											<AvatarImage src={value?.avatar} />
+											<AvatarFallback>
+												{getInitials(value.user_name)}
+											</AvatarFallback>
+										</Avatar> */}
+								{/* Keep QueryDisplay layout untouched to preserve existing actions and min-width */}
+								<QueryDisplay
+									mode={query?.type}
+									bulkPrompt={query?.metadata?.queries}
+									workflowTitle={
+										query?.metadata?.saved_query_reference
+											?.title ||
+										query?.metadata?.workflow_reference?.name
+									}
+									key={query.id}
+									prompt={query?.question}
+									isEditing={
+										editingQueryId === answerElem.query_id
+									}
+									onSave={handleSaveEdit}
+									onCancel={handleCancelEdit}
+									createdAt={query?.created_at}
+									isClarificationQuery={isClarificationQuery}
 								/>
-								{(workspace.show &&
-									activeQueryId === answerElem?.query_id) ||
-								!activeQueryId
-									? 'Hide'
-									: 'Show'}{' '}
-								Workspace
-							</Button>
-						)}
-						{hasClarification && <Clarification />}
-					</div> */}
+							</div>
+							{/* Place sibling navigation in a separate row below the query to avoid disturbing existing action icons */}
+							<div className="mt-1 flex justify-end">
+								<QueryActions
+									siblingInfo={siblingInfo}
+									onNavigate={handleNavigate}
+									onEdit={() => handleEdit(answerElem.query_id)}
+									disabled={inputDisabled}
+									disableEdit={
+										inputDisabled ||
+										answerElem?.type === 'workflow'
+									}
+									queryText={query?.question}
+									queryId={answerElem.query_id}
+									savedQueryReference={
+										query?.metadata?.saved_query_reference
+									}
+									onDeleteSuccess={() => {
+										// Refetch queries to update the UI after save/delete
+										queryClient.invalidateQueries([
+											'chat',
+											'session',
+											currentSessionId,
+											'queries',
+											selectedPathLeafId,
+										]);
+									}}
+									setUserHasNavigated={setUserHasNavigated}
+									setDisableAutoScroll={setDisableAutoScroll}
+									isClarificationQuery={isClarificationQuery}
+								/>
+							</div>
 
-					<div className="mt-8">
-						{!currentDoingScience && hasClarification ? (
-							<div>
-								<div className="flex items-center space-x-2 mb-4">
+							{/* <div className="mt-4 flex items-center space-x-2">
 									<img src={ira} alt="ira" className="size-10" />
-									<Clarification />
-								</div>
-
-								<div className="ml-12">
-									<ResponseCard
-										answerResp={answerElem}
-										isGraphLoading={isGraphLoading}
-										setIsGraphLoading={setIsGraphLoading}
-										setAnswerResp={setAnswers}
-										setDoingScience={setDoingScience}
-										setResponseTimeElapsed={
-											setResponseTimeElapsed
-										}
-										setBanners={setBanners}
-										doingScience={currentDoingScience}
-										setDashboard={setDashboard}
-										showTable={
-											!answerElem?.answer
-												?.response_dataframe &&
-											answerElem?.answer?.graph
-										}
-										setIsTableLoading={setIsTableLoading}
-										isTableLoading={isTableLoading}
-										hasClarification={hasClarification}
-										showWorkspaceToggle={showWorkspaceToggle}
-										toggleWorkspace={toggleWorkspace}
-										queryId={query?.id}
-										isAllDocuments={isAllDocuments}
-										workspaceQueryId={workspaceQueryId}
-										isWorkspaceExpanded={isWorkspaceExpanded}
-										isLastQuery={
-											answerElem.query_id ===
-											answers[answers.length - 1]?.query_id
-										}
-										updatedAt={query?.updated_at}
-									/>
-								</div>
-							</div>
-						) : (
-							<div className="flex items-start space-x-3 w-full max-w-full overflow-hidden">
-								<img src={ira} alt="ira" className="size-10" />
-
-								<div className="w-full max-w-full">
-									{currentDoingScience && (
-										<QueueStatus
-											text={
-												answerElem?.status_text ||
-												'Doing Science'
-											}
-										/>
+									{showWorkspaceToggle && (
+										<Button
+											variant="outline"
+											className="text-sm font-semibold text-purple-100 hover:bg-white hover:text-purple-100 hover:opacity-80 flex items-center"
+											onClick={() => {
+												toggleIra(answerElem?.query_id);
+											}}
+											disabled={isAllDocuments}
+										>
+											<img
+												src="https://d2vkmtgu2mxkyq.cloudfront.net/category.svg"
+												className="me-1 size-5"
+											/>
+											{(workspace.show &&
+												activeQueryId === answerElem?.query_id) ||
+											!activeQueryId
+												? 'Hide'
+												: 'Show'}{' '}
+											Workspace
+										</Button>
 									)}
+									{hasClarification && <Clarification />}
+								</div> */}
 
-									<div className="flex-1 min-w-0">
-										<ResponseCard
-											answerResp={answerElem}
-											isGraphLoading={isGraphLoading}
-											setIsGraphLoading={setIsGraphLoading}
-											setAnswerResp={setAnswers}
-											setDoingScience={setDoingScience}
-											setResponseTimeElapsed={
-												setResponseTimeElapsed
-											}
-											setBanners={setBanners}
-											doingScience={currentDoingScience}
-											setDashboard={setDashboard}
-											showTable={
-												!answerElem?.answer
-													?.response_dataframe &&
-												answerElem?.answer?.graph
-											}
-											setIsTableLoading={setIsTableLoading}
-											isTableLoading={isTableLoading}
-											hasClarification={hasClarification}
-											showWorkspaceToggle={showWorkspaceToggle}
-											toggleWorkspace={toggleWorkspace}
-											queryId={query?.id}
-											isAllDocuments={isAllDocuments}
-											workspaceQueryId={workspaceQueryId}
-											isWorkspaceExpanded={isWorkspaceExpanded}
-											isLastQuery={
-												answerElem.query_id ===
-												answers[answers.length - 1]?.query_id
-											}
-											updatedAt={query?.updated_at}
-										/>
+							<div className="mt-8">
+								{!currentDoingScience && hasClarification ? (
+									<div>
+										<div className="flex items-start space-x-2 mb-4">
+											<img
+												src={ira}
+												alt="ira"
+												className="size-10"
+											/>
+											<Clarification
+												data={
+													answerElem?.answer?.clarification
+												}
+												addClarificationQuery={(payload) =>
+													addClarificationQuery(
+														payload,
+														query,
+													)
+												}
+												canClarify={!inputDisabled}
+											/>
+											{/* <ResponseCard
+													answerResp={answerElem}
+													isGraphLoading={isGraphLoading}
+													setIsGraphLoading={setIsGraphLoading}
+													setAnswerResp={setAnswers}
+													setDoingScience={setDoingScience}
+													setResponseTimeElapsed={
+														setResponseTimeElapsed
+													}
+													setBanners={setBanners}
+													doingScience={currentDoingScience}
+													setDashboard={setDashboard}
+													showTable={
+														!answerElem?.answer
+															?.response_dataframe &&
+														answerElem?.answer?.graph
+													}
+													setIsTableLoading={setIsTableLoading}
+													isTableLoading={isTableLoading}
+													hasClarification={hasClarification}
+													showWorkspaceToggle={showWorkspaceToggle}
+													toggleWorkspace={toggleWorkspace}
+													queryId={query?.id}
+													isAllDocuments={isAllDocuments}
+													workspaceQueryId={workspaceQueryId}
+													isWorkspaceExpanded={isWorkspaceExpanded}
+													isLastQuery={
+														answerElem.query_id ===
+														answers[answers.length - 1]?.query_id
+													}
+													updatedAt={query?.updated_at}
+												/> */}
+										</div>
 									</div>
-								</div>
+								) : (
+									<div className="flex items-start space-x-3 w-full max-w-full overflow-hidden">
+										<img
+											src={ira}
+											alt="ira"
+											className="size-10"
+										/>
+
+										<div className="w-full max-w-full">
+											{currentDoingScience && (
+												<QueueStatus
+													text={
+														answerElem?.status_text ||
+														'Doing Science'
+													}
+												/>
+											)}
+
+											<div className="flex-1 min-w-0">
+												<ResponseCard
+													answerResp={answerElem}
+													isGraphLoading={isGraphLoading}
+													setIsGraphLoading={
+														setIsGraphLoading
+													}
+													setAnswerResp={setAnswers}
+													setDoingScience={setDoingScience}
+													setResponseTimeElapsed={
+														setResponseTimeElapsed
+													}
+													setBanners={setBanners}
+													doingScience={
+														currentDoingScience
+													}
+													setDashboard={setDashboard}
+													showTable={
+														!answerElem?.answer
+															?.response_dataframe &&
+														answerElem?.answer?.graph
+													}
+													setIsTableLoading={
+														setIsTableLoading
+													}
+													isTableLoading={isTableLoading}
+													hasClarification={
+														hasClarification
+													}
+													showWorkspaceToggle={
+														showWorkspaceToggle
+													}
+													toggleWorkspace={toggleWorkspace}
+													queryId={query?.id}
+													isAllDocuments={isAllDocuments}
+													workspaceQueryId={
+														workspaceQueryId
+													}
+													isWorkspaceExpanded={
+														isWorkspaceExpanded
+													}
+													isLastQuery={
+														answerElem.query_id ===
+														answers[answers.length - 1]
+															?.query_id
+													}
+													updatedAt={query?.updated_at}
+													currentSessionData={
+														currentSessionData
+													}
+												/>
+											</div>
+										</div>
+									</div>
+								)}
 							</div>
-						)}
-					</div>
-				</div>
-			);
-		});
+						</div>
+					);
+				})}
+			</div>
+		);
 	};
 
 	const clearPolling = () => {
@@ -1120,10 +1344,13 @@ const Workzone = () => {
 
 	// Update input disabled based on in-progress queries
 	useEffect(() => {
+		// Always keep input disabled if this is a SQL workflow session
+		if (isSqlWorkflowSession) return;
+
 		// Disable input if session has any query in progress (including background queries)
 		const sessionHasProcessing = currentSessionData?.status === 'in_progress';
 		setInputDisabled(sessionHasProcessing);
-	}, [currentSessionData?.status]);
+	}, [currentSessionData?.status, isSqlWorkflowSession]);
 
 	// Reset userHasNavigated when new query is added (starts processing)
 	useEffect(() => {
@@ -1138,6 +1365,9 @@ const Workzone = () => {
 	}, [doingScience]);
 
 	useEffect(() => {
+		// Don't re-enable input if this is a SQL workflow session
+		if (isSqlWorkflowSession) return;
+
 		if (queries.length > 0) {
 			queries.some((query) => query.status !== 'done')
 				? setInputDisabled(true)
@@ -1145,7 +1375,7 @@ const Workzone = () => {
 		} else {
 			setInputDisabled(false);
 		}
-	}, [queries]);
+	}, [queries, isSqlWorkflowSession]);
 
 	// useEffect(() => {}, [utilReducer?.isGenerateReportModalOpen]);
 
@@ -1290,8 +1520,11 @@ const Workzone = () => {
 							config={config}
 							onAppendQuery={handleAppendQuery}
 							disabled={inputDisabled}
-						/>
-
+							isWorkflowLocked={isSqlWorkflowSession}
+							isDisabledWithoutLoading={
+								isLastQueryHasNonTextClarification
+							}
+						/>{' '}
 						{showSharedSessionModal && (
 							<div
 								className="absolute -top-8 left-0 w-full flex items-center justify-center bg-white/90 backdrop-blur-sm z-50 rounded-xl pointer-events-auto"
@@ -1448,14 +1681,33 @@ const Workzone = () => {
 				)}
 			</div>
 
-			{dashboard?.showAdd && (
-				<AddQueryToDashboard
-					open={dashboard.showAdd}
-					setDashboard={setDashboard}
-					newDashboardIds={newDashboardIds}
+			{/* Original AddQueryToDashboard - commented out */}
+			{/* {dashboard?.showAdd && (
+			<AddQueryToDashboard
+				open={dashboard.showAdd}
+				setDashboard={setDashboard}
+				newDashboardIds={newDashboardIds}
+				queryId={dashboard.queryId}
+			/>
+		)} */}
+
+			{(dashboard?.showSelectDashboard || dashboard?.showAdd) && (
+				<AddToDashboardModal
+					open={dashboard.showSelectDashboard || dashboard.showAdd}
+					onClose={() =>
+						setDashboard((prev) => ({
+							...prev,
+							showSelectDashboard: false,
+							showAdd: false,
+							selectedDashboard: null,
+						}))
+					}
 					queryId={dashboard.queryId}
+					initialSelectedDashboardId={dashboard?.selectedDashboard?.id}
+					initialSelectedDashboard={dashboard?.selectedDashboard}
 				/>
 			)}
+
 			{dashboard?.showCreate && (
 				<CreateDashboardDialog
 					open={dashboard.showCreate}

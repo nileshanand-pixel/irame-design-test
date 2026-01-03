@@ -1,5 +1,7 @@
 import useS3File from '@/hooks/useS3File';
 import { getFileIcon } from '@/lib/utils';
+import { openFile } from '@/utils/file-opening';
+import { extractFileName } from '@/utils/filename';
 import { XCircle } from '@phosphor-icons/react';
 
 export default function FilePreview({
@@ -13,9 +15,8 @@ export default function FilePreview({
 	const { isOpening, openS3File } = useS3File();
 
 	const handleClick = () => {
-		if (!fileUrl) return;
-
-		openS3File(fileUrl);
+		const displayFileName = fileUrl ? extractFileName(fileUrl) : fileName;
+		openFile(fileUrl, openS3File, { fileName: displayFileName });
 	};
 
 	const handleCrossClick = (e) => {
@@ -25,7 +26,7 @@ export default function FilePreview({
 
 	return (
 		<div
-			className={`relative px-2 py-1 border border-[#DDD] rounded-sm inline-flex flex-col bg-[#fff] ${fileUrl && 'cursor-pointer'}`}
+			className={`relative px-2 py-1 border border-[#DDD] rounded-sm inline-flex flex-col bg-[#fff] ${fileUrl && 'cursor-pointer'} max-w-[90%]`}
 			onClick={handleClick}
 		>
 			{isOpening ? (

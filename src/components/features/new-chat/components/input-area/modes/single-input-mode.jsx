@@ -34,6 +34,8 @@ const SingleInputMode = ({
 	utilReducer,
 	updateUtilProp,
 	inputRef,
+	isWorkflowLocked = false,
+	isDisabledWithoutLoading = false,
 }) => {
 	const localInputRef = useRef(null);
 	const actualInputRef = inputRef || localInputRef;
@@ -77,13 +79,15 @@ const SingleInputMode = ({
 					onChange={(e) => onPromptChange(e.target.value)}
 					onKeyDown={onKeyDown}
 					placeholder={
-						!(disabled || isQnaDisabled)
-							? CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER
-							: CHAT_CONSTANTS.IRA_GENERATING_RESPONSE
+						isWorkflowLocked
+							? CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER_LOCKED
+							: !(disabled || isQnaDisabled)
+								? CHAT_CONSTANTS.IRA_INPUT_PLACEHOLDER
+								: CHAT_CONSTANTS.IRA_GENERATING_RESPONSE
 					}
-					disabled={disabled || isQnaDisabled}
+					disabled={disabled || isQnaDisabled || isDisabledWithoutLoading}
 					inputRef={actualInputRef}
-					className="mentions-input"
+					className={`mentions-input ${isWorkflowLocked ? 'mentions-input--locked' : ''}`}
 					suggestionsPortalHost={document.getElementById(
 						'mentions-portal',
 					)}

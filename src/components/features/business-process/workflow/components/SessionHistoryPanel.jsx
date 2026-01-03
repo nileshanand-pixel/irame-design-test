@@ -110,7 +110,7 @@ const SessionHistoryPanel = ({ onClose }) => {
 
 			{/* Grid Container */}
 			<div className="flex-1 w-[95%] mx-auto overflow-y-auto">
-				<div className="relative bg-white h-[92%] mb-5 pb-5 overflow-y-auto shadow-md border-2 rounded-2xl">
+				<div className="relative bg-white h-[97%] mb-5 overflow-y-auto overflow-x-hidden shadow-md border-2 rounded-2xl">
 					{/* Grid Header */}
 					<div className="sticky top-0 grid grid-cols-12 bg-gray-100 text-black/40 font-semibold text-sm py-3 px-4 border-b-2 z-10">
 						<div className="col-span-3">Date</div>
@@ -119,7 +119,7 @@ const SessionHistoryPanel = ({ onClose }) => {
 					</div>
 
 					{/* Grid Content */}
-					<div className="divide-y text-black/60">
+					<div className="divide-y text-black/60 overflow-x-auto show-scrollbar h-full">
 						{runs.map((item) => {
 							const linkActive = isLinkActive(item.status);
 							const sessionUrl = `${window.location.origin}/app/new-chat/session/?sessionId=${item.session_id}&source=workflow&datasource_id=${item.datasource_id}`;

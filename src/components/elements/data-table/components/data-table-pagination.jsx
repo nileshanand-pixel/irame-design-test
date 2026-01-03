@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
@@ -27,7 +27,15 @@ import {
 export function DataTablePagination({
 	table,
 	pageSizeOptions = [10, 20, 30, 40, 50],
+	defaultRowsPerPage,
 }) {
+	const newPageSizeOptions = useMemo(() => {
+		if (!pageSizeOptions.includes(defaultRowsPerPage)) {
+			return [defaultRowsPerPage, ...pageSizeOptions].sort((a, b) => a - b);
+		}
+		return pageSizeOptions;
+	}, [pageSizeOptions, defaultRowsPerPage]);
+
 	return (
 		<div className="flex w-full items-center justify-end overflow-auto px-2 py-1 flex-row gap-8">
 			{/* <div className="flex-1 whitespace-nowrap text-sm text-muted-foreground">
@@ -52,7 +60,7 @@ export function DataTablePagination({
 							side="top"
 							className="text-xs font-normal textprimary80"
 						>
-							{pageSizeOptions.map((pageSize) => (
+							{newPageSizeOptions.map((pageSize) => (
 								<SelectItem
 									key={pageSize}
 									value={`${pageSize}`}

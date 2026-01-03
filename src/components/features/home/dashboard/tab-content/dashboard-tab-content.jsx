@@ -74,7 +74,17 @@ export default function DashboardsTabContent({ dateRange }) {
 				feature: 'homepage',
 				action: 'create-dashboard-in-homepage',
 			});
-			toast.error('Something went wrong while creating dashboard');
+
+			// Check for duplicate key error
+			if (error.response?.data?.error_code === 'duplicate_key') {
+				const errorMessage =
+					error.response?.data?.message ||
+					'A dashboard with this name already exists';
+				setErrors({ dashboardName: errorMessage });
+				toast.error(errorMessage);
+			} else {
+				toast.error('Something went wrong while creating dashboard');
+			}
 		}
 	};
 

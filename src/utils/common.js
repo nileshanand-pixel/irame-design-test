@@ -38,3 +38,49 @@ export function areStringObjectsEqual(obj1, obj2) {
 
 	return true;
 }
+
+/**
+ * Format time ago string from ISO date string
+ * Includes weeks support and handles null/undefined
+ */
+export const formatTimeAgo = (dateString) => {
+	if (!dateString) return 'Unknown';
+
+	const date = new Date(dateString);
+	const now = new Date();
+	const diffMs = now - date;
+	const diffMins = Math.floor(diffMs / 60000);
+	const diffHours = Math.floor(diffMs / 3600000);
+	const diffDays = Math.floor(diffMs / 86400000);
+	const diffWeeks = Math.floor(diffDays / 7);
+	const diffMonths = Math.floor(diffDays / 30);
+
+	if (diffMins < 1) return 'Just now';
+	if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+	if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+	if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+	if (diffWeeks < 4) return `${diffWeeks} week${diffWeeks !== 1 ? 's' : ''} ago`;
+	if (diffMonths < 12)
+		return `${diffMonths} month${diffMonths !== 1 ? 's' : ''} ago`;
+	return `${Math.floor(diffDays / 365)} year${Math.floor(diffDays / 365) !== 1 ? 's' : ''} ago`;
+};
+
+/**
+ * Get time ago string - accepts both Date object and date string
+ * Returns 'Recently' for null/undefined
+ */
+export const getTimeAgo = (dateInput) => {
+	if (!dateInput) return 'Recently';
+
+	const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+	const now = new Date();
+	const diffMs = now - date;
+	const diffMins = Math.floor(diffMs / 60000);
+	const diffHours = Math.floor(diffMs / 3600000);
+	const diffDays = Math.floor(diffMs / 86400000);
+
+	if (diffMins < 1) return 'Just now';
+	if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+	if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+	return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+};

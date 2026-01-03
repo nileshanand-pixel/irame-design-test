@@ -20,6 +20,7 @@ import { useWorkflowRunId } from '../hooks/use-workflow-run-id';
 import DataSourceCard from './components/connect-data-source/data-source-card';
 import ModificationRequestModal from './components/ModificationRequestModal';
 import useAuth from '@/hooks/useAuth';
+import BreadCrumbs from '@/components/BreadCrumbs';
 
 export default function WorkflowPageV2() {
 	const { businessProcessId, workflowId } = useParams();
@@ -80,12 +81,33 @@ export default function WorkflowPageV2() {
 
 	const breadcrumbItems = useMemo(
 		() => [
-			{ label: 'Business Process', path: '/app/business-process' },
+			{
+				label: 'Business Process',
+				path: '/app/business-process',
+				icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/workflow_icon.svg',
+			},
 			{
 				label: businessProcess?.name || 'Business Process',
 				path: `/app/business-process/${businessProcessId}`,
 			},
-			{ label: workflowDetails?.name || 'Workflow' },
+			{
+				label: (
+					<div className="flex items-center gap-6">
+						<span>{workflowDetails?.name || 'Workflow'}</span>
+						{(workflowDetails?.data?.type?.toUpperCase() ===
+							'SQL_WORKFLOW' ||
+							workflowDetails?.data?.type?.toUpperCase() ===
+								'SQL') && (
+							<div className="flex items-center shrink-0">
+								<span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-semibold rounded-full">
+									<span className="size-2 bg-green-600 rounded-full animate-pulse"></span>
+									Live
+								</span>
+							</div>
+						)}
+					</div>
+				),
+			},
 		],
 		[businessProcess, businessProcessId, workflowDetails],
 	);
@@ -108,36 +130,46 @@ export default function WorkflowPageV2() {
 		return <WorkflowPageSkeleton />;
 	}
 
-	const mainContentClasses = `h-[calc(100%-2.625rem)] overflow-x-scroll ${
-		sidebarOpen ? 'w-full' : 'w-3/5 mx-auto'
-	} transition-all duration-300 ${
+	const mainContentClasses = `h-full w-full transition-all duration-300 ${
 		runWorkFlowMutation.isPending ? 'overflow-y-hidden' : 'overflow-y-auto'
 	}`;
 
 	return (
-		<div className="h-full w-full overflow-hidden text-primary80">
-			<Breadcrumb items={breadcrumbItems} />
-
+		<div className="w-full h-full text-primary80 overflow-y-auto">
 			<div className={mainContentClasses}>
-				<PanelGroup direction="horizontal" className="w-full h-full">
-					<Panel defaultSize={60} minSize={40}>
+				<PanelGroup
+					direction="horizontal"
+					className="w-full h-full overflow-y-scroll !overflow-auto"
+				>
+					<Panel
+						defaultSize={60}
+						minSize={40}
+						className="overflow-y-auto !overflow-auto px-6"
+					>
+						<BreadCrumbs items={breadcrumbItems} />
+
 						<div
-							className={` h-full bg-white relative p-4 flex flex-col min-h-full ${
-								runWorkFlowMutation.isPending
-									? 'overflow-y-hidden'
-									: 'overflow-auto'
-							}`}
+							className={`h-full bg-white relative flex flex-col min-h-full mt-4`}
 						>
-							<WorkflowDetails
-								workflowDetails={workflowDetails}
-								sidebarOpen={sidebarOpen}
-								onViewHistory={() => setSidebarOpen(true)}
-								onRequestModification={() => setIsModalOpen(true)}
-							/>
+							<div
+								className={`${sidebarOpen ? 'mx-0' : 'mx-16'} flex-1 flex flex-col gap-6`}
+							>
+								<WorkflowDetails
+									workflowDetails={workflowDetails}
+									sidebarOpen={sidebarOpen}
+									onViewHistory={() => setSidebarOpen(true)}
+									onRequestModification={() =>
+										setIsModalOpen(true)
+									}
+								/>
 
-							<DataSourceCard />
+								<DataSourceCard
+									workflowDetails={workflowDetails}
+									workflowId={workflowId}
+								/>
 
-							<WorkflowPlan plan={plan} disabled />
+								<WorkflowPlan plan={plan} disabled />
+							</div>
 
 							{/* <div className="mt-auto sticky bottom-12 left-0 flex justify-center py-4">
 								<Button

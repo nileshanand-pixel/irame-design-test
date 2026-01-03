@@ -1,6 +1,7 @@
 import axiosClientV1 from '@/lib/axios';
 import { removeQueryString } from './url';
 import { logError } from '@/lib/logger';
+import { toast } from '@/lib/toast';
 
 export const isImageFile = (file) => {
 	return file.type.includes('image');
@@ -62,6 +63,7 @@ export const downloadFile = (fileUrl, fileName) => {
 					feature: 'file_download',
 					action: 'download_blob',
 				});
+				toast.error('Failed to download file');
 			});
 	} else {
 		const a = document.createElement('a');

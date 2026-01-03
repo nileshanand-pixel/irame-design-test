@@ -235,7 +235,11 @@ const MultiSelect = React.forwardRef(
 					</Button>
 				</PopoverTrigger>
 
-				<PopoverContent className="w-auto p-0" align="start">
+				<PopoverContent
+					className="p-0"
+					align="start"
+					style={{ width: 'var(--radix-popover-trigger-width)' }}
+				>
 					<Command>
 						<CommandInput
 							placeholder="Search..."

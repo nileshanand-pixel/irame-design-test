@@ -1,26 +1,47 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import ConnectDatasourceButton from './connect-datasource-button';
 
-const DataSourceCard = () => {
+const CARD_CONFIG = {
+	SQL_WORKFLOW: {
+		title: 'Execute Workflow',
+		description: 'Run the workflow with the selected filters',
+		buttonText: 'Execute Workflow',
+	},
+	DEFAULT: {
+		title: 'Data Source',
+		description: 'Securely connect to a data source',
+		buttonText: 'Connect Data Source',
+	},
+};
+
+const DataSourceCard = ({ workflowDetails, workflowId }) => {
+	const workflowType = workflowDetails?.data?.type?.toUpperCase();
+
+	const cardConfig = useMemo(() => {
+		return CARD_CONFIG[workflowType] || CARD_CONFIG.DEFAULT;
+	}, [workflowType]);
+
 	return (
-		<>
-			<Card className="mb-8 text-primary80 border rounded-xl shadow-none">
-				<CardHeader>
-					<div className="flex justify-between">
-						<div>
-							<CardTitle className="text-lg font-semibold">
-								Data Source
-							</CardTitle>
-							<CardDescription className="text-sm text-primary60">
-								Securely connect to a datasource
-							</CardDescription>
-						</div>
-						<ConnectDatasourceButton />
+		<Card className="text-primary80 border rounded-xl shadow-none">
+			<CardHeader>
+				<div className="flex justify-between">
+					<div>
+						<CardTitle className="text-base font-semibold text-primary80 mb-1">
+							{cardConfig.title}
+						</CardTitle>
+						<CardDescription className="text-sm text-primary40">
+							{cardConfig.description}
+						</CardDescription>
 					</div>
-				</CardHeader>
-			</Card>
-		</>
+
+					<ConnectDatasourceButton
+						workflowId={workflowId}
+						buttonText={cardConfig.buttonText}
+					/>
+				</div>
+			</CardHeader>
+		</Card>
 	);
 };
 

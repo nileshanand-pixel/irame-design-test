@@ -7,11 +7,13 @@ import Layout from '@/components/Layout';
 import Configuration from '@/components/features/configuration/page';
 import Workzone from '@/components/features/new-chat/session/Page';
 import DashboardDetailsPage from '@/components/features/dashboard/components/DashboardDetailsPage';
+import DashboardContentRouter from '@/components/features/dashboard/components/DashboardContentRouter';
+import DashboardDetailPageNew from '@/components/features/dashboard/components/DashboardDetailPageNew';
 import TestRoute from '@/components/features/testingUI/Page';
 import ProtectedRoute from './ProtectedRoute';
 import DataSource from '@/components/features/configuration/datasource/page';
 import ReportsInDatasource from '@/components/features/reports/datasource_reports/Page';
-import ReportFolders from '@/components/features/reports/Page';
+import ReportsPage from '@/components/features/reports/Page';
 import TermsModal from '@/components/TermsModal';
 import BusinessProcessPage from '@/components/features/business-process/page';
 import SingleBusinessProcessPage from '@/components/features/business-process/single-business-process/SingleBusinessProcess';
@@ -60,10 +62,19 @@ const AppRoutes = () => {
 									path="dashboard/content"
 									element={
 										<ProtectedRoute
-											element={<DashboardDetailsPage />}
+											element={<DashboardDetailPageNew />}
 										/>
 									}
 								/>
+								{/* <Route
+									path="dashboard/content"
+									element={
+										<ProtectedRoute
+											element={<DashboardContentRouter />}
+										/>
+									}
+								/> */}
+
 								<Route
 									path="dashboard/*"
 									element={
@@ -97,11 +108,9 @@ const AppRoutes = () => {
 									}
 								/>
 								<Route
-									path="reports/datasources"
+									path="reports"
 									element={
-										<ProtectedRoute
-											element={<ReportFolders />}
-										/>
+										<ProtectedRoute element={<ReportsPage />} />
 									}
 								/>
 								<Route

@@ -25,6 +25,7 @@ import {
 	ThumbsUp,
 	Workflow,
 } from 'lucide-react';
+import { QUERY_TYPES } from '@/constants/query-type.constant';
 import workSpaceHoverIcon from '@/assets/icons/workspace.svg';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import AddQueryFlow from '../reports/components/AddQueryFlow';
@@ -33,7 +34,6 @@ import useS3File from '@/hooks/useS3File';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 import { Input } from '@/components/ui/input';
-import Clarification from './Clarification';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -106,7 +106,9 @@ export function AddToDropdown({
 	handleAddToWorkflow,
 }) {
 	const [open, setOpen] = useState(false);
-	const isWorkflowQuery = answerResp?.type === 'workflow';
+	const isWorkflowQuery =
+		answerResp?.type === QUERY_TYPES.WORKFLOW ||
+		answerResp?.type === QUERY_TYPES.SQL_WORKFLOW;
 
 	return (
 		<DropdownMenu open={open} onOpenChange={setOpen}>
@@ -190,6 +192,7 @@ const ResponseCard = ({
 	isWorkspaceExpanded,
 	isLastQuery,
 	updatedAt,
+	currentSessionData,
 }) => {
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
@@ -337,7 +340,7 @@ const ResponseCard = ({
 	const handleAddToDashboard = () => {
 		setDashboard((prevState) => ({
 			...prevState,
-			showAdd: true,
+			showSelectDashboard: true,
 			queryId: answerResp?.query_id,
 		}));
 		trackEvent(
@@ -607,7 +610,10 @@ const ResponseCard = ({
 									<AddToDropdown
 										safeHTML={safeHTML}
 										answerResp={answerResp}
-										showGraph={displayLogic?.showGraph}
+										showGraph={
+											displayLogic?.showGraph ||
+											displayLogic?.showTableOnly
+										}
 										handleAddQueryToReport={
 											handleAddQueryToReport
 										}
@@ -663,6 +669,7 @@ const ResponseCard = ({
 									setResponseTimeElapsed={setResponseTimeElapsed}
 									setBanners={setBanners}
 									answerResp={answerResp}
+									currentSessionData={currentSessionData}
 								/>
 							))}
 						</div>

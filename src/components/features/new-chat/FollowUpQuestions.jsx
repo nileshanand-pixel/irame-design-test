@@ -18,6 +18,7 @@ const FollowUpQuestions = ({
 	setResponseTimeElapsed,
 	setBanners,
 	answerResp,
+	currentSessionData,
 }) => {
 	const { query, navigate } = useRouter();
 	const dispatch = useDispatch();
@@ -25,6 +26,8 @@ const FollowUpQuestions = ({
 	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const { data: datasourceData } = useDatasourceDetailsV2();
+	const planMode = currentSessionData?.metadata?.plan_mode;
+
 	const handlePrompt = () => {
 		try {
 			trackEvent(
@@ -57,6 +60,9 @@ const FollowUpQuestions = ({
 				parent_query_id: answerResp?.query_id,
 				query: question,
 				session_id: answerResp?.session_id,
+				metadata: {
+					plan_mode: planMode,
+				},
 			}).then((res) => {
 				const updatedQueries = tempCurrentQueries?.map((item) => {
 					if (item?.parentQueryId === answerResp?.query_id) {

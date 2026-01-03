@@ -10,6 +10,7 @@ import {
 	getBusinessProcesses,
 	getWorkflowsByBusinessProcess,
 } from '../service/workflow.service';
+import BreadCrumbs from '@/components/BreadCrumbs';
 
 const EmptyStateWrapper = ({ config }) => (
 	<div className="flex justify-center">
@@ -178,22 +179,22 @@ const SingleBusinessProcessPage = () => {
 	return (
 		<div className="h-full flex flex-col w-full text-primary80 px-8">
 			<header className="max-w-full flex-none mb-2">
-				<div className="flex items-center gap-2 mb-4">
-					<h1
-						onClick={() => navigate('/app/business-process')}
-						className="text-2xl truncate font-semibold cursor-pointer"
-					>
-						Business Process
-					</h1>
-					<span>/</span>
-					{isBusinessLoading ? (
-						<BreadcrumbSkeleton />
-					) : (
-						<span className="truncate">
-							{businessProcess?.name || 'Unnamed Process'}
-						</span>
-					)}
-				</div>
+				<BreadCrumbs
+					items={[
+						{
+							label: 'Business Process',
+							icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/workflow_icon.svg',
+							path: '/app/business-process',
+						},
+						{
+							label: isBusinessLoading ? (
+								<BreadcrumbSkeleton />
+							) : (
+								businessProcess?.name || 'Unnamed Process'
+							),
+						},
+					]}
+				/>
 			</header>
 
 			<section className="max-w-full flex flex-col flex-1 py-2 pl-2 mr-2 mb-4 border-2 border-primary8 shadow-1xl bg-white rounded-3xl overflow-y-hidden">

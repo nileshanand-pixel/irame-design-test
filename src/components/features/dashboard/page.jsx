@@ -1,216 +1,132 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
-import { createDashboard, getUserDashboard } from './service/dashboard.service';
-import { logError } from '@/lib/logger';
-import DashboardCard from './components/DashboardCard';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useRouter } from '@/hooks/useRouter';
-import CreateDashboardDialog from './components/CreateDashboardDialog';
-import { toast } from '@/lib/toast';
-import EmptyState from '@/components/elements/EmptyState';
-import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
-import { trackEvent } from '@/lib/mixpanel';
-import { queryClient } from '@/lib/react-query';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import DashboardHeader from './components/DashboardHeader';
+import DashboardTabs from './components/DashboardTabs';
+import DashboardActionBar from './components/DashboardActionBar';
+import MyDashboardsTab from './components/MyDashboardsTab';
+import SharedDashboardsTab from './components/SharedDashboardsTab';
+import CreateDashboardModal from './components/CreateDashboardModal';
+import { useDebouncedSearch } from './hooks/useDashboardSearch';
+import {
+	DEFAULT_TIME_FILTER,
+	DASHBOARD_TABS,
+} from './constants/dashboard.constants';
 
-const Dashboard = () => {
-	const [dashboard, setDashboard] = useState([]);
-	const [isFocused, setIsFocused] = useState(false);
-	const [search, setSearch] = useState('');
-	const [showCreateDashboard, setShowCreateDashboard] = useState(false);
-	const [dashboardName, setDashboardName] = useState('');
-	const [errors, setErrors] = useState({});
-	const [isLoading, setIsLoading] = useState(false);
-	const [refetch, setRefetch] = useState(false);
+const DashboardPage = () => {
+	const [searchParams, setSearchParams] = useSearchParams();
 
-	const { navigate, query } = useRouter();
+	const [timeFilter, setTimeFilter] = useState(DEFAULT_TIME_FILTER);
+	const [searchValue, debouncedSearchValue, setSearchValue] =
+		useDebouncedSearch(300);
+	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+	const navigate = useNavigate();
 
-	const userDashboardQuery = useQuery({
-		queryKey: ['user-dashboard'],
-		queryFn: () => getUserDashboard(),
-	});
+	// Get active tab from URL, default to MY_DASHBOARD
+	const activeTab = useMemo(() => {
+		const tabParam = searchParams.get('tab');
+		return tabParam &&
+			Object.values(DASHBOARD_TABS)
+				?.map((t) => t.value)
+				.includes(tabParam)
+			? tabParam
+			: DASHBOARD_TABS.MY_DASHBOARD.value;
+	}, [searchParams]);
 
-	const handleCreateNewDashboard = async () => {
-		try {
-			if (!dashboardName) {
-				setErrors({ dashboardName: 'Please enter dashboard name' });
-				return;
-			}
-			setIsLoading(true);
-			const resp = await createDashboard(dashboardName);
-			if (resp) {
-				setIsLoading(false);
-				setShowCreateDashboard(false);
-				toast.success('Dashboard created successfully');
-				trackEvent(
-					EVENTS_ENUM.DASHBOARD_NEW_CREATED,
-					EVENTS_REGISTRY.DASHBOARD_NEW_CREATED,
-					() => ({
-						dashboard_id: resp.dashboard_id,
-						dashboard_name: dashboardName,
-					}),
-				);
-				queryClient.invalidateQueries(['user-dashboard']);
-				navigate(`/app/new-chat?source=dashboard`);
-			}
-		} catch (error) {
-			setIsLoading(false);
-			logError(error, {
-				feature: 'dashboard',
-				action: 'create-dashboard',
-			});
-			toast.error('Something went wrong while creating dashboard');
-		}
-	};
-
-	const filteredList = useMemo(() => {
-		if (search) {
-			trackEvent(
-				EVENTS_ENUM.DASHBOARD_SEARCHED,
-				EVENTS_REGISTRY.DASHBOARD_SEARCHED,
-				() => ({
-					search_query: search,
-				}),
-			);
-		}
-		return dashboard.filter((item) =>
-			item?.title?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
-		);
-	}, [search, dashboard]);
-
+	// Sync URL with tab state on mount
 	useEffect(() => {
-		if (userDashboardQuery.data) {
-			setDashboard(userDashboardQuery.data || []);
+		if (!searchParams.get('tab')) {
+			setSearchParams({ tab: activeTab }, { replace: true });
 		}
-	}, [refetch, userDashboardQuery.data]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
-	// Handle user dashboard query errors
-	useEffect(() => {
-		if (userDashboardQuery.error) {
-			logError(userDashboardQuery.error, {
-				feature: 'dashboard',
-				action: 'fetchUserDashboard',
-				extra: {
-					errorMessage: userDashboardQuery.error.message,
-					status: userDashboardQuery.error.response?.status,
-				},
-			});
-		}
-	}, [userDashboardQuery.error]);
+	const handleTabChange = useCallback(
+		(value) => {
+			setSearchParams({ tab: value }, { replace: true });
+			setSearchValue('');
+			setTimeFilter(DEFAULT_TIME_FILTER);
+		},
+		[setSearchParams, setSearchValue],
+	);
 
-	useEffect(() => {
-		setErrors({});
-	}, [dashboardName]);
+	const handleDashboardClick = useCallback(
+		(dashboard) => {
+			// Route to new dashboard detail page for dashboards from live-dashboard
+			// Use a separate route to avoid conflicts with old dashboard flow
+			navigate(`/app/dashboard/content?id=${dashboard.id}`);
+		},
+		[navigate],
+	);
 
-	const emptyStateConfig = {
-		image: 'https://d2vkmtgu2mxkyq.cloudfront.net/empty-state.svg',
-		reactionText: 'Create your first dashboard...',
-		ctaText: 'Create a Dashboard',
-		ctaDisabled: false,
-		ctaClickHandler: () => setShowCreateDashboard(true),
-	};
+	const handleCreateDashboardClick = useCallback(() => {
+		setIsCreateModalOpen(true);
+	}, []);
 
-	useEffect(() => {
-		trackEvent(
-			EVENTS_ENUM.DASHBOARD_HOMEPAGE_LOADED,
-			EVENTS_REGISTRY.DASHBOARD_HOMEPAGE_LOADED,
-			() => ({
-				source: query.source || 'url',
-			}),
-		);
-	}, [query]);
+	const handleDashboardCreateSuccess = useCallback(
+		(data) => {
+			// Stay on the live-dashboard page with the current active tab
+			// The dashboard list will automatically refresh via query invalidation
+			// No need to navigate away - just close the modal and stay on the page
+			setSearchParams({ tab: activeTab }, { replace: true });
+		},
+		[activeTab, setSearchParams],
+	);
 
 	return (
-		<div className="w-full ml-8 h-full flex flex-col overflow-hidden">
-			<div className="w-full flex justify-between mt-2 ">
-				<h2 className="text-2xl font-semibold text-primary80 ">Dashboard</h2>
-				<div className="flex items-center gap-4">
-					<div
-						className={cn(
-							'flex items-center border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300',
-							{
-								'w-[18.75rem]': isFocused,
-								'w-[7.375rem]': !isFocused,
-							},
-						)}
-					>
-						<i className="bi-search text-primary40 me-2"></i>
-						<Input
-							placeholder="Search"
-							className={cn(
-								'border-none rounded-sm px-0 text-primary40 font-medium bg-transparent',
-							)}
-							value={search}
-							onChange={(e) => setSearch(e.target.value)}
-							onFocus={() => setIsFocused(true)}
-							onBlur={() => setIsFocused(false)}
-						/>
-					</div>
-					<Button
-						variant="secondary"
-						className="w-fit mr-9 rounded-lg bg-purple-8 hover:bg-purple-16 text-purple-100 font-medium"
-						onClick={() => {
-							trackEvent(
-								EVENTS_ENUM.DASHBOARD_CREATE_NEW_CLICKED,
-								EVENTS_REGISTRY.DASHBOARD_CREATE_NEW_CLICKED,
-							);
-							setShowCreateDashboard(true);
-						}}
-					>
-						Create a Dashboard
-					</Button>
-				</div>
-			</div>
-			<div className="mt-6 pr-8 flex-1 overflow-y-auto">
-				{userDashboardQuery.isLoading ? (
-					<div className="w-full mt-6 p-6 bg-white border border-primary1 rounded-s-xl rounded-e-xl">
-						<div className="flex items-center space-x-4">
-							<Skeleton className="h-12 w-16 rounded-xl bg-purple-4" />
-							<div className="space-y-2">
-								<Skeleton className="h-4 w-[15.625rem] bg-purple-4" />
-								<Skeleton className="h-4 w-[12.5rem] bg-purple-4" />
-							</div>
-						</div>
-					</div>
-				) : dashboard.length === 0 ? (
-					<EmptyState config={emptyStateConfig} />
-				) : filteredList.length > 0 ? (
-					<div className="w-full mt-2 bg-white border border-primary10 rounded-s-xl rounded-e-xl mb-6">
-						{filteredList.map((item, idx) => (
-							<DashboardCard
-								key={idx}
-								data={item}
-								refetch={refetch}
-								setRefetch={setRefetch}
-							/>
-						))}
-					</div>
-				) : (
-					<div className="w-full mt-6 p-6  bg-white border border-primary1 rounded-s-xl rounded-e-xl">
-						<p className="text-sm text-primary60 font-medium">
-							{search
-								? 'No such dashboard found'
-								: 'No dashboards found'}
-						</p>
-					</div>
-				)}
-			</div>
+		<div className="h-full w-full flex flex-col px-6 py-4 pt-1">
+			<DashboardHeader />
 
-			{showCreateDashboard && (
-				<CreateDashboardDialog
-					open={showCreateDashboard}
-					setOpen={setShowCreateDashboard}
-					dashboardName={dashboardName}
-					setDashboardName={setDashboardName}
-					handleCreateNewDashboard={handleCreateNewDashboard}
-					errors={errors}
-					isLoading={isLoading}
+			<Tabs
+				value={activeTab}
+				onValueChange={handleTabChange}
+				className="h-[calc(100%-3rem)]"
+			>
+				<DashboardTabs />
+
+				<DashboardActionBar
+					searchValue={searchValue}
+					onSearchChange={setSearchValue}
+					timeFilter={timeFilter}
+					onTimeFilterChange={setTimeFilter}
+					onCreateDashboard={handleCreateDashboardClick}
 				/>
-			)}
+
+				<div className="h-[calc(100%-9rem)] overflow-auto pb-2">
+					<TabsContent
+						value={DASHBOARD_TABS.MY_DASHBOARD.value}
+						className="mt-0"
+					>
+						<MyDashboardsTab
+							searchQuery={debouncedSearchValue}
+							timeFilter={timeFilter}
+							onDashboardClick={handleDashboardClick}
+							onCreateDashboard={handleCreateDashboardClick}
+						/>
+					</TabsContent>
+
+					{/* <TabsContent
+						value={DASHBOARD_TABS.SHARED_DASHBOARD.value}
+						className="mt-0"
+					>
+						<SharedDashboardsTab
+							searchQuery={debouncedSearchValue}
+							timeFilter={timeFilter}
+							onDashboardClick={handleDashboardClick}
+							onCreateDashboard={handleCreateDashboardClick}
+						/>
+					</TabsContent> */}
+				</div>
+			</Tabs>
+
+			{/* Create Dashboard Modal */}
+			<CreateDashboardModal
+				open={isCreateModalOpen}
+				onOpenChange={setIsCreateModalOpen}
+				onSuccess={handleDashboardCreateSuccess}
+			/>
 		</div>
 	);
 };
 
-export default Dashboard;
+export default DashboardPage;

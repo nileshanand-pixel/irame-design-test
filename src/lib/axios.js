@@ -28,6 +28,13 @@ const axiosClientV2 = axios.create({
 	withCredentials: true,
 });
 
+// Client for the data manager service v3
+const axiosClientV3 = axios.create({
+	baseURL: serviceUrlMap.DATA_MANAGER_SERVICE_V3,
+	headers: headers,
+	withCredentials: true,
+});
+
 const setupInterceptors = (axiosClient) => {
 	axiosClient.interceptors.response.use(
 		(response) => {
@@ -57,9 +64,10 @@ const setupInterceptors = (axiosClient) => {
 	);
 };
 
-// Attach interceptors to both clients
+// Attach interceptors to all clients
 setupInterceptors(axiosClientV1);
 setupInterceptors(axiosClientV2);
+setupInterceptors(axiosClientV3);
 
 export default axiosClientV1;
-export { axiosClientV2 };
+export { axiosClientV2, axiosClientV3 };

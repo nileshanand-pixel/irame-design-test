@@ -24,6 +24,7 @@ export const useDataTable = ({
 	defaultSort,
 	onSortingChange = () => {},
 	enableSorting = true,
+	defaultRowsPerPage = 10,
 }) => {
 	const config = {
 		data,
@@ -54,9 +55,20 @@ export const useDataTable = ({
 			? {
 					initialState: {
 						sorting: defaultSort,
+						pagination: {
+							pageSize: defaultRowsPerPage,
+							pageIndex: 0,
+						},
 					},
 				}
-			: {}),
+			: {
+					initialState: {
+						pagination: {
+							pageSize: defaultRowsPerPage,
+							pageIndex: 0,
+						},
+					},
+				}),
 		onSortingChange: onSortingChange,
 		_features: [SortingFixFeature],
 	};

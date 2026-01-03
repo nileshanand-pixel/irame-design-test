@@ -9,6 +9,7 @@ import { generateReportSummary, getReportSummary } from '../service/reports.serv
 import { useReportId } from '../hooks/useReportId';
 import DOMPurify from 'dompurify';
 import { queryClient } from '@/lib/react-query';
+import { REPORT_SECTION_IDS } from './report-sidebar';
 
 export default function ReportSummary() {
 	const [status, setStatus] = useState('idle');
@@ -124,7 +125,7 @@ export default function ReportSummary() {
 	}, [status, fullText]);
 
 	return (
-		<div className="py-8">
+		<div className="py-8" id={REPORT_SECTION_IDS.SUMMARY}>
 			<div className="flex items-center justify-between">
 				<h1 className="text-2xl font-semibold text-primary80">
 					Report Summary

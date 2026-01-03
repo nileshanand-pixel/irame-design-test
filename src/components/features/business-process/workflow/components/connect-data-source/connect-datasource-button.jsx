@@ -1,10 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { ConnectDatasourceModal } from './connect-datasource-modal';
 import { useWorkflowRunId } from '../../../hooks/use-workflow-run-id';
 import { useDatasourceId } from '@/hooks/use-datasource-id';
 
-export default function ConnectDatasourceButton() {
+export default function ConnectDatasourceButton({
+	workflowId,
+	buttonText = 'Execute Workflow',
+}) {
 	const runId = useWorkflowRunId();
 	const datasourceId = useDatasourceId();
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,12 +20,15 @@ export default function ConnectDatasourceButton() {
 	return (
 		<>
 			<Button
-				variant="outline"
-				className="rounded-lg bg-purple-8 font-medium border-none hover:bg-purple-4"
+				className="text-white rounded-lg bg-primary font-medium border-none"
 				onClick={() => setIsModalOpen(true)}
 			>
-				Connect Data Source
+				{buttonText}
+				{buttonText === 'Execute Workflow' && (
+					<ArrowRight className="ml-2 size-4" />
+				)}
 			</Button>
+
 			<ConnectDatasourceModal open={isModalOpen} setOpen={setIsModalOpen} />
 		</>
 	);
