@@ -30,7 +30,7 @@ const AppRoutes = () => {
 		<>
 			<TermsModal />
 			<Routes>
-				<Route exact path="/*" element={<SignInSignUp />} />
+				<Route exact path="/" element={<SignInSignUp />} />
 
 				{/* Public invitation routes - no layout or auth */}
 				<Route
@@ -45,127 +45,82 @@ const AppRoutes = () => {
 				<Route
 					path="/app/*"
 					element={
-						<Layout>
-							<Routes>
-								<Route
-									path="/home"
-									element={<ProtectedRoute element={<Home />} />}
-								/>
-								<Route path="/" element={<Navigate to="/home" />} />
-								<Route
-									path="new-chat/session"
-									element={
-										<ProtectedRoute element={<Workzone />} />
-									}
-								/>
-								<Route
-									path="new-chat/*"
-									element={
-										<ProtectedRoute element={<NewChat />} />
-									}
-								/>
-								<Route
-									path="dashboard"
-									element={
-										<ProtectedRoute element={<Dashboard />} />
-									}
-								/>
-								<Route
-									path="dashboard/content"
-									element={
-										<ProtectedRoute
+						<ProtectedRoute
+							element={
+								<Layout>
+									<Routes>
+										<Route path="/home" element={<Home />} />
+										<Route
+											path="/"
+											element={<Navigate to="/app/home" />}
+										/>
+										<Route
+											path="new-chat/session"
+											element={<Workzone />}
+										/>
+										<Route
+											path="new-chat/*"
+											element={<NewChat />}
+										/>
+										<Route
+											path="dashboard"
+											element={<Dashboard />}
+										/>
+										<Route
+											path="dashboard/content"
 											element={<DashboardDetailsPage />}
 										/>
-									}
-								/>
-								<Route
-									path="dashboard/*"
-									element={
-										<ProtectedRoute element={<Dashboard />} />
-									}
-								/>
-								<Route
-									path="configuration/datasource"
-									element={
-										<ProtectedRoute element={<DataSource />} />
-									}
-								/>
-								<Route
-									path="configuration"
-									element={
-										<ProtectedRoute
+										<Route
+											path="dashboard/*"
+											element={<Dashboard />}
+										/>
+										<Route
+											path="configuration/datasource"
+											element={<DataSource />}
+										/>
+										<Route
+											path="configuration"
 											element={<Configuration />}
 										/>
-									}
-								/>
-								<Route
-									path="help"
-									element={<ProtectedRoute element={<Help />} />}
-								/>
-								<Route
-									path="reports/datasources/report"
-									element={
-										<ProtectedRoute
+										<Route path="help" element={<Help />} />
+										<Route
+											path="reports/datasources/report"
 											element={<ReportsInDatasource />}
 										/>
-									}
-								/>
-								<Route
-									path="reports/datasources"
-									element={
-										<ProtectedRoute
+										<Route
+											path="reports/datasources"
 											element={<ReportFolders />}
 										/>
-									}
-								/>
-								<Route
-									path="reports/:reportId"
-									element={
-										<ProtectedRoute
+										<Route
+											path="reports/:reportId"
 											element={<SingleReportPage />}
 										/>
-									}
-								/>
-								<Route
-									path="business-process"
-									element={
-										<ProtectedRoute
+										<Route
+											path="business-process"
 											element={<BusinessProcessPage />}
 										/>
-									}
-								/>
-								<Route
-									path="business-process/:businessProcessId"
-									element={
-										<ProtectedRoute
+										<Route
+											path="business-process/:businessProcessId"
 											element={<SingleBusinessProcessPage />}
 										/>
-									}
-								/>
-								{/* <Route
+										{/* <Route
 									path="business-process/:businessProcessId/workflows/:workflowId"
 									element={
 										<ProtectedRoute element={<WorkflowPage />} />
 									}
 								/> */}
-								<Route
-									path="business-process/:businessProcessId/workflows/:workflowId"
-									element={
-										<ProtectedRoute
+										<Route
+											path="business-process/:businessProcessId/workflows/:workflowId"
 											element={<WorkflowPageV2 />}
 										/>
-									}
-								/>
-								<Route
-									path="access-management"
-									element={
-										<ProtectedRoute
+										<Route
+											path="access-management"
 											element={<AccessManagementPage />}
 										/>
-									}
-								/>
-							</Routes>
-						</Layout>
+									</Routes>
+								</Layout>
+							}
+						/>
 					}
 				/>
 				<Route
@@ -177,6 +132,7 @@ const AppRoutes = () => {
 					element={<ReportCoverPage />}
 				/>
 				<Route path="test" element={<TestRoute />} />
+				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>
 			{/* {!window.location.pathname.includes('export') && <HelpMenu />} */}
 		</>

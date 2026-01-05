@@ -40,7 +40,12 @@ const setupInterceptors = (axiosClient) => {
 	axiosClient.interceptors.request.use(
 		(config) => {
 			try {
-				if (ENABLE_RBAC && config) {
+				// Skip auth headers for public invitation routes
+				const isInvitationRoute =
+					config.url?.includes('/invitations/') &&
+					config.url?.match(/\/(validate|accept|decline)$/);
+
+				if (ENABLE_RBAC && config && !isInvitationRoute) {
 					const raw = localStorage.getItem('userDetails');
 					const user = raw ? JSON.parse(raw) : null;
 					const userId =
@@ -91,7 +96,18 @@ const setupInterceptors = (axiosClient) => {
 				});
 			}
 
-			if (error.response && error.response.status === 401 && !isLoggingOut) {
+			// Check if this is an invitation endpoint
+			const isInvitationRoute =
+				error.config?.url?.includes('/invitations/') &&
+				error.config?.url?.match(/\/(validate|accept|decline)$/);
+
+			// Only log out on 401 if NOT an invitation route
+			if (
+				error.response &&
+				error.response.status === 401 &&
+				!isLoggingOut &&
+				!isInvitationRoute
+			) {
 				isLoggingOut = true;
 				await ensureCleanup();
 			}

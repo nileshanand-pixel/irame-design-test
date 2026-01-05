@@ -11,7 +11,7 @@ export const invitationService = {
 	 */
 	validateToken: async (token) => {
 		const response = await axiosGatekeeper.get(`/invitations/${token}/validate`);
-		return response.data;
+		return response.data.data; // Return just the data object
 	},
 
 	/**
