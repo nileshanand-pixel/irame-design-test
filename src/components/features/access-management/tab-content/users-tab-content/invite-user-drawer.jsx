@@ -1,7 +1,8 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useState, useEffect } from 'react';
-import { Eye, ChevronDown, ChevronUp } from 'lucide-react';
+import { Eye, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import MultiSelect from '@/components/elements/MultiSelect';
 import { cn } from '@/lib/utils';
 import InputText from '@/components/elements/InputText';
@@ -20,6 +21,7 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 	const [expandedRoleIds, setExpandedRoleIds] = useState([]);
 	const [rolePermissions, setRolePermissions] = useState({});
 	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState(null);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -51,7 +53,7 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 
 				if (teamsRes.success) {
 					const mappedTeams = teamsRes.data.map((team) => ({
-						value: team.id,
+						value: team.externalId || team.id,
 						label: team.name,
 					}));
 					setTeams(mappedTeams);
@@ -69,6 +71,16 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 		}
 	}, [open]);
 
+	// Reset form when drawer closes
+	useEffect(() => {
+		if (!open) {
+			setFullName('');
+			setEmail('');
+			setSelectedTeams([]);
+			setError(null);
+		}
+	}, [open]);
+
 	const handleInvite = async () => {
 		if (!fullName || !email || !selectedRole || selectedTeams.length === 0) {
 			toast.error('Please fill in all required fields');
@@ -77,6 +89,7 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 
 		try {
 			setLoading(true);
+			setError(null);
 			const inviteData = {
 				fullName,
 				email,
@@ -97,9 +110,10 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 			}
 		} catch (error) {
 			console.error('Failed to invite user:', error);
-			toast.error(
-				error.response?.data?.message || 'Failed to send invitation',
-			);
+			const message =
+				error.response?.data?.message || 'Failed to send invitation';
+			setError(message);
+			toast.error(message);
 		} finally {
 			setLoading(false);
 		}
@@ -118,6 +132,16 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 							Invite User
 						</SheetTitle>
 					</SheetHeader>
+
+					{error && (
+						<div className="px-6 mb-4">
+							<Alert variant="destructive">
+								<AlertCircle className="h-4 w-4" />
+								<AlertTitle>Error</AlertTitle>
+								<AlertDescription>{error}</AlertDescription>
+							</Alert>
+						</div>
+					)}
 
 					<div className="border-t border-[#6A12CD1A] pt-4 px-6 pb-5 space-y-4">
 						<InputText

@@ -22,6 +22,8 @@ import HelpMenu from '@/components/elements/HelpMenu';
 import WorkflowPageV2 from '@/components/features/business-process/workflow/page-v2';
 import Home from '@/components/features/home';
 import AccessManagementPage from '@/components/features/access-management/page';
+import AcceptInvitationPage from '@/components/features/invitation/AcceptInvitationPage';
+import DeclineInvitationPage from '@/components/features/invitation/DeclineInvitationPage';
 
 const AppRoutes = () => {
 	return (
@@ -29,6 +31,17 @@ const AppRoutes = () => {
 			<TermsModal />
 			<Routes>
 				<Route exact path="/*" element={<SignInSignUp />} />
+
+				{/* Public invitation routes - no layout or auth */}
+				<Route
+					path="/accept-invitation"
+					element={<AcceptInvitationPage />}
+				/>
+				<Route
+					path="/decline-invitation"
+					element={<DeclineInvitationPage />}
+				/>
+
 				<Route
 					path="/app/*"
 					element={

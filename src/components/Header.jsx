@@ -13,6 +13,7 @@ import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 import { logError } from '@/lib/logger';
 import { authUserDetails } from './features/login/service/auth.service';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
@@ -413,7 +414,7 @@ const Header = () => {
 
 	const navigate = useNavigate();
 
-	// const dispatch = useDispatch();
+	const dispatch = useDispatch();
 	const renderAvatar = () => {
 		return (
 			<Avatar>
@@ -453,8 +454,25 @@ const Header = () => {
 			setValue({
 				...userDetails,
 			});
+
+			// Sync user_id to Redux store
+			const userId =
+				userDetails.user_id ||
+				userDetails.id ||
+				userDetails.sub ||
+				userDetails.userId;
+			if (userId) {
+				dispatch(
+					updateAuthStoreProp([
+						{
+							key: 'user_id',
+							value: userId,
+						},
+					]),
+				);
+			}
 		}
-	}, [userDetails]);
+	}, [userDetails, dispatch, setValue]);
 
 	useEffect(() => {
 		if (error) {

@@ -75,3 +75,6 @@ export const userService = {
 		return response.data;
 	},
 };
+
+// Re-export invitation service for convenience
+export { invitationService } from './invitation.service';

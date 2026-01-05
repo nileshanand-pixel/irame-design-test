@@ -122,19 +122,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		},
 	});
 
-	useEffect(() => {
-		if (sessionsData && sessionsData.length > 0 && sessionsData[0]?.user_id) {
-			dispatch(
-				updateAuthStoreProp([
-					{
-						key: 'user_id',
-						value: sessionsData[0].user_id,
-					},
-				]),
-			);
-		}
-	}, [sessionsData, dispatch]);
-
 	const { data: recentWorkflowRuns, isLoading: isBusinessLoading } = useQuery({
 		queryKey: ['get-business-processes-home-page'],
 		queryFn: () => getRecentWorkflowsRunsHomePage(),

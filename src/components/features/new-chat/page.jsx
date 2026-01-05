@@ -11,7 +11,6 @@ import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { getDataSourcesV2 } from '../configuration/service/configuration.service';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import { useQuery } from '@tanstack/react-query';
-import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 // import InputArea from './InputArea';
 import { trackEvent } from '@/lib/mixpanel';
 import { logError } from '@/lib/logger';

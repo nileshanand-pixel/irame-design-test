@@ -1,5 +1,4 @@
 import { isMobileOnly } from 'react-device-detect';
-import AppProvider from './providers/AppProvider';
 import AppRoutes from './routes';
 import { ThemeProvider } from './providers/ThemeProvider';
 import { useMemo } from 'react';
@@ -23,11 +22,11 @@ export default function App() {
 		);
 	}
 	return (
-		<AppProvider>
+		<>
 			{!isLoading && isAuthenticated && <UserSessionManager />}
 			<ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
 				<AppRoutes />
 			</ThemeProvider>
-		</AppProvider>
+		</>
 	);
 }

@@ -40,7 +40,7 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 
 				if (teamsRes.success) {
 					const mappedTeams = teamsRes.data.map((team) => ({
-						value: team.id,
+						value: team.externalId || team.id,
 						label: team.name,
 					}));
 					setTeams(mappedTeams);

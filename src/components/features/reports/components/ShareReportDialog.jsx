@@ -17,7 +17,6 @@ import { toast } from '@/lib/toast';
 import { logError } from '@/lib/logger';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import AccessSkeletonList from './AccessSkeleton';
-import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 import { closeModal } from '@/redux/reducer/modalReducer';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
