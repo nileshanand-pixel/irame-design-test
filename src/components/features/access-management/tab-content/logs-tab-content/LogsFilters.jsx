@@ -106,7 +106,7 @@ export default function LogsFilters({
 					onClick={onExport}
 					disabled={isExporting}
 					className={cn(
-						'inline-flex items-center gap-2 px-4 py-2',
+						'inline-flex items-center gap-2 px-4 py-2 ml-auto',
 						'text-[#26064A] text-sm font-medium',
 						'border border-gray-200 rounded-md',
 						'hover:bg-gray-50 transition-colors',

@@ -165,8 +165,8 @@ export default function LogsTabContent() {
 		);
 	}
 
-	// Show empty state when no logs and no filters
-	if (logs.data.length === 0 && !hasActiveFilters) {
+	// Show empty state ONLY when no logs, no filters, AND not loading
+	if (logs.data.length === 0 && !hasActiveFilters && !isLoading && !isFetching) {
 		return <EmptyState config={EMPTY_STATE_CONFIG} />;
 	}
 
@@ -191,28 +191,16 @@ export default function LogsTabContent() {
 				/>
 			</div>
 
-			{/* Table or Empty State */}
+			{/* Always show table - shows "no results" message when appropriate */}
 			<div className="flex-1 min-h-0">
-				{logs.data.length === 0 && hasActiveFilters ? (
-					<div className="text-center py-8">
-						<p className="text-gray-500">
-							No activity logs found matching your filters.
-						</p>
-						<button
-							onClick={handleClearFilters}
-							className="mt-2 text-sm text-[#26064A] font-medium hover:underline"
-						>
-							Clear all filters
-						</button>
-					</div>
-				) : (
-					<LogsTable
-						logs={logs}
-						pagination={pagination}
-						onPaginationChange={setPagination}
-						isLoading={isFetching || isSearching}
-					/>
-				)}
+				<LogsTable
+					logs={logs}
+					pagination={pagination}
+					onPaginationChange={setPagination}
+					isLoading={isFetching || isSearching}
+					hasActiveFilters={hasActiveFilters}
+					onClearFilters={handleClearFilters}
+				/>
 			</div>
 		</div>
 	);

@@ -63,15 +63,11 @@ export const ACTION_TYPE_OPTIONS = [
 export const CATEGORY_OPTIONS = [
 	{ label: 'All Categories', value: 'all' },
 	{ label: 'Team', value: 'team' },
-	{ label: 'Membership', value: 'membership' },
 	{ label: 'User', value: 'user' },
+	{ label: 'User Role', value: 'user_role' },
 	{ label: 'Role', value: 'role' },
-	{ label: 'Permission', value: 'permission' },
 	{ label: 'Invitation', value: 'invitation' },
 	{ label: 'Tenant', value: 'tenant' },
-	{ label: 'Approval', value: 'approval' },
-	{ label: 'Security', value: 'security' },
-	{ label: 'System', value: 'system' },
 ];
 
 /**
@@ -87,15 +83,11 @@ export const getActionTypesByCategory = (category) => {
 	// Category to action type prefix mapping
 	const categoryPrefixMap = {
 		team: ['team_', 'team.'],
-		membership: ['membership.', 'team_member_'],
 		user: ['user.'],
-		role: ['role_', 'role.'],
-		permission: ['permission.'],
+		user_role: ['role.'], // user_role category maps to role.* actions
+		role: ['role_'],
 		invitation: ['invitation.'],
 		tenant: ['tenant.'],
-		approval: ['approval_request_'],
-		security: ['security.'],
-		system: [], // System category typically doesn't have specific actions
 	};
 
 	const prefixes = categoryPrefixMap[category] || [];

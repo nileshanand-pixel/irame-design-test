@@ -30,13 +30,28 @@ export const activityLogService = {
 	/**
 	 * Export activity logs as CSV
 	 * @param {Object} params - Query parameters (same as getActivityLogs)
-	 * @returns {Promise<Blob>} CSV file blob
+	 * @returns {Promise<void>} Triggers CSV download
 	 */
 	exportActivityLogs: async (params = {}) => {
-		const response = await axiosGatekeeper.get('/activity-logs/export', {
-			params,
-			responseType: 'blob',
-		});
-		return response.data;
+		try {
+			const response = await axiosGatekeeper.get('/activity-logs/export', {
+				params,
+				responseType: 'blob',
+			});
+
+			// Create blob and trigger download
+			const blob = response.data;
+			const url = window.URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = `activity-logs-${new Date().toISOString().split('T')[0]}.csv`;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			window.URL.revokeObjectURL(url);
+		} catch (error) {
+			console.error('Export failed:', error);
+			throw error;
+		}
 	},
 };

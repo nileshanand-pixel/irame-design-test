@@ -62,7 +62,7 @@ const getColumns = () => [
 					? 'System'
 					: actorType === 'service'
 						? 'Service'
-						: 'Unknown');
+						: 'N/A');
 
 			return (
 				<span className="text-[#00000099] text-sm font-medium">
@@ -78,7 +78,7 @@ const getColumns = () => [
 			const category = row.original.category;
 			return (
 				<span className="text-[#00000099] text-sm font-medium capitalize">
-					{category || '-'}
+					{category || 'N/A'}
 				</span>
 			);
 		},
@@ -123,6 +123,8 @@ export default function LogsTable({
 	pagination,
 	onPaginationChange,
 	isLoading,
+	hasActiveFilters = false,
+	onClearFilters = () => {},
 }) {
 	const totalCount = logs.pagination?.total || 0;
 	const totalPages = logs.pagination?.totalPages || 0;
@@ -145,7 +147,7 @@ export default function LogsTable({
 					/>
 				</div>
 
-				{/* Pagination Info */}
+				{/* Pagination Info & Empty State Message */}
 				{data.length > 0 && (
 					<div className="flex items-center justify-between mt-3 flex-shrink-0">
 						<p className="text-sm text-gray-500">
@@ -153,6 +155,23 @@ export default function LogsTable({
 							{totalPages > 1 &&
 								` (Page ${pagination.pageIndex + 1} of ${totalPages})`}
 						</p>
+					</div>
+				)}
+
+				{/* Empty State Message */}
+				{data.length === 0 && hasActiveFilters && (
+					<div className="flex items-center justify-center">
+						<div className="text-center py-6">
+							<p className="text-gray-500 mb-3 text-sm">
+								No activity logs found matching your filters.
+							</p>
+							<button
+								onClick={onClearFilters}
+								className="text-sm text-[#26064A] font-medium hover:underline"
+							>
+								Clear all filters
+							</button>
+						</div>
 					</div>
 				)}
 			</div>
