@@ -173,15 +173,15 @@ export default function ManageUsersDrawer({ open, setOpen, team }) {
 					</div>
 
 					<div className="absolute bottom-0 left-0 w-full py-4 px-6 flex justify-between border-t border-[#6A12CD1A]">
-						<Button
+						{/* <Button
 							className="gap-2 px-3 rounded-lg"
 							onClick={() => {}}
 							size="lg"
 						>
 							<img src={plusIconWhite} className="size-5" />
 							Invite User
-						</Button>
-						<Button>Create Team</Button>
+						</Button> */}
+						<Button className="ml-auto">Update Team</Button>
 					</div>
 				</div>
 			</SheetContent>

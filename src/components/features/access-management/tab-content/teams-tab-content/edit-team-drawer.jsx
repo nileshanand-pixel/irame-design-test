@@ -1,10 +1,49 @@
 import InputText from '@/components/elements/InputText';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { updateTeam } from '@/api/gatekeeper/team.service';
+import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 
 export default function EditTeamDrawer({ open, setOpen, team }) {
-	const [teamName, setTeamName] = useState(team?.teamName);
+	const queryClient = useQueryClient();
+	const [teamName, setTeamName] = useState(team?.teamName || '');
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	useEffect(() => {
+		if (team?.teamName) {
+			setTeamName(team.teamName);
+		}
+	}, [team]);
+
+	const handleUpdateTeam = async () => {
+		if (!teamName.trim()) {
+			toast.error('Team name is required');
+			return;
+		}
+
+		if (teamName.trim() === team?.teamName) {
+			setOpen(false);
+			return;
+		}
+
+		setIsSubmitting(true);
+		try {
+			await updateTeam(team.id, {
+				name: teamName.trim(),
+			});
+			toast.success('Team updated successfully');
+			queryClient.invalidateQueries(['teams']);
+			setOpen(false);
+		} catch (error) {
+			console.error('Error updating team:', error);
+			toast.error(error?.response?.data?.message || 'Failed to update team');
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
 
 	return (
 		<Sheet open={open} onOpenChange={setOpen}>
@@ -42,7 +81,16 @@ export default function EditTeamDrawer({ open, setOpen, team }) {
 					</div>
 
 					<div className="w-full absolute bottom-0 left-0 py-4 px-6 flex justify-end border-t border-[#6A12CD1A]">
-						<Button>Update Team</Button>
+						<Button onClick={handleUpdateTeam} disabled={isSubmitting}>
+							{isSubmitting ? (
+								<>
+									<Loader2 className="mr-2 size-4 animate-spin" />
+									Updating...
+								</>
+							) : (
+								'Update Team'
+							)}
+						</Button>
 					</div>
 				</div>
 			</SheetContent>

@@ -1,61 +1,34 @@
 import InputText from '@/components/elements/InputText';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useState, useEffect } from 'react';
-import { Search, Check } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useUsers } from '@/hooks/use-users';
+import { createTeam } from '@/api/gatekeeper/team.service';
+import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function CreateTeamDrawer({ open, setOpen }) {
+	const queryClient = useQueryClient();
 	const [teamName, setTeamName] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
-	const [users, setUsers] = useState([]);
 	const [selectedUsers, setSelectedUsers] = useState([]);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	// Mock users data - replace with actual API call
-	useEffect(() => {
-		const mockUsers = [
-			{ id: 1, name: 'Aarav Mehta', email: 'aarav.mehta@example.com' },
-			{ id: 2, name: 'Rohan Patel', email: 'rohan.patel@example.com' },
-			{ id: 3, name: 'Vikram Singh', email: 'vikram.singh@example.com' },
-			{ id: 4, name: 'Nisha Verma', email: 'nisha.verma@example.com' },
-			{ id: 5, name: 'Priya Joshi', email: 'priya.joshi@example.com' },
-			{ id: 6, name: 'Anjali Rao', email: 'anjali.rao@example.com' },
-			{ id: 7, name: 'Siddharth Kumar', email: 'siddharth.kumar@example.com' },
-			{ id: 8, name: 'Karan Desai', email: 'karan.desai@example.com' },
-			{ id: 1, name: 'Aarav Mehta', email: 'aarav.mehta@example.com' },
-			{ id: 2, name: 'Rohan Patel', email: 'rohan.patel@example.com' },
-			{ id: 3, name: 'Vikram Singh', email: 'vikram.singh@example.com' },
-			{ id: 4, name: 'Nisha Verma', email: 'nisha.verma@example.com' },
-			{ id: 5, name: 'Priya Joshi', email: 'priya.joshi@example.com' },
-			{ id: 6, name: 'Anjali Rao', email: 'anjali.rao@example.com' },
-			{ id: 7, name: 'Siddharth Kumar', email: 'siddharth.kumar@example.com' },
-			{ id: 8, name: 'Karan Desai', email: 'karan.desai@example.com' },
-			{ id: 1, name: 'Aarav Mehta', email: 'aarav.mehta@example.com' },
-			{ id: 2, name: 'Rohan Patel', email: 'rohan.patel@example.com' },
-			{ id: 3, name: 'Vikram Singh', email: 'vikram.singh@example.com' },
-			{ id: 4, name: 'Nisha Verma', email: 'nisha.verma@example.com' },
-			{ id: 5, name: 'Priya Joshi', email: 'priya.joshi@example.com' },
-			{ id: 6, name: 'Anjali Rao', email: 'anjali.rao@example.com' },
-			{ id: 7, name: 'Siddharth Kumar', email: 'siddharth.kumar@example.com' },
-			{ id: 8, name: 'Karan Desai', email: 'karan.desai@example.com' },
-			{ id: 1, name: 'Aarav Mehta', email: 'aarav.mehta@example.com' },
-			{ id: 2, name: 'Rohan Patel', email: 'rohan.patel@example.com' },
-			{ id: 3, name: 'Vikram Singh', email: 'vikram.singh@example.com' },
-			{ id: 4, name: 'Nisha Verma', email: 'nisha.verma@example.com' },
-			{ id: 5, name: 'Priya Joshi', email: 'priya.joshi@example.com' },
-			{ id: 6, name: 'Anjali Rao', email: 'anjali.rao@example.com' },
-			{ id: 7, name: 'Siddharth Kumar', email: 'siddharth.kumar@example.com' },
-			{ id: 8, name: 'Karan Desai', email: 'karan.desai@example.com' },
-			{ id: 1, name: 'Aarav Mehta', email: 'aarav.mehta@example.com' },
-			{ id: 2, name: 'Rohan Patel', email: 'rohan.patel@example.com' },
-			{ id: 3, name: 'Vikram Singh', email: 'vikram.singh@example.com' },
-			{ id: 4, name: 'Nisha Verma', email: 'nisha.verma@example.com' },
-			{ id: 5, name: 'Priya Joshi', email: 'priya.joshi@example.com' },
-			{ id: 6, name: 'Anjali Rao', email: 'anjali.rao@example.com' },
-			{ id: 7, name: 'Siddharth Kumar', email: 'siddharth.kumar@example.com' },
-			{ id: 8, name: 'Karan Desai', email: 'karan.desai@example.com' },
-		];
-		setUsers(mockUsers);
-	}, []);
+	const { data: usersData, isLoading: usersLoading } = useUsers({
+		type: 'active',
+		status: 'active',
+		limit: 100, // Fetch all active users for selection
+	});
+
+	const users = useMemo(() => {
+		if (!usersData?.success || !usersData?.data) return [];
+		return usersData.data.map((user) => ({
+			id: user.userId,
+			name: user.name || user.email,
+			email: user.email,
+		}));
+	}, [usersData]);
 
 	const toggleUserSelection = (userId) => {
 		setSelectedUsers((prev) =>
@@ -65,11 +38,39 @@ export default function CreateTeamDrawer({ open, setOpen }) {
 		);
 	};
 
-	const filteredUsers = users.filter(
-		(user) =>
-			user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			user.email.toLowerCase().includes(searchQuery.toLowerCase()),
-	);
+	const filteredUsers = useMemo(() => {
+		return users.filter(
+			(user) =>
+				user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				user.email?.toLowerCase().includes(searchQuery.toLowerCase()),
+		);
+	}, [users, searchQuery]);
+
+	const handleCreateTeam = async () => {
+		if (!teamName.trim()) {
+			toast.error('Team name is required');
+			return;
+		}
+
+		setIsSubmitting(true);
+		try {
+			await createTeam({
+				name: teamName.trim(),
+				memberIds: selectedUsers,
+			});
+			toast.success('Team created successfully');
+			queryClient.invalidateQueries(['teams']);
+			setOpen(false);
+			// Reset form
+			setTeamName('');
+			setSelectedUsers([]);
+		} catch (error) {
+			console.error('Error creating team:', error);
+			toast.error(error?.response?.data?.message || 'Failed to create team');
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
 
 	return (
 		<Sheet open={open} onOpenChange={setOpen}>
@@ -120,7 +121,12 @@ export default function CreateTeamDrawer({ open, setOpen }) {
 
 				<div className="px-6 h-[calc(100vh-22.5rem)] overflow-auto pb-3">
 					<div className="border border-gray-200 rounded-lg">
-						{filteredUsers.length > 0 ? (
+						{usersLoading ? (
+							<div className="px-4 py-8 text-center text-gray-500 text-sm flex items-center justify-center gap-2">
+								<Loader2 className="size-4 animate-spin" />
+								Loading users...
+							</div>
+						) : filteredUsers.length > 0 ? (
 							filteredUsers.map((user, index) => (
 								<div
 									key={user.id}
@@ -164,7 +170,16 @@ export default function CreateTeamDrawer({ open, setOpen }) {
 				</div>
 
 				<div className="py-4 px-6 flex justify-end border-t border-[#6A12CD1A]">
-					<Button>Create Team</Button>
+					<Button onClick={handleCreateTeam} disabled={isSubmitting}>
+						{isSubmitting ? (
+							<>
+								<Loader2 className="mr-2 size-4 animate-spin" />
+								Creating...
+							</>
+						) : (
+							'Create Team'
+						)}
+					</Button>
 				</div>
 			</SheetContent>
 		</Sheet>
