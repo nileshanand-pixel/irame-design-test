@@ -35,4 +35,14 @@ export const roleService = {
 		const response = await axiosGatekeeper.get(`/roles/${roleId}`);
 		return response.data;
 	},
+
+	/**
+	 * Get permissions for a specific role
+	 * @param {string} roleId - Role ID
+	 * @returns {Promise<Object>} Role permissions
+	 */
+	getRolePermissions: async (roleId) => {
+		const response = await axiosGatekeeper.get(`/roles/${roleId}/permissions`);
+		return response.data;
+	},
 };

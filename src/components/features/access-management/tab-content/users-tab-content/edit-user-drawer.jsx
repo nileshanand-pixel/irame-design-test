@@ -16,6 +16,7 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 	const [selectedRole, setSelectedRole] = useState(null);
 	const [expandedRoleIds, setExpandedRoleIds] = useState([]);
 	const [rolePermissions, setRolePermissions] = useState({});
+	const [loadingPermissions, setLoadingPermissions] = useState({});
 	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
@@ -30,12 +31,6 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 
 				if (rolesRes.success) {
 					setRoles(rolesRes.data);
-					// Map permissions for each role
-					const permissionsMap = {};
-					rolesRes.data.forEach((role) => {
-						permissionsMap[role.id] = role.permissions || [];
-					});
-					setRolePermissions(permissionsMap);
 				}
 
 				if (teamsRes.success) {
@@ -69,6 +64,35 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 			fetchData();
 		}
 	}, [open, user]);
+
+	const toggleRoleExpand = async (roleId) => {
+		const isExpanding = !expandedRoleIds.includes(roleId);
+
+		if (isExpanding) {
+			setExpandedRoleIds((prev) => [...prev, roleId]);
+
+			// Fetch permissions if not already loaded
+			if (!rolePermissions[roleId]) {
+				try {
+					setLoadingPermissions((prev) => ({ ...prev, [roleId]: true }));
+					const response = await roleService.getRolePermissions(roleId);
+					if (response.success) {
+						setRolePermissions((prev) => ({
+							...prev,
+							[roleId]: response.data,
+						}));
+					}
+				} catch (error) {
+					console.error('Failed to fetch role permissions:', error);
+					toast.error('Failed to load permissions');
+				} finally {
+					setLoadingPermissions((prev) => ({ ...prev, [roleId]: false }));
+				}
+			}
+		} else {
+			setExpandedRoleIds((prev) => prev.filter((id) => id !== roleId));
+		}
+	};
 
 	const handleUpdate = async () => {
 		try {
@@ -196,14 +220,7 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 											className="ml-3 flex items-center gap-2 text-[#26064A] border-gray-300 hover:bg-gray-50"
 											onClick={(e) => {
 												e.stopPropagation();
-												setExpandedRoleIds((prev) =>
-													prev.includes(role.id)
-														? prev.filter(
-																(id) =>
-																	id !== role.id,
-															)
-														: [...prev, role.id],
-												);
+												toggleRoleExpand(role.id);
 											}}
 										>
 											<Eye className="size-4" />
@@ -221,34 +238,52 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 									{/* Permissions Section */}
 									{expandedRoleIds.includes(role.id) && (
 										<div className="border-t border-[#6A12CD33]">
-											{/* Table Header */}
-											<div className="grid grid-cols-2 gap-4 px-4 py-3 border-b border-[#6A12CD33]">
-												<div className="text-[#26064A] font-semibold text-xs">
-													Permission
+											{loadingPermissions[role.id] ? (
+												<div className="p-4 text-center text-xs text-[#26064A99]">
+													Loading permissions...
 												</div>
-												<div className="text-[#26064A] font-semibold text-xs">
-													Description
-												</div>
-											</div>
-
-											{/* Table Body */}
-											<div className="divide-y divide-[#6A12CD33]">
-												{rolePermissions[role.id]?.map(
-													(perm, index) => (
-														<div
-															key={index}
-															className="grid grid-cols-2 gap-4 px-4 py-3 bg-white"
-														>
-															<div className="text-[#26064A] text-xs font-medium">
-																{perm.permission}
-															</div>
-															<div className="text-[#26064ACC] text-xs">
-																{perm.description}
-															</div>
+											) : (
+												<>
+													{/* Table Header */}
+													<div className="grid grid-cols-2 gap-4 px-4 py-3 border-b border-[#6A12CD33]">
+														<div className="text-[#26064A] font-semibold text-xs">
+															Permission
 														</div>
-													),
-												)}
-											</div>
+														<div className="text-[#26064A] font-semibold text-xs">
+															Description
+														</div>
+													</div>
+
+													{/* Table Body */}
+													<div className="divide-y divide-[#6A12CD33]">
+														{rolePermissions[role.id] &&
+														rolePermissions[role.id]
+															.length > 0 ? (
+															rolePermissions[
+																role.id
+															].map((perm, index) => (
+																<div
+																	key={index}
+																	className="grid grid-cols-2 gap-4 px-4 py-3 bg-white"
+																>
+																	<div className="text-[#26064A] text-xs font-medium">
+																		{perm.name}
+																	</div>
+																	<div className="text-[#26064ACC] text-xs">
+																		{perm.description ||
+																			'No description'}
+																	</div>
+																</div>
+															))
+														) : (
+															<div className="px-4 py-3 text-xs text-[#26064ACC]">
+																No permissions found
+																for this role
+															</div>
+														)}
+													</div>
+												</>
+											)}
 										</div>
 									)}
 								</div>
