@@ -257,7 +257,9 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 					</div>
 
 					<div className="absolute bottom-0 left-0 w-full py-4 px-6 flex justify-between border-t border-[#6A12CD1A] bg-white">
-						<Button
+						{/* TODO: Implement disable user later after discuss */}
+
+						{/* <Button
 							variant="outline"
 							className="border-[#26064A] !text-[#26064A]"
 							onClick={() => {
@@ -275,8 +277,12 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 							}}
 						>
 							Disable User
-						</Button>
-						<Button onClick={handleUpdate} disabled={loading}>
+						</Button> */}
+						<Button
+							onClick={handleUpdate}
+							disabled={loading}
+							className="ml-auto"
+						>
 							{loading ? 'Updating...' : 'Update'}
 						</Button>
 					</div>

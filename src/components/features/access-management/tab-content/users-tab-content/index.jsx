@@ -165,9 +165,16 @@ export default function UsersTabContent() {
 
 	const totalCount = data?.pagination?.total || 0;
 
-	const handleEditUser = (user) => {
-		setSelectedUser(user);
-		setIsEditUserDrawerOpen(true);
+	const handleEditUser = async (user) => {
+		try {
+			// Fetch fresh user data from the API
+			const userResponse = await userService.getUserById(user.id);
+			setSelectedUser(userResponse.data);
+			setIsEditUserDrawerOpen(true);
+		} catch (error) {
+			toast.error('Failed to load user details');
+			console.error('Error fetching user details:', error);
+		}
 	};
 
 	const handleSuspendUser = async (user) => {
@@ -265,26 +272,26 @@ export default function UsersTabContent() {
 							show: !isInvitation, // Only show for actual users
 							icon: <img src={editIcon} className="size-4" />,
 						},
-						{
-							type: 'item',
-							label:
-								user.status === 'active'
-									? 'Suspend User'
-									: 'Enable User',
-							onClick: () =>
-								user.status === 'active'
-									? handleSuspendUser(user)
-									: handleEnableUser(user),
-							show: !isInvitation, // Only show for actual users
-							icon: <img src={userCrossIcon} className="size-4" />,
-						},
-						{
-							type: 'item',
-							label: 'Disable User',
-							onClick: () => handleDisableUser(user),
-							show: !isInvitation, // Only show for actual users
-							icon: <img src={deleteIcon} className="size-4" />,
-						},
+						// {
+						// 	type: 'item',
+						// 	label:
+						// 		user.status === 'active'
+						// 			? 'Suspend User'
+						// 			: 'Enable User',
+						// 	onClick: () =>
+						// 		user.status === 'active'
+						// 			? handleSuspendUser(user)
+						// 			: handleEnableUser(user),
+						// 	show: !isInvitation, // Only show for actual users
+						// 	icon: <img src={userCrossIcon} className="size-4" />,
+						// },
+						// {
+						// 	type: 'item',
+						// 	label: 'Disable User',
+						// 	onClick: () => handleDisableUser(user),
+						// 	show: !isInvitation, // Only show for actual users
+						// 	icon: <img src={deleteIcon} className="size-4" />,
+						// },
 						{
 							type: 'item',
 							label: 'Resend Invite',
