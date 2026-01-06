@@ -171,7 +171,7 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 
 					<div className="border-t border-[#6A12CD1A] py-4 px-6">
 						<div className="text-[#26064A] text-base font-medium">
-							Initial Role
+							Current Role
 						</div>
 						<div className="text-[#26064ACC] text-xs">
 							You can assign only one role to a user.
