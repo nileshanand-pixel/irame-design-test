@@ -8,9 +8,11 @@ import CreateRoleCta from './create-role-cta';
 import CloneRoleDrawer from './clone-role-drawer';
 import EditPermissionsDrawer from './edit-permissions-drawer';
 import { useRoles } from '@/hooks/use-roles';
+import { useRoleDelete } from '@/hooks/use-role-delete';
 import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'react-toastify';
 import { Copy } from 'lucide-react';
+import useConfirmDialog from '@/hooks/use-confirm-dialog';
 
 export default function RolePermissionTabContent() {
 	const [search, setSearch] = useState('');
@@ -34,6 +36,10 @@ export default function RolePermissionTabContent() {
 	const [isEditPermissionsDrawerOpen, setIsEditPermissionsDrawerOpen] =
 		useState(false);
 
+	// Hooks
+	const { mutate: deleteRole, isPending: isDeleting } = useRoleDelete();
+	const [ConfirmationDialog, confirm] = useConfirmDialog();
+
 	const handleEditPermissions = (role) => {
 		setSelectedRole(role);
 		setIsEditPermissionsDrawerOpen(true);
@@ -44,9 +50,23 @@ export default function RolePermissionTabContent() {
 		setIsCloneRoleDrawerOpen(true);
 	};
 
-	const handleRemoveRole = (role) => {
-		// TODO: Implement remove role functionality
-		console.log('Removing role:', role);
+	const handleRemoveRole = async (role) => {
+		try {
+			const confirmed = await confirm({
+				header: 'Delete Role',
+				description: `Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`,
+				secondaryCtaText: 'Cancel',
+				primaryCtaText: 'Delete Role',
+				primaryCtaVariant: 'destructive',
+			});
+
+			if (!confirmed) return;
+
+			deleteRole(role.id);
+		} catch (error) {
+			console.error('Error deleting role:', error);
+			toast.error('Failed to delete role');
+		}
 	};
 
 	const handleCopyRoleId = (roleId) => {
@@ -179,6 +199,8 @@ export default function RolePermissionTabContent() {
 					role={selectedRole}
 				/>
 			)}
+
+			<ConfirmationDialog />
 		</div>
 	);
 }

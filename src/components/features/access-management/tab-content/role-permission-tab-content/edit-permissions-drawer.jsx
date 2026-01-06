@@ -9,6 +9,12 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { useRolePermissionsUpdate } from '@/hooks/use-role-permissions-update';
 import { roleService } from '@/api/gatekeeper/role.service';
 import { Loader2 } from 'lucide-react';
+import {
+	Accordion,
+	AccordionItem,
+	AccordionTrigger,
+	AccordionContent,
+} from '@/components/ui/accordion';
 
 export default function EditPermissionsDrawer({ open, setOpen, role }) {
 	const [roleName, setRoleName] = useState(role?.name || '');
@@ -83,6 +89,9 @@ export default function EditPermissionsDrawer({ open, setOpen, role }) {
 		}
 	};
 
+	// Get the first category key to set as default open
+	const firstCategoryKey = Object.keys(permissionsByResource?.data || {})[0];
+
 	return (
 		<Sheet open={open} onOpenChange={setOpen}>
 			<SheetContent
@@ -146,51 +155,83 @@ export default function EditPermissionsDrawer({ open, setOpen, role }) {
 										<Loader2 className="animate-spin text-purple-600 h-8 w-8" />
 									</div>
 								) : (
-									Object.entries(
-										permissionsByResource?.data || {},
-									).map(([category, categoryPermissions]) => (
-										<div key={category}>
-											<div className="border-b border-[#6A12CD1A]">
-												<div className="px-4 py-3 text-[#26064A] font-medium text-sm bg-[#6A12CD05] border border-[#6A12CD1A] capitalize">
-													{category}
-												</div>
-											</div>
-
-											{categoryPermissions?.map(
-												(permission) => (
-													<div
-														key={permission.id}
-														className="grid grid-cols-2 gap-4 px-4 py-2 border-b border-[#6A12CD1A] last:border-b-0"
-													>
-														<div>
-															<div className="text-[#26064A] font-medium text-sm">
-																{permission.action}
-															</div>
-															<div className="text-[#26064A99] text-xs mt-0.5">
-																{
-																	permission.description
-																}
-															</div>
+									<Accordion
+										type="single"
+										collapsible
+										defaultValue={firstCategoryKey}
+									>
+										{Object.entries(
+											permissionsByResource?.data || {},
+										).map(([category, categoryPermissions]) => {
+											const enabledCount =
+												categoryPermissions?.filter(
+													(p) => permissions[p.id],
+												).length || 0;
+											const totalCount =
+												categoryPermissions?.length || 0;
+											return (
+												<AccordionItem
+													key={category}
+													value={category}
+													className="border-[#6A12CD1A]"
+												>
+													<AccordionTrigger className="px-4 py-3 text-[#26064A] font-medium text-sm bg-[#6A12CD05] border border-[#6A12CD1A] hover:bg-[#6A12CD0A] transition-colors [&[data-state=open]]:rounded-t-md gap-1">
+														<div className="flex items-center gap-1 w-full capitalize">
+															<span className="text-[#26064A]">
+																{category}
+															</span>
+															<span className="ml-auto text-xs text-[#26064A99]">
+																{enabledCount}/
+																{totalCount}{' '}
+																Permissions
+															</span>
 														</div>
-														<div className="flex items-center justify-end">
-															<Switch
-																checked={
-																	permissions[
+													</AccordionTrigger>
+													<AccordionContent className="border-l border-r border-[#6A12CD1A] bg-white">
+														{categoryPermissions?.map(
+															(permission) => (
+																<div
+																	key={
 																		permission.id
-																	] || false
-																}
-																onCheckedChange={() =>
-																	handlePermissionToggle(
-																		permission.id,
-																	)
-																}
-															/>
-														</div>
-													</div>
-												),
-											)}
-										</div>
-									))
+																	}
+																	className="grid grid-cols-2 gap-4 px-4 py-2 border-b border-[#6A12CD1A] last:border-b-0 hover:bg-gray-50"
+																>
+																	<div>
+																		<div className="text-[#26064A] font-medium text-sm">
+																			{
+																				permission.action
+																			}
+																		</div>
+																		<div className="text-[#26064A99] text-xs mt-0.5">
+																			{
+																				permission.description
+																			}
+																		</div>
+																	</div>
+																	<div className="flex items-center justify-end">
+																		<Switch
+																			checked={
+																				permissions[
+																					permission
+																						.id
+																				] ||
+																				false
+																			}
+																			onCheckedChange={() =>
+																				handlePermissionToggle(
+																					permission.id,
+																				)
+																			}
+																		/>
+																	</div>
+																</div>
+															),
+														)}
+													</AccordionContent>
+												</AccordionItem>
+											);
+										})}
+									</Accordion>
 								)}
 							</div>
 						</div>

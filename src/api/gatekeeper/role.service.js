@@ -94,4 +94,14 @@ export const roleService = {
 		);
 		return response.data;
 	},
+
+	/**
+	 * Delete a role
+	 * @param {string} roleId
+	 * @returns {Promise<Object>}
+	 */
+	deleteRole: async (roleId) => {
+		const response = await axiosGatekeeper.delete(`/roles/${roleId}`);
+		return response.data;
+	},
 };
