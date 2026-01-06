@@ -20,6 +20,7 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 	const [selectedRole, setSelectedRole] = useState(null);
 	const [expandedRoleIds, setExpandedRoleIds] = useState([]);
 	const [rolePermissions, setRolePermissions] = useState({});
+	const [loadingPermissions, setLoadingPermissions] = useState({});
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState(null);
 
@@ -34,12 +35,6 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 
 				if (rolesRes.success) {
 					setRoles(rolesRes.data);
-					// Map permissions for each role
-					const permissionsMap = {};
-					rolesRes.data.forEach((role) => {
-						permissionsMap[role.id] = role.permissions || [];
-					});
-					setRolePermissions(permissionsMap);
 
 					// Set default role if available
 					if (rolesRes.data.length > 0) {
@@ -80,6 +75,35 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 			setError(null);
 		}
 	}, [open]);
+
+	const toggleRoleExpand = async (roleId) => {
+		const isExpanding = !expandedRoleIds.includes(roleId);
+
+		if (isExpanding) {
+			setExpandedRoleIds((prev) => [...prev, roleId]);
+
+			// Fetch permissions if not already loaded
+			if (!rolePermissions[roleId]) {
+				try {
+					setLoadingPermissions((prev) => ({ ...prev, [roleId]: true }));
+					const response = await roleService.getRolePermissions(roleId);
+					if (response.success) {
+						setRolePermissions((prev) => ({
+							...prev,
+							[roleId]: response.data,
+						}));
+					}
+				} catch (error) {
+					console.error('Failed to fetch role permissions:', error);
+					toast.error('Failed to load permissions');
+				} finally {
+					setLoadingPermissions((prev) => ({ ...prev, [roleId]: false }));
+				}
+			}
+		} else {
+			setExpandedRoleIds((prev) => prev.filter((id) => id !== roleId));
+		}
+	};
 
 	const handleInvite = async () => {
 		if (!fullName || !email || !selectedRole || selectedTeams.length === 0) {
@@ -230,14 +254,7 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 											className="ml-3 flex items-center gap-2 text-[#26064A] border-gray-300 hover:bg-gray-50"
 											onClick={(e) => {
 												e.stopPropagation();
-												setExpandedRoleIds((prev) =>
-													prev.includes(role.id)
-														? prev.filter(
-																(id) =>
-																	id !== role.id,
-															)
-														: [...prev, role.id],
-												);
+												toggleRoleExpand(role.id);
 											}}
 										>
 											<Eye className="size-4" />
@@ -267,20 +284,33 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 
 											{/* Table Body */}
 											<div className="divide-y divide-[#6A12CD33]">
-												{rolePermissions[role.id]?.map(
-													(perm, index) => (
-														<div
-															key={index}
-															className="grid grid-cols-2 gap-4 px-4 py-3 bg-white"
-														>
-															<div className="text-[#26064A] text-xs font-medium">
-																{perm.permission}
+												{loadingPermissions[role.id] ? (
+													<div className="px-4 py-8 text-center text-gray-500 text-sm">
+														Loading permissions...
+													</div>
+												) : rolePermissions[role.id]
+														?.length > 0 ? (
+													rolePermissions[role.id].map(
+														(perm, index) => (
+															<div
+																key={index}
+																className="grid grid-cols-2 gap-4 px-4 py-3 bg-white"
+															>
+																<div className="text-[#26064A] text-xs font-medium">
+																	{perm.name}
+																</div>
+																<div className="text-[#26064ACC] text-xs">
+																	{
+																		perm.description
+																	}
+																</div>
 															</div>
-															<div className="text-[#26064ACC] text-xs">
-																{perm.description}
-															</div>
-														</div>
-													),
+														),
+													)
+												) : (
+													<div className="px-4 py-8 text-center text-gray-500 text-sm">
+														No permissions found
+													</div>
 												)}
 											</div>
 										</div>

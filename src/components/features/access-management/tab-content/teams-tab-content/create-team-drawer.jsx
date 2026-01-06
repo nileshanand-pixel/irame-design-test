@@ -1,19 +1,33 @@
 import InputText from '@/components/elements/InputText';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useState, useMemo } from 'react';
-import { Search, Check, Loader2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Search, Check, Loader2, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useUsers } from '@/hooks/use-users';
+import useAuth from '@/hooks/useAuth';
 import { createTeam } from '@/api/gatekeeper/team.service';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function CreateTeamDrawer({ open, setOpen }) {
 	const queryClient = useQueryClient();
+	const { userDetails } = useAuth();
 	const [teamName, setTeamName] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [selectedUsers, setSelectedUsers] = useState([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	const currentUserId = useMemo(() => {
+		return userDetails?.user_id || userDetails?.id || userDetails?.userId;
+	}, [userDetails]);
+
+	// Auto-select current user as creator/admin
+	useEffect(() => {
+		if (currentUserId && !selectedUsers.includes(currentUserId)) {
+			setSelectedUsers((prev) => [...prev, currentUserId]);
+		}
+	}, [currentUserId]);
 
 	const { data: usersData, isLoading: usersLoading } = useUsers({
 		type: 'active',
@@ -31,6 +45,8 @@ export default function CreateTeamDrawer({ open, setOpen }) {
 	}, [usersData]);
 
 	const toggleUserSelection = (userId) => {
+		if (userId === currentUserId) return; // Cannot deselect creator/admin
+
 		setSelectedUsers((prev) =>
 			prev.includes(userId)
 				? prev.filter((id) => id !== userId)
@@ -139,22 +155,44 @@ export default function CreateTeamDrawer({ open, setOpen }) {
 								>
 									<div
 										className={`flex-shrink-0 size-5 rounded border-2 flex items-center justify-center transition-colors ${
-											selectedUsers.includes(user.id)
+											selectedUsers.includes(user.id) ||
+											user.id === currentUserId
 												? 'bg-[#6A12CD] border-[#6A12CD]'
 												: 'border-gray-300 bg-white'
+										} ${
+											user.id === currentUserId
+												? 'opacity-70 cursor-not-allowed'
+												: ''
 										}`}
 									>
-										{selectedUsers.includes(user.id) && (
-											<Check
+										{user.id === currentUserId ? (
+											<Minus
 												className="size-3 text-white"
-												strokeWidth={3}
+												strokeWidth={4}
 											/>
+										) : (
+											selectedUsers.includes(user.id) && (
+												<Check
+													className="size-3 text-white"
+													strokeWidth={3}
+												/>
+											)
 										)}
 									</div>
 									<div className="flex-1 min-w-0">
 										<div className="text-[#26064A] font-medium text-sm truncate">
 											{user.name}
 										</div>
+										{user.id === currentUserId && (
+											<div className="flex gap-1 my-0.5">
+												<Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 text-[10px] px-1.5 py-0 h-4 rounded-md">
+													Creator
+												</Badge>
+												<Badge className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-50 text-[10px] px-1.5 py-0 h-4 rounded-md">
+													Admin
+												</Badge>
+											</div>
+										)}
 										<div className="text-gray-500 text-xs truncate">
 											@{user.email}
 										</div>
