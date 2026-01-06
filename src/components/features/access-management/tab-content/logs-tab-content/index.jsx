@@ -86,20 +86,26 @@ const getYesterdayUTCRange = () => {
 	};
 };
 
+// Helper function for default 7-day range
+const getLast7DaysRange = () => ({
+	startDate: dayjs().subtract(7, 'day').startOf('day').toISOString(),
+	endDate: dayjs().endOf('day').toISOString(),
+});
+
 export default function LogsTabContent() {
 	// Filter states
 	const [searchTerm, setSearchTerm] = useState('');
 	const debouncedSearch = useDebounce(searchTerm, 500);
 	const [categoryFilter, setCategoryFilter] = useState('all');
 	const [actionTypeFilter, setActionTypeFilter] = useState('all');
-	const [dateRange, setDateRange] = useState({
-		startDate: undefined,
-		endDate: undefined,
-	});
+	const [dateRange, setDateRange] = useState(getLast7DaysRange);
 	const [pagination, setPagination] = useState({
 		pageIndex: 0,
 		pageSize: 10,
 	});
+
+	// A key to force reset components when filters are cleared
+	const [filterResetKey, setFilterResetKey] = useState(0);
 
 	// Get filtered action types based on category
 	const availableActionTypes = useMemo(() => {
@@ -184,17 +190,26 @@ export default function LogsTabContent() {
 		setSearchTerm('');
 		setCategoryFilter('all');
 		setActionTypeFilter('all');
-		setDateRange({ startDate: undefined, endDate: undefined });
+		setDateRange(getLast7DaysRange());
 		setPagination({ ...pagination, pageIndex: 0 });
+		setFilterResetKey((prev) => prev + 1);
 	};
 
 	// Check if any filters are active
-	const hasActiveFilters =
-		searchTerm ||
-		categoryFilter !== 'all' ||
-		actionTypeFilter !== 'all' ||
-		dateRange.startDate ||
-		dateRange.endDate;
+	const hasActiveFilters = useMemo(() => {
+		const defaultRange = getLast7DaysRange();
+		// Compare dates by day to ignore time differences in ISO strings
+		const isDefaultDate =
+			dayjs(dateRange.startDate).isSame(defaultRange.startDate, 'day') &&
+			dayjs(dateRange.endDate).isSame(defaultRange.endDate, 'day');
+
+		return (
+			searchTerm !== '' ||
+			categoryFilter !== 'all' ||
+			actionTypeFilter !== 'all' ||
+			!isDefaultDate
+		);
+	}, [searchTerm, categoryFilter, actionTypeFilter, dateRange]);
 
 	const columns = useMemo(
 		() => [
@@ -320,6 +335,7 @@ export default function LogsTabContent() {
 				<div className="flex flex-col gap-4 flex-shrink-0 mb-5">
 					<div className="w-full max-w-md">
 						<SearchBar
+							key={`search-${filterResetKey}`}
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 							placeholder="Search by user name..."
@@ -391,7 +407,17 @@ export default function LogsTabContent() {
 						</Select>
 
 						<DateRangePicker
+							key={`date-${filterResetKey}`}
 							predefinedOptions={[
+								{
+									key: 'last_7_days',
+									label: 'Last 7 Days',
+									startDate: dayjs()
+										.subtract(7, 'day')
+										.startOf('day')
+										.toISOString(),
+									endDate: dayjs().endOf('day').toISOString(),
+								},
 								{
 									key: 'today',
 									label: 'Today',
@@ -401,15 +427,6 @@ export default function LogsTabContent() {
 									key: 'yesterday',
 									label: 'Yesterday',
 									...getYesterdayUTCRange(),
-								},
-								{
-									key: 'last_7_days',
-									label: 'Last 7 Days',
-									startDate: dayjs()
-										.subtract(7, 'day')
-										.startOf('day')
-										.toISOString(),
-									endDate: dayjs().endOf('day').toISOString(),
 								},
 								{
 									key: 'last_30_days',
@@ -438,14 +455,12 @@ export default function LogsTabContent() {
 								});
 							}}
 							onClear={() => {
-								setDateRange({
-									startDate: undefined,
-									endDate: undefined,
-								});
+								setDateRange(getLast7DaysRange());
 								setPagination({
 									...pagination,
 									pageIndex: 0,
 								});
+								setFilterResetKey((prev) => prev + 1);
 							}}
 						/>
 
