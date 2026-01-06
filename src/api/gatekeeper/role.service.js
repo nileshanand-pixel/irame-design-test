@@ -45,4 +45,53 @@ export const roleService = {
 		const response = await axiosGatekeeper.get(`/roles/${roleId}/permissions`);
 		return response.data;
 	},
+
+	/**
+	 * Create a new role
+	 * @param {Object} roleData - { name, description }
+	 * @returns {Promise<Object>}
+	 */
+	createRole: async (roleData) => {
+		const response = await axiosGatekeeper.post('/roles', roleData);
+		return response.data;
+	},
+
+	/**
+	 * Update role details
+	 * @param {string} roleId
+	 * @param {Object} roleData - { name?, description? }
+	 * @returns {Promise<Object>}
+	 */
+	updateRole: async (roleId, roleData) => {
+		const response = await axiosGatekeeper.put(`/roles/${roleId}`, roleData);
+		return response.data;
+	},
+
+	/**
+	 * Update role permissions
+	 * @param {string} roleId
+	 * @param {Object} changes - { add: string[], remove: string[] }
+	 * @returns {Promise<Object>}
+	 */
+	updateRolePermissions: async (roleId, changes) => {
+		const response = await axiosGatekeeper.put(
+			`/roles/${roleId}/permissions`,
+			changes,
+		);
+		return response.data;
+	},
+
+	/**
+	 * Clone a role
+	 * @param {string} roleId
+	 * @param {Object} cloneData - { name?, description? }
+	 * @returns {Promise<Object>}
+	 */
+	cloneRole: async (roleId, cloneData) => {
+		const response = await axiosGatekeeper.post(
+			`/roles/${roleId}/clone`,
+			cloneData,
+		);
+		return response.data;
+	},
 };

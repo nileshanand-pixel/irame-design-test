@@ -1,204 +1,52 @@
 import InputText from '@/components/elements/InputText';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import redInfoIcon from '@/assets/icons/red-info.svg';
 import gridIcon from '@/assets/icons/grid.svg';
+import { usePermissions } from '@/hooks/use-permissions';
+import { useRoleClone } from '@/hooks/use-role-clone';
+import { roleService } from '@/api/gatekeeper/role.service';
+import { Loader2 } from 'lucide-react';
 
-const PERMISSIONS_DATA = [
-	{
-		category: 'Business Process',
-		permissions: [
-			{
-				id: 'bp-view',
-				label: 'View',
-				description: 'View business process and their details',
-			},
-			{
-				id: 'bp-create-update',
-				label: 'Create and Update',
-				description: 'Build and updates business processes',
-			},
-			{
-				id: 'bp-delete',
-				label: 'Delete',
-				description: 'Remove workflows permanently',
-			},
-			{
-				id: 'bp-sharing',
-				label: 'Sharing Permission',
-				description: 'Share workflows with specific users and team',
-			},
-		],
-	},
-	{
-		category: 'Workflows',
-		permissions: [
-			{
-				id: 'wf-view',
-				label: 'View',
-				description: 'View workflow & their details',
-			},
-			{
-				id: 'wf-create',
-				label: 'Create',
-				description: 'Can create new workflows',
-			},
-			{
-				id: 'wf-update',
-				label: 'Update',
-				description: 'Modify existing workflows',
-			},
-			{
-				id: 'wf-delete',
-				label: 'Delete',
-				description: 'Delete workflows',
-			},
-			{
-				id: 'wf-view-output',
-				label: 'View Output',
-				description: 'View workflows',
-			},
-			{
-				id: 'wf-run',
-				label: 'Run',
-				description: 'View workflows',
-			},
-			{
-				id: 'wf-integrate-data',
-				label: 'Integrate Data',
-				description: 'View workflows',
-			},
-		],
-	},
-	{
-		category: 'Reports',
-		permissions: [
-			{
-				id: 'rp-view',
-				label: 'View',
-				description: 'View workflows',
-			},
-			{
-				id: 'rp-add-queries',
-				label: 'Add Queries',
-				description: 'View workflows',
-			},
-			{
-				id: 'rp-comment',
-				label: 'Comment on Queries',
-				description: 'Edit workflows',
-			},
-			{
-				id: 'rp-upload-data',
-				label: 'Upload New Data',
-				description: 'Delete workflows',
-			},
-			{
-				id: 'rp-attach-proofs',
-				label: 'Attach Proofs',
-				description: 'Share workflows',
-			},
-			{
-				id: 'rp-share-publish',
-				label: 'Share/Publish',
-				description: 'Export workflows',
-			},
-			{
-				id: 'rp-delete-queries',
-				label: 'Delete Queries',
-				description: 'Delete workflows',
-			},
-		],
-	},
-	{
-		category: 'Dashboard',
-		permissions: [
-			{
-				id: 'db-view',
-				label: 'View',
-				description: 'Manage projects',
-			},
-			{
-				id: 'db-add-queries',
-				label: 'Add Queries',
-				description: 'Analyze data',
-			},
-			{
-				id: 'db-publish-queries',
-				label: 'Publish Queries',
-				description: 'User feedback',
-			},
-			{
-				id: 'db-delete-queries',
-				label: 'Delete Queries',
-				description: 'Optimize processes',
-			},
-			{
-				id: 'db-comment',
-				label: 'Comment on Queries',
-				description: 'Team collaboration',
-			},
-		],
-	},
-	{
-		category: 'Customer Support',
-		permissions: [
-			{
-				id: 'cs-manually-upload',
-				label: 'Manually Upload',
-				description: 'Team collaboration',
-			},
-			{
-				id: 'cs-live-datasource',
-				label: 'Live Datasource List',
-				description: 'Project management',
-			},
-			{
-				id: 'cs-data-filters',
-				label: 'Data Level Filters',
-				description: 'User feedback',
-			},
-		],
-	},
-	{
-		category: 'Admin',
-		permissions: [
-			{
-				id: 'ad-compliance-logs',
-				label: 'Compliance Logs',
-				description: 'User feedback',
-			},
-			{
-				id: 'ad-usages',
-				label: 'Usages Listing',
-				description: 'Feature request',
-			},
-			{
-				id: 'ad-billing',
-				label: 'Bill & Payments',
-				description: 'Bug report',
-			},
-			{
-				id: 'ad-internal-tech',
-				label: 'Internal Tech Specialist',
-				description: 'Usability improvement',
-			},
-			{
-				id: 'ad-external-tech',
-				label: 'External Tech Specialist',
-				description: 'Performance issue',
-			},
-		],
-	},
-];
-
-export default function CreateRoleDrawer({ open, setOpen, role }) {
+export default function CloneRoleDrawer({ open, setOpen, role }) {
 	const [roleName, setRoleName] = useState('');
 	const [description, setDescription] = useState('');
 	const [permissions, setPermissions] = useState({});
+	const [isLoadingSourcePermissions, setIsLoadingSourcePermissions] =
+		useState(false);
+
+	const { data: permissionsByResource, isLoading: isLoadingPermissions } =
+		usePermissions();
+	const cloneRoleMutation = useRoleClone();
+
+	useEffect(() => {
+		if (open && role?.id) {
+			setRoleName(`${role.name} (Copy)`);
+			setDescription(role.description || '');
+			fetchSourceRolePermissions();
+		}
+	}, [open, role]);
+
+	const fetchSourceRolePermissions = async () => {
+		setIsLoadingSourcePermissions(true);
+		try {
+			const res = await roleService.getRolePermissions(role.id);
+			if (res.success) {
+				const permsMap = {};
+				res.data.forEach((p) => {
+					permsMap[p.id] = true;
+				});
+				setPermissions(permsMap);
+			}
+		} catch (error) {
+			console.error('Failed to fetch source role permissions:', error);
+		} finally {
+			setIsLoadingSourcePermissions(false);
+		}
+	};
 
 	const handlePermissionToggle = (permissionId) => {
 		setPermissions((prev) => ({
@@ -207,10 +55,21 @@ export default function CreateRoleDrawer({ open, setOpen, role }) {
 		}));
 	};
 
-	const handleCreateRole = () => {
-		// TODO: Implement create role functionality
-		console.log('Creating role:', { roleName, description, permissions });
-		setOpen(false);
+	const handleCloneRole = async () => {
+		if (!roleName.trim()) {
+			return;
+		}
+
+		try {
+			await cloneRoleMutation.mutateAsync({
+				roleId: role.id,
+				name: roleName,
+				description,
+			});
+			setOpen(false);
+		} catch (error) {
+			// Error handled by hook
+		}
 	};
 
 	return (
@@ -271,45 +130,58 @@ export default function CreateRoleDrawer({ open, setOpen, role }) {
 							</div>
 
 							<div className="bg-white h-[calc(100%-2.125rem)] overflow-auto">
-								{PERMISSIONS_DATA.map((section) => (
-									<div key={section.category}>
-										<div className="border-b border-[#6A12CD1A]">
-											<div className="px-4 py-3 text-[#26064A] font-medium text-sm bg-[#6A12CD05] border border-[#6A12CD1A]">
-												{section.category}
-											</div>
-										</div>
-
-										{section?.permissions?.map((permission) => (
-											<div
-												key={permission.id}
-												className="grid grid-cols-2 gap-4 px-4 py-2 border-b border-[#6A12CD1A] last:border-b-0"
-											>
-												<div>
-													<div className="text-[#26064A] font-medium text-sm">
-														{permission.label}
-													</div>
-													<div className="text-[#26064A99] text-xs mt-0.5">
-														{permission.description}
-													</div>
-												</div>
-												<div className="flex items-center justify-end">
-													<Switch
-														checked={
-															permissions[
-																permission.id
-															] || false
-														}
-														onCheckedChange={() =>
-															handlePermissionToggle(
-																permission.id,
-															)
-														}
-													/>
-												</div>
-											</div>
-										))}
+								{isLoadingPermissions ||
+								isLoadingSourcePermissions ? (
+									<div className="flex justify-center items-center h-full">
+										<Loader2 className="animate-spin text-purple-600 h-8 w-8" />
 									</div>
-								))}
+								) : (
+									Object.entries(
+										permissionsByResource?.data || {},
+									).map(([category, categoryPermissions]) => (
+										<div key={category}>
+											<div className="border-b border-[#6A12CD1A]">
+												<div className="px-4 py-3 text-[#26064A] font-medium text-sm bg-[#6A12CD05] border border-[#6A12CD1A] capitalize">
+													{category}
+												</div>
+											</div>
+
+											{categoryPermissions?.map(
+												(permission) => (
+													<div
+														key={permission.id}
+														className="grid grid-cols-2 gap-4 px-4 py-2 border-b border-[#6A12CD1A] last:border-b-0"
+													>
+														<div>
+															<div className="text-[#26064A] font-medium text-sm">
+																{permission.action}
+															</div>
+															<div className="text-[#26064A99] text-xs mt-0.5">
+																{
+																	permission.description
+																}
+															</div>
+														</div>
+														<div className="flex items-center justify-end">
+															<Switch
+																checked={
+																	permissions[
+																		permission.id
+																	] || false
+																}
+																onCheckedChange={() =>
+																	handlePermissionToggle(
+																		permission.id,
+																	)
+																}
+															/>
+														</div>
+													</div>
+												),
+											)}
+										</div>
+									))
+								)}
 							</div>
 						</div>
 					</div>
@@ -324,7 +196,17 @@ export default function CreateRoleDrawer({ open, setOpen, role }) {
 							</div>
 						</div>
 						<div className="py-4 px-6 flex justify-end border-t border-[#6A12CD1A] bg-white">
-							<Button onClick={handleCreateRole}>Clone Role</Button>
+							<Button
+								onClick={handleCloneRole}
+								disabled={
+									cloneRoleMutation.isLoading || !roleName.trim()
+								}
+							>
+								{cloneRoleMutation.isLoading ? (
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+								) : null}
+								Clone Role
+							</Button>
 						</div>
 					</div>
 				</div>
