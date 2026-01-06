@@ -135,8 +135,8 @@ export default function TeamsTabContent() {
 			{!isLoading && teams?.length === 0 && !search ? (
 				<EmptyState config={EMPTY_STATE_CONFIG} />
 			) : (
-				<div className="space-y-5">
-					<div className="flex justify-between items-center">
+				<div className="space-y-5 flex flex-col h-full">
+					<div className="flex justify-between items-center flex-shrink-0">
 						<div>
 							<SearchBar
 								value={search}
@@ -148,7 +148,7 @@ export default function TeamsTabContent() {
 						</div>
 					</div>
 
-					<div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+					<div className="bg-white rounded-lg border border-gray-200 overflow-hidden flex-1 min-h-0">
 						<DataTable
 							data={teams}
 							columns={columns}

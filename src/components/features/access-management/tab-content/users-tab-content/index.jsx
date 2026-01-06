@@ -331,9 +331,9 @@ export default function UsersTabContent() {
 	);
 
 	return (
-		<div className="w-full h-full">
-			<div className="space-y-5">
-				<div className="flex justify-between items-center gap-4">
+		<div className="w-full h-full flex flex-col">
+			<div className="flex flex-col gap-5 h-full">
+				<div className="flex justify-between items-center gap-4 flex-shrink-0">
 					<SearchBar
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
@@ -408,29 +408,35 @@ export default function UsersTabContent() {
 					</div>
 				</div>
 
-				{isLoading && users.length === 0 ? (
-					<div className="flex items-center justify-center h-64">
-						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#26064A]"></div>
-					</div>
-				) : users.length === 0 &&
-				  !search &&
-				  filterType === 'active' &&
-				  statusFilter === '' ? (
-					<EmptyState config={EMPTY_STATE_CONFIG} />
-				) : (
-					<div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-						<DataTable
-							data={users}
-							columns={columns}
-							totalCount={totalCount}
-							pagination={pagination}
-							setPagination={setPagination}
-							isServerSide={true}
-							simplePagination={true}
-							isLoading={isLoading || isFetching || isSearching}
-						/>
-					</div>
-				)}
+				<div className="flex-1 min-h-0">
+					{isLoading && users.length === 0 ? (
+						<div className="flex items-center justify-center h-64">
+							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#26064A]"></div>
+						</div>
+					) : users.length === 0 &&
+					  !search &&
+					  filterType === 'active' &&
+					  statusFilter === '' ? (
+						<EmptyState config={EMPTY_STATE_CONFIG} />
+					) : (
+						<div className="bg-white rounded-lg border border-gray-200 overflow-hidden h-full flex flex-col">
+							<div className="flex-1 min-h-0 overflow-auto">
+								<DataTable
+									data={users}
+									columns={columns}
+									totalCount={totalCount}
+									pagination={pagination}
+									setPagination={setPagination}
+									isServerSide={true}
+									simplePagination={true}
+									isLoading={
+										isLoading || isFetching || isSearching
+									}
+								/>
+							</div>
+						</div>
+					)}
+				</div>
 			</div>
 
 			{isEditUserDrawerOpen && (

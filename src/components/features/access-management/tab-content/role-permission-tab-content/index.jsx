@@ -156,9 +156,9 @@ export default function RolePermissionTabContent() {
 	);
 
 	return (
-		<div className="w-full h-full">
-			<div className="space-y-5">
-				<div className="flex justify-between items-center">
+		<div className="w-full h-full flex flex-col">
+			<div className="flex flex-col gap-5 h-full">
+				<div className="flex justify-between items-center flex-shrink-0">
 					<div>
 						<SearchBar
 							value={search}
@@ -170,7 +170,7 @@ export default function RolePermissionTabContent() {
 					</div>
 				</div>
 
-				<div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+				<div className="bg-white rounded-lg border border-gray-200 overflow-hidden flex-1 min-h-0">
 					<DataTable
 						data={roles}
 						columns={columns}

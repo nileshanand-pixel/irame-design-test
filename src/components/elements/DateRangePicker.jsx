@@ -177,6 +177,7 @@ function CalendarView({
 
 export default function DateRangePicker({
 	onChange,
+	onClear,
 	predefinedOptions = [],
 	className,
 }) {
@@ -238,11 +239,24 @@ export default function DateRangePicker({
 		setShowCalendar(true);
 	};
 
+	const handleClearClick = () => {
+		setSelectedPredefinedOption(null);
+		setSelectedRange({ start: null, end: null });
+		setShowCalendar(false);
+		setIsOpen(false);
+		if (onClear) {
+			onClear();
+		}
+	};
+
 	const selectedLabel = useMemo(() => {
 		if (selectedPredefinedOption) {
 			return selectedPredefinedOption?.label;
 		}
-		return `${selectedRange?.start?.format('MMM D')} - ${selectedRange?.end?.format('MMM D, YYYY')}`;
+		if (selectedRange.start && selectedRange.end) {
+			return `${selectedRange?.start?.format('MMM D')} - ${selectedRange?.end?.format('MMM D, YYYY')}`;
+		}
+		return 'Select Date Range';
 	}, [selectedPredefinedOption, selectedRange]);
 
 	return (
@@ -302,6 +316,21 @@ export default function DateRangePicker({
 							<span className="font-medium">Custom range</span>
 							<ChevronRight className="h-4 w-4" />
 						</button>
+
+						{onClear &&
+							(selectedPredefinedOption ||
+								(selectedRange.start && selectedRange.end)) && (
+								<button
+									onClick={handleClearClick}
+									className={cn(
+										'w-full px-4 py-3 text-left text-sm hover:bg-red-50 transition-colors',
+										'flex items-center justify-between border-t border-gray-100',
+										'text-red-600 font-medium',
+									)}
+								>
+									Clear Selection
+								</button>
+							)}
 					</div>
 
 					{showCalendar && isOpen && (
