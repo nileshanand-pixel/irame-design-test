@@ -185,10 +185,16 @@ export default function CreateTeamDrawer({ open, setOpen }) {
 										</div>
 										{user.id === currentUserId && (
 											<div className="flex gap-1 my-0.5">
-												<Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 text-[10px] px-1.5 py-0 h-4 rounded-md">
+												<Badge
+													variant="secondary"
+													className="bg-[#6A12CD1A] text-[#6A12CD] hover:bg-[#6A12CD1A] text-[10px] px-1.5 py-2 h-6 font-medium"
+												>
 													Creator
 												</Badge>
-												<Badge className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-50 text-[10px] px-1.5 py-0 h-4 rounded-md">
+												<Badge
+													variant="secondary"
+													className="bg-[#6A12CD1A] text-[#6A12CD] hover:bg-[#6A12CD1A] text-[10px] px-1.5 py-2 h-6 font-medium"
+												>
 													Admin
 												</Badge>
 											</div>
