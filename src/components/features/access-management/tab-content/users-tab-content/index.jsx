@@ -15,6 +15,7 @@ import { toast } from 'react-toastify';
 import { useUsers } from '@/hooks/use-users';
 import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
+import { Copy } from 'lucide-react';
 import {
 	Select,
 	SelectContent,
@@ -207,6 +208,15 @@ export default function UsersTabContent() {
 		}
 	};
 
+	const handleCopyUserId = async (userId) => {
+		try {
+			await navigator.clipboard.writeText(userId);
+			toast.success('User ID copied to clipboard!');
+		} catch (error) {
+			toast.error('Failed to copy user ID');
+		}
+	};
+
 	const columns = useMemo(
 		() => [
 			{
@@ -298,6 +308,13 @@ export default function UsersTabContent() {
 							onClick: () => console.log('Resend invite', user),
 							show: isInvitation && isPending, // Only for pending invitations
 							icon: <img src={resendIcon} className="size-4" />,
+						},
+						{
+							type: 'item',
+							label: 'Copy User ID',
+							onClick: () => handleCopyUserId(user.id),
+							show: true, // Show for all users
+							icon: <Copy className="size-4" />,
 						},
 					];
 
