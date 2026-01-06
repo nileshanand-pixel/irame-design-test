@@ -137,7 +137,7 @@ export const generateDescription = (log) => {
 			details.roleName ||
 			log.after_state?.name ||
 			log.after_state?.roleName ||
-			'Unknown Role';
+			'Some Role';
 		const userName = targetName || details.userName || 'user';
 
 		if (

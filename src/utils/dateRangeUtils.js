@@ -93,6 +93,16 @@ export const getDateRangeOptions = () => [
  * Check if two date ranges are equal (comparing by day)
  */
 export const areDateRangesEqual = (range1, range2) => {
+	// Handle null/undefined ranges
+	if (!range1 && !range2) return true;
+	if (!range1 || !range2) return false;
+
+	const r1Has = range1.startDate && range1.endDate;
+	const r2Has = range2.startDate && range2.endDate;
+
+	if (!r1Has && !r2Has) return true;
+	if (!r1Has || !r2Has) return false;
+
 	return (
 		dayjs(range1.startDate).isSame(range2.startDate, 'day') &&
 		dayjs(range1.endDate).isSame(range2.endDate, 'day')

@@ -24,7 +24,7 @@ const EMPTY_STATE_CONFIG = {
 
 const DEFAULT_PAGINATION = {
 	pageIndex: 0,
-	pageSize: 10,
+	pageSize: 8,
 };
 
 export default function LogsTabContent() {
@@ -52,10 +52,10 @@ export default function LogsTabContent() {
 		if (categoryFilter && categoryFilter !== 'all') {
 			params.category = categoryFilter;
 		}
-		if (dateRange.startDate) {
+		if (dateRange && dateRange.startDate) {
 			params.startDate = dateRange.startDate;
 		}
-		if (dateRange.endDate) {
+		if (dateRange && dateRange.endDate) {
 			params.endDate = dateRange.endDate;
 		}
 
@@ -89,13 +89,18 @@ export default function LogsTabContent() {
 	// Check if any filters are active
 	const hasActiveFilters = useMemo(() => {
 		const defaultRange = getLast7DaysRange();
-		const isDefaultDate = areDateRangesEqual(dateRange, defaultRange);
+		// Determine if a date filter is actually applied (both start & end present)
+		const dateFilterApplied =
+			dateRange && dateRange.startDate && dateRange.endDate;
+		const isDefaultDate = dateFilterApplied
+			? areDateRangesEqual(dateRange, defaultRange)
+			: false;
 
 		return (
 			searchTerm !== '' ||
 			categoryFilter !== 'all' ||
 			actionTypeFilter !== 'all' ||
-			!isDefaultDate
+			(dateFilterApplied && !isDefaultDate)
 		);
 	}, [searchTerm, categoryFilter, actionTypeFilter, dateRange]);
 
@@ -122,7 +127,8 @@ export default function LogsTabContent() {
 	};
 
 	const handleDateRangeClear = () => {
-		setDateRange(getLast7DaysRange());
+		// Clear selection -> no date filter (null start/end)
+		setDateRange({ startDate: null, endDate: null });
 		setPagination(DEFAULT_PAGINATION);
 	};
 
@@ -130,7 +136,8 @@ export default function LogsTabContent() {
 		setSearchTerm('');
 		setCategoryFilter('all');
 		setActionTypeFilter('all');
-		setDateRange(getLast7DaysRange());
+		// Clear all filters: remove explicit date filtering
+		setDateRange({ startDate: null, endDate: null });
 		setPagination(DEFAULT_PAGINATION);
 	};
 

@@ -176,18 +176,44 @@ function CalendarView({
 }
 
 export default function DateRangePicker({
+	value,
 	onChange,
 	onClear,
 	predefinedOptions = [],
 	className,
 }) {
 	const [isOpen, setIsOpen] = useState(false);
-	const [selectedPredefinedOption, setSelectedPredefinedOption] = useState(
-		predefinedOptions?.[0],
-	);
+	const [selectedPredefinedOption, setSelectedPredefinedOption] = useState(null);
 	const [showCalendar, setShowCalendar] = useState(false);
 	const [currentMonth, setCurrentMonth] = useState(dayjs());
 	const [selectedRange, setSelectedRange] = useState({ start: null, end: null });
+
+	// Sync internal state with prop value
+	useEffect(() => {
+		if (!value?.startDate || !value?.endDate) {
+			setSelectedPredefinedOption(null);
+			setSelectedRange({ start: null, end: null });
+			return;
+		}
+
+		// Try to find a matching predefined option
+		const matchingOption = predefinedOptions.find(
+			(opt) =>
+				dayjs(opt.startDate).isSame(dayjs(value.startDate), 'day') &&
+				dayjs(opt.endDate).isSame(dayjs(value.endDate), 'day'),
+		);
+
+		if (matchingOption) {
+			setSelectedPredefinedOption(matchingOption);
+			setSelectedRange({ start: null, end: null });
+		} else {
+			setSelectedPredefinedOption(null);
+			setSelectedRange({
+				start: dayjs(value.startDate),
+				end: dayjs(value.endDate),
+			});
+		}
+	}, [value, predefinedOptions]);
 
 	const handlePredefinedOptionSelect = (option) => {
 		setSelectedPredefinedOption(option);
@@ -226,8 +252,8 @@ export default function DateRangePicker({
 			setSelectedPredefinedOption(null);
 			if (onChange) {
 				onChange({
-					startDate: selectedRange.start.toISOString(),
-					endDate: selectedRange.end.toISOString(),
+					startDate: selectedRange.start.startOf('day').toISOString(),
+					endDate: selectedRange.end.endOf('day').toISOString(),
 				});
 			}
 			setIsOpen(false);

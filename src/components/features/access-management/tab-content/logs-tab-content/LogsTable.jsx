@@ -96,7 +96,7 @@ const getColumns = () => [
 					<span className="text-[#26064A99] text-xs line-clamp-2">
 						{description}
 					</span>
-					{hasRawDetails && (
+					{/* {hasRawDetails && (
 						<TooltipProvider>
 							<Tooltip>
 								<TooltipTrigger asChild>
@@ -111,7 +111,7 @@ const getColumns = () => [
 								</TooltipContent>
 							</Tooltip>
 						</TooltipProvider>
-					)}
+					)} */}
 				</div>
 			);
 		},
@@ -131,7 +131,7 @@ export default function LogsTable({
 	const data = logs.data || [];
 
 	return (
-		<div className="flex flex-col h-full gap-5">
+		<div className="flex relative flex-col h-full gap-5">
 			{/* Data Table */}
 			<div className="flex-1 flex flex-col min-h-0">
 				<div className="bg-white rounded-lg border border-gray-200 overflow-hidden flex-1 flex flex-col">
@@ -160,7 +160,7 @@ export default function LogsTable({
 
 				{/* Empty State Message */}
 				{data.length === 0 && hasActiveFilters && (
-					<div className="flex items-center justify-center">
+					<div className="flex absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 items-center justify-center">
 						<div className="text-center py-6">
 							<p className="text-gray-500 mb-3 text-sm">
 								No activity logs found matching your filters.

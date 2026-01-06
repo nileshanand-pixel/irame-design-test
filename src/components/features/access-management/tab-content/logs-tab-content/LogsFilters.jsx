@@ -83,6 +83,7 @@ export default function LogsFilters({
 
 				{/* Date Range Picker */}
 				<DateRangePicker
+					value={dateRange}
 					predefinedOptions={getDateRangeOptions()}
 					onChange={onDateRangeChange}
 					onClear={onDateRangeClear}
