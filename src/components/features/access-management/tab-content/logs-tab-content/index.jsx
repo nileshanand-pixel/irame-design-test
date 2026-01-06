@@ -4,6 +4,7 @@ import logsEmpty from '@/assets/icons/empty-logs.svg';
 import EmptyState from '../empty-state';
 import LogsFilters from './LogsFilters';
 import LogsTable from './LogsTable';
+import LogDetailsDrawer from './LogDetailsDrawer';
 import { activityLogService } from '@/api/gatekeeper/activityLog.service';
 import { useActivityLogs } from '@/hooks/use-activity-logs';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -35,6 +36,10 @@ export default function LogsTabContent() {
 	const [actionTypeFilter, setActionTypeFilter] = useState('all');
 	const [dateRange, setDateRange] = useState(getLast7DaysRange());
 	const [pagination, setPagination] = useState(DEFAULT_PAGINATION);
+
+	// Details drawer state
+	const [selectedLogId, setSelectedLogId] = useState(null);
+	const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
 
 	// Build query parameters
 	const queryParams = useMemo(() => {
@@ -163,6 +168,12 @@ export default function LogsTabContent() {
 		}
 	};
 
+	// Handle view details
+	const handleViewDetails = (logId) => {
+		setSelectedLogId(logId);
+		setIsDetailsDrawerOpen(true);
+	};
+
 	// Show loading state on initial load
 	if (isLoading && logs.data.length === 0) {
 		return (
@@ -207,8 +218,18 @@ export default function LogsTabContent() {
 					isLoading={isFetching || isSearching}
 					hasActiveFilters={hasActiveFilters}
 					onClearFilters={handleClearFilters}
+					onViewDetails={handleViewDetails}
 				/>
 			</div>
+
+			{/* Details Drawer */}
+			{isDetailsDrawerOpen && (
+				<LogDetailsDrawer
+					open={isDetailsDrawerOpen}
+					setOpen={setIsDetailsDrawerOpen}
+					logId={selectedLogId}
+				/>
+			)}
 		</div>
 	);
 }

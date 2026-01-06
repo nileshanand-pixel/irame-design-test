@@ -54,4 +54,14 @@ export const activityLogService = {
 			throw error;
 		}
 	},
+
+	/**
+	 * Get single activity log by ID with enriched data
+	 * @param {string} logId - Activity log ID (UUID)
+	 * @returns {Promise<Object>} Enriched activity log
+	 */
+	getActivityLogById: async (logId) => {
+		const response = await axiosGatekeeper.get(`/activity-logs/${logId}`);
+		return response.data;
+	},
 };

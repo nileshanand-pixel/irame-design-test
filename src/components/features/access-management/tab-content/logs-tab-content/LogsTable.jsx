@@ -1,21 +1,15 @@
 import { DataTable } from '@/components/elements/DataTable';
-import { Info } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import {
 	formatActionType,
 	generateDescription,
 } from '@/constants/activityLogActionTypes';
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { formatTimestamp } from '@/utils/dateRangeUtils';
 
 /**
  * Column definitions for the logs table
  */
-const getColumns = () => [
+const getColumns = (onViewDetails) => [
 	{
 		accessorKey: 'occurred_at',
 		header: 'Time Stamp',
@@ -88,30 +82,22 @@ const getColumns = () => [
 		header: 'Description',
 		cell: ({ row }) => {
 			const description = generateDescription(row.original);
-			const hasRawDetails =
-				row.original.details || row.original.action_metadata;
 
 			return (
 				<div className="flex items-center gap-2 max-w-xs">
 					<span className="text-[#26064A99] text-xs line-clamp-2">
 						{description}
 					</span>
-					{/* {hasRawDetails && (
-						<TooltipProvider>
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<button className="text-gray-400 hover:text-gray-600 flex-shrink-0">
-										<Info className="h-3.5 w-3.5" />
-									</button>
-								</TooltipTrigger>
-								<TooltipContent className="max-w-md p-3 bg-gray-900 text-white text-xs">
-									<pre className="whitespace-pre-wrap break-words">
-										{JSON.stringify(hasRawDetails, null, 2)}
-									</pre>
-								</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
-					)} */}
+					<button
+						onClick={(e) => {
+							e.stopPropagation();
+							onViewDetails(row.original.id);
+						}}
+						className=" hover:text-[#26064A] flex-shrink-0 ml-auto transition-colors"
+						title="View details"
+					>
+						<Eye className="h-4 w-4" />
+					</button>
 				</div>
 			);
 		},
@@ -125,6 +111,7 @@ export default function LogsTable({
 	isLoading,
 	hasActiveFilters = false,
 	onClearFilters = () => {},
+	onViewDetails = () => {},
 }) {
 	const totalCount = logs.pagination?.total || 0;
 	const totalPages = logs.pagination?.totalPages || 0;
@@ -137,7 +124,7 @@ export default function LogsTable({
 				<div className="bg-white rounded-lg border border-gray-200 overflow-hidden flex-1 flex flex-col">
 					<DataTable
 						data={data}
-						columns={getColumns()}
+						columns={getColumns(onViewDetails)}
 						totalCount={totalCount}
 						pagination={pagination}
 						setPagination={onPaginationChange}
