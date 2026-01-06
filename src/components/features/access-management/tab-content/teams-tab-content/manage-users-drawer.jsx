@@ -35,7 +35,7 @@ export default function ManageUsersDrawer({ open, setOpen, team }) {
 	const promoteMutation = usePromoteToAdmin(teamId);
 	const demoteMutation = useDemoteFromAdmin(teamId);
 
-	const members = membersData || [];
+	const members = membersData?.members || [];
 	const availableUsers = availableUsersData?.users || [];
 
 	const toggleUserSelection = (userId) => {
@@ -110,7 +110,10 @@ export default function ManageUsersDrawer({ open, setOpen, team }) {
 					<div className="h-full w-full relative">
 						<SheetHeader className="p-6 pb-4">
 							<SheetTitle className="text-base text-[#26064A] font-semibold">
-								Manage Team Members - {team?.name}
+								Manage Team Members -{' '}
+								{membersData?.teamName ||
+									team?.teamName ||
+									team?.name}
 							</SheetTitle>
 						</SheetHeader>
 
@@ -138,30 +141,31 @@ export default function ManageUsersDrawer({ open, setOpen, team }) {
 											>
 												<div className="flex-1 min-w-0 flex items-center justify-between gap-2">
 													<div className="min-w-0 flex-1">
-														<div className="flex items-center gap-2 mb-0.5">
-															<div className="text-[#26064A] font-medium text-sm truncate">
-																{user.name}
+														<div className="text-[#26064A] font-medium text-sm truncate mb-0.5">
+															{user.name}
+														</div>
+														<div className="flex items-center gap-2">
+															<div className="text-gray-500 text-xs truncate">
+																{user.email}
 															</div>
-															{user.isCreator && (
-																<Badge
-																	variant="secondary"
-																	className="bg-purple-100 text-purple-700 hover:bg-purple-100 text-[10px] px-1.5 py-0 h-4"
-																>
-																	Creator
-																</Badge>
-															)}
-															{user.isAdmin &&
-																!user.isCreator && (
+															<div className="flex items-center gap-1.5 flex-wrap">
+																{user.isCreator && (
 																	<Badge
 																		variant="secondary"
-																		className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-[10px] px-1.5 py-0 h-4"
+																		className="bg-[#6A12CD1A] text-[#6A12CD] hover:bg-[#6A12CD1A] text-[10px] px-1.5 py-2 h-6 font-medium"
+																	>
+																		Creator
+																	</Badge>
+																)}
+																{user.isAdmin && (
+																	<Badge
+																		variant="secondary"
+																		className="bg-[#6A12CD1A] text-[#6A12CD] hover:bg-[#6A12CD1A] text-[10px] px-1.5 py-2 h-6 font-medium"
 																	>
 																		Admin
 																	</Badge>
 																)}
-														</div>
-														<div className="text-gray-500 text-xs truncate">
-															{user.email}
+															</div>
 														</div>
 													</div>
 
