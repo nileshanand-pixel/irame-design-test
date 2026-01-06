@@ -2,14 +2,13 @@ import InputText from '@/components/elements/InputText';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import redInfoIcon from '@/assets/icons/red-info.svg';
-import gridIcon from '@/assets/icons/grid.svg';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useRoleClone } from '@/hooks/use-role-clone';
 import { roleService } from '@/api/gatekeeper/role.service';
 import { Loader2 } from 'lucide-react';
+import PermissionsAccordion from './permissions-accordion';
 
 export default function CloneRoleDrawer({ open, setOpen, role }) {
 	const [roleName, setRoleName] = useState('');
@@ -46,13 +45,6 @@ export default function CloneRoleDrawer({ open, setOpen, role }) {
 		} finally {
 			setIsLoadingSourcePermissions(false);
 		}
-	};
-
-	const handlePermissionToggle = (permissionId) => {
-		setPermissions((prev) => ({
-			...prev,
-			[permissionId]: !prev[permissionId],
-		}));
 	};
 
 	const handleCloneRole = async () => {
@@ -109,82 +101,14 @@ export default function CloneRoleDrawer({ open, setOpen, role }) {
 						</div>
 					</div>
 
-					<div className="border-t border-[#6A12CD1A] py-4 px-6">
-						<div className="text-[#26064A] text-base font-medium">
-							Review role permissions
-						</div>
-					</div>
-
-					<div className="px-6 h-[calc(100%-29.5rem)] overflow-hidden">
-						<div className="bg-[#F9F5FF] rounded-lg border border-[#6A12CD1A] overflow-hidden h-full">
-							<div className="grid grid-cols-2 gap-4 px-4 py-3 bg-[#F9F5FF] border-b border-[#6A12CD1A]">
-								<div className="flex items-center gap-2">
-									<img src={gridIcon} className="size-4" />
-									<span className="text-[#26064A] font-semibold text-xs">
-										Resources
-									</span>
-								</div>
-								<div className="text-[#26064A] font-semibold text-xs text-right">
-									Permission
-								</div>
-							</div>
-
-							<div className="bg-white h-[calc(100%-2.125rem)] overflow-auto">
-								{isLoadingPermissions ||
-								isLoadingSourcePermissions ? (
-									<div className="flex justify-center items-center h-full">
-										<Loader2 className="animate-spin text-purple-600 h-8 w-8" />
-									</div>
-								) : (
-									Object.entries(
-										permissionsByResource?.data || {},
-									).map(([category, categoryPermissions]) => (
-										<div key={category}>
-											<div className="border-b border-[#6A12CD1A]">
-												<div className="px-4 py-3 text-[#26064A] font-medium text-sm bg-[#6A12CD05] border border-[#6A12CD1A] capitalize">
-													{category}
-												</div>
-											</div>
-
-											{categoryPermissions?.map(
-												(permission) => (
-													<div
-														key={permission.id}
-														className="grid grid-cols-2 gap-4 px-4 py-2 border-b border-[#6A12CD1A] last:border-b-0"
-													>
-														<div>
-															<div className="text-[#26064A] font-medium text-sm">
-																{permission.action}
-															</div>
-															<div className="text-[#26064A99] text-xs mt-0.5">
-																{
-																	permission.description
-																}
-															</div>
-														</div>
-														<div className="flex items-center justify-end">
-															<Switch
-																checked={
-																	permissions[
-																		permission.id
-																	] || false
-																}
-																onCheckedChange={() =>
-																	handlePermissionToggle(
-																		permission.id,
-																	)
-																}
-															/>
-														</div>
-													</div>
-												),
-											)}
-										</div>
-									))
-								)}
-							</div>
-						</div>
-					</div>
+					<PermissionsAccordion
+						permissions={permissions}
+						setPermissions={setPermissions}
+						permissionsByResource={permissionsByResource?.data}
+						isLoading={
+							isLoadingPermissions || isLoadingSourcePermissions
+						}
+					/>
 
 					<div className="absolute bottom-0 left-0 w-full">
 						<div className="flex justify-center gap-2 items-center bg-white py-1 px-3 rounded-t-2xl border border-[#F0E7FA]">
