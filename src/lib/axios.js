@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import { ensureCleanup } from '@/components/features/login/service/auth.service';
 import { serviceUrlMap } from '@/config/url.config';
 import { STAGE_APP_TOKEN, ENABLE_RBAC } from '@/config';
@@ -101,6 +102,19 @@ const setupInterceptors = (axiosClient) => {
 				error.config?.url?.includes('/invitations/') &&
 				error.config?.url?.match(/\/(validate|accept|decline)$/);
 
+			// Show a user-visible toast for non-401 errors (avoid double toasts for auth flow)
+			try {
+				if (error.response && error.response.status !== 401) {
+					const msg =
+						error.response?.data?.message ||
+						error.message ||
+						'API request failed';
+					toast.error(msg);
+				}
+			} catch (e) {
+				// ignore toast errors
+			}
+
 			// Only log out on 401 if NOT an invitation route
 			if (
 				error.response &&
@@ -111,6 +125,7 @@ const setupInterceptors = (axiosClient) => {
 				isLoggingOut = true;
 				await ensureCleanup();
 			}
+
 			return Promise.reject(error);
 		},
 	);
