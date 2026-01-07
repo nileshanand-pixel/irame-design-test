@@ -85,19 +85,19 @@ const getColumns = (onViewDetails) => [
 
 			return (
 				<div className="flex items-center gap-2 max-w-xs">
-					<span className="text-[#26064A99] text-xs line-clamp-2">
-						{description}
-					</span>
 					<button
 						onClick={(e) => {
 							e.stopPropagation();
 							onViewDetails(row.original.id);
 						}}
-						className=" hover:text-[#26064A] flex-shrink-0 ml-auto transition-colors"
+						className=" text-gray-600 hover:text-[#26064A] flex-shrink-0 transition-colors"
 						title="View details"
 					>
-						<Eye className="h-4 w-4" />
+						<Eye className="h-3.5 w-3.5" />
 					</button>
+					<span className="text-[#26064A99] text-xs line-clamp-2">
+						{description}
+					</span>
 				</div>
 			);
 		},

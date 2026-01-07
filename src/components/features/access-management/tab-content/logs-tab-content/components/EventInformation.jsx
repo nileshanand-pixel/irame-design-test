@@ -54,8 +54,8 @@ export default function EventInformation({ log }) {
 	const { date, time } = formatTimestamp(log.occurred_at || log.created_at);
 
 	return (
-		<div className="border border-[#E6E2E9] rounded-lg p-4 space-y-3">
-			<div className="text-sm font-semibold text-[#26064A]">
+		<div className="border border-[#E6E2E9] bg-purple-4 rounded-lg p-4 space-y-3">
+			<div className="text-sm font-semibold  text-[#26064A]">
 				Event Information
 			</div>
 

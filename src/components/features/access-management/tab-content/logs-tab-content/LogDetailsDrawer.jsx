@@ -1,16 +1,37 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useActivityLogDetails } from '@/hooks/use-activity-log-details';
 import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import EventInformation from './components/EventInformation';
 import ActorSection from './components/ActorSection';
 import TargetSection from './components/TargetSection';
 import ChangeTrackingSection from './components/ChangeTrackingSection';
-import AdditionalDetailsAccordion from './components/AdditionalDetailsAccordion';
+import AdditionalDetailsAccordion, {
+	AccordionSection,
+} from './components/AdditionalDetailsAccordion';
 
-export default function LogDetailsDrawer({ open, setOpen, logId }) {
+export default function LogDetailsDrawer({
+	open,
+	setOpen,
+	logId,
+	useAccordion = true,
+}) {
 	const { data, isLoading, error } = useActivityLogDetails(logId, {
 		enabled: open && !!logId,
 	});
+
+	const [openSections, setOpenSections] = useState({
+		actor: false,
+		target: false,
+		changes: false,
+	});
+
+	const toggleSection = (section) => {
+		setOpenSections((prev) => ({
+			...prev,
+			[section]: !prev[section],
+		}));
+	};
 
 	if (isLoading) {
 		return (
@@ -73,11 +94,41 @@ export default function LogDetailsDrawer({ open, setOpen, logId }) {
 
 					<div className="flex-1 overflow-y-auto p-6 space-y-4">
 						<EventInformation log={log} />
-						<ActorSection log={log} />
-						{log.target && <TargetSection log={log} />}
-						{(log.before_state || log.after_state) && (
-							<ChangeTrackingSection log={log} />
+
+						{useAccordion ? (
+							<>
+								<AccordionSection
+									title="Performed By"
+									isOpen={openSections.actor}
+									onToggle={() => toggleSection('actor')}
+								>
+									<ActorSection log={log} hideWrapper />
+								</AccordionSection>
+
+								<AccordionSection
+									title="Target Information"
+									isOpen={openSections.target}
+									onToggle={() => toggleSection('target')}
+								>
+									<TargetSection log={log} hideWrapper />
+								</AccordionSection>
+
+								<AccordionSection
+									title="What Changed"
+									isOpen={openSections.changes}
+									onToggle={() => toggleSection('changes')}
+								>
+									<ChangeTrackingSection log={log} hideWrapper />
+								</AccordionSection>
+							</>
+						) : (
+							<>
+								<ActorSection log={log} />
+								<TargetSection log={log} />
+								<ChangeTrackingSection log={log} />
+							</>
 						)}
+
 						<AdditionalDetailsAccordion log={log} />
 					</div>
 				</div>
