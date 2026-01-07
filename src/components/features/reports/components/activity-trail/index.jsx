@@ -14,7 +14,7 @@ export default function ActivityTrail() {
 	});
 
 	return (
-		<div className="mt-8">
+		<div className="">
 			{isLoading ? (
 				<ActivityTrailSkeleton />
 			) : (

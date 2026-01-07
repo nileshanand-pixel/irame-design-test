@@ -84,10 +84,7 @@ const Layout = ({ children }) => {
 				<Header />
 				<div
 					className={cn(
-						'h-full pt-0 flex bg-gray-300 justify-center overflow-x-hidden w-full',
-						pathname.includes('/dashboard')
-							? 'bg-gray-muted'
-							: 'bg-white',
+						'h-full pt-0 flex  justify-center overflow-x-hidden w-full bg-white',
 					)}
 				>
 					{/* <Outlet /> */}

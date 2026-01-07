@@ -73,7 +73,13 @@ export const WorkspaceEditProvider = ({ children, regenerator, editDisabled }) =
 
 		const workspaceChanges = {};
 		workspaceChanges.query = answer.query;
-		workspaceChanges.metadata = answer.metadata;
+		workspaceChanges.metadata = {
+			...answer.metadata,
+			workspace_id:
+				answer?.answer?.planner?.workspace_id ||
+				answer?.answer?.reference?.workspace_id ||
+				null,
+		};
 		workspaceChanges.apiConfig = {
 			previous_query_id: answer.query_id,
 		};

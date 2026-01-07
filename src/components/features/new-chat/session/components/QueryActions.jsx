@@ -26,6 +26,7 @@ const QueryActions = ({
 	onDeleteSuccess, // Callback after successful delete
 	setUserHasNavigated,
 	setDisableAutoScroll,
+	isClarificationQuery = false,
 }) => {
 	const [copied, setCopied] = useState(false);
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
@@ -131,79 +132,84 @@ const QueryActions = ({
 				disabled={false}
 			/>
 
-			{/* Bookmark */}
-			<button
-				onClick={handleBookmark}
-				disabled={
-					saveTemplateMutation.isPending ||
-					deleteTemplateMutation.isPending
-				}
-				className=" hover:bg-purple-4 hover:scale-105 transition-all duration-150 rounded-md p-0"
-				title={
-					saveTemplateMutation.isPending
-						? 'Saving...'
-						: deleteTemplateMutation.isPending
-							? 'Deleting...'
-							: isSaved
-								? 'Delete saved query'
-								: 'Save query'
-				}
-			>
-				{saveTemplateMutation.isPending ||
-				deleteTemplateMutation.isPending ? (
-					<div className="w-9 h-9 p-2 flex items-center justify-center">
-						<svg
-							className="animate-spin w-5 h-5"
-							fill="none"
-							viewBox="0 0 24 24"
+			{!isClarificationQuery && (
+				<>
+					{/* Bookmark */}
+					<button
+						onClick={handleBookmark}
+						disabled={
+							saveTemplateMutation.isPending ||
+							deleteTemplateMutation.isPending
+						}
+						className=" hover:bg-purple-4 hover:scale-105 transition-all duration-150 rounded-md p-0"
+						title={
+							saveTemplateMutation.isPending
+								? 'Saving...'
+								: deleteTemplateMutation.isPending
+									? 'Deleting...'
+									: isSaved
+										? 'Delete saved query'
+										: 'Save query'
+						}
+					>
+						{saveTemplateMutation.isPending ||
+						deleteTemplateMutation.isPending ? (
+							<div className="w-9 h-9 p-2 flex items-center justify-center">
+								<svg
+									className="animate-spin w-5 h-5"
+									fill="none"
+									viewBox="0 0 24 24"
+								>
+									<circle
+										className="opacity-25"
+										cx="12"
+										cy="12"
+										r="10"
+										stroke="currentColor"
+										strokeWidth="4"
+									></circle>
+									<path
+										className="opacity-75"
+										fill="currentColor"
+										d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+									></path>
+								</svg>
+							</div>
+						) : (
+							<Bookmark
+								className={`h-9 w-9 p-2 ${isSaved ? 'fill-primary text-primary' : ''}`}
+							/>
+						)}
+					</button>
+
+					{/* Copy */}
+					<button
+						onClick={handleCopy}
+						className=" hover:bg-purple-4 hover:scale-105 transition-all duration-150 rounded-md p-0"
+						title={copied ? 'Copied!' : 'Copy to clipboard'}
+					>
+						{copied ? (
+							<Check className="h-9 w-9 p-2" />
+						) : (
+							<Copy className="h-9 w-9 p-2" />
+						)}
+					</button>
+
+					{/* Edit */}
+					{onEdit && (
+						<Button
+							variant="ghost"
+							onClick={onEdit}
+							disabled={disableEdit}
+							className=" hover:bg-purple-4 hover:scale-105 transition-all duration-150 rounded-md p-0 "
+							title="Edit query"
 						>
-							<circle
-								className="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								strokeWidth="4"
-							></circle>
-							<path
-								className="opacity-75"
-								fill="currentColor"
-								d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-							></path>
-						</svg>
-					</div>
-				) : (
-					<Bookmark
-						className={`h-9 w-9 p-2 ${isSaved ? 'fill-primary text-primary' : ''}`}
-					/>
-				)}
-			</button>
-
-			{/* Copy */}
-			<button
-				onClick={handleCopy}
-				className=" hover:bg-purple-4 hover:scale-105 transition-all duration-150 rounded-md p-0"
-				title={copied ? 'Copied!' : 'Copy to clipboard'}
-			>
-				{copied ? (
-					<Check className="h-9 w-9 p-2" />
-				) : (
-					<Copy className="h-9 w-9 p-2" />
-				)}
-			</button>
-
-			{/* Edit */}
-			{onEdit && (
-				<Button
-					variant="ghost"
-					onClick={onEdit}
-					disabled={disableEdit}
-					className=" hover:bg-purple-4 hover:scale-105 transition-all duration-150 rounded-md p-0 "
-					title="Edit query"
-				>
-					<Pencil className="h-9 w-9 p-2" />
-				</Button>
+							<Pencil className="h-9 w-9 p-2" />
+						</Button>
+					)}
+				</>
 			)}
+
 			<ConfirmationDialog />
 		</div>
 	);

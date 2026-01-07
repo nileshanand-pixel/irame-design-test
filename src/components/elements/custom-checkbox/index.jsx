@@ -1,7 +1,13 @@
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 
-const CustomCheckbox = ({ checked, disabled, onChange }) => {
+const CustomCheckbox = ({
+	checked,
+	disabled,
+	onChange,
+	boxClassName,
+	checkClass,
+}) => {
 	return (
 		<label className="relative inline-flex items-center cursor-pointer">
 			<input
@@ -15,10 +21,14 @@ const CustomCheckbox = ({ checked, disabled, onChange }) => {
 					checked
 						? 'bg-primary border-primary'
 						: 'bg-white border-gray-500 border-2',
+					boxClassName,
 				)}
 			/>
 			<Check
-				className="absolute left-0.5 top-0.5 w-4 h-4 p-0.5 text-white pointer-events-none hidden peer-checked:block"
+				className={cn(
+					'absolute left-0.5 top-0.5 w-4 h-4 p-0.5 text-white pointer-events-none hidden peer-checked:block',
+					checkClass,
+				)}
 				strokeWidth={5}
 			/>
 		</label>

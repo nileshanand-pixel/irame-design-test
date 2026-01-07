@@ -49,6 +49,10 @@ export default function useS3File() {
 	const createS3File = async (s3Url) => {
 		try {
 			setIsCreatingS3File(true);
+			// If it's a data URL (for mock data), return it directly
+			if (s3Url && s3Url.startsWith('data:')) {
+				return s3Url;
+			}
 			const signedUrl = await createSignedUrlFromS3Url(s3Url);
 			return signedUrl;
 		} catch (error) {

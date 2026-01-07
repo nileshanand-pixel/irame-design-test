@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
@@ -29,7 +29,15 @@ export function DataTablePagination({
 	table,
 	pageSizeOptions = [10, 20, 30, 40, 50],
 	simpleMode = false,
+	defaultRowsPerPage,
 }) {
+	const newPageSizeOptions = useMemo(() => {
+		if (defaultRowsPerPage && !pageSizeOptions.includes(defaultRowsPerPage)) {
+			return [defaultRowsPerPage, ...pageSizeOptions].sort((a, b) => a - b);
+		}
+		return pageSizeOptions;
+	}, [pageSizeOptions, defaultRowsPerPage]);
+
 	// Simple mode: only Previous and Next buttons
 	if (simpleMode) {
 		return (
@@ -83,7 +91,7 @@ export function DataTablePagination({
 							side="top"
 							className="text-xs font-normal textprimary80"
 						>
-							{pageSizeOptions.map((pageSize) => (
+							{newPageSizeOptions.map((pageSize) => (
 								<SelectItem
 									key={pageSize}
 									value={`${pageSize}`}

@@ -27,7 +27,7 @@ export const formatFileSize = (size) => {
 
 export const getInitials = (user_name) => {
 	if (!user_name) return;
-	const words = user_name.split(' ');
+	const words = user_name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
 
 	const initials = words.map((word) => word.charAt(0).toUpperCase());
 

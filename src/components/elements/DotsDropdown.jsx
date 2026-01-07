@@ -8,20 +8,31 @@ import {
 	DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 
-const DotsDropdown = ({ options, align = 'end', labelClassName }) => {
+const DotsDropdown = ({
+	options,
+	align = 'end',
+	triggerClassName,
+	labelClassName,
+}) => {
 	return (
 		<DropdownMenu className="relative">
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" size="icon" className=" h-9 w-6">
-					<span className="material-symbols-outlined text-primary100 cursor-pointer text-2xl">
+					<span
+						className={cn(
+							'material-symbols-outlined text-primary100 cursor-pointer text-2xl',
+							triggerClassName,
+						)}
+					>
 						more_vert
 					</span>
-					<span className="sr-only">Open menu</span>
+					{/* <span className="sr-only">Open menu</span> */}
 				</Button>
 			</DropdownMenuTrigger>
+
 			<DropdownMenuContent
 				align={align}
-				className="text-primary80 p-0 max-h-60 overflow-y-auto"
+				className="text-primary80 max-h-60 overflow-y-auto p-2"
 			>
 				{options?.map((i) => {
 					const { icon: Icon, label, type, onClick, show } = i;

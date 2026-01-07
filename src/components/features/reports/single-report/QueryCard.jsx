@@ -1,39 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { QueryStatusDropdown } from './QueryStatusDropdown';
 import { RiskTypesDropdown } from './RiskTypesDropdown';
-import {
-	ArrowSquareOut,
-	BoxArrowDown,
-	ChartLineUp,
-	Table,
-	Trash,
-} from '@phosphor-icons/react';
-import Tooltip from '../components/Tooltip';
+import { ArrowSquareOut, ChartLineUp, Table, Trash } from '@phosphor-icons/react';
 import { AddGraphModal } from './AddGraphModal';
 import DotsDropdown from '@/components/elements/DotsDropdown';
 import { QueryGraphs } from './QueryGraphs';
 import { useMutation } from '@tanstack/react-query';
-import { deleteReportCard } from '../service/reports.service';
+import { deleteReportCard, generateCases } from '../service/reports.service';
 import { Loader2, Eye, Copy } from 'lucide-react';
-import { getSupportedGraphs } from '@/lib/utils';
+import { getInitials, getSupportedGraphs } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
 import { toast } from '@/lib/toast';
 import { logError } from '@/lib/logger';
 import { RiskLevelDropdown } from './RiskLevelDropdown';
-import { Hint } from '@/components/Hint';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
-import { QuerySources } from './QuerySources';
-import ReportComments from '../components/report-comments';
+import { QuerySourcesAndComments } from './QuerySourcesAndComments';
 import useS3File from '@/hooks/useS3File';
-import CircularLoader from '@/components/elements/loading/CircularLoader';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import redirectIcon from '@/assets/icons/redirect.svg';
+import { useSearchParams } from 'react-router-dom';
+import FlagExceptionsModal from './flag-exception-modal';
+import Kpis from './kpis';
+import { FiDownload, FiFlag } from 'react-icons/fi';
+import CircularLoader from '@/components/elements/loading/CircularLoader';
 
 export const QueryCard = ({ report, card, pdfMode }) => {
 	const queryNumber = card?.order_no || 1;
 	const { isOwner } = useReportPermission();
+	const [searchParams, setSearchParams] = useSearchParams();
 
 	const [status, setStatus] = useState(card?.status || 'in_review');
 	const [riskTypes, setRiskTypes] = useState(
@@ -42,9 +40,18 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 	const [riskLevel, setRiskLevel] = useState(card?.risk_level || 'medium');
 	const [showAddGraph, setShowAddGraph] = useState(false);
 	const [showGraphs, setShowGraphs] = useState(true);
+	const [showFlagExceptionsModal, setShowFlagExceptionsModal] = useState(false);
 
 	const { isDownloading, downloadS3File } = useS3File();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
+
+	// Check URL for card_id on mount and when searchParams change
+	useEffect(() => {
+		if (searchParams.get('card_id') === card.external_id) {
+			setShowFlagExceptionsModal(true);
+		}
+	}, [searchParams, card.external_id]);
+
 	const deleteMutation = useMutation({
 		mutationFn: deleteReportCard,
 		onSuccess: () => {
@@ -62,9 +69,72 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 		},
 	});
 
+	const generateCasesMutation = useMutation({
+		mutationFn: generateCases,
+		onSuccess: () => {
+			toast.success('Cases generated successfully');
+			queryClient.invalidateQueries(['report-details', report.report_id]);
+		},
+		onError: (error) => {
+			logError(error, {
+				feature: 'reports',
+				action: 'generate-cases',
+				reportId: report?.report_id,
+				cardId: card?.external_id,
+			});
+			toast.error(
+				error?.response?.data?.message || 'Failed to generate cases',
+			);
+		},
+	});
+
+	const handleGenerateCases = () => {
+		generateCasesMutation.mutate({
+			reportId: report.report_id,
+			cardId: card.external_id,
+		});
+	};
+
 	const openQuery = () => {
 		const url = `${window.location.origin}/app/new-chat/session/?sessionId=${card.session_id}&queryId=${card.query_id}&source=report&datasource_id=${card.datasource_id}`;
 		window.open(url, '_blank');
+	};
+
+	const handleDownloadQuery = () => {
+		const csvUrl = card?.data?.tables?.[0]?.csv_url;
+		if (!csvUrl || isDownloading) return;
+
+		const truncatedTitle = (card.title ?? 'Untitled')
+			.replace(/\s+/g, '_')
+			.slice(0, 20);
+		const fileName = `${report.name}_${truncatedTitle}_${card.query_id}.csv`;
+		downloadS3File(csvUrl, fileName);
+	};
+
+	const handleFlagExceptions = () => {
+		// Add card_id to URL
+		setSearchParams(
+			(prev) => {
+				const newParams = new URLSearchParams(prev);
+				newParams.set('card_id', card.external_id);
+				return newParams;
+			},
+			{ replace: true },
+		);
+		setShowFlagExceptionsModal(true);
+	};
+
+	const handleCloseFlagExceptions = () => {
+		setShowFlagExceptionsModal(false);
+		// Remove card_id from URL
+		setSearchParams(
+			(prev) => {
+				const newParams = new URLSearchParams(prev);
+				newParams.delete('card_id');
+				return newParams;
+			},
+			{ replace: true },
+		);
 	};
 
 	const cardActions = [
@@ -101,6 +171,20 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 		},
 		{
 			type: 'item',
+			label: 'Add Graph',
+			icon: <ChartLineUp className="size-6" />,
+			show: true,
+			onClick: () => setShowAddGraph(true),
+		},
+		{
+			type: 'item',
+			label: 'Download',
+			icon: <FiDownload className="size-5 text-[#26064A99]" />,
+			show: true,
+			onClick: handleDownloadQuery,
+		},
+		{
+			type: 'item',
 			label: 'Delete',
 			onClick: async () => {
 				const confirmed = await confirm({
@@ -124,16 +208,22 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 	];
 
 	return (
-		<Card className="rounded-xl px-5 py-4 border shadow-sm bg-[#f9f8ff]">
+		<Card className="rounded-xl px-6 py-4 border border-[#F4EFF9] shadow-sm hover:shadow-md hover:border-[#6A12CD33] transition-all duration-300">
 			<ConfirmationDialog />
-			<CardHeader className="p-0">
-				<div className="flex flex-row flex-wrap items-center gap-3 mb-2">
+			<CardHeader className="p-0 pb-3 border-b-1 border-[#26064A1A]">
+				<div className="flex flex-row flex-wrap items-center gap-3 mb-3">
 					<Badge
 						variant="outline"
-						className="px-3 py-2 font-semibold border-none rounded-full text-primary80 bg-purple-4"
+						className="px-3 py-3 font-semibold border-none rounded-full text-[#26064ACC] bg-[#6A12CD0A] text-xs"
 					>
-						QUERY&nbsp;{String(queryNumber).padStart(2, '0')}:
+						QUERY&nbsp;{String(queryNumber).padStart(2, '0')}
 					</Badge>
+
+					<QueryStatusDropdown
+						value={status}
+						onChange={setStatus}
+						reportCardId={card.external_id}
+					/>
 
 					<RiskTypesDropdown
 						value={riskTypes[0] || 'financial'}
@@ -149,91 +239,87 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 						reportCardId={card.external_id}
 					/>
 
-					<div className="sm:ml-auto">
-						<QueryStatusDropdown
-							value={status}
-							onChange={setStatus}
-							reportCardId={card.external_id}
-						/>
-					</div>
+					{!pdfMode && (
+						<div className="sm:ml-auto">
+							<DotsDropdown options={cardActions} align="end" />
+						</div>
+					)}
 				</div>
 
-				<div className="flex flex-row items-center justify-between gap-16 border-b border-gray-200 pb-2 min-w-0">
-					<CardTitle className="flex items-center gap-1 p-0 overflow-x-hidden text-xl font-semibold text-primary80">
-						<span className="truncate">
-							{card?.title ?? 'Prescriptive analysis of this report'}
-						</span>
-						{!pdfMode && (
-							<Hint label="Open Query" side="top">
-								<Button
-									variant="ghost"
-									size="iconSm"
-									className="text-gray-500 hover:text-gray-700 relative"
-									onClick={openQuery}
-								>
-									<ArrowSquareOut className="size-6 shrink-0" />
-								</Button>
-							</Hint>
-						)}
-					</CardTitle>
+				<CardTitle className="p-0 text-xl font-semibold text-primary80 truncate">
+					{card?.title ?? 'Prescriptive analysis of this report'}
+				</CardTitle>
 
+				<div className="flex items-center justify-between pt-2">
+					<div className="flex items-center gap-2">
+						<div className="text-[#26064A99] text-sm">Added by:</div>
+
+						<div className="flex items-center gap-1">
+							<Avatar className="size-8">
+								<AvatarFallback className="text-sm font-medium">
+									{getInitials(card?.added_by)}
+								</AvatarFallback>
+							</Avatar>
+
+							<div className="capitalize text-[#26064ACC] font-medium text-sm">
+								{card?.added_by}
+							</div>
+						</div>
+					</div>
 					{!pdfMode && (
-						<div className="flex shrink-0 items-center gap-3">
-							<Tooltip content="Add Graph">
+						<div>
+							{card?.cases_generated ? (
 								<Button
-									variant="ghost"
-									size="iconSm"
-									disabled={!isOwner}
-									className="text-gray-500 hover:text-gray-700"
-									onClick={() => setShowAddGraph(true)}
+									variant="outline"
+									size="sm"
+									className="flex items-center gap-2"
+									onClick={handleFlagExceptions}
 								>
-									<ChartLineUp className="size-6" />
+									<FiFlag className="size-4 text-[#26064A99]" />
+									<span className="text-[#26064ACC] text-xs">
+										Manage Exceptions
+									</span>
+									<div className="w-[0.0625rem] h-5 bg-[#26064A66]"></div>
+									<img
+										src={redirectIcon}
+										alt="flag icon"
+										className="size-4"
+									/>
 								</Button>
-							</Tooltip>
-							<Tooltip
-								content={isDownloading ? 'Downloading' : 'Download'}
-							>
+							) : (
 								<Button
-									variant="ghost"
-									size="iconSm"
-									className="text-gray-500 hover:text-gray-700"
-									onClick={() => {
-										const csvUrl =
-											card?.data?.tables?.[0]?.csv_url;
-										if (!csvUrl || isDownloading) return;
-
-										const truncatedTitle = (
-											card.title ?? 'Untitled'
-										)
-											.replace(/\s+/g, '_')
-											.slice(0, 20);
-										const fileName = `${report.name}_${truncatedTitle}_${card.query_id}.csv`;
-										downloadS3File(csvUrl, fileName);
-									}}
+									variant="outline"
+									size="sm"
+									onClick={handleGenerateCases}
+									disabled={generateCasesMutation.isPending}
 								>
-									{isDownloading ? (
-										<CircularLoader size="sm" />
+									{generateCasesMutation.isPending ? (
+										<div className="flex gap-2 items-center">
+											<CircularLoader size="sm" />
+											<span>Generating...</span>
+										</div>
 									) : (
-										<BoxArrowDown size={18} className="size-6" />
+										'Generate Cases'
 									)}
 								</Button>
-							</Tooltip>
-							<div className="relative">
-								<DotsDropdown options={cardActions} align="start" />
-							</div>
+							)}
 						</div>
 					)}
 				</div>
 			</CardHeader>
 
-			<CardContent className="p-0 flex flex-col gap-2 pt-2">
+			<CardContent className="p-0 flex flex-col gap-2 pt-3">
+				<div className="mb-4">
+					<Kpis kpisData={card?.kpis} />
+				</div>
+
 				{showGraphs && (
 					<QueryGraphs
 						graphs={card.data.graphs}
 						reportCardId={card.external_id}
 					/>
 				)}
-				<div className="pl-8">
+				<div>
 					<div
 						className="text-primary80"
 						style={{ whiteSpace: 'pre-wrap' }}
@@ -242,38 +328,21 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 						}}
 					/>
 				</div>
-				<QuerySources
+
+				<QuerySourcesAndComments
 					queryCardId={card.external_id}
-					reportId={report.report_id}
-				/>
-				<ReportComments
-					withTrigger={true}
 					reportId={report.report_id}
 					reportCardId={card.external_id}
 				/>
+
+				{/* <ReportComments
+					withTrigger={true}
+					reportId={report.report_id}
+					reportCardId={card.external_id}
+					onTriggerClick={() => {}}
+				/> */}
 			</CardContent>
 
-			{/* ---------- footer ---------- */}
-			{/* TODO -> Implement in milestone 2 */}
-			{/* <CardFooter className=" flex flex-col sm:flex-row sm:items-center mt-2 sm:justify-between gap-3">
-				<div className="flex pl-2 items-center">
-					<div className="flex -space-x-2">
-						<div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white" />
-						<div className="w-8 h-8 rounded-full bg-gray-400 border-2 border-white" />
-						<div className="w-8 h-8 rounded-full bg-gray-500 border-2 border-white" />
-					</div>
-					<span className="ml-2 font-medium text-[#6a3bff]">
-						+3 sources
-					</span>
-				</div>
-				<Button
-					variant="ghost"
-					size="icon"
-					className="text-gray-400 hover:text-gray-600"
-				>
-					<PlusCircle size={24} />
-				</Button>
-			</CardFooter> */}
 			{showAddGraph && (
 				<AddGraphModal
 					onClose={() => setShowAddGraph(false)}
@@ -282,6 +351,13 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 					open={showAddGraph}
 				/>
 			)}
+
+			<FlagExceptionsModal
+				open={showFlagExceptionsModal}
+				onClose={handleCloseFlagExceptions}
+				reportId={report?.report_id}
+				cardId={card?.external_id}
+			/>
 		</Card>
 	);
 };

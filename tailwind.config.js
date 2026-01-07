@@ -112,6 +112,69 @@ module.exports = {
 					900: 'rgba(219, 119, 7, 1)',
 					200: 'rgba(219, 119, 7, 0.16)',
 				},
+				pill: {
+					status: {
+						/* Base (dot + text) */
+						inProgress: '#0000FF',
+						pending: '#FFA500',
+						completed: '#008000',
+
+						/* Background */
+						inProgressBg: '#EBEEFF',
+						pendingBg: '#FFFAEB',
+						completedBg: '#F3FFEB',
+
+						/* Border (10%) */
+						inProgressBorder: 'rgba(0, 0, 255, 0.1)',
+						pendingBorder: 'rgba(219, 119, 7, 0.1)',
+						completedBorder: 'rgba(0, 128, 0, 0.1)',
+					},
+
+					action: {
+						/* Base */
+						needAction: '#0000FF',
+						bau: '#FFA500',
+						systematic: '#6A12CD',
+						falsePositive: '#BF2E84',
+						approved: '#008000',
+
+						/* Background */
+						needActionBg: '#EBEEFF',
+						bauBg: '#FFFAEB',
+						systematicBg: 'rgba(106, 18, 205, 0.06)',
+						falsePositiveBg: '#FFFDFE',
+						approvedBg: '#F3FFEB',
+
+						/* Border (10%) */
+						needActionBorder: 'rgba(0, 0, 255, 0.1)',
+						bauBorder: 'rgba(219, 119, 7, 0.1)',
+						systematicBorder: 'rgba(239, 229, 249, 1)',
+						falsePositiveBorder: 'rgba(191, 46, 132, 0.1)',
+						approvedBorder: 'rgba(0, 128, 0, 0.1)',
+					},
+
+					severity: {
+						/* Base */
+						low: '#B78900',
+						medium: '#D97300',
+						high: '#DC2626',
+
+						/* Background */
+						lowBg: 'rgba(183, 137, 0, 0.1)',
+						mediumBg: 'rgba(217, 115, 0, 0.1)',
+						highBg: 'rgba(220, 38, 38, 0.1)',
+
+						/* Border (10%) */
+						lowBorder: 'rgba(183, 137, 0, 0.2)',
+						mediumBorder: 'rgba(217, 115, 0, 0.2)',
+						highBorder: 'rgba(220, 38, 38, 0.2)',
+					},
+
+					user: {
+						bg: '#DBEAFE80',
+						avatar: '#C3DCFF',
+					},
+				},
 			},
 			keyframes: {
 				'accordion-down': {

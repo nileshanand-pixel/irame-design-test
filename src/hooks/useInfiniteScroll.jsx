@@ -66,6 +66,7 @@ const useInfiniteScroll = ({
 					const dataArray =
 						lastPage?.session_list ||
 						lastPage?.sessions ||
+						lastPage?.reports ||
 						lastPage?.data ||
 						lastPage;
 
@@ -77,6 +78,7 @@ const useInfiniteScroll = ({
 								const pageData =
 									page?.session_list ||
 									page?.sessions ||
+									page?.reports ||
 									page?.data ||
 									page;
 								return (
@@ -94,11 +96,21 @@ const useInfiniteScroll = ({
 
 			if (paginationType === 'offset') {
 				const limit = options.limit || 20;
-				const lastPageData = lastPage?.data || lastPage;
+				const lastPageData =
+					lastPage?.session_list ||
+					lastPage?.sessions ||
+					lastPage?.reports ||
+					lastPage?.data ||
+					lastPage;
 
 				if (Array.isArray(lastPageData) && lastPageData.length === limit) {
 					const totalItems = allPages.reduce((total, page) => {
-						const pageData = page?.data || page;
+						const pageData =
+							page?.session_list ||
+							page?.sessions ||
+							page?.reports ||
+							page?.data ||
+							page;
 						return (
 							total + (Array.isArray(pageData) ? pageData.length : 0)
 						);
@@ -181,8 +193,15 @@ const useInfiniteScroll = ({
 
 	// Use the appropriate query
 	const query = isInfinite ? infiniteQuery : regularQuery;
-	const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
-		query;
+	const {
+		data,
+		isLoading,
+		isFetchingNextPage = false,
+		hasNextPage = false,
+		fetchNextPage = () => {},
+		error,
+		isError,
+	} = query;
 
 	// Flatten data from pages
 	const flattenedData = useMemo(() => {
@@ -194,7 +213,11 @@ const useInfiniteScroll = ({
 		// and the flatMap will not be called.
 		const flattened = data?.pages?.flatMap((page) => {
 			const pageData =
-				page?.session_list || page?.sessions || page?.data || page;
+				page?.session_list ||
+				page?.sessions ||
+				page?.reports ||
+				page?.data ||
+				page;
 			return Array.isArray(pageData)
 				? pageData.filter((item) => item != null)
 				: [];
@@ -298,6 +321,8 @@ const useInfiniteScroll = ({
 		isFetchingNextPage,
 		hasNextPage,
 		fetchNextPage,
+		error,
+		isError,
 		Sentinel,
 	};
 };

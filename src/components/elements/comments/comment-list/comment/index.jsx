@@ -33,7 +33,7 @@ export default function Comment({ commentData }) {
 					userEmail={commentData?.email}
 				/>
 			</div>
-			<div className="flex flex-col gap-2">
+			<div className="flex flex-col gap-2 w-[calc(100%-1.625rem)]">
 				<div>
 					<div className="text-sm font-semibold">
 						{capitalize(commentData?.user)}

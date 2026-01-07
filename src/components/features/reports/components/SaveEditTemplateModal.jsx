@@ -7,6 +7,7 @@ import {
 	DialogDescription,
 	DialogTitle,
 } from '@/components/ui/dialog';
+import { QUERY_TYPES } from '@/constants/query-type.constant';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useDispatch, useSelector } from 'react-redux';
@@ -206,14 +207,16 @@ const SaveEditTemplateModal = React.memo(
 							<div className="flex flex-col gap-2">
 								<DialogTitle>
 									{templateData?.isEditing ? 'Edit' : 'Save'}{' '}
-									{mode === 'workflow'
+									{mode === QUERY_TYPES.WORKFLOW ||
+									mode === QUERY_TYPES.SQL_WORKFLOW
 										? 'Workflow'
 										: 'To be decided'}
 								</DialogTitle>
 								<DialogDescription>
 									You can{' '}
 									{templateData?.isEditing ? 'edit' : 'save'} your{' '}
-									{mode === 'workflow'
+									{mode === QUERY_TYPES.WORKFLOW ||
+									mode === QUERY_TYPES.SQL_WORKFLOW
 										? 'workflow'
 										: 'To be decided'}{' '}
 									as a template

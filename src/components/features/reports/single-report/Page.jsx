@@ -1,21 +1,23 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useReportId } from '../hooks/useReportId';
 import { useQuery } from '@tanstack/react-query';
 import { getUserReport } from '../service/reports.service';
-import { base64ToBlob } from '@/lib/utils';
-import ReportHeader from '../components/ReportHeader';
 import ReportHero from './ReportHero';
 import QueryList from './QueryList';
-import { ReportPermissionProvider } from '@/contexts/ReportPermissionContext';
+import {
+	ReportPermissionProvider,
+	useReportPermission,
+} from '@/contexts/ReportPermissionContext';
 import ReportSummary from './ReportSummary';
-import axios from 'axios';
-import axiosClientV1 from '@/lib/axios';
-import { toast } from '@/lib/toast';
-import { logError } from '@/lib/logger';
 import ActivityTrail from '../components/activity-trail';
 import ReportComments from '../components/report-comments';
+import ReportSidebar, { REPORT_SECTION_IDS } from './report-sidebar';
+import SingleReportBreadcrumb from './single-report-breadcrumb';
+import Kpis from './kpis';
 
 const SingleReportPage = () => {
+	const [cards, setCards] = useState([]);
+
 	const reportId = useReportId();
 	if (!reportId) return null;
 	const printRef = useRef();
@@ -26,88 +28,50 @@ const SingleReportPage = () => {
 		enabled: Boolean(reportId),
 	});
 
-	if (!reportDetails) return null;
-
-	const generatePDF = async () => {
-		try {
-			const contentUrl = `${window.location.origin}/export/reports/${reportId}/content`;
-			const coverUrl = `${window.location.origin}/export/reports/${reportId}/cover`;
-
-			const [coverResponse, contentResponse] = await Promise.all([
-				axiosClientV1.post(
-					`/files/convert/url`,
-					{
-						url: coverUrl,
-					},
-					{ headers: { 'Content-Type': 'application/json' } },
-				),
-				axiosClientV1.post(
-					`/files/convert/url`,
-					{
-						url: contentUrl,
-					},
-					{ headers: { 'Content-Type': 'application/json' } },
-				),
-			]);
-
-			const coverBase64 = coverResponse.data.pdf;
-			const contentBase64 = contentResponse.data.pdf;
-
-			const coverBlob = base64ToBlob(coverBase64, 'application/pdf');
-			const contentBlob = base64ToBlob(contentBase64, 'application/pdf');
-
-			const formData = new FormData();
-			formData.append('files', coverBlob, 'cover.pdf');
-			formData.append('files', contentBlob, 'content.pdf');
-
-			const mergeResponse = await axiosClientV1.post(
-				`/files/merge/pdf`,
-				formData,
-				{
-					headers: { 'Content-Type': 'multipart/form-data' },
-					responseType: 'blob',
-				},
+	useEffect(() => {
+		if (reportDetails?.cards?.length) {
+			const sorted = reportDetails.cards.sort(
+				(a, b) => a.order_no - b.order_no,
 			);
-
-			const mergedBlob = mergeResponse.data;
-			const url = window.URL.createObjectURL(mergedBlob);
-			const link = document.createElement('a');
-			link.href = url;
-			link.setAttribute('download', reportDetails.report.name || 'merged.pdf');
-			document.body.appendChild(link);
-			link.click();
-			link.remove();
-			window.URL.revokeObjectURL(url);
-		} catch (error) {
-			logError(error, {
-				feature: 'reports',
-				action: 'generate-pdf',
-				reportId,
-			});
-			toast.error('PDF Download failed', error.message);
+			setCards(sorted);
+		} else {
+			setCards([]);
 		}
-	};
+	}, [reportDetails]);
+
+	if (!reportDetails) return null;
 
 	return (
 		<ReportPermissionProvider report={reportDetails.report}>
-			<div className="flex px-5 flex-col w-full h-full">
-				<div className="shrink-0">
-					<ReportHeader
-						onDownload={generatePDF}
-						report={reportDetails.report}
-					/>
-				</div>
-				<div
-					ref={printRef}
-					className="flex-1 px-[7.5rem] py-8 overflow-y-auto"
-				>
-					<ReportHero reportDetails={reportDetails} />
-					<ReportSummary />
-					<QueryList reportDetails={reportDetails} />
-					<ActivityTrail />
+			<div className="flex px-5 flex-col w-full h-full overflow-hidden">
+				<SingleReportBreadcrumb reportDetails={reportDetails} />
 
-					<div className="mt-12">
-						<ReportComments reportId={reportId} />
+				<div className="flex h-full pb-3 overflow-hidden">
+					<ReportSidebar
+						reportDetails={reportDetails}
+						cards={cards}
+						setCards={setCards}
+					/>
+
+					<div
+						ref={printRef}
+						className="w-full h-full pt-8 px-12 flex flex-col gap-8 overflow-auto"
+					>
+						<ReportHero reportDetails={reportDetails} />
+						<Kpis kpisData={reportDetails?.report?.kpis} />
+						<ReportSummary />
+						<QueryList reportDetails={reportDetails} cards={cards} />
+
+						<div
+							className="scroll-m-5 py-4 px-6 rounded-xl border border-[#F4EFF9]"
+							id={REPORT_SECTION_IDS.APPENDIX}
+						>
+							<ActivityTrail />
+
+							<div className="mt-6">
+								<ReportComments reportId={reportId} />
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

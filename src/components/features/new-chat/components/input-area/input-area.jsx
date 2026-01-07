@@ -28,12 +28,15 @@ import { useInputHandlers } from './hooks/use-input-handlers';
 import { pxToRem } from '@/utils/unit-convertor';
 import { useSessionId } from '@/hooks/use-session-id';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
+import { QUERY_TYPES } from '@/constants/query-type.constant';
 
 const InputArea = ({
 	config,
 	onAppendQuery,
 	disabled = false,
 	promptInitialValue = '',
+	isWorkflowLocked = false,
+	isDisabledWithoutLoading = false,
 }) => {
 	// Refs
 	const firstActionRef = useRef(null);
@@ -165,6 +168,7 @@ const InputArea = ({
 						utilReducer={utilReducer}
 						updateUtilProp={updateUtilProp}
 						inputRef={singleInputRef}
+						isWorkflowLocked={isWorkflowLocked}
 					/>
 				);
 		}
@@ -210,7 +214,13 @@ const InputArea = ({
 				</div>
 			)}
 
-			<div className="w-full rounded-xl flex flex-col justify-between bg-purple-4 px-3 py-2 mb-2">
+			<div
+				className={`w-full rounded-xl flex flex-col justify-between px-3 py-2 mb-2 transition-all ${
+					isWorkflowLocked
+						? 'bg-purple-4 opacity-60 cursor-not-allowed'
+						: 'bg-purple-4'
+				}`}
+			>
 				{renderInputByMode()}
 
 				<InputToolbar
@@ -235,7 +245,9 @@ const InputArea = ({
 					onSend={handleSend}
 					mode={mode}
 					promptLength={prompt?.trim()?.length || 0}
+					isWorkflowLocked={isWorkflowLocked}
 					onMentionClick={handleMentionClick} // Add this line to pass the handler
+					isDisabledWithoutLoading={isDisabledWithoutLoading}
 				/>
 			</div>
 
@@ -247,7 +259,12 @@ const InputArea = ({
 						templateData={editTemplateData}
 						queries={queries}
 						setQueries={setQueries}
-						label={mode === 'workflow' ? 'Step' : 'Query'}
+						label={
+							mode === QUERY_TYPES.WORKFLOW ||
+							mode === QUERY_TYPES.SQL_WORKFLOW
+								? 'Step'
+								: 'Query'
+						}
 						refetchSavedQueries={templateActions.refetch}
 						mode={mode}
 					/>,

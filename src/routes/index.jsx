@@ -7,11 +7,13 @@ import Layout from '@/components/Layout';
 import Configuration from '@/components/features/configuration/page';
 import Workzone from '@/components/features/new-chat/session/Page';
 import DashboardDetailsPage from '@/components/features/dashboard/components/DashboardDetailsPage';
+import DashboardContentRouter from '@/components/features/dashboard/components/DashboardContentRouter';
+import DashboardDetailPageNew from '@/components/features/dashboard/components/DashboardDetailPageNew';
 import TestRoute from '@/components/features/testingUI/Page';
 import ProtectedRoute from './ProtectedRoute';
 import DataSource from '@/components/features/configuration/datasource/page';
 import ReportsInDatasource from '@/components/features/reports/datasource_reports/Page';
-import ReportFolders from '@/components/features/reports/Page';
+import ReportsPage from '@/components/features/reports/Page';
 import TermsModal from '@/components/TermsModal';
 import BusinessProcessPage from '@/components/features/business-process/page';
 import SingleBusinessProcessPage from '@/components/features/business-process/single-business-process/SingleBusinessProcess';
@@ -68,7 +70,7 @@ const AppRoutes = () => {
 										/>
 										<Route
 											path="dashboard/content"
-											element={<DashboardDetailsPage />}
+											element={<DashboardDetailPageNew />}
 										/>
 										<Route
 											path="dashboard/*"
@@ -88,8 +90,8 @@ const AppRoutes = () => {
 											element={<ReportsInDatasource />}
 										/>
 										<Route
-											path="reports/datasources"
-											element={<ReportFolders />}
+											path="reports"
+											element={<ReportsPage />}
 										/>
 										<Route
 											path="reports/:reportId"
@@ -103,12 +105,6 @@ const AppRoutes = () => {
 											path="business-process/:businessProcessId"
 											element={<SingleBusinessProcessPage />}
 										/>
-										{/* <Route
-									path="business-process/:businessProcessId/workflows/:workflowId"
-									element={
-										<ProtectedRoute element={<WorkflowPage />} />
-									}
-								/> */}
 										<Route
 											path="business-process/:businessProcessId/workflows/:workflowId"
 											element={<WorkflowPageV2 />}

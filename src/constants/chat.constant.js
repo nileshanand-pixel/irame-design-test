@@ -4,6 +4,8 @@ const CHAT_CONSTANTS = {
 	IRA_INPUT_PLACEHOLDER: 'Enter your prompt here',
 
 	IRA_GENERATING_RESPONSE: 'Generating response, wait for magic...',
+
+	IRA_INPUT_PLACEHOLDER_LOCKED: 'This session is locked',
 };
 
 export const RESPONSE_CARD_VIEWS = {

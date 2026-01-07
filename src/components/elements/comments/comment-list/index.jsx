@@ -1,13 +1,19 @@
+import { cn } from '@/lib/utils';
 import Comment from './comment';
 import CommentListSkeleton from './skeleton';
 
-export default function CommentList({ commentsData, isLoadingComments }) {
+export default function CommentList({ commentsData, isLoadingComments, className }) {
 	if (isLoadingComments) {
 		return <CommentListSkeleton />;
 	}
 
 	return (
-		<div className="border-b border-[#D1D5DB] bg-[#fff] rounded-t-lg">
+		<div
+			className={cn(
+				'border-b border-[#D1D5DB] bg-[#fff] rounded-t-lg',
+				className,
+			)}
+		>
 			{commentsData?.length !== 0 ? (
 				commentsData?.map((commentData) => (
 					<Comment commentData={commentData} />

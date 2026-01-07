@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
 
-// Messages rotate with typing effect
-const messages = [
+// Default messages if none are passed
+const defaultMessages = [
 	'Loading domain knowledge modules...',
 	'Retrieving relevant datasets...',
 	'Storing audit trail securely...',
@@ -18,6 +18,8 @@ const TYPING_CONFIG = {
 	pauseAfterMessage: 2000,
 	cursorBlinkSpeed: 530,
 };
+
+// ------------------ Animations ------------------
 
 const DiamondAnimation = () => {
 	const [progress, setProgress] = useState(0);
@@ -85,11 +87,14 @@ const AnimatedDots = ({ show }) => {
 		const i = setInterval(() => setDotCount((c) => (c + 1) % 4), 500);
 		return () => clearInterval(i);
 	}, [show]);
+
 	if (!show) return null;
 	return <span className="inline-block w-6">{'.'.repeat(dotCount)}</span>;
 };
 
-const RotatingMessage = () => {
+// ------------------ Rotating Messages ------------------
+
+const RotatingMessage = ({ messages }) => {
 	const [idx, setIdx] = useState(0);
 	const [text, setText] = useState('');
 	const [typing, setTyping] = useState(true);
@@ -105,6 +110,7 @@ const RotatingMessage = () => {
 
 	useEffect(() => {
 		const msg = messages[idx];
+
 		if (typing) {
 			if (text.length < msg.length) {
 				const variation = Math.random() * TYPING_CONFIG.speedVariation;
@@ -113,6 +119,7 @@ const RotatingMessage = () => {
 					TYPING_CONFIG.baseSpeed +
 					variation +
 					(isSpace ? TYPING_CONFIG.pauseAfterWord : 0);
+
 				const t = setTimeout(
 					() => setText(msg.slice(0, text.length + 1)),
 					delay,
@@ -129,7 +136,7 @@ const RotatingMessage = () => {
 		} else {
 			setTyping(true);
 		}
-	}, [idx, text, typing]);
+	}, [idx, text, typing, messages]);
 
 	const current = messages[idx];
 	const endsWithDots = current.endsWith('...');
@@ -143,14 +150,12 @@ const RotatingMessage = () => {
 			</div>
 			<span className="text-gray-800 font-medium text-sm min-h-[20px] flex items-center">
 				{textWithoutDots}
-				{showAnimatedDots ? (
-					<AnimatedDots show={true} />
-				) : endsWithDots && text.includes('.') && text !== current ? (
-					'...'
-				) : null}
+				{showAnimatedDots && <AnimatedDots show={true} />}
 				{typing && !showAnimatedDots && (
 					<span
-						className={`ml-1 transition-opacity duration-100 ${cursor ? 'opacity-100' : 'opacity-0'}`}
+						className={`ml-1 transition-opacity duration-100 ${
+							cursor ? 'opacity-100' : 'opacity-0'
+						}`}
 					>
 						|
 					</span>
@@ -160,11 +165,14 @@ const RotatingMessage = () => {
 	);
 };
 
-export const CustomLoader = () => {
+// ------------------ Wrapper Component ------------------
+
+export const CustomLoader = ({ messages = defaultMessages }) => {
 	return (
 		<div className="bg-gray-50 flex items-center justify-center p-16 rounded-lg h-full">
 			<div className="w-full flex flex-col gap-4 max-w-2xl">
 				<DiamondAnimation />
+
 				<div className="text-center mb-2">
 					<h2 className="text-sm text-primary100 font-medium leading-relaxed">
 						AI agents are working on your data. Validation and column
@@ -172,7 +180,8 @@ export const CustomLoader = () => {
 						mapping in progress...
 					</h2>
 				</div>
-				<RotatingMessage />
+
+				<RotatingMessage messages={messages} />
 			</div>
 		</div>
 	);

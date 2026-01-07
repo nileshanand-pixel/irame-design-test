@@ -19,7 +19,7 @@ import { logError } from '@/lib/logger';
 
 export default function ReportHeader({ report, onDownload }) {
 	const [status, setStatus] = useState(report.status);
-	const [isDownloading, setIsDownloading] = useState(false); // <-- Add this
+	const [isDownloading, setIsDownloading] = useState(false);
 	const dispatch = useDispatch();
 	const { isOwner } = useReportPermission();
 
@@ -27,12 +27,17 @@ export default function ReportHeader({ report, onDownload }) {
 
 	const handleDownload = async () => {
 		setIsDownloading(true);
-		toast.success('Pdf generation started');
+
 		try {
-			if (onDownload) await onDownload();
+			if (onDownload) {
+				toast.success('Report download started');
+				await onDownload();
+			}
+		} catch (error) {
+			console.error(error);
+			toast.error('Failed to download report');
 		} finally {
 			setIsDownloading(false);
-			toast.success('Pdf downloaded');
 		}
 	};
 
@@ -78,7 +83,7 @@ export default function ReportHeader({ report, onDownload }) {
 			variant: 'ghost',
 			onClick: handleDownload,
 			show: true,
-			loading: isDownloading, // <-- Add this
+			loading: isDownloading,
 		},
 		{
 			id: 'delete',
@@ -146,7 +151,7 @@ export default function ReportHeader({ report, onDownload }) {
 								className={
 									textButton ? 'px-6 py-2 rounded-lg gap-2' : ''
 								}
-								disabled={loading} // <-- Disable while loading
+								disabled={loading}
 							>
 								{loading ? (
 									<span className="animate-spin mr-2 w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full"></span>

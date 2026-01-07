@@ -14,6 +14,7 @@ import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import useS3File from '@/hooks/useS3File';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
+import EmptyDashboardState from './EmptyDashboardState';
 
 const DashboardDetailsPage = () => {
 	const [dashboard, setDashboard] = useState([]);
@@ -102,9 +103,7 @@ const DashboardDetailsPage = () => {
 				</button>
 			</div>
 		) : (
-			<div className="text-primary60 font-normal mt-2">
-				No dashboard content. Please add a query to this dashboard.
-			</div>
+			<EmptyDashboardState />
 		);
 	};
 

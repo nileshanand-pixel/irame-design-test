@@ -38,6 +38,7 @@ import { DataTablePagination } from './data-table/components/data-table-paginati
  * @property {boolean} [simplePagination]
  * @property {boolean} [stickyHeader]
  * @property {boolean} [stickyPagination]
+ * @property {number} [defaultRowsPerPage]
  */
 
 /**
@@ -67,6 +68,7 @@ export function DataTable({
 	simplePagination = false,
 	stickyHeader = false,
 	stickyPagination = false,
+	defaultRowsPerPage = 10,
 }) {
 	const { table } = useDataTable({
 		data,
@@ -83,6 +85,7 @@ export function DataTable({
 		defaultSort,
 		onSortingChange,
 		enableSorting,
+		defaultRowsPerPage,
 	});
 
 	return (
@@ -196,6 +199,7 @@ export function DataTable({
 					<DataTablePagination
 						table={table}
 						simpleMode={simplePagination}
+						defaultRowsPerPage={defaultRowsPerPage}
 					/>
 				</div>
 			)}

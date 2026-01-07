@@ -3,6 +3,7 @@ import PlannerComponent from './PlannerComponent';
 import SourceComponent from './SourceComponent';
 import CoderComponent from './CoderComponent';
 import { Skeleton } from '@/components/ui/skeleton';
+import { QUERY_TYPES } from '@/constants/query-type.constant';
 
 import { WorkspaceEnum, workSpaceMap } from './types/new-chat.enum';
 
@@ -53,7 +54,8 @@ const Workspace = ({
 					data={answerResp?.answer?.[WorkspaceEnum.Planner]}
 					canEdit={
 						canEdit &&
-						answerResp?.type !== 'workflow' &&
+						answerResp?.type !== QUERY_TYPES.WORKFLOW &&
+						answerResp?.type !== QUERY_TYPES.SQL_WORKFLOW &&
 						!answerResp?.answer?.clarification
 					}
 					workspaceHasChanges={workspaceHasChanges}
@@ -124,7 +126,8 @@ const Workspace = ({
 	const showRegenerateAction =
 		!editDisabled &&
 		workspaceHasChanges &&
-		answerResp?.type !== 'workflow' &&
+		answerResp?.type !== QUERY_TYPES.WORKFLOW &&
+		answerResp?.type !== QUERY_TYPES.SQL_WORKFLOW &&
 		!answerResp?.answer?.clarification;
 
 	return (

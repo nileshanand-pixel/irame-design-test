@@ -1,33 +1,38 @@
-import DotsDropdown from '@/components/elements/DotsDropdown';
-import React, { useState } from 'react';
-import {
-	deleteUserDashboard,
-	updateDashboardName,
-} from '../service/dashboard.service';
-import { useRouter } from '@/hooks/useRouter';
-import InputText from '@/components/elements/InputText';
-import { toast } from '@/lib/toast';
-import { logError } from '@/lib/logger';
-import graphPlaceholder from '@/assets/icons/graph-placeholder.svg';
+import React, { memo, useCallback } from 'react';
+import { cn } from '@/lib/utils';
+import { formatTimeAgo } from '@/utils/common';
+import { MdOutlineAccessTime } from 'react-icons/md';
+import OwnerIcon from '../../../../assets/svg/OwnerIcon';
+import DashListIcon from '../../../../assets/svg/DashListIcon';
+import DashFilledIcon from '../../../../assets/svg/DashFilledIcon';
 import { useMutation } from '@tanstack/react-query';
+import { deleteUserDashboard } from '../service/dashboard.service';
+import { toast } from '@/lib/toast';
 import { queryClient } from '@/lib/react-query';
-import { trackEvent } from '@/lib/mixpanel';
-import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { logError } from '@/lib/logger';
+import DotsDropdown from '@/components/elements/DotsDropdown';
+import upperFirst from 'lodash.upperfirst';
+import useConfirmDialog from '@/hooks/use-confirm-dialog';
+import { Trash2 } from 'lucide-react';
 
-const DashboardCard = ({ data, refetch, setRefetch }) => {
-	const [isEditing, setIsEditing] = useState(false);
-	const [editedTitle, setEditedTitle] = useState(data.title);
+const DashboardCard = ({ dashboard, onClick, isShared = false }) => {
+	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
-	const { navigate } = useRouter();
+	const handleClick = useCallback(() => {
+		if (onClick) {
+			onClick(dashboard);
+		}
+	}, [onClick, dashboard]);
+
+	const ownerName = dashboard.createdBy?.name || 'Unknown';
 
 	const deleteMutation = useMutation({
 		mutationFn: (id) => deleteUserDashboard(id),
 		onSuccess: () => {
 			toast.success('Dashboard deleted successfully');
-			queryClient.invalidateQueries(['user-dashboard'], {
-				refetchActive: true,
-				refetchInactive: true,
-			});
+			queryClient.invalidateQueries(
+				isShared ? ['shared-dashboards'] : ['my-dashboards'],
+			);
 		},
 		onError: (error, id) => {
 			logError(error, {
@@ -35,150 +40,110 @@ const DashboardCard = ({ data, refetch, setRefetch }) => {
 				action: 'delete-dashboard',
 				id,
 			});
-			toast.error('Something went wrong while deleting dashboard');
-		},
-	});
-	const editMutation = useMutation({
-		mutationFn: ({ id, name }) => updateDashboardName(id, name),
-		onSuccess: () => {
-			setIsEditing(false);
-			toast.success('Dashboard updated successfully');
-			queryClient.invalidateQueries(['user-dashboard'], {
-				refetchActive: true,
-				refetchInactive: true,
-			});
-			trackEvent(
-				EVENTS_ENUM.DASHBOARD_DETAILS_CHANGED,
-				EVENTS_REGISTRY.DASHBOARD_DETAILS_CHANGED,
-				() => ({
-					dashboard_id: data.dashboard_id,
-					change_param: ['name'],
-				}),
+			toast.error(
+				error?.response?.data?.message ||
+					'Something went wrong while deleting dashboard',
 			);
-		},
-		onError: (err) => {
-			console.log('Error updating dashboard', err);
-			logError(err, {
-				feature: 'dashboard',
-				action: 'update-dashboard',
-				dashboard_id: data?.dashboard_id,
-			});
-			toast.error('Something went wrong while updating dashboard');
 		},
 	});
 
-	const dashboardMutations = [
-		// {
-		//     type: 'item',
-		//     label: 'Edit',
-		//     onClick: () => console.log('Edit'),
-		// },
-		// {
-		//     type: 'separator',
-		// },
+	const handleDelete = async (e) => {
+		e.stopPropagation();
+
+		const confirmed = await confirm({
+			header: 'Delete Dashboard?',
+			description:
+				'Are you sure you want to delete this dashboard? This action cannot be undone.',
+		});
+
+		if (!confirmed) return;
+
+		deleteMutation.mutateAsync(dashboard?.dashboard_id);
+	};
+
+	const dashboardActions = [
 		{
 			type: 'item',
 			label: 'Delete',
 			show: true,
-			onClick: (e) => {
-				e.stopPropagation();
-				deleteMutation.mutateAsync(data?.dashboard_id);
-			},
+			onClick: handleDelete,
+			icon: <Trash2 className="size-4 text-primary60" />,
 		},
 	];
 
-	const handleEdit = () => {
-		editMutation.mutateAsync({ id: data.dashboard_id, name: editedTitle });
-	};
 	return (
 		<div
-			key={data.dashboard_id}
-			className="p-6 flex justify-between w-full gap-6 border-b last:border-none border-primary10 cursor-pointer hover:bg-purple-2"
-			onClick={
-				isEditing
-					? null
-					: () => {
-							trackEvent(
-								EVENTS_ENUM.EXISTING_DASHBOARD_CLICKED,
-								EVENTS_REGISTRY.EXISTING_DASHBOARD_CLICKED,
-								() => ({
-									dashboard_id: data.dashboard_id,
-									dashboard_name: data?.title,
-								}),
-							);
-							navigate(
-								`/app/dashboard/content?id=${data?.dashboard_id}&name=${data?.title}`,
-							);
-						}
-			}
+			onClick={handleClick}
+			className={cn(
+				'flex items-center justify-between gap-10 group rounded-lg p-4 pr-6 bg-white cursor-pointer',
+				'border border-[#E2E8F0]',
+				'hover:border-l-4 hover:border-l-[#6A12CD] hover:shadow-sm',
+				'transition-all duration-200 ease-in-out',
+			)}
 		>
-			<div className="flex gap-6">
-				<div className="bg-purple-4 w-[6.25rem] rounded-xl flex items-center justify-center pt-1.5">
-					<img
-						src={graphPlaceholder}
-						alt="graph-placeholder"
-						className="w-[4.56rem] h-[3.125rem]"
+			<div className="flex items-center gap-2 flex-1 min-w-0">
+				<div className="flex-shrink-0 size-9 bg-purple-4 group-hover:bg-purple-8 rounded-lg p-2 flex items-center justify-center ">
+					<DashListIcon
+						width={24}
+						height={24}
+						color="#6A12CD"
+						className="block group-hover:hidden"
+					/>
+					<DashFilledIcon
+						width={14}
+						height={14}
+						color="#6A12CD"
+						className="hidden group-hover:block"
 					/>
 				</div>
-				<div className="flex flex-col">
-					{isEditing ? (
-						<InputText
-							value={editedTitle}
-							setValue={(e) => setEditedTitle(e)}
-							onClick={(e) => e.stopPropagation()}
-							variant="ghost"
-							className="border-transparent bg-transparent w-[20rem]"
-							inputMainClass="border-none bg-purple-4 w-full"
-							onKeyDown={(e) => {
-								if (e.key === 'Enter') {
-									handleEdit();
-								}
-							}}
-							onBlur={() => handleEdit()}
-						/>
-					) : (
-						<h4 className="text-primary80 text-medium font-semibold">
-							{data?.title}
-						</h4>
-					)}
 
-					<p className="text-primary60 text-sm font-normal">
-						{data?.answer || 'there should be a subtitle'}
+				<div className="flex-1 min-w-0">
+					<div className="flex items-center gap-2 mb-1">
+						<h3 className="text-sm font-medium text-[#26064A] truncate">
+							{upperFirst(dashboard.title)}
+						</h3>
+						{/* Type badge */}
+						{dashboard.type === 'LIVE' && (
+							<div className="flex items-center shrink-0">
+								<span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-semibold rounded-full">
+									<span className="size-2 bg-green-600 rounded-full animate-pulse"></span>
+									Live
+								</span>
+							</div>
+						)}
+					</div>
+					<p className="text-xs text-[#26064ACC] line-clamp-1 leading-5">
+						{dashboard.description || 'No description'}
 					</p>
 				</div>
 			</div>
-			<div className="flex items-start justify-start gap-1">
-				<span
-					className="material-symbols-outlined text-primary100 cursor-pointer hover:bg-purple-4 rounded-full p-2 text-2xl"
-					onClick={(e) => {
-						e.stopPropagation();
-						if (!isEditing) {
-							trackEvent(
-								EVENTS_ENUM.EDIT_DASHBOARD_CLICKED,
-								EVENTS_REGISTRY.EDIT_DASHBOARD_CLICKED,
-								() => ({
-									dashboard_id: data.dashboard_id,
-									dashboard_name: data?.title,
-								}),
-							);
-						}
-						setIsEditing(isEditing ? false : true);
-					}}
-				>
-					{isEditing ? (
-						'check_circle'
-					) : (
-						<img
-							src={`https://d2vkmtgu2mxkyq.cloudfront.net/pencil.svg`}
-							className=" size-6"
-							alt="edit-pencil"
-						/>
-					)}
-				</span>
-				<DotsDropdown options={dashboardMutations} />
+
+			<div className="flex items-center gap-6 flex-shrink-0 ml-4">
+				<div className="flex items-center gap-2 text-xs font-medium text-[#26064A] leading-5">
+					<MdOutlineAccessTime className="size-4 text-[#26064A]" />
+					<span>
+						{dashboard.timeAgo || formatTimeAgo(dashboard.updatedAt)}
+					</span>
+				</div>
+
+				{isShared && (
+					<div className="flex items-center gap-1">
+						<OwnerIcon width={16} height={16} color="#26064A" />
+						<span className="text-[#26064A] text-xs font-medium leading-4">
+							Owner:{' '}
+						</span>
+						<span className="text-[#26064A] text-xs leading-4">
+							{ownerName}
+						</span>
+					</div>
+				)}
+
+				<DotsDropdown options={dashboardActions} />
 			</div>
+
+			<ConfirmationDialog />
 		</div>
 	);
 };
 
-export default DashboardCard;
+export default memo(DashboardCard);

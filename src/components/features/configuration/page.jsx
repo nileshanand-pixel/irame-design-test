@@ -7,31 +7,7 @@ import DismissibleBanner from '@/components/elements/dismissible-banner';
 import CreateDatasource from './components/create-datasource';
 import ExistingDataSources from './components/existing-datasources';
 import { Database } from '@phosphor-icons/react';
-import { ChevronRight } from 'lucide-react';
-
-const BreadCrumbs = ({ items }) => {
-	return (
-		<div className="flex items-center gap-2">
-			{items.map((item, index) => (
-				<div key={index} className="flex items-center gap-2">
-					{item.icon}
-					<span
-						className={cn(
-							index === items.length - 1 &&
-								'text-[#6A12CD] font-medium',
-						)}
-					>
-						{item.label}
-					</span>
-
-					{index < items.length - 1 && (
-						<ChevronRight className="size-5 text-[#26064ACC]" />
-					)}
-				</div>
-			))}
-		</div>
-	);
-};
+import BreadCrumbs from '@/components/BreadCrumbs';
 
 const Configuration = () => {
 	const [showForm, setShowForm] = useState(false);
@@ -63,6 +39,7 @@ const Configuration = () => {
 						},
 					]}
 				/>
+
 				<div className="mt-2">
 					<DismissibleBanner
 						id="talk-to-documents"

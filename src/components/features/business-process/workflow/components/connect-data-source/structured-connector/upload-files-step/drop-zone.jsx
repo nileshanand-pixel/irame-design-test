@@ -19,7 +19,7 @@ export const DropZone = ({
 	const onDropRejected = useCallback((rejectedFiles) => {
 		if (rejectedFiles.length > 0) {
 			toast.error(
-				`Unsupported file type. Please upload only .csv, .xlsx or .xlsb files.`,
+				`Unsupported file type. Please upload only .csv or .xlsx files.`,
 			);
 		}
 	}, []);
@@ -33,7 +33,6 @@ export const DropZone = ({
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [
 				'.xlsx',
 			],
-			'application/vnd.ms-excel.sheet.binary.macroenabled.12': ['.xlsb'],
 		},
 	});
 
@@ -61,9 +60,8 @@ export const DropZone = ({
 					</p>
 					<p className="text-sm text-primary80">
 						Supported file types:{' '}
-						<span className="font-semibold">.csv</span>,
-						<span className="font-semibold">.xlsx</span> &{' '}
-						<span className="font-semibold">.xlsb</span> only
+						<span className="font-semibold">.csv</span> &{' '}
+						<span className="font-semibold">.xlsx</span> only
 					</p>
 				</div>
 			</div>

@@ -40,7 +40,7 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 
 			const excelFiles = filesArr.filter((file) => {
 				const ext = file.name.split('.').pop()?.toLowerCase();
-				return ['xlsx', 'xls', 'xlsb', 'xlsm'].includes(ext);
+				return ['xlsx', 'xls', 'xlsm'].includes(ext);
 			});
 			const csvFiles = filesArr.filter((file) => {
 				const ext = file.name.split('.').pop()?.toLowerCase();

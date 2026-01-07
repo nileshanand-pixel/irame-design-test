@@ -20,6 +20,7 @@ export default function CommentForm({
 	commetsAdder,
 	onSuccessCommentAddition,
 	isCommentSectionOpen,
+	toastPosition = 'bottom-right',
 }) {
 	const [value] = useLocalStorage('userDetails');
 	const [commentString, setCommentString] = useState('');
@@ -36,7 +37,7 @@ export default function CommentForm({
 	const commentMutation = useMutation({
 		mutationFn: (payload) => commetsAdder(payload),
 		onSuccess: async () => {
-			toast.success('Comment added successful');
+			toast.success('Comment added successful', { position: toastPosition });
 			onSuccessCommentAddition();
 			setCommentString('');
 			resetUploads();
@@ -49,7 +50,9 @@ export default function CommentForm({
 					errorMessage: err.message,
 				},
 			});
-			toast.error(`Error in Adding comment: ${err.message}`);
+			toast.error(`Error in Adding comment: ${err.message}`, {
+				position: toastPosition,
+			});
 		},
 	});
 
@@ -78,7 +81,7 @@ export default function CommentForm({
 		e.preventDefault();
 		const newCommentText = commentString.trim();
 		if (!newCommentText && files.length === 0) {
-			toast.error(`Comment can't be empty!`);
+			toast.error(`Comment can't be empty!`, { position: toastPosition });
 			return;
 		}
 

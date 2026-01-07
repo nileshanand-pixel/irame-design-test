@@ -18,17 +18,14 @@ import { logError } from '@/lib/logger';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import AccessSkeletonList from './AccessSkeleton';
 import { closeModal } from '@/redux/reducer/modalReducer';
-import { trackEvent } from '@/lib/mixpanel';
-import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
-import { useReportId } from '../hooks/useReportId';
 import { updateReportStoreProp } from '@/redux/reducer/reportReducer';
+import { useReportId } from '../hooks/useReportId';
 
 const ShareReportDialog = React.memo(() => {
 	const dispatch = useDispatch();
 	const modalState = useSelector((state) => state.modalReducer);
 	const reportReducer = useSelector((state) => state.reportStoreReducer);
 	const authStoreReducer = useSelector((state) => state.authStoreReducer);
-	const utilReducer = useSelector((state) => state.utilReducer);
 
 	const [invitedEmails, setInvitedEmails] = useState([]);
 	const [inputValue, setInputValue] = useState('');

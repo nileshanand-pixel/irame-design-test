@@ -33,7 +33,7 @@ const getFileName = (file) => {
 		: `${file.filename} (${file.worksheet})`;
 };
 
-const EXCEL_EXTENSIONS = ['xls', 'xlsx', 'xlsb', 'xlsm', 'excel', 'csv'];
+const EXCEL_EXTENSIONS = ['xls', 'xlsx', 'xlsm', 'excel', 'csv'];
 
 export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) => {
 	const navigate = useNavigate();

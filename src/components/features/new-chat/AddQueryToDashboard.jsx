@@ -12,7 +12,7 @@ import {
 import {
 	createDashboard,
 	createDashboardContent,
-	getUserDashboard,
+	getMyDashboards,
 } from '../dashboard/service/dashboard.service';
 import { useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -37,7 +37,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds, queryId }) =
 
 	const userDashboardQuery = useQuery({
 		queryKey: ['user-dashboard'],
-		queryFn: () => getUserDashboard(),
+		queryFn: () => getMyDashboards({}),
 	});
 
 	const { data: datasourceData } = useDatasourceDetailsV2();

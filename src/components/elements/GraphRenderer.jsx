@@ -1,22 +1,44 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Chart from 'chart.js/auto';
+import zoomPlugin from 'chartjs-plugin-zoom';
 import * as d3 from 'd3';
 import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 import { Button } from '../ui/button';
 import { GraphCategoryFilter } from './GraphCategoryFilter';
+import ChartBrushOverlay from './ChartBrushOverlay';
 import { debounce } from 'lodash';
 import { cn, getChartType } from '@/lib/utils';
 import useS3File from '@/hooks/useS3File';
 import { logError } from '@/lib/logger';
+import { toChartJsType } from '@/utils/chart-compatibility';
 
-const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
+Chart.register(zoomPlugin);
+
+/**
+ * GraphRenderer - Renders charts using Chart.js
+ * @param {Object} graph - Graph data object
+ * @param {string} identifierKey - Unique identifier for the chart canvas
+ * @param {string} aspect - Aspect ratio class for the container
+ * @param {string} chartTypeOverride - Optional chart type override (line, bar, area, pie, etc.)
+ * @param {Function} onZoomRangeChange - Callback when zoom range changes (receives { selectedLabels: string[], xAxisColumn: string } or null)
+ */
+const GraphRenderer = ({
+	graph,
+	identifierKey,
+	aspect = 'aspect-[2]',
+	chartTypeOverride,
+	onZoomRangeChange,
+}) => {
 	const chartRef = useRef(null);
 	const containerRef = useRef(null);
 	const resizeObserverRef = useRef(null);
+	const currentFullLabelsRef = useRef([]);
 	const [baseData, setBaseData] = useState([]);
 	const [loadedData, setLoadedData] = useState([]);
 	const [isGraphLoading, setIsGraphLoading] = useState(true);
 	const [fontSize, setFontSize] = useState(0);
+	const [isZoomed, setIsZoomed] = useState(false);
+	const [isSelectionToolActive, setIsSelectionToolActive] = useState(false);
 	const [categoryData, setCategoryData] = useState({
 		options: [],
 		label: '',
@@ -45,10 +67,15 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 	];
 
 	const getOpacity = (chartType) => {
-		switch (chartType) {
+		if (!chartType) return 0.5;
+		const normalizedType = chartType.toLowerCase();
+		switch (normalizedType) {
 			case 'line':
 				return 0.1;
+			case 'area':
+				return 0.3;
 			case 'pie':
+			case 'doughnut':
 				return 0.8;
 			default:
 				return 0.5;
@@ -71,7 +98,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 				backgroundColor: data?.map(
 					(_, index) =>
 						`${colors[index % colors.length]}${Math.floor(
-							getOpacity(graph.type) * 255,
+							getOpacity(chartTypeOverride || graph.type) * 255,
 						)
 							.toString(16)
 							.padStart(2, '0')}`,
@@ -91,7 +118,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 			data: data?.map((item) => Number(item[yAxis])),
 			borderColor: colors[index % colors.length],
 			backgroundColor: `${colors[index % colors.length]}${Math.floor(
-				getOpacity(graph.type) * 255,
+				getOpacity(chartTypeOverride || graph.type) * 255,
 			)
 				.toString(16)
 				.padStart(2, '0')}`,
@@ -230,21 +257,58 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 
 	useEffect(() => {
 		if (loadedData.length > 0) {
-			if (chartRef.current) chartRef.current.destroy();
-			const ctx = document.getElementById(
-				`canvas_${identifierKey}_${graph.id}`,
-			);
-			const isPieChart = ['pie', 'doughnut'].includes(
-				graph.type.toLowerCase(),
+			// Destroy existing chart instance
+			if (chartRef.current) {
+				chartRef.current.destroy();
+				chartRef.current = null;
+			}
+
+			const canvasId = `canvas_${identifierKey}_${graph.id}`;
+			const ctx = document.getElementById(canvasId);
+
+			// Check if canvas exists
+			if (!ctx) {
+				return;
+			}
+
+			// Check if Chart.js already has a chart instance on this canvas
+			// and destroy it if it exists
+			const existingChart = Chart.getChart(ctx);
+			if (existingChart) {
+				existingChart.destroy();
+			}
+
+			// Use chartTypeOverride if provided, otherwise use graph.type
+			const effectiveChartType = chartTypeOverride || graph.type;
+
+			// Categorize chart types by data structure
+			const isCircularChart = ['pie', 'doughnut', 'polararea'].includes(
+				effectiveChartType.toLowerCase(),
 			);
 
-			const finalDataObj = isPieChart
+			// Check if this should be an area chart
+			// Note: Chart.js doesn't have "area" type, so we map it to "line" with fill enabled
+			const isAreaChart = effectiveChartType?.toLowerCase() === 'area';
+
+			// Determine which dataset function to use
+			const finalDataObj = isCircularChart
 				? getCircularChartDatasets(loadedData)
-				: getAxialChartDatasets(loadedData, graph.y_axis);
+				: getAxialChartDatasets(loadedData, graph.y_axis, isAreaChart);
 
-			const chartType = getChartType(graph);
+			// Store full labels for zoom range tracking (use ref for closure access)
+			currentFullLabelsRef.current = finalDataObj.fullLabels || [];
 
-			chartRef.current = new Chart(ctx, {
+			// Convert internal chart type to Chart.js format
+			let chartType;
+			if (isAreaChart) {
+				chartType = 'line';
+			} else if (chartTypeOverride) {
+				chartType = toChartJsType(chartTypeOverride);
+			} else {
+				chartType = getChartType(graph);
+			}
+
+			const chartInstance = new Chart(ctx, {
 				type: chartType,
 				data: {
 					labels: finalDataObj.labels,
@@ -257,6 +321,12 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 						resize: {
 							animation: {
 								duration: 200,
+								easing: 'easeOutQuart',
+							},
+						},
+						zoom: {
+							animation: {
+								duration: 500,
 								easing: 'easeOutQuart',
 							},
 						},
@@ -302,6 +372,26 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 								},
 							},
 						},
+						zoom: {
+							zoom: {
+								wheel: {
+									enabled: false, // Disable wheel zoom
+								},
+								pinch: {
+									enabled: false, // Disable pinch zoom
+								},
+								drag: {
+									enabled: false, // Disable drag zoom (we use custom brush)
+								},
+								mode: 'x', // Only zoom on X-axis
+							},
+							pan: {
+								enabled: false, // Disable pan
+							},
+							limits: {
+								x: { min: 'original', max: 'original' },
+							},
+						},
 					},
 					animation: handle.active
 						? {
@@ -331,14 +421,195 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 					maintainAspectRatio: false,
 				},
 			});
+
+			chartRef.current = chartInstance;
+
+			// Reset zoom state when chart is recreated
+			setIsZoomed(false);
+
+			// Listen for zoom completion events by wrapping the update method
+			const originalUpdate = chartInstance.update.bind(chartInstance);
+			chartInstance.update = function (mode) {
+				const result = originalUpdate(mode);
+				// Check zoom state after update
+				if (chartInstance.scales.x) {
+					const xScale = chartInstance.scales.x;
+					const isCurrentlyZoomed =
+						xScale.min !== undefined &&
+						xScale.max !== undefined &&
+						(xScale.min !== xScale.minRaw ||
+							xScale.max !== xScale.maxRaw);
+
+					if (isCurrentlyZoomed !== isZoomed) {
+						setIsZoomed(isCurrentlyZoomed);
+					}
+
+					// Notify parent component about zoom range change
+					if (onZoomRangeChange && !isPieChart) {
+						if (
+							isCurrentlyZoomed &&
+							xScale.min !== undefined &&
+							xScale.max !== undefined
+						) {
+							// Get the indices of visible data points
+							const fullLabels = currentFullLabelsRef.current;
+							if (fullLabels && fullLabels.length > 0) {
+								const minIndex = Math.max(0, Math.floor(xScale.min));
+								const maxIndex = Math.min(
+									fullLabels.length - 1,
+									Math.ceil(xScale.max),
+								);
+
+								// Extract selected labels
+								const selectedLabels = fullLabels.slice(
+									minIndex,
+									maxIndex + 1,
+								);
+
+								// Call callback with selected labels and X-axis column name
+								onZoomRangeChange({
+									selectedLabels,
+									xAxisColumn: graph.x_axis,
+								});
+							}
+						} else {
+							// Zoom reset - clear filter
+							onZoomRangeChange(null);
+						}
+					}
+				}
+				return result;
+			};
 		}
 		return () => {
-			if (chartRef.current) chartRef.current.destroy();
+			if (chartRef.current) {
+				try {
+					chartRef.current.destroy();
+				} catch (error) {
+					console.warn('Chart destruction warning:', error);
+				}
+				chartRef.current = null;
+			}
 		};
-	}, [loadedData, graph, identifierKey, handle.active, fontSize]);
+	}, [
+		loadedData,
+		graph,
+		identifierKey,
+		handle.active,
+		fontSize,
+		chartTypeOverride,
+		onZoomRangeChange,
+	]);
+
+	// Handle brush selection completion - zoom to selected range
+	const handleSelectionComplete = useCallback(({ startX, endX, bounds }) => {
+		if (!chartRef.current || !bounds) return;
+
+		const chart = chartRef.current;
+		const xScale = chart.scales.x;
+
+		if (!xScale) return;
+
+		// Convert relative pixel positions to absolute positions
+		const absoluteStartX = bounds.left + startX;
+		const absoluteEndX = bounds.left + endX;
+
+		// Convert pixel positions to data values using Chart.js scale API
+		const startValue = xScale.getValueForPixel(absoluteStartX);
+		const endValue = xScale.getValueForPixel(absoluteEndX);
+
+		if (
+			startValue === null ||
+			endValue === null ||
+			isNaN(startValue) ||
+			isNaN(endValue)
+		) {
+			return;
+		}
+
+		// Apply zoom with smooth animation
+		try {
+			chart.zoomScale('x', {
+				min: Math.min(startValue, endValue),
+				max: Math.max(startValue, endValue),
+			});
+
+			// Update zoom state after a brief delay to allow chart to update
+			setTimeout(() => {
+				setIsZoomed(true);
+			}, 100);
+		} catch (error) {
+			logError(error, {
+				feature: 'graph-renderer',
+				action: 'zoom-to-selection',
+				extra: {
+					startValue,
+					endValue,
+					startX,
+					endX,
+				},
+			});
+		}
+	}, []);
+
+	// Reset selection tool when zoom is reset externally
+	useEffect(() => {
+		if (!isZoomed && isSelectionToolActive) {
+			// Keep tool active even after zoom reset, user can cancel manually
+		}
+	}, [isZoomed, isSelectionToolActive]);
+
+	// Handle reset zoom
+	const handleResetZoom = useCallback(() => {
+		if (!chartRef.current) return;
+
+		try {
+			chartRef.current.resetZoom();
+			// Update state after reset completes
+			setTimeout(() => {
+				setIsZoomed(false);
+				// Notify parent that zoom is reset
+				if (onZoomRangeChange) {
+					onZoomRangeChange(null);
+				}
+			}, 100);
+		} catch (error) {
+			logError(error, {
+				feature: 'graph-renderer',
+				action: 'reset-zoom',
+			});
+		}
+	}, [onZoomRangeChange]);
+
+	// Handle selection tool toggle
+	const handleToggleSelectionTool = useCallback(() => {
+		if (isSelectionToolActive) {
+			// Deactivate tool and reset zoom if zoomed
+			setIsSelectionToolActive(false);
+			// if (isZoomed && chartRef.current) {
+			// 	handleResetZoom();
+			// }
+		} else {
+			// Activate selection tool
+			setIsSelectionToolActive(true);
+		}
+	}, [isSelectionToolActive, isZoomed, handleResetZoom]);
+
+	// Determine if zoom should be enabled for this chart type
+	// Enable for: line, bar, area, scatter charts
+	// Disable for: pie, doughnut, radar, polarArea
+	const effectiveChartType = chartTypeOverride || graph?.type;
+	const isPieChart = ['pie', 'doughnut'].includes(
+		effectiveChartType?.toLowerCase() || '',
+	);
+	const isZoomEnabled =
+		!isPieChart &&
+		!['radar', 'polarArea'].includes(effectiveChartType?.toLowerCase() || '') &&
+		!isGraphLoading &&
+		chartRef.current;
 
 	return (
-		<div className="bg-white rounded-xl p-2">
+		<div className="bg-white rounded-xl p-2 w-full h-full">
 			{isGraphLoading ? (
 				<div className="darkSoul-glowing-button2 mb-10">
 					<button className="darkSoul-button2" type="button">
@@ -347,9 +618,10 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 					</button>
 				</div>
 			) : (
-				<div className="relative" ref={containerRef}>
+				<div className="relative h-full" ref={containerRef}>
+					{/* Top Bar with Category Filter, Reset Zoom, Selection Tool, and Fullscreen Button */}
 					<div
-						className={`${showCategoryFilter ? 'block' : 'hidden'} w-full flex justify-between`}
+						className={`${showCategoryFilter ? 'block' : 'hidden'} w-full flex justify-between items-center mb-2 `}
 					>
 						<div
 							className={`${showCategoryFilter ? 'block' : 'hidden'}`}
@@ -359,22 +631,107 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 								onChange={handleCategoryChange}
 							/>
 						</div>
-						<Button
-							size="icon"
-							variant="ghost"
-							className={`${showCategoryFilter ? 'block' : 'hidden'} font-extrabold relative float-right text-primary animate-pulse hover:animate-none duration-1000`}
-							onClick={handle.enter}
-						>
-							<i className="bi bi-fullscreen text-lg font-extrabold"></i>
-						</Button>
+						<div className="flex items-center gap-2">
+							{/* Selection Tool Toggle Button */}
+							{isZoomEnabled && (
+								<Button
+									size="icon"
+									variant="ghost"
+									onClick={handleToggleSelectionTool}
+									className={`font-extrabold transition-all duration-200 ${
+										isSelectionToolActive
+											? 'text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100'
+											: 'text-primary hover:text-[#6A12CD]'
+									}`}
+									title={
+										isSelectionToolActive
+											? 'Cancel selection tool'
+											: 'Enable selection tool'
+									}
+								>
+									{isSelectionToolActive ? (
+										<i className="bi-x-lg text-lg font-extrabold"></i>
+									) : (
+										<i className="bi-cursor text-lg font-extrabold"></i>
+									)}
+								</Button>
+							)}
+							{/* Reset Zoom Button  */}
+							{isZoomed && isZoomEnabled && (
+								<Button
+									size="icon"
+									variant="ghost"
+									onClick={handleResetZoom}
+									className="font-extrabold text-primary hover:text-[#6A12CD] transition-all duration-200"
+									title="Reset zoom"
+								>
+									<i className="bi-arrow-counterclockwise text-lg font-extrabold"></i>
+								</Button>
+							)}
+							<Button
+								size="icon"
+								variant="ghost"
+								className="font-extrabold text-primary animate-pulse hover:animate-none duration-1000"
+								onClick={handle.enter}
+							>
+								<i className="bi bi-fullscreen text-lg font-extrabold"></i>
+							</Button>
+						</div>
 					</div>
 
-					<FullScreen handle={handle}>
+					{!showCategoryFilter && (
+						<div className="absolute top-2 right-2 z-20 flex items-center gap-2">
+							{isZoomEnabled && (
+								<Button
+									size="icon"
+									variant="ghost"
+									onClick={handleToggleSelectionTool}
+									className={`font-extrabold transition-all duration-200 ${
+										isSelectionToolActive
+											? 'text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100'
+											: 'text-primary hover:text-[#6A12CD]'
+									}`}
+									title={
+										isSelectionToolActive
+											? 'Cancel selection tool'
+											: 'Enable selection tool'
+									}
+								>
+									{isSelectionToolActive ? (
+										<i className="bi-x-lg text-lg font-extrabold"></i>
+									) : (
+										<i className="bi-cursor text-lg font-extrabold"></i>
+									)}
+								</Button>
+							)}
+
+							{isZoomed && isZoomEnabled && (
+								<Button
+									size="icon"
+									variant="ghost"
+									onClick={handleResetZoom}
+									className="font-extrabold text-primary hover:text-[#6A12CD] transition-all duration-200"
+									title="Reset zoom"
+								>
+									<i className="bi-arrow-counterclockwise text-lg font-extrabold"></i>
+								</Button>
+							)}
+							<Button
+								size="icon"
+								variant="ghost"
+								className="font-extrabold text-primary animate-pulse hover:animate-none duration-1000"
+								onClick={handle.enter}
+							>
+								<i className="bi bi-fullscreen text-lg font-extrabold"></i>
+							</Button>
+						</div>
+					)}
+
+					<FullScreen handle={handle} className="h-full w-full">
 						<div
 							className={cn(
-								'relative  w-full min-w-[18.75rem] transition-all duration-300 ease-out',
+								'relative h-full w-full min-w-[18.75rem] transition-all duration-300 ease-out',
 								!handle.active && aspect,
-								handle.active && 'w-full h-full',
 							)}
 						>
 							<canvas
@@ -386,6 +743,69 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 									transition: 'all 0.05s ease-out',
 								}}
 							></canvas>
+
+							{isZoomEnabled &&
+								chartRef.current &&
+								isSelectionToolActive && (
+									<ChartBrushOverlay
+										chart={chartRef.current}
+										onSelectionComplete={handleSelectionComplete}
+										enabled={
+											!isGraphLoading && isSelectionToolActive
+										}
+									/>
+								)}
+
+							{/* Selection Tool, Reset Zoom, and Exit Fullscreen Buttons */}
+							{handle.active && (
+								<div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-2">
+									{isZoomEnabled && (
+										<Button
+											size="icon"
+											variant="ghost"
+											onClick={handleToggleSelectionTool}
+											className={`font-extrabold transition-all duration-200 ${
+												isSelectionToolActive
+													? 'text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100'
+													: 'text-primary hover:text-[#6A12CD]'
+											}`}
+											title={
+												isSelectionToolActive
+													? 'Cancel selection tool'
+													: 'Enable selection tool'
+											}
+										>
+											{isSelectionToolActive ? (
+												<i className="bi-x-lg text-lg font-extrabold"></i>
+											) : (
+												<i className="bi-cursor text-lg font-extrabold"></i>
+											)}
+										</Button>
+									)}
+									{/* Reset Zoom Button */}
+									{isZoomed && isZoomEnabled && (
+										<Button
+											size="icon"
+											variant="ghost"
+											onClick={handleResetZoom}
+											className="font-extrabold text-primary hover:text-[#6A12CD] transition-all duration-200"
+											title="Reset zoom"
+										>
+											<i className="bi-arrow-counterclockwise text-lg font-extrabold"></i>
+										</Button>
+									)}
+
+									<Button
+										size="icon"
+										variant="ghost"
+										onClick={handle.exit}
+										className="font-extrabold text-primary animate-pulse hover:animate-none duration-1000 transition-all"
+										title="Exit fullscreen"
+									>
+										<i className="bi-fullscreen-exit text-lg font-extrabold"></i>
+									</Button>
+								</div>
+							)}
 						</div>
 					</FullScreen>
 
@@ -396,7 +816,7 @@ const GraphRenderer = ({ graph, identifierKey, aspect = 'aspect-[2]' }) => {
 							className="absolute top-0 font-extrabold right-0 text-primary animate-pulse hover:animate-none duration-1000"
 							onClick={handle.enter}
 						>
-							<i className="bi bi-fullscreen text-lg font-extrabold"></i>
+							{/* <i className="bi bi-fullscreen text-lg font-extrabold"></i> */}
 						</Button>
 					)}
 				</div>
