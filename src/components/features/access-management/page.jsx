@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import RolePermissionTabContent from './tab-content/role-permission-tab-content';
 import TeamsTabContent from './tab-content/teams-tab-content';
 import UsersTabContent from './tab-content/users-tab-content';
@@ -34,7 +34,19 @@ const USER_MAMANGEMENT_TABS = [
 ];
 
 const AccessManagementPage = () => {
-	const [activeTab, setActiveTab] = useState(USER_MAMANGEMENT_TABS[2].key);
+	const [searchParams, setSearchParams] = useSearchParams();
+	const activeTab = searchParams.get('tab') || USER_MAMANGEMENT_TABS[0].key;
+
+	const setActiveTab = (key) => {
+		setSearchParams(
+			(prev) => {
+				const nextParams = new URLSearchParams(prev);
+				nextParams.set('tab', key);
+				return nextParams;
+			},
+			{ replace: true },
+		);
+	};
 
 	const ActiveComponent = USER_MAMANGEMENT_TABS.find(
 		(tab) => tab.key === activeTab,
