@@ -142,7 +142,16 @@ export default function LogsTabContent() {
 		setCategoryFilter('all');
 		setActionTypeFilter('all');
 		// Clear all filters: remove explicit date filtering
-		setDateRange({ startDate: null, endDate: null });
+		const defaultRange = getLast7DaysRange();
+
+		const dateFilterApplied =
+			dateRange && dateRange.startDate && dateRange.endDate;
+		const isDefaultDate = dateFilterApplied
+			? areDateRangesEqual(dateRange, defaultRange)
+			: false;
+		if (!isDefaultDate && dateFilterApplied) {
+			setDateRange(defaultRange);
+		}
 		setPagination(DEFAULT_PAGINATION);
 	};
 

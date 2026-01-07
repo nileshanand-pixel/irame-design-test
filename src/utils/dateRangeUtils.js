@@ -60,12 +60,6 @@ export const getLast7DaysRange = () => ({
  */
 export const getDateRangeOptions = () => [
 	{
-		key: 'last_7_days',
-		label: 'Last 7 Days',
-		startDate: dayjs().subtract(7, 'day').startOf('day').toISOString(),
-		endDate: dayjs().endOf('day').toISOString(),
-	},
-	{
 		key: 'today',
 		label: 'Today',
 		...getTodayUTCRange(),
@@ -74,6 +68,12 @@ export const getDateRangeOptions = () => [
 		key: 'yesterday',
 		label: 'Yesterday',
 		...getYesterdayUTCRange(),
+	},
+	{
+		key: 'last_7_days',
+		label: 'Last 7 Days',
+		startDate: dayjs().subtract(7, 'day').startOf('day').toISOString(),
+		endDate: dayjs().endOf('day').toISOString(),
 	},
 	{
 		key: 'last_30_days',

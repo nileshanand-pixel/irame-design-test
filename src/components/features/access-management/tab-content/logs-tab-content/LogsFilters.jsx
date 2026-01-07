@@ -33,81 +33,80 @@ export default function LogsFilters({
 	const availableActionTypes = getActionTypesByCategory(categoryFilter);
 
 	return (
-		<div className="flex flex-col gap-4 flex-shrink-0">
-			<div className="w-full max-w-md">
-				<SearchBar
-					value={searchTerm}
-					onChange={onSearchChange}
-					placeholder="Search by user name..."
-				/>
-			</div>
+		<div className="flex items-center gap-4 flex-shrink-0">
+			{/* Search */}
+			<SearchBar
+				value={searchTerm}
+				onChange={onSearchChange}
+				placeholder="Search by user name..."
+			/>
 
-			<div className="flex flex-wrap items-center gap-3">
-				{/* Category Filter */}
-				<Select value={categoryFilter} onValueChange={onCategoryChange}>
-					<SelectTrigger
-						className={cn(
-							'w-[180px]',
-							categoryFilter === 'all' && 'text-muted-foreground',
-						)}
-					>
-						<SelectValue placeholder="All Categories" />
-					</SelectTrigger>
-					<SelectContent>
-						{CATEGORY_OPTIONS.map((option) => (
-							<SelectItem key={option.value} value={option.value}>
-								{option.label}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+			{/* Category Filter */}
+			<Select value={categoryFilter} onValueChange={onCategoryChange}>
+				<SelectTrigger
+					className={cn(
+						'w-[180px]',
+						categoryFilter === 'all' && 'text-muted-foreground',
+					)}
+				>
+					<SelectValue placeholder="All Categories" />
+				</SelectTrigger>
+				<SelectContent>
+					{CATEGORY_OPTIONS.map((option) => (
+						<SelectItem key={option.value} value={option.value}>
+							{option.label}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
 
-				{/* Action Type Filter */}
-				<Select value={actionTypeFilter} onValueChange={onActionTypeChange}>
-					<SelectTrigger
-						className={cn(
-							'w-[180px]',
-							actionTypeFilter === 'all' && 'text-muted-foreground',
-						)}
-					>
-						<SelectValue placeholder="All Actions" />
-					</SelectTrigger>
-					<SelectContent>
-						{availableActionTypes.map((option) => (
-							<SelectItem key={option.value} value={option.value}>
-								{option.label}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
+			{/* Action Type Filter */}
+			<Select value={actionTypeFilter} onValueChange={onActionTypeChange}>
+				<SelectTrigger
+					className={cn(
+						'w-[180px]',
+						actionTypeFilter === 'all' && 'text-muted-foreground',
+					)}
+				>
+					<SelectValue placeholder="All Actions" />
+				</SelectTrigger>
+				<SelectContent>
+					{availableActionTypes.map((option) => (
+						<SelectItem key={option.value} value={option.value}>
+							{option.label}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
 
-				{/* Date Range Picker */}
-				<DateRangePicker
-					value={dateRange}
-					predefinedOptions={getDateRangeOptions()}
-					onChange={onDateRangeChange}
-					onClear={onDateRangeClear}
-				/>
+			{/* Date Range Picker */}
+			<DateRangePicker
+				value={dateRange}
+				predefinedOptions={getDateRangeOptions()}
+				onChange={onDateRangeChange}
+				onClear={onDateRangeClear}
+			/>
 
-				{/* Clear Filters Button */}
-				{hasActiveFilters && (
-					<button
-						onClick={onClearFilters}
-						className={cn(
-							'text-sm text-gray-500 hover:text-gray-700',
-							'underline-offset-2 hover:underline',
-						)}
-					>
-						Clear Filters
-					</button>
-				)}
+			{/* Clear Filters Button */}
+			{hasActiveFilters && (
+				<button
+					onClick={onClearFilters}
+					className={cn(
+						'text-sm text-gray-500 hover:text-gray-700',
+						'underline-offset-2 hover:underline',
+					)}
+				>
+					Clear Filters
+				</button>
+			)}
 
-				{/* Export Button */}
+			{/* Export (aligned right) */}
+			<div className="ml-auto">
 				<button
 					onClick={onExport}
 					disabled={isExporting}
 					className={cn(
-						'inline-flex items-center gap-2 px-4 py-2 ml-auto',
+						'inline-flex items-center gap-2 px-4 py-2',
 						'text-[#26064A] text-sm font-medium',
 						'border border-gray-200 rounded-md',
 						'hover:bg-gray-50 transition-colors',
