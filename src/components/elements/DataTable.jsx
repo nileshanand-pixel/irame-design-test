@@ -36,6 +36,8 @@ import { DataTablePagination } from './data-table/components/data-table-paginati
  * @property {any} [defaultSort]
  * @property {boolean} [enableSorting]
  * @property {boolean} [simplePagination]
+ * @property {boolean} [stickyHeader]
+ * @property {boolean} [stickyPagination]
  */
 
 /**
@@ -63,6 +65,8 @@ export function DataTable({
 	onSortingChange,
 	enableSorting = false,
 	simplePagination = false,
+	stickyHeader = false,
+	stickyPagination = false,
 }) {
 	const { table } = useDataTable({
 		data,
@@ -82,10 +86,24 @@ export function DataTable({
 	});
 
 	return (
-		<div className="w-full space-y-2.5 overflow-auto ">
-			<div className="text-primary100  w-full overflow-auto">
+		<div
+			className={cn(
+				'w-full space-y-2.5',
+				stickyPagination
+					? 'h-full flex flex-col overflow-hidden'
+					: 'overflow-auto',
+			)}
+		>
+			<div
+				className={cn(
+					'text-primary100 w-full overflow-auto',
+					stickyPagination && 'flex-1',
+				)}
+			>
 				<Table>
-					<TableHeader>
+					<TableHeader
+						className={cn(stickyHeader && 'sticky top-0 z-20 bg-white')}
+					>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => (
@@ -168,7 +186,13 @@ export function DataTable({
 				</Table>
 			</div>
 			{!hidePagination && (
-				<div className={cn('space-y-2.5', simplePagination && 'pb-5')}>
+				<div
+					className={cn(
+						'space-y-2.5',
+						simplePagination && 'pb-5',
+						stickyPagination && 'sticky bottom-0 z-10 bg-white',
+					)}
+				>
 					<DataTablePagination
 						table={table}
 						simpleMode={simplePagination}

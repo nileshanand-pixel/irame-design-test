@@ -228,6 +228,8 @@ export default function LogsTabContent() {
 					hasActiveFilters={hasActiveFilters}
 					onClearFilters={handleClearFilters}
 					onViewDetails={handleViewDetails}
+					stickyHeader={true}
+					stickyPagination={true}
 				/>
 			</div>
 

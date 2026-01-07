@@ -112,6 +112,8 @@ export default function LogsTable({
 	hasActiveFilters = false,
 	onClearFilters = () => {},
 	onViewDetails = () => {},
+	stickyHeader = false,
+	stickyPagination = false,
 }) {
 	const totalCount = logs.pagination?.total || 0;
 	const totalPages = logs.pagination?.totalPages || 0;
@@ -131,6 +133,8 @@ export default function LogsTable({
 						isServerSide={true}
 						simplePagination={true}
 						isLoading={isLoading}
+						stickyHeader={stickyHeader}
+						stickyPagination={stickyPagination}
 					/>
 				</div>
 
