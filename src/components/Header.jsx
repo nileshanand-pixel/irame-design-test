@@ -29,7 +29,6 @@ import { Button } from '@/components/ui/button';
 import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronDownIcon } from '@radix-ui/react-icons';
 import {
 	ArrowUpDown,
 	Database,
