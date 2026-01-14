@@ -118,7 +118,9 @@ export class APIDashboardAdapter extends DashboardAdapter {
 	async getMyDashboards(params = {}) {
 		try {
 			// Build query parameters
-			const queryParams = {};
+			const queryParams = {
+				space: 'personal',
+			};
 			if (params.limit) queryParams.limit = params.limit;
 			if (params.cursor) queryParams.cursor = params.cursor;
 			if (params.start_date) queryParams.start_date = params.start_date;
@@ -154,14 +156,16 @@ export class APIDashboardAdapter extends DashboardAdapter {
 	async getSharedDashboards(params = {}) {
 		try {
 			// Build query parameters
-			const queryParams = {};
+			const queryParams = {
+				space: 'shared',
+			};
 			if (params.limit) queryParams.limit = params.limit;
 			if (params.cursor) queryParams.cursor = params.cursor;
 			if (params.start_date) queryParams.start_date = params.start_date;
 			if (params.end_date) queryParams.end_date = params.end_date;
 			if (params.query_id) queryParams.query_id = params.query_id;
 
-			const response = await this.api.get('/dashboards/shared', {
+			const response = await this.api.get('/dashboards', {
 				params: queryParams,
 			});
 

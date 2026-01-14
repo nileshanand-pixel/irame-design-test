@@ -105,7 +105,7 @@ const DashboardPage = () => {
 						/>
 					</TabsContent>
 
-					{/* <TabsContent
+					<TabsContent
 						value={DASHBOARD_TABS.SHARED_DASHBOARD.value}
 						className="mt-0"
 					>
@@ -115,7 +115,7 @@ const DashboardPage = () => {
 							onDashboardClick={handleDashboardClick}
 							onCreateDashboard={handleCreateDashboardClick}
 						/>
-					</TabsContent> */}
+					</TabsContent>
 				</div>
 			</Tabs>
 
