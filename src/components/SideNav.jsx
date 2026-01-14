@@ -731,6 +731,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 																	teamId,
 																),
 															);
+															queryClient.invalidateQueries();
 															setTeamSearchQuery('');
 														}}
 													>
