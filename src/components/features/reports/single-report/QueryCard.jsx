@@ -11,7 +11,7 @@ import { QueryGraphs } from './QueryGraphs';
 import { useMutation } from '@tanstack/react-query';
 import { deleteReportCard, generateCases } from '../service/reports.service';
 import { Loader2, Eye, Copy } from 'lucide-react';
-import { getInitials, getSupportedGraphs } from '@/lib/utils';
+import { cn, getInitials, getSupportedGraphs } from '@/lib/utils';
 import { queryClient } from '@/lib/react-query';
 import { toast } from '@/lib/toast';
 import { logError } from '@/lib/logger';
@@ -107,7 +107,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 		const truncatedTitle = (card.title ?? 'Untitled')
 			.replace(/\s+/g, '_')
 			.slice(0, 20);
-		const fileName = `${report.name}_${truncatedTitle}_${card.query_id}.csv`;
+		const fileName = `${report?.name}_${truncatedTitle}_${card.query_id}.csv`;
 		downloadS3File(csvUrl, fileName);
 	};
 
@@ -207,8 +207,23 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 		},
 	];
 
+	const answerContent = (
+		<div
+			className="text-primary80"
+			style={{ whiteSpace: 'pre-wrap' }}
+			dangerouslySetInnerHTML={{
+				__html: card?.data?.answer || '',
+			}}
+		/>
+	);
+
 	return (
-		<Card className="rounded-xl px-6 py-4 border border-[#F4EFF9] shadow-sm hover:shadow-md hover:border-[#6A12CD33] transition-all duration-300">
+		<Card
+			className={cn(
+				'rounded-xl px-6 py-4 border border-[#F4EFF9] shadow-sm hover:shadow-md hover:border-[#6A12CD33] transition-all duration-300 query-card',
+				pdfMode && 'block pdf-mode-card',
+			)}
+		>
 			<ConfirmationDialog />
 			<CardHeader className="p-0 pb-3 border-b-1 border-[#26064A1A]">
 				<div className="flex flex-row flex-wrap items-center gap-3 mb-3">
@@ -246,7 +261,9 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 					)}
 				</div>
 
-				<CardTitle className="p-0 text-xl font-semibold text-primary80 truncate">
+				<CardTitle
+					className={`p-0 text-xl font-semibold text-primary80 ${pdfMode ? 'break-words' : 'truncate'}`}
+				>
 					{card?.title ?? 'Prescriptive analysis of this report'}
 				</CardTitle>
 
@@ -308,31 +325,45 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 				</div>
 			</CardHeader>
 
-			<CardContent className="p-0 flex flex-col gap-2 pt-3">
+			<CardContent
+				className={cn(
+					'p-0 flex flex-col gap-2 pt-3',
+					pdfMode && 'block space-y-2',
+				)}
+			>
 				<div className="mb-4">
 					<Kpis kpisData={card?.kpis} />
 				</div>
 
-				{showGraphs && (
-					<QueryGraphs
-						graphs={card.data.graphs}
-						reportCardId={card.external_id}
-					/>
+				{pdfMode ? (
+					<>
+						<div>{answerContent}</div>
+						{showGraphs && (
+							<QueryGraphs
+								graphs={card.data.graphs}
+								reportCardId={card.external_id}
+								pdfMode={pdfMode}
+							/>
+						)}
+					</>
+				) : (
+					<>
+						{showGraphs && (
+							<QueryGraphs
+								graphs={card.data.graphs}
+								reportCardId={card.external_id}
+								pdfMode={pdfMode}
+							/>
+						)}
+						<div>{answerContent}</div>
+					</>
 				)}
-				<div>
-					<div
-						className="text-primary80"
-						style={{ whiteSpace: 'pre-wrap' }}
-						dangerouslySetInnerHTML={{
-							__html: card?.data?.answer || '',
-						}}
-					/>
-				</div>
 
 				<QuerySourcesAndComments
 					queryCardId={card.external_id}
 					reportId={report.report_id}
 					reportCardId={card.external_id}
+					pdfMode={pdfMode}
 				/>
 
 				{/* <ReportComments

@@ -45,6 +45,9 @@ const GraphRenderer = ({
 		placeholder: '',
 	});
 
+	// PDF mode detection for higher resolution rendering
+	const isPdfMode = window.location.pathname.includes('/export/');
+
 	const handle = useFullScreenHandle();
 	const { createS3File } = useS3File();
 
@@ -317,6 +320,7 @@ const GraphRenderer = ({
 				options: {
 					responsive: true,
 					responsiveAnimationDuration: 0,
+					devicePixelRatio: isPdfMode ? 5 : window.devicePixelRatio,
 					transitions: {
 						resize: {
 							animation: {
@@ -334,7 +338,7 @@ const GraphRenderer = ({
 					plugins: {
 						title: {
 							align: handle.active ? 'end' : 'center',
-							display: true,
+							display: !isPdfMode,
 							text: graph.title || 'Data plot',
 							font: {
 								size: handle.active
@@ -620,66 +624,64 @@ const GraphRenderer = ({
 			) : (
 				<div className="relative h-full" ref={containerRef}>
 					{/* Top Bar with Category Filter, Reset Zoom, Selection Tool, and Fullscreen Button */}
-					<div
-						className={`${showCategoryFilter ? 'block' : 'hidden'} w-full flex justify-between items-center mb-2 `}
-					>
-						<div
-							className={`${showCategoryFilter ? 'block' : 'hidden'}`}
-						>
-							<GraphCategoryFilter
-								filterData={categoryData}
-								onChange={handleCategoryChange}
-							/>
-						</div>
-						<div className="flex items-center gap-2">
-							{/* Selection Tool Toggle Button */}
-							{isZoomEnabled && (
+					{!isPdfMode && showCategoryFilter ? (
+						<div className="w-full flex justify-between items-center mb-2 ">
+							<div>
+								<GraphCategoryFilter
+									filterData={categoryData}
+									onChange={handleCategoryChange}
+								/>
+							</div>
+							<div className="flex items-center gap-2">
+								{/* Selection Tool Toggle Button */}
+								{isZoomEnabled && (
+									<Button
+										size="icon"
+										variant="ghost"
+										onClick={handleToggleSelectionTool}
+										className={`font-extrabold transition-all duration-200 ${
+											isSelectionToolActive
+												? 'text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100'
+												: 'text-primary hover:text-[#6A12CD]'
+										}`}
+										title={
+											isSelectionToolActive
+												? 'Cancel selection tool'
+												: 'Enable selection tool'
+										}
+									>
+										{isSelectionToolActive ? (
+											<i className="bi-x-lg text-lg font-extrabold"></i>
+										) : (
+											<i className="bi-cursor text-lg font-extrabold"></i>
+										)}
+									</Button>
+								)}
+								{/* Reset Zoom Button  */}
+								{isZoomed && isZoomEnabled && (
+									<Button
+										size="icon"
+										variant="ghost"
+										onClick={handleResetZoom}
+										className="font-extrabold text-primary hover:text-[#6A12CD] transition-all duration-200"
+										title="Reset zoom"
+									>
+										<i className="bi-arrow-counterclockwise text-lg font-extrabold"></i>
+									</Button>
+								)}
 								<Button
 									size="icon"
 									variant="ghost"
-									onClick={handleToggleSelectionTool}
-									className={`font-extrabold transition-all duration-200 ${
-										isSelectionToolActive
-											? 'text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100'
-											: 'text-primary hover:text-[#6A12CD]'
-									}`}
-									title={
-										isSelectionToolActive
-											? 'Cancel selection tool'
-											: 'Enable selection tool'
-									}
+									className="font-extrabold text-primary animate-pulse hover:animate-none duration-1000"
+									onClick={handle.enter}
 								>
-									{isSelectionToolActive ? (
-										<i className="bi-x-lg text-lg font-extrabold"></i>
-									) : (
-										<i className="bi-cursor text-lg font-extrabold"></i>
-									)}
+									<i className="bi bi-fullscreen text-lg font-extrabold"></i>
 								</Button>
-							)}
-							{/* Reset Zoom Button  */}
-							{isZoomed && isZoomEnabled && (
-								<Button
-									size="icon"
-									variant="ghost"
-									onClick={handleResetZoom}
-									className="font-extrabold text-primary hover:text-[#6A12CD] transition-all duration-200"
-									title="Reset zoom"
-								>
-									<i className="bi-arrow-counterclockwise text-lg font-extrabold"></i>
-								</Button>
-							)}
-							<Button
-								size="icon"
-								variant="ghost"
-								className="font-extrabold text-primary animate-pulse hover:animate-none duration-1000"
-								onClick={handle.enter}
-							>
-								<i className="bi bi-fullscreen text-lg font-extrabold"></i>
-							</Button>
+							</div>
 						</div>
-					</div>
+					) : null}
 
-					{!showCategoryFilter && (
+					{!showCategoryFilter && !isPdfMode ? (
 						<div className="absolute top-2 right-2 z-20 flex items-center gap-2">
 							{isZoomEnabled && (
 								<Button
@@ -725,7 +727,7 @@ const GraphRenderer = ({
 								<i className="bi bi-fullscreen text-lg font-extrabold"></i>
 							</Button>
 						</div>
-					)}
+					) : null}
 
 					<FullScreen handle={handle} className="h-full w-full">
 						<div
@@ -757,7 +759,7 @@ const GraphRenderer = ({
 								)}
 
 							{/* Selection Tool, Reset Zoom, and Exit Fullscreen Buttons */}
-							{handle.active && (
+							{handle.active && !isPdfMode && (
 								<div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-2">
 									{isZoomEnabled && (
 										<Button
@@ -809,7 +811,7 @@ const GraphRenderer = ({
 						</div>
 					</FullScreen>
 
-					{!showCategoryFilter && (
+					{!showCategoryFilter && !isPdfMode ? (
 						<Button
 							size="icon"
 							variant="ghost"
@@ -818,7 +820,7 @@ const GraphRenderer = ({
 						>
 							{/* <i className="bi bi-fullscreen text-lg font-extrabold"></i> */}
 						</Button>
-					)}
+					) : null}
 				</div>
 			)}
 		</div>

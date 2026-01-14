@@ -67,6 +67,33 @@
 		--ring: 0 0% 83.1%;
 	}
 
+	html.pdf-mode {
+		font-size: 75% !important;
+	}
+
+	/* Prevent charts from being split across pages in PDF, but allow cards to split */
+	.pdf-mode .graph-container {
+		break-inside: avoid !important;
+		page-break-inside: avoid !important;
+		display: block !important;
+		position: relative !important;
+		overflow: visible !important;
+	}
+
+	.pdf-mode .query-card,
+	.pdf-mode .query-card * {
+		overflow: visible !important; /* Overflow hidden kills break-inside: avoid */
+	}
+
+	/* Subtle card border restored only for PDF output (kept light to avoid heavy layout changes) */
+	.pdf-mode .pdf-mode-card {
+		border: 1px solid rgba(106, 18, 205, 0.12) !important; /* subtle purple */
+		box-shadow: none !important;
+		background-color: #ffffff !important;
+		border-radius: 12px !important;
+		overflow: visible !important;
+	}
+
 	*::-webkit-scrollbar {
 		height: 0px;
 		width: 0px;
@@ -329,7 +356,6 @@
 	}
 
 	.darkSoul-glowing-button2 {
-		/* margin: auto; */
 		width: 15.6rem;
 		height: 3rem;
 		display: flex;
@@ -585,15 +611,6 @@
 		box-sizing: content-box;
 	}
 
-	/* Allow user-agent defaults for margins/padding */
-
-	/* .rendered-markdown,
-	.rendered-markdown * {
-		margin: initial !important;
-		padding: initial !important;
-		box-sizing: content-box !important;
-	} */
-
 	/* Restore default heading styles */
 	.rendered-markdown h1 {
 		font-size: 2.5rem;
@@ -656,7 +673,6 @@
 
 	/* Links */
 	.rendered-markdown a {
-		/* color: #0000ee; */
 		text-decoration: underline;
 	}
 

@@ -34,7 +34,7 @@ const tabsConfig = [
 	},
 ];
 
-export const QuerySourcesAndComments = ({ queryCardId }) => {
+export const QuerySourcesAndComments = ({ queryCardId, pdfMode }) => {
 	const [commentsData, setCommentsData] = useState([]);
 	const [openTab, setOpenTab] = useState(TABS.SOURCES);
 	const [open, setOpen] = useState(false);
@@ -54,27 +54,29 @@ export const QuerySourcesAndComments = ({ queryCardId }) => {
 
 	return (
 		<>
-			<div className="mt-2 flex justify-between items-center">
-				<button
-					className=" bg-[#F4F3FF] hover:bg-[#eae8fa] px-3 py-1 rounded-3xl"
-					onClick={() => handleOpenTab(TABS.SOURCES)}
-				>
-					{isLoading ? (
-						<Loader2 className="animate-spin h-4 w-4" />
-					) : (
-						<span className="flex items-center">
-							<span className="font-medium text-[#5925DC]">
-								{sourcesCount} sources
+			{!pdfMode && (
+				<div className="mt-2 flex justify-between items-center">
+					<button
+						className=" bg-[#F4F3FF] hover:bg-[#eae8fa] px-3 py-1 rounded-3xl"
+						onClick={() => handleOpenTab(TABS.SOURCES)}
+					>
+						{isLoading ? (
+							<Loader2 className="animate-spin h-4 w-4" />
+						) : (
+							<span className="flex items-center">
+								<span className="font-medium text-[#5925DC]">
+									{sourcesCount} sources
+								</span>
 							</span>
-						</span>
-					)}
-				</button>
+						)}
+					</button>
 
-				<CommentTrigger
-					handleClick={() => handleOpenTab(TABS.COMMENTS)}
-					commentsData={commentsData}
-				/>
-			</div>
+					<CommentTrigger
+						handleClick={() => handleOpenTab(TABS.COMMENTS)}
+						commentsData={commentsData}
+					/>
+				</div>
+			)}
 
 			<TabSheet
 				open={open}

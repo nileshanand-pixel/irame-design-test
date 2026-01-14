@@ -11,7 +11,7 @@ import DOMPurify from 'dompurify';
 import { queryClient } from '@/lib/react-query';
 import { REPORT_SECTION_IDS } from './report-sidebar';
 
-export default function ReportSummary() {
+export default function ReportSummary({ pdfMode }) {
 	const [status, setStatus] = useState('idle');
 	const [visibleText, setVisibleText] = useState('');
 	const [fullText, setFullText] = useState('');
@@ -140,7 +140,7 @@ export default function ReportSummary() {
 						<GradientSpinner tailwindBg="bg-[#E6D7F7]" width="1" />
 						Generating Summary…
 					</Button>
-				) : shouldHideButton ? null : (
+				) : shouldHideButton || pdfMode ? null : (
 					<Button
 						variant="secondary1"
 						className="px-6 text-purple-100 font-semibold"

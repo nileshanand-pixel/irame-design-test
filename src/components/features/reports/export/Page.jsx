@@ -9,7 +9,20 @@ import ReportSummary from '../single-report/ReportSummary';
 const ReportContentPage = () => {
 	const [cards, setCards] = useState([]);
 	const reportId = useReportId();
-	if (!reportId) null;
+
+	if (!reportId) {
+		return null;
+	}
+
+	useEffect(() => {
+		// Increase font size for PDF export
+		document.documentElement.classList.add('pdf-mode');
+		window.dispatchEvent(new Event('resize'));
+		return () => {
+			document.documentElement.classList.remove('pdf-mode');
+			window.dispatchEvent(new Event('resize'));
+		};
+	}, []);
 
 	const {
 		data: reportDetails,
@@ -17,14 +30,17 @@ const ReportContentPage = () => {
 		isLoading,
 	} = useQuery({
 		queryKey: ['report-details', reportId],
-		queryFn: () => getUserReport(reportId),
+		queryFn: async () => {
+			const result = await getUserReport(reportId);
+			return result;
+		},
 		enabled: Boolean(reportId),
 	});
 
 	const showSummary = () => {
 		return (
-			!!reportDetails?.report.data.summary &&
-			!reportDetails?.report.data.generation_in_progress
+			!!reportDetails?.report?.data?.summary &&
+			!reportDetails?.report?.data?.generation_in_progress
 		);
 	};
 
@@ -40,6 +56,7 @@ const ReportContentPage = () => {
 	}, [reportDetails]);
 
 	if (isLoading) return <div>Loading...</div>;
+	if (error) return <div>Error loading report.</div>;
 
 	return (
 		<div
@@ -48,9 +65,14 @@ const ReportContentPage = () => {
 				
 			"
 		>
+			{reportDetails && (
+				<div id="api-data-loaded" style={{ display: 'none' }}></div>
+			)}
 			<ReportHero reportDetails={reportDetails} pdfMode />
-			{showSummary() && <ReportSummary />}
-			<QueryList reportDetails={reportDetails} pdfMode cards={cards} />
+			{showSummary() && <ReportSummary pdfMode />}
+			<div className={`${showSummary() ? 'mt-0' : 'mt-6'}`}>
+				<QueryList reportDetails={reportDetails} pdfMode cards={cards} />
+			</div>
 		</div>
 	);
 };
