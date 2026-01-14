@@ -1,5 +1,6 @@
-import axiosClientV1 from '@/lib/axios';
+import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
 import { getTimeAgo } from '@/utils/common';
+import { ENABLE_RBAC } from '@/config';
 
 /**
  * Abstract adapter interface
@@ -182,10 +183,17 @@ export class APIDashboardAdapter extends DashboardAdapter {
 
 	async createDashboard(data) {
 		try {
-			const response = await this.api.post('/dashboards', {
+			const payload = {
 				title: data.title,
 				description: data.description || '',
-			});
+			};
+
+			// Add V2 specific fields if present
+			if (data.visibility) {
+				payload.visibility = data.visibility;
+			}
+
+			const response = await this.api.post('/dashboards', payload);
 
 			const newDashboard = transformDashboard(response.data, false);
 
@@ -374,5 +382,8 @@ export class APIDashboardAdapter extends DashboardAdapter {
  * Factory function to get the appropriate adapter
  */
 export const getDashboardAdapter = () => {
+	if (ENABLE_RBAC) {
+		return new APIDashboardAdapter(axiosClientV2);
+	}
 	return new APIDashboardAdapter(axiosClientV1);
 };

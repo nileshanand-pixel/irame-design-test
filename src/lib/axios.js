@@ -64,12 +64,10 @@ const setupInterceptors = (axiosClient) => {
 						config.headers = config.headers || {};
 						config.headers['X-USER-ID'] = userId;
 
-						// Add X-TEAM-ID for GET requests (existing logic)
-						if (config.method && config.method.toLowerCase() === 'get') {
-							const teamId = localStorage.getItem(`team_${userId}`);
-							if (teamId) {
-								config.headers['X-TEAM-ID'] = teamId;
-							}
+						// Add X-TEAM-ID if available in localStorage
+						const teamId = localStorage.getItem(`team_${userId}`);
+						if (teamId) {
+							config.headers['X-TEAM-ID'] = teamId;
 						}
 					}
 
