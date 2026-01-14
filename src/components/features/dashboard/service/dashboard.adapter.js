@@ -54,6 +54,10 @@ export class DashboardAdapter {
 	async refreshDashboard(id) {
 		throw new Error('refreshDashboard must be implemented');
 	}
+
+	async shareDashboard(id, data) {
+		throw new Error('shareDashboard must be implemented');
+	}
 }
 
 /**
@@ -376,6 +380,15 @@ export class APIDashboardAdapter extends DashboardAdapter {
 				success: true,
 				data: response.data,
 			};
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async shareDashboard(id, data) {
+		try {
+			await this.api.post(`/dashboards/${id}/share`, data);
+			return { success: true };
 		} catch (error) {
 			throw error;
 		}

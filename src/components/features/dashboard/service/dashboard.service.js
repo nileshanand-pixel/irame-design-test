@@ -327,3 +327,26 @@ export const refreshDashboard = async (id) => {
 		throw error;
 	}
 };
+
+/**
+ * Share dashboard with users
+ * @param {string} id - Dashboard ID
+ * @param {Object} data - Share data { recipients: [{email, accessLevel}] }
+ */
+export const shareDashboard = async (id, data) => {
+	try {
+		await adapter.shareDashboard(id, data);
+		return true;
+	} catch (error) {
+		logError(error, {
+			feature: 'live-dashboard',
+			action: 'share-dashboard',
+			extra: {
+				errorMessage: error.message,
+				status: error.response?.status,
+				dashboardId: id,
+			},
+		});
+		throw error;
+	}
+};

@@ -8,6 +8,7 @@ const MyDashboardsTab = ({
 	timeFilter,
 	onDashboardClick,
 	onCreateDashboard,
+	onShare,
 }) => {
 	const { data: dashboards = [], isLoading, error } = useMyDashboards();
 
@@ -25,6 +26,7 @@ const MyDashboardsTab = ({
 			searchQuery={searchQuery}
 			onDashboardClick={onDashboardClick}
 			onCreateDashboard={onCreateDashboard}
+			onShare={onShare}
 			isShared={false}
 		/>
 	);

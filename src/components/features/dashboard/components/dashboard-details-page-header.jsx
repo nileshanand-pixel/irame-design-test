@@ -2,13 +2,14 @@ import React, { memo, useCallback } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { LuPencil, LuLayoutGrid } from 'react-icons/lu';
 import { MdRefresh } from 'react-icons/md';
+import { Share2 } from 'lucide-react';
 import { useRouter } from '@/hooks/useRouter';
 import EditModeModal from './EditModeModal';
 import AutoRefreshDropdown from './AutoRefreshDropdown';
 import { logError } from '@/lib/logger';
 import { toast } from '@/lib/toast';
 import BreadCrumbs from '@/components/BreadCrumbs';
-import ShareDashboardCTA from './share-dashboard-cta';
+import { ShareDashboardDialog } from './ShareDashboardDialog';
 import AddQueryCta from './add-query-cta';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
@@ -36,6 +37,7 @@ const DashboardDetailsPageHeader = memo(
 	}) => {
 		const { navigate } = useRouter();
 		const [ConfirmationDialog, confirm] = useConfirmDialog();
+		const [isShareDialogOpen, setIsShareDialogOpen] = React.useState(false);
 
 		const handleEditModeToggle = useCallback((checked) => {
 			setIsEditMode(checked);
@@ -174,7 +176,14 @@ const DashboardDetailsPageHeader = memo(
 									<i className="bi-trash text-primary80 font-medium text-lg group-hover:text-red-500"></i>
 								)}
 							</div>
-							{/* <ShareDashboardCTA /> */}
+
+							<div
+								className="flex justify-center items-center group hover:shadow-sm border border-[#E5E7EB] cursor-pointer rounded-md h-10 w-10"
+								onClick={() => setIsShareDialogOpen(true)}
+								title="Share Dashboard"
+							>
+								<Share2 className="w-[1.125rem] h-[1.125rem] text-primary80 group-hover:text-[#6A12CD]" />
+							</div>
 						</div>
 					</div>
 
@@ -237,6 +246,12 @@ const DashboardDetailsPageHeader = memo(
 				/>
 
 				<ConfirmationDialog />
+
+				<ShareDashboardDialog
+					open={isShareDialogOpen}
+					onClose={() => setIsShareDialogOpen(false)}
+					dashboardId={dashboardId}
+				/>
 
 				{isEditMode && !isEditModeModalOpen && (
 					<EditModeButton onClick={handleEditModeButtonClick} />
