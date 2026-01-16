@@ -1,11 +1,13 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDashboardById, shareDashboard } from '../service/dashboard.service';
 import { getDashboardAccessUsers } from '@/api/gatekeeper/dashboardAccess.service';
+import { userService } from '@/api/gatekeeper/user.service';
 import { ShareModal } from '@/components/elements/ShareModal';
 import { toast } from '@/lib/toast';
 import { Globe, Lock } from 'lucide-react';
 import { logError } from '@/lib/logger';
+import { useDebounce } from '@/hooks/use-debounce';
 
 /**
  * Single source of truth for access levels
@@ -62,6 +64,12 @@ const ACCESS_OPTIONS = [
 export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 	const queryClient = useQueryClient();
 
+	// User search and selection state
+	const [searchQuery, setSearchQuery] = useState('');
+	const debouncedSearch = useDebounce(searchQuery, 300);
+	const [selectedUsers, setSelectedUsers] = useState([]);
+	const [inviteAccessLevel, setInviteAccessLevel] = useState('viewer');
+
 	// Fetch dashboard basic info (for title, etc.)
 	const { data: dashboardResponse, isLoading: isDashboardLoading } = useQuery({
 		queryKey: ['dashboard', dashboardId],
@@ -76,6 +84,18 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 		queryKey: ['dashboard-access-users', dashboardId],
 		queryFn: () => getDashboardAccessUsers(dashboardId),
 		enabled: !!dashboardId && open,
+	});
+
+	// Fetch users for search suggestions
+	const { data: usersData, isLoading: isSearching } = useQuery({
+		queryKey: ['users-search', debouncedSearch],
+		queryFn: () =>
+			userService.getUsers({
+				search: debouncedSearch,
+				type: 'active',
+				limit: 10,
+			}),
+		enabled: debouncedSearch.length > 0 && open,
 	});
 
 	const shareMutation = useMutation({
@@ -101,28 +121,33 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 
 	const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-	const handleInvite = useCallback(
-		(inputValue) => {
-			const emails = inputValue
-				.split(',')
-				.map((e) => e.trim())
-				.filter((e) => e);
-			const validEmails = emails.filter(isValidEmail);
+	const handleInvite = useCallback(() => {
+		if (selectedUsers.length === 0) {
+			toast.error('Please select at least one user to invite');
+			return;
+		}
 
-			if (validEmails.length === 0) {
-				toast.error('Please enter valid email addresses');
-				return;
-			}
+		if (selectedUsers.length > 3) {
+			toast.error('Cannot invite more than 3 users at once');
+			return;
+		}
 
-			const accesses = validEmails.map((email) => ({
-				email,
-				accessLevel: 'viewer', // Default to viewer
-			}));
+		const accesses = selectedUsers.map((user) => ({
+			email: user.email,
+			accessLevel: inviteAccessLevel,
+		}));
 
-			shareMutation.mutate({ dashboardId, accesses });
-		},
-		[dashboardId, shareMutation],
-	);
+		shareMutation.mutate(
+			{ dashboardId, accesses },
+			{
+				onSuccess: () => {
+					setSelectedUsers([]);
+					setSearchQuery('');
+					setInviteAccessLevel('viewer');
+				},
+			},
+		);
+	}, [dashboardId, selectedUsers, inviteAccessLevel, shareMutation]);
 
 	const handleRoleChange = useCallback(
 		(userId, email, newRole) => {
@@ -139,6 +164,49 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 		},
 		[dashboardId, shareMutation],
 	);
+
+	const handleUserSelect = useCallback(
+		(user) => {
+			if (selectedUsers.length >= 3) {
+				toast.error('Maximum 3 users can be invited at once');
+				return;
+			}
+
+			if (selectedUsers.some((u) => u.userId === user.userId)) {
+				return; // Already selected
+			}
+
+			setSelectedUsers((prev) => [...prev, user]);
+			setSearchQuery(''); // Clear search after selection
+		},
+		[selectedUsers],
+	);
+
+	const handleUserRemove = useCallback((userId) => {
+		setSelectedUsers((prev) => prev.filter((u) => u.userId !== userId));
+	}, []);
+
+	// Filter suggestions: exclude already selected and existing members
+	const suggestions = useMemo(() => {
+		if (!usersData?.data) return [];
+
+		const selectedUserIds = new Set(selectedUsers.map((u) => u.userId));
+		const existingUserIds = new Set();
+
+		if (accessData?.owner) {
+			existingUserIds.add(accessData.owner.user_id);
+		}
+
+		if (accessData?.shared_users) {
+			accessData.shared_users.forEach((u) => existingUserIds.add(u.user_id));
+		}
+
+		return usersData.data.filter(
+			(user) =>
+				!selectedUserIds.has(user.userId) &&
+				!existingUserIds.has(user.userId),
+		);
+	}, [usersData, selectedUsers, accessData]);
 
 	const members = useMemo(() => {
 		const membersList = [];
@@ -223,7 +291,21 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 				invite: {
 					placeholder: 'Search by name or email',
 					buttonText: 'Invite',
+					searchQuery,
+					onSearchChange: setSearchQuery,
+					selectedUsers,
+					onUserSelect: handleUserSelect,
+					onUserRemove: handleUserRemove,
+					suggestions,
+					isSearching,
+					accessLevel: inviteAccessLevel,
+					onAccessLevelChange: setInviteAccessLevel,
 					onInvite: handleInvite,
+					accessLevelOptions: [
+						{ ...ACCESS_LEVELS.viewer, value: 'viewer' },
+						{ ...ACCESS_LEVELS.editor, value: 'editor' },
+						{ ...ACCESS_LEVELS.deleter, value: 'deleter' },
+					],
 				},
 				members,
 				isLoading,
