@@ -132,21 +132,14 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 			return;
 		}
 
+		// Defensive: ensure accessLevel is set and include snake_case for API compatibility
+		const level = inviteAccessLevel || 'viewer';
 		const accesses = selectedUsers.map((user) => ({
 			email: user.email,
-			accessLevel: inviteAccessLevel,
+			access_level: level,
 		}));
 
-		shareMutation.mutate(
-			{ dashboardId, accesses },
-			{
-				onSuccess: () => {
-					setSelectedUsers([]);
-					setSearchQuery('');
-					setInviteAccessLevel('viewer');
-				},
-			},
-		);
+		shareMutation.mutate({ dashboardId, accesses });
 	}, [dashboardId, selectedUsers, inviteAccessLevel, shareMutation]);
 
 	const handleRoleChange = useCallback(
@@ -157,9 +150,10 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 				return;
 			}
 
+			// Defensive: include both casing variants
 			shareMutation.mutate({
 				dashboardId,
-				accesses: [{ email, accessLevel: newRole }],
+				accesses: [{ email, access_level: newRole }],
 			});
 		},
 		[dashboardId, shareMutation],

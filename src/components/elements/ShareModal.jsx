@@ -127,7 +127,7 @@ export function ShareModal({ open, onOpenChange, config, ...restProps }) {
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-[40rem] p-0 gap-0 overflow-hidden rounded-xl border-[#e9eaeb] shadow-2xl">
+			<DialogContent className="max-w-[36rem] p-0 gap-0 overflow-hidden rounded-xl border-[#e9eaeb] shadow-2xl">
 				{/* Header */}
 				<div className="border-b border-[#e9eaeb] px-5 py-3 flex items-center gap-3 bg-white">
 					<div className="bg-[#f4ebff] border-[4px] border-[#f9f5ff] rounded-full p-1.5 shrink-0">
@@ -154,7 +154,7 @@ export function ShareModal({ open, onOpenChange, config, ...restProps }) {
 										>
 											<Avatar className="h-4 w-4">
 												<AvatarImage src={user.avatar} />
-												<AvatarFallback className="bg-purple-100 text-purple-700 text-[10px]">
+												<AvatarFallback className="text-purple-700 text-[10px]">
 													{user.name?.[0] ||
 														user.email?.[0]}
 												</AvatarFallback>
@@ -234,7 +234,7 @@ export function ShareModal({ open, onOpenChange, config, ...restProps }) {
 																			user.avatar
 																		}
 																	/>
-																	<AvatarFallback className="bg-purple-100 text-purple-700">
+																	<AvatarFallback className="text-purple-700">
 																		{user
 																			.name?.[0] ||
 																			user
@@ -264,48 +264,60 @@ export function ShareModal({ open, onOpenChange, config, ...restProps }) {
 							</div>
 
 							{/* Access Level Selector */}
-							{invite.accessLevelOptions && (
-								<Select
-									value={invite.accessLevel || 'viewer'}
-									onValueChange={invite.onAccessLevelChange}
-								>
-									<SelectTrigger className="w-auto h-auto border-none shadow-none bg-transparent hover:bg-gray-50 focus:ring-0 gap-1 px-2 py-1.5 text-[#26064a] text-sm font-normal">
-										<SelectValue>
-											{
-												(
-													invite.accessLevelOptions.find(
-														(opt) =>
-															opt.value ===
-															(invite.accessLevel ||
-																'viewer'),
-													) || {}
-												).label
+							{invite.accessLevelOptions &&
+								invite.selectedUsers?.length > 0 && (
+									<div className="animate-in fade-in slide-in-from-right-2 duration-300 ease-in-out">
+										<Select
+											value={invite.accessLevel || 'viewer'}
+											onValueChange={
+												invite.onAccessLevelChange
 											}
-										</SelectValue>
-									</SelectTrigger>
-									<SelectContent align="end" className="w-[280px]">
-										{invite.accessLevelOptions.map((opt) => (
-											<SelectItem
-												key={opt.value}
-												value={opt.value}
-												textValue={opt.label}
-												className="py-2.5"
+										>
+											<SelectTrigger className="w-auto h-auto border-none shadow-none bg-transparent hover:bg-gray-50 focus:ring-0 gap-1 px-2 py-3 text-[#26064a] text-sm font-normal">
+												<SelectValue>
+													{
+														(
+															invite.accessLevelOptions.find(
+																(opt) =>
+																	opt.value ===
+																	(invite.accessLevel ||
+																		'viewer'),
+															) || {}
+														).label
+													}
+												</SelectValue>
+											</SelectTrigger>
+											<SelectContent
+												align="end"
+												className="w-[280px]"
 											>
-												<div className="flex flex-col items-start gap-0.5">
-													<span className="font-medium text-sm text-[#26064a]">
-														{opt.label}
-													</span>
-													{opt.description && (
-														<span className="text-[rgba(38,6,74,0.6)] text-xs font-normal">
-															{opt.description}
-														</span>
-													)}
-												</div>
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							)}
+												{invite.accessLevelOptions.map(
+													(opt) => (
+														<SelectItem
+															key={opt.value}
+															value={opt.value}
+															textValue={opt.label}
+															className="py-2.5"
+														>
+															<div className="flex flex-col items-start gap-0.5">
+																<span className="font-medium text-sm text-[#26064a]">
+																	{opt.label}
+																</span>
+																{opt.description && (
+																	<span className="text-[rgba(38,6,74,0.6)] text-xs font-normal">
+																		{
+																			opt.description
+																		}
+																	</span>
+																)}
+															</div>
+														</SelectItem>
+													),
+												)}
+											</SelectContent>
+										</Select>
+									</div>
+								)}
 						</div>
 
 						{/* Max users indicator */}
@@ -322,7 +334,7 @@ export function ShareModal({ open, onOpenChange, config, ...restProps }) {
 							<div key={index} className="flex items-center gap-3">
 								<Avatar className="h-9 w-9">
 									<AvatarImage src={member.avatar} />
-									<AvatarFallback className="bg-purple-100 text-purple-700">
+									<AvatarFallback className=" text-purple-700">
 										{member.name?.[0] || member.email?.[0]}
 									</AvatarFallback>
 								</Avatar>
