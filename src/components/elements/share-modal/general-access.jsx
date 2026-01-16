@@ -7,6 +7,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Lock } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function GeneralAccess({ generalAccess = {} }) {
 	return (
@@ -36,12 +37,20 @@ export default function GeneralAccess({ generalAccess = {} }) {
 						</div>
 					</SelectValue>
 				</SelectTrigger>
-				<SelectContent className="w-[var(--radix-select-trigger-width)]">
+				<SelectContent
+					className={cn(
+						'rounded-[0.625rem] border border-[#E5E7EB] bg-white shadow-md p-0 overflow-hidden',
+						'w-[var(--radix-select-trigger-width)]',
+					)}
+				>
 					{(generalAccess.options || []).map((opt) => (
 						<SelectItem
 							key={opt.value}
 							value={opt.value}
-							className="py-2.5"
+							className={cn(
+								'cursor-pointer text-sm px-4 py-3 outline-none',
+								'hover:bg-[rgba(106,18,205,0.08)] focus:bg-[rgba(106,18,205,0.08)] data-[highlighted]:bg-[rgba(106,18,205,0.08)]',
+							)}
 						>
 							<div className="flex items-center gap-2 text-left">
 								<span className="shrink-0 p-1.5 bg-gray-50 rounded-full">

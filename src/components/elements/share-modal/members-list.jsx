@@ -55,19 +55,26 @@ export default function MembersList({ members = [] }) {
 									}
 								</SelectValue>
 							</SelectTrigger>
-							<SelectContent align="end" className="w-[280px]">
+							<SelectContent
+								align="end"
+								className={cn(
+									'rounded-[0.625rem] border border-[#E5E7EB] bg-white shadow-md p-0 overflow-hidden',
+									'w-[280px]',
+								)}
+							>
 								{(member.options || []).map((opt, optIndex) => (
 									<React.Fragment key={opt.value}>
 										{opt.isDanger && optIndex > 0 && (
-											<SelectSeparator />
+											<SelectSeparator className="my-0 py-0" />
 										)}
 										<SelectItem
 											value={opt.value}
 											textValue={opt.label}
 											className={cn(
-												'py-2.5',
-												opt.isDanger &&
-													'text-red-600 focus:text-red-600 focus:bg-red-50',
+												'cursor-pointer text-sm px-4 py-3 outline-none',
+												opt.isDanger
+													? 'text-red-600 focus:text-red-600 focus:bg-red-50'
+													: 'hover:bg-[rgba(106,18,205,0.08)] focus:bg-[rgba(106,18,205,0.08)] data-[highlighted]:bg-[rgba(106,18,205,0.08)]',
 											)}
 										>
 											<div className="flex flex-col items-start gap-0.5">

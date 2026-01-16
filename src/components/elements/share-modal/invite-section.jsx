@@ -8,6 +8,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Loader2, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function InviteSection({ invite = {} }) {
 	const [showSuggestions, setShowSuggestions] = useState(false);
@@ -149,13 +150,22 @@ export default function InviteSection({ invite = {} }) {
 									}
 								</SelectValue>
 							</SelectTrigger>
-							<SelectContent align="end" className="w-[280px]">
+							<SelectContent
+								align="end"
+								className={cn(
+									'rounded-[0.625rem] border border-[#E5E7EB] bg-white shadow-md p-0 overflow-hidden',
+									'w-[280px]',
+								)}
+							>
 								{invite.accessLevelOptions.map((opt) => (
 									<SelectItem
 										key={opt.value}
 										value={opt.value}
 										textValue={opt.label}
-										className="py-2.5"
+										className={cn(
+											'cursor-pointer text-sm px-4 py-3 outline-none',
+											'hover:bg-[rgba(106,18,205,0.08)] focus:bg-[rgba(106,18,205,0.08)] data-[highlighted]:bg-[rgba(106,18,205,0.08)]',
+										)}
 									>
 										<div className="flex flex-col items-start gap-0.5">
 											<span className="font-medium text-sm text-[#26064a]">
