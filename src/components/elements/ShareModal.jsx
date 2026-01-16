@@ -487,18 +487,18 @@ export function ShareModal({ open, onOpenChange, config, ...restProps }) {
 				</div>
 
 				{/* Footer */}
-				<div className="bg-white border-t border-[#e9eaeb] px-5 py-4 flex items-center justify-between">
+				<div className="bg-white border-t border-[#e9eaeb] pr-5 py-4 flex items-center justify-between">
 					<Button
-						variant="ghost"
-						className="gap-2 text-[#6a12cd] hover:text-[#5b0fb3] hover:bg-purple-50 font-semibold text-sm h-auto py-1 px-2"
+						variant="transparent"
+						className="gap-2 text-purple-80 font-semibold "
 						onClick={footer.onCopy}
 					>
-						<LinkIcon className="h-3.5 w-3.5" />
+						<LinkIcon className="size-4" />
 						Copy Link
 					</Button>
 
 					<Button
-						className="bg-[#6a12cd] hover:bg-[#5b0fb3] text-white font-medium px-4 h-[38px]"
+						className="bg-[#6a12cd] hover:bg-[#5b0fb3] text-white font-medium px-6"
 						onClick={() => {
 							invite.onInvite?.();
 							setShowSuggestions(false);
