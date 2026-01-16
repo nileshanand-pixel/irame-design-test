@@ -62,40 +62,50 @@ export default function MembersList({ members = [] }) {
 									'w-[280px]',
 								)}
 							>
-								{(member.options || []).map((opt, optIndex) => (
-									<React.Fragment key={opt.value}>
-										{opt.isDanger && optIndex > 0 && (
-											<SelectSeparator className="my-0 py-0" />
-										)}
-										<SelectItem
-											value={opt.value}
-											textValue={opt.label}
-											className={cn(
-												'cursor-pointer text-sm px-4 py-3 outline-none',
-												opt.isDanger
-													? 'text-red-600 focus:text-red-600 focus:bg-red-50'
-													: 'hover:bg-[rgba(106,18,205,0.08)] focus:bg-[rgba(106,18,205,0.08)] data-[highlighted]:bg-[rgba(106,18,205,0.08)]',
+								{(member.options || []).map((opt, optIndex) => {
+									const isSelected = opt.value === member.role;
+									return (
+										<React.Fragment key={opt.value}>
+											{opt.isDanger && optIndex > 0 && (
+												<SelectSeparator className="my-0 py-0" />
 											)}
-										>
-											<div className="flex flex-col items-start gap-0.5">
-												<span
-													className={cn(
-														'font-medium text-sm',
-														!opt.isDanger &&
-															'text-[#26064a]',
-													)}
-												>
-													{opt.label}
-												</span>
-												{opt.description && (
-													<span className="text-[rgba(38,6,74,0.6)] text-xs font-normal">
-														{opt.description}
-													</span>
+											<SelectItem
+												value={opt.value}
+												textValue={opt.label}
+												className={cn(
+													'cursor-pointer text-sm px-4 py-3 outline-none',
+													opt.isDanger
+														? 'text-red-600 focus:text-red-600 focus:bg-red-50 py-4'
+														: 'hover:bg-[rgba(106,18,205,0.08)] focus:bg-[rgba(106,18,205,0.08)] data-[highlighted]:bg-[rgba(106,18,205,0.08)]',
 												)}
-											</div>
-										</SelectItem>
-									</React.Fragment>
-								))}
+											>
+												<div className="flex flex-col items-start gap-0.5">
+													<span
+														className={cn(
+															'font-medium text-sm',
+															isSelected
+																? 'text-purple-100'
+																: !opt.isDanger &&
+																		'text-[#26064a]',
+														)}
+													>
+														{opt.label}
+													</span>
+													{opt.description && (
+														<span
+															className={cn(
+																'text-[rgba(38,6,74,0.6)]',
+																'text-xs font-normal',
+															)}
+														>
+															{opt.description}
+														</span>
+													)}
+												</div>
+											</SelectItem>
+										</React.Fragment>
+									);
+								})}
 							</SelectContent>
 						</Select>
 					)}

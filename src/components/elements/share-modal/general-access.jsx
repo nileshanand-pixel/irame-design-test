@@ -53,7 +53,7 @@ export default function GeneralAccess({ generalAccess = {} }) {
 							)}
 						>
 							<div className="flex items-center gap-2 text-left">
-								<span className="shrink-0 p-1.5 bg-gray-50 rounded-full">
+								<span className="shrink-0 p-1.5  rounded-full">
 									{opt.icon || <Lock className="h-4 w-4" />}
 								</span>
 								<div className="flex flex-col items-start translate-y-[1px]">

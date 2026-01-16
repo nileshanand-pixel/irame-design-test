@@ -12,6 +12,7 @@ import { toast } from '@/lib/toast';
 import { Globe, Lock } from 'lucide-react';
 import { logError } from '@/lib/logger';
 import { useDebounce } from '@/hooks/use-debounce';
+import { FiUser, FiUsers } from 'react-icons/fi';
 
 /**
  * Single source of truth for access levels
@@ -282,14 +283,15 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 				value: 'restricted',
 				icon: <Lock className="h-4 w-4" />,
 			},
-			{
-				label: 'Everyone at Irame',
-				value: 'everyone',
-				icon: <Globe className="h-4 w-4" />,
-			},
+
 			{
 				label: 'Everyone at Team',
 				value: 'team',
+				icon: <FiUsers className="h-4 w-4" />,
+			},
+			{
+				label: 'Everyone at Irame',
+				value: 'everyone',
 				icon: <Globe className="h-4 w-4" />,
 			},
 		],
