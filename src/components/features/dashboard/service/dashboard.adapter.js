@@ -58,6 +58,10 @@ export class DashboardAdapter {
 	async shareDashboard(id, data) {
 		throw new Error('shareDashboard must be implemented');
 	}
+
+	async revokeDashboardAccess(id, userId) {
+		throw new Error('revokeDashboardAccess must be implemented');
+	}
 }
 
 /**
@@ -388,6 +392,15 @@ export class APIDashboardAdapter extends DashboardAdapter {
 	async shareDashboard(id, data) {
 		try {
 			await this.api.post(`/dashboards/${id}/share`, data);
+			return { success: true };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async revokeDashboardAccess(id, userId) {
+		try {
+			await this.api.delete(`/dashboards/${id}/access/${userId}`);
 			return { success: true };
 		} catch (error) {
 			throw error;

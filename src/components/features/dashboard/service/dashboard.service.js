@@ -350,3 +350,27 @@ export const shareDashboard = async (id, data) => {
 		throw error;
 	}
 };
+
+/**
+ * Revoke dashboard access for a user
+ * @param {string} id - Dashboard ID
+ * @param {string} userId - Target User ID
+ */
+export const revokeDashboardAccess = async (id, userId) => {
+	try {
+		await adapter.revokeDashboardAccess(id, userId);
+		return true;
+	} catch (error) {
+		logError(error, {
+			feature: 'live-dashboard',
+			action: 'revoke-dashboard-access',
+			extra: {
+				errorMessage: error.message,
+				status: error.response?.status,
+				dashboardId: id,
+				userId,
+			},
+		});
+		throw error;
+	}
+};

@@ -1,6 +1,10 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getDashboardById, shareDashboard } from '../service/dashboard.service';
+import {
+	getDashboardById,
+	shareDashboard,
+	revokeDashboardAccess,
+} from '../service/dashboard.service';
 import { getDashboardAccessUsers } from '@/api/gatekeeper/dashboardAccess.service';
 import { userService } from '@/api/gatekeeper/user.service';
 import { ShareModal } from '@/components/elements/ShareModal';
@@ -115,7 +119,28 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 				action: 'share-dashboard',
 				dashboardId,
 			});
-			toast.error('Failed to share dashboard');
+			// toast.error('Failed to share dashboard'); // Removed to avoid double toasts
+		},
+	});
+
+	const revokeMutation = useMutation({
+		mutationFn: async ({ dashboardId: targetDashboardId, userId }) => {
+			await revokeDashboardAccess(targetDashboardId, userId);
+		},
+		onSuccess: () => {
+			toast.success('Access removed successfully');
+			// Invalidate and refetch access users
+			queryClient.invalidateQueries(['dashboard-access-users', dashboardId]);
+			queryClient.invalidateQueries(['dashboard', dashboardId]);
+			queryClient.invalidateQueries(['my-dashboards']);
+		},
+		onError: (err) => {
+			logError(err, {
+				feature: 'dashboard',
+				action: 'revoke-dashboard-access',
+				dashboardId,
+			});
+			// toast.error('Failed to remove access'); // Removed to avoid double toasts
 		},
 	});
 
@@ -145,8 +170,7 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 	const handleRoleChange = useCallback(
 		(userId, email, newRole) => {
 			if (newRole === 'remove') {
-				// TODO: Implement remove access when API is ready
-				toast.info('Remove access feature coming soon');
+				revokeMutation.mutate({ dashboardId, userId });
 				return;
 			}
 
@@ -156,7 +180,7 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 				accesses: [{ email, access_level: newRole }],
 			});
 		},
-		[dashboardId, shareMutation],
+		[dashboardId, shareMutation, revokeMutation],
 	);
 
 	const handleUserSelect = useCallback(
