@@ -7,7 +7,7 @@ import {
 } from '../service/dashboard.service';
 import { getDashboardAccessUsers } from '@/api/gatekeeper/dashboardAccess.service';
 import { userService } from '@/api/gatekeeper/user.service';
-import { ShareModal } from '@/components/elements/ShareModal';
+import { ShareModal } from '@/components/elements/share-modal';
 import { toast } from '@/lib/toast';
 import { Globe, Lock } from 'lucide-react';
 import { logError } from '@/lib/logger';
