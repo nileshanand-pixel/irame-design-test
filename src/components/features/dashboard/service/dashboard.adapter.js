@@ -62,6 +62,10 @@ export class DashboardAdapter {
 	async revokeDashboardAccess(id, userId) {
 		throw new Error('revokeDashboardAccess must be implemented');
 	}
+
+	async updateDashboardVisibility(id, visibility) {
+		throw new Error('updateDashboardVisibility must be implemented');
+	}
 }
 
 /**
@@ -401,6 +405,15 @@ export class APIDashboardAdapter extends DashboardAdapter {
 	async revokeDashboardAccess(id, userId) {
 		try {
 			await this.api.delete(`/dashboards/${id}/access/${userId}`);
+			return { success: true };
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async updateDashboardVisibility(id, visibility) {
+		try {
+			await this.api.patch(`/dashboards/${id}/visibility`, { visibility });
 			return { success: true };
 		} catch (error) {
 			throw error;

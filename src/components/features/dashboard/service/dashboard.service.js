@@ -374,3 +374,27 @@ export const revokeDashboardAccess = async (id, userId) => {
 		throw error;
 	}
 };
+
+/**
+ * Update dashboard visibility (General Access)
+ * @param {string} id - Dashboard ID
+ * @param {string} visibility - Visibility: team, tenant, restricted
+ */
+export const updateDashboardVisibility = async (id, visibility) => {
+	try {
+		await adapter.updateDashboardVisibility(id, visibility);
+		return true;
+	} catch (error) {
+		logError(error, {
+			feature: 'live-dashboard',
+			action: 'update-dashboard-visibility',
+			extra: {
+				errorMessage: error.message,
+				status: error.response?.status,
+				dashboardId: id,
+				visibility,
+			},
+		});
+		throw error;
+	}
+};

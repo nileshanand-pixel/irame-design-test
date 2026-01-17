@@ -4,6 +4,7 @@ import {
 	getDashboardById,
 	shareDashboard,
 	revokeDashboardAccess,
+	updateDashboardVisibility,
 } from '../service/dashboard.service';
 import { getDashboardAccessUsers } from '@/api/gatekeeper/dashboardAccess.service';
 import { userService } from '@/api/gatekeeper/user.service';
@@ -145,6 +146,27 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 		},
 	});
 
+	const visibilityMutation = useMutation({
+		mutationFn: async ({ dashboardId: targetId, visibility }) => {
+			await updateDashboardVisibility(targetId, visibility);
+		},
+		onSuccess: () => {
+			toast.success('Visibility updated successfully');
+			// Invalidate and refetch access users and dashboard
+			queryClient.invalidateQueries(['dashboard-access-users', dashboardId]);
+			queryClient.invalidateQueries(['dashboard', dashboardId]);
+			queryClient.invalidateQueries(['my-dashboards']);
+			queryClient.invalidateQueries(['shared-dashboards']);
+		},
+		onError: (err) => {
+			logError(err, {
+				feature: 'dashboard',
+				action: 'update-visibility',
+				dashboardId,
+			});
+		},
+	});
+
 	const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 	const handleInvite = useCallback(() => {
@@ -274,31 +296,48 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 		return membersList;
 	}, [accessData, dashboard, handleRoleChange]);
 
-	const generalAccessConfig = {
-		value: 'restricted',
-		icon: <Lock className="h-4 w-4 text-gray-500" />,
-		options: [
-			{
-				label: 'Only Invited Users',
-				value: 'restricted',
-				icon: <Lock className="h-4 w-4" />,
-			},
+	const generalAccessConfig = useMemo(() => {
+		const currentVisibility = accessData?.visibility || 'restricted';
+		const teamName = accessData?.team_name || 'Team';
+		const tenantName = accessData?.tenant_name || 'Organization';
 
-			{
-				label: 'Everyone at Team',
-				value: 'team',
-				icon: <FiUsers className="h-4 w-4" />,
+		const icons = {
+			restricted: <Lock className="h-4 w-4 text-gray-500" />,
+			team: <FiUsers className="h-4 w-4 text-gray-500" />,
+			tenant: <Globe className="h-4 w-4 text-gray-500" />,
+		};
+
+		return {
+			value: currentVisibility,
+			icon: icons[currentVisibility] || icons.restricted,
+			options: [
+				{
+					label: 'Only Invited Users',
+					value: 'restricted',
+					icon: icons.restricted,
+					description: 'Only users explicitly invited can access.',
+				},
+				{
+					label: `Everyone at ${teamName}`,
+					value: 'team',
+					icon: icons.team,
+					description: `All members of ${teamName} can view.`,
+				},
+				{
+					label: `Everyone at ${tenantName}`,
+					value: 'tenant',
+					icon: icons.tenant,
+					description: `All users in ${tenantName} can view.`,
+				},
+			],
+			onChange: (newVisibility) => {
+				visibilityMutation.mutate({
+					dashboardId,
+					visibility: newVisibility,
+				});
 			},
-			{
-				label: 'Everyone at Irame',
-				value: 'everyone',
-				icon: <Globe className="h-4 w-4" />,
-			},
-		],
-		onChange: () => {
-			// TODO: Implement general access change
-		},
-	};
+		};
+	}, [accessData, dashboardId, visibilityMutation]);
 
 	const isLoading = isDashboardLoading || isAccessLoading;
 
