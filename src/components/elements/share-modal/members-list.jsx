@@ -27,6 +27,11 @@ export default function MembersList({ members = [] }) {
 							<span className="text-[#26064a] text-sm font-medium truncate">
 								{member.name || member.email}
 							</span>
+							{member.isOwner && (
+								<span className=" bg-purple-4 text-black/60 text-[10px] px-2 py-1 rounded font-medium">
+									Owner
+								</span>
+							)}
 						</div>
 						<span className="text-[rgba(38,6,74,0.6)] text-xs truncate">
 							{member.email}
@@ -34,9 +39,21 @@ export default function MembersList({ members = [] }) {
 					</div>
 
 					{member.isOwner ? (
-						<div className="bg-[#f0f1f1] text-[#637083] text-[10px] px-2 py-0.5 rounded font-medium">
-							Owner
-						</div>
+						<Select
+							value={member.role || 'owner'}
+							onValueChange={() => {}}
+						>
+							<SelectTrigger
+								disabled
+								className="w-auto h-auto border-none shadow-none bg-transparent hover:bg-transparent focus:ring-0 gap-1 px-2 py-1.5 text-[#26064a] text-sm font-normal"
+							>
+								<SelectValue placeholder="Access">
+									{(member.options || []).find(
+										(opt) => opt.value === member.role,
+									)?.label || 'Full Access'}
+								</SelectValue>
+							</SelectTrigger>
+						</Select>
 					) : (
 						<Select
 							value={member.role}
