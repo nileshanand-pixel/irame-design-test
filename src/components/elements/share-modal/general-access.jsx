@@ -26,7 +26,7 @@ export default function GeneralAccess({ generalAccess = {} }) {
 								{generalAccess.options?.find(
 									(opt) => opt.value === generalAccess.value,
 								)?.icon || (
-									<Lock className="h-4 w-4 text-[#26064a]" />
+									<Lock className="h-4 w-4 text-primary80" />
 								)}
 							</span>
 							<span className="text-sm font-medium">
@@ -43,32 +43,42 @@ export default function GeneralAccess({ generalAccess = {} }) {
 						'w-[var(--radix-select-trigger-width)]',
 					)}
 				>
-					{(generalAccess.options || []).map((opt) => (
-						<SelectItem
-							key={opt.value}
-							value={opt.value}
-							className={cn(
-								'cursor-pointer text-sm px-4 py-3 outline-none',
-								'hover:bg-[rgba(106,18,205,0.08)] focus:bg-[rgba(106,18,205,0.08)] data-[highlighted]:bg-[rgba(106,18,205,0.08)]',
-							)}
-						>
-							<div className="flex items-center gap-2 text-left">
-								<span className="shrink-0 p-1.5  rounded-full">
-									{opt.icon || <Lock className="h-4 w-4" />}
-								</span>
-								<div className="flex flex-col items-start translate-y-[1px]">
-									<span className="text-sm font-medium text-[#26064a]">
-										{opt.label}
+					{(generalAccess.options || []).map((opt) => {
+						const isSelected = opt.value === generalAccess.value;
+						return (
+							<SelectItem
+								key={opt.value}
+								value={opt.value}
+								className={cn(
+									'cursor-pointer text-sm px-4 py-3 outline-none',
+									'hover:bg-[rgba(106,18,205,0.08)] focus:bg-[rgba(106,18,205,0.08)] data-[highlighted]:bg-[rgba(106,18,205,0.08)]',
+								)}
+							>
+								<div className="flex items-center gap-2 text-left">
+									<span className="shrink-0 p-1.5 rounded-full text-primary80">
+										{opt.icon || <Lock className="h-4 w-4" />}
 									</span>
-									{opt.description && (
-										<span className="text-xs text-muted-foreground">
-											{opt.description}
+									<div className="flex flex-col items-start translate-y-[1px]">
+										<span
+											className={cn(
+												'text-sm font-medium',
+												isSelected
+													? 'text-purple-100'
+													: 'text-[#26064a]',
+											)}
+										>
+											{opt.label}
 										</span>
-									)}
+										{opt.description && (
+											<span className="text-xs text-muted-foreground">
+												{opt.description}
+											</span>
+										)}
+									</div>
 								</div>
-							</div>
-						</SelectItem>
-					))}
+							</SelectItem>
+						);
+					})}
 				</SelectContent>
 			</Select>
 		</div>

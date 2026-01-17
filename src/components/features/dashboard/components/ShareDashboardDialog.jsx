@@ -302,9 +302,9 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 		const tenantName = accessData?.tenant_name || 'Organization';
 
 		const icons = {
-			restricted: <Lock className="h-4 w-4 text-gray-500" />,
-			team: <FiUsers className="h-4 w-4 text-gray-500" />,
-			tenant: <Globe className="h-4 w-4 text-gray-500" />,
+			restricted: <Lock className="h-4 w-4 text-purple-80" />,
+			team: <FiUsers className="h-4 w-4 text-purple-80" />,
+			tenant: <Globe className="h-4 w-4 text-purple-80" />,
 		};
 
 		return {
