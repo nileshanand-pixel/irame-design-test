@@ -1018,12 +1018,12 @@ const Workzone = () => {
 
 		return (
 			<div className="h-full w-full overflow-auto">
-				{/* <div className="sticky top-0 w-full px-4 pb-2 flex justify-end bg-white z-[10]">
+				<div className="sticky top-0 w-full px-4 pb-2 flex justify-end bg-white z-[10]">
 					<UnderstandingStats
 						activePathQueries={activePathQueries}
 						doingScience={doingScience}
 					/>
-				</div> */}
+				</div>
 				{activePathQueries?.map((answerElem, key) => {
 					const query = queries.find((q) => q.id === answerElem.query_id);
 					const hasClarification = !!answerElem?.answer?.clarification;
