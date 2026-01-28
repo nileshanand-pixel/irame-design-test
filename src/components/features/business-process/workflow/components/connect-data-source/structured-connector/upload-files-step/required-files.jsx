@@ -13,11 +13,24 @@ const RequiredFiles = ({ requiredFiles }) => {
 
 	const breakpoint = useBreakpoint();
 
-	const allFiles = requiredFiles?.csv_files?.map((item) => ({
-		name: item.file_name,
-		label: 'Excel',
-		description: item.description,
-	}));
+	// Map CSV/Excel files
+	const csvFiles =
+		requiredFiles?.csv_files?.map((item) => ({
+			name: item.file_name,
+			label: 'Excel',
+			description: item.description,
+		})) || [];
+
+	// Map PDF files
+	const pdfFiles =
+		requiredFiles?.pdf_files?.map((item) => ({
+			name: item.file_name,
+			label: 'PDF',
+			description: item.description,
+		})) || [];
+
+	// Combine all files
+	const allFiles = [...csvFiles, ...pdfFiles];
 
 	const toggleExpanded = () => {
 		setIsExpanded(!isExpanded);
