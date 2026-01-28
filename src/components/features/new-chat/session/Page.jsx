@@ -1019,10 +1019,10 @@ const Workzone = () => {
 		return (
 			<div className="h-full w-full overflow-auto">
 				<div className="sticky top-0 w-full px-4 pb-2 flex justify-end bg-white z-[10]">
-					<UnderstandingStats
+					{/* <UnderstandingStats
 						activePathQueries={activePathQueries}
 						doingScience={doingScience}
-					/>
+					/> */}
 				</div>
 				{activePathQueries?.map((answerElem, key) => {
 					const query = queries.find((q) => q.id === answerElem.query_id);
