@@ -15,13 +15,21 @@ import {
 } from '@/components/features/configuration/service/configuration.service';
 import { toast } from '@/lib/toast';
 import { useStructuredDatasourceId } from '../hooks/datasource-context';
-import { getFileType } from '@/utils/file';
+import {
+	CONNECTOR_FILE_TYPES,
+	validateFiles,
+	getAcceptString,
+} from '@/config/file-upload.config';
 
 export const UploadManager = ({
 	onManagerReady,
 	onItemsChange,
 	highlightErrors,
+	connectorType = 'STRUCTURED',
 }) => {
+	// Get allowed file types from centralized config
+	const allowedFileTypes =
+		CONNECTOR_FILE_TYPES[connectorType] || CONNECTOR_FILE_TYPES.STRUCTURED;
 	const { datasourceId, isCreating, isReady } = useStructuredDatasourceId();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 	const [deletingSheets, setDeletingSheets] = useState(new Set());
@@ -101,20 +109,10 @@ export const UploadManager = ({
 	const handleFilesListInput = (e) => {
 		const list = Array.from(e.target.files || []);
 
-		let isInvalidFilePresent = false;
-
-		list.forEach((file) => {
-			const fileType = getFileType(file);
-			if (fileType !== 'csv' && fileType !== 'excel') {
-				isInvalidFilePresent = true;
-			}
-		});
-
-		if (isInvalidFilePresent) {
-			toast.error(
-				`Unsupported file type. Please upload only .csv or .xlsx files.`,
-				{ position: 'bottom-center' },
-			);
+		// Validate files using centralized config
+		const validation = validateFiles(list, allowedFileTypes);
+		if (!validation.valid) {
+			toast.error(validation.error, { position: 'bottom-center' });
 			return;
 		}
 
@@ -370,7 +368,7 @@ export const UploadManager = ({
 						ref={fileInputRef}
 						style={{ display: 'none' }}
 						onChange={handleFilesListInput}
-						accept=".csv,.xlsx"
+						accept={getAcceptString(allowedFileTypes)}
 					/>
 					<FilesList
 						files={items}
@@ -393,6 +391,7 @@ export const UploadManager = ({
 					selectedDataSources={selectedDataSources}
 					onChooseExisting={handleChooseExisting}
 					creatingDS={isCreating}
+					allowedFileTypes={allowedFileTypes}
 				/>
 			)}
 		</div>

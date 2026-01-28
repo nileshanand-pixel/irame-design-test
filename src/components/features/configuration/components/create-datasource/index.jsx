@@ -34,8 +34,17 @@ import FileListing from './file-listing';
 import { FILE_STATUS } from '@/constants/file.constant';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
 import { cn } from '@/lib/utils';
-import { getFileType } from '@/utils/file';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
+import {
+	CONNECTOR_FILE_TYPES,
+	validateFileType,
+	getAcceptString,
+	getInvalidFileMessage,
+	getFileTypeLegacy,
+} from '@/config/file-upload.config';
+
+// Get allowed file types for datasource creation (PDF supported)
+const ALLOWED_FILE_TYPES = CONNECTOR_FILE_TYPES.DATASOURCE;
 
 const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	const [datasourceId, setDatasourceId] = useState('');
@@ -217,30 +226,29 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 			// Check if all files (existing + new) have the same type
 			const allFiles = [...files, ...newFiles];
 			const fileTypes = allFiles.map((file) =>
-				file.rawFile ? getFileType(file) : file.type,
+				file.rawFile ? getFileTypeLegacy(file.rawFile) : file.type,
 			);
 			const uniqueTypes = [...new Set(fileTypes)];
 
-			const allowedTypes = ['pdf', 'excel', 'csv'];
-
-			for (let i = 0; i < uniqueTypes.length; i++) {
-				const type = uniqueTypes[i];
-				if (!allowedTypes.includes(type)) {
-					toast.error(
-						'Unsupported file type. Please upload only PDF, Excel (.xlsx), or CSV files.',
-					);
+			// Validate file types using centralized config
+			for (const file of newFiles) {
+				const validation = validateFileType(
+					file.rawFile,
+					ALLOWED_FILE_TYPES,
+				);
+				if (!validation.valid) {
+					toast.error(getInvalidFileMessage(ALLOWED_FILE_TYPES));
 					return;
 				}
 			}
 
+			// Datasource: allow multiple files, but don't allow mixing PDF with CSV/Excel
 			if (uniqueTypes.length > 1 && uniqueTypes.includes('pdf')) {
 				toast.error(
-					'Please upload files of the same type. Mixing different file types is not allowed.',
+					'Please upload files of the same type. Mixing PDF and CSV/Excel files is not allowed.',
 				);
 				return;
 			}
-
-			setIsInitializingUpload(true);
 
 			onShowFormChange(true);
 
@@ -734,7 +742,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 					className="absolute top-0 w-0 -z-1 opacity-0"
 					onChange={(e) => handleFileChange(e)}
 					id="file-upload"
-					accept=".csv,.xlsx,.pdf"
+					accept={getAcceptString(ALLOWED_FILE_TYPES)}
 				/>
 			</div>
 		);

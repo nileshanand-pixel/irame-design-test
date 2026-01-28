@@ -58,6 +58,11 @@ import useS3File from '@/hooks/useS3File';
 import FilePreview from '@/components/elements/file-preview';
 import { Mention, MentionsInput } from 'react-mentions';
 import { mentionsInputStyle, mentionStyle } from './mentionStyles';
+import {
+	validateFiles,
+	getAcceptString,
+	UPLOAD_CONTEXTS,
+} from '@/config/file-upload.config';
 import { useCommentRendering } from './hooks/useCommentRendering';
 import Flag, {
 	FLAG_CONFIG,
@@ -993,43 +998,38 @@ function CommentComposerComponent({
 	users,
 }) {
 	const fileInputRef = React.useRef(null);
-
-	// Helper function to check if a file is allowed (CSV or PDF)
-	const isAllowedFile = useCallback((file) => {
-		const fileType = file.type.toLowerCase();
-		const fileName = file.name.toLowerCase();
-		return (
-			fileType === 'text/csv' ||
-			fileType === 'application/pdf' ||
-			fileName.endsWith('.csv') ||
-			fileName.endsWith('.pdf')
-		);
-	}, []);
+	const allowedFileTypes = UPLOAD_CONTEXTS.REPORT_EVIDENCE;
 
 	const handleFileSelect = useCallback(
 		(e) => {
 			const uploadedFiles = e.target.files;
 			if (uploadedFiles && uploadedFiles.length > 0) {
-				const allowedFiles = Array.from(uploadedFiles).filter(isAllowedFile);
+				const filesArray = Array.from(uploadedFiles);
+				const validation = validateFiles(filesArray, allowedFileTypes);
 
-				if (allowedFiles.length !== uploadedFiles.length) {
-					toast.error('Only CSV and PDF files are allowed');
-				}
-
-				if (allowedFiles.length > 0) {
-					addFiles(allowedFiles);
+				if (!validation.valid) {
+					toast.error(validation.error);
+					// Only add valid files
+					const validFiles = filesArray.filter(
+						(file) => !validation.invalidFiles.includes(file),
+					);
+					if (validFiles.length > 0) {
+						addFiles(validFiles);
+					}
+				} else {
+					addFiles(filesArray);
 				}
 			}
 			if (fileInputRef.current) {
 				fileInputRef.current.value = '';
 			}
 		},
-		[addFiles, isAllowedFile],
+		[addFiles, allowedFileTypes],
 	);
 
 	const documentFiles = useMemo(() => {
-		return files.filter(isAllowedFile);
-	}, [files, isAllowedFile]);
+		return files;
+	}, [files]);
 
 	const handleRemoveFile = useCallback(
 		(fileOrName) => {
@@ -1113,7 +1113,7 @@ function CommentComposerComponent({
 								ref={fileInputRef}
 								type="file"
 								multiple
-								accept=".csv,.pdf,application/pdf,text/csv"
+								accept={getAcceptString(allowedFileTypes)}
 								onChange={handleFileSelect}
 								className="hidden"
 							/>

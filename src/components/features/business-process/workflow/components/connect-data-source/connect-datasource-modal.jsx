@@ -7,6 +7,7 @@ import { getWorkflowDetails } from '../../../service/workflow.service';
 import UnstructuredConnector from './unstructured-connector/unstructured-connector';
 import StructuredConnector from './structured-connector/structured-connector';
 import HybridConnector from './hybrid-connector/hybrid-connector';
+import PdfDemoConnector from './pdf-demo-connector/pdf-demo-connector';
 import ExecuteWorkflowModal from './execute-workflow-modal';
 import { X } from 'lucide-react';
 
@@ -51,6 +52,8 @@ export const ConnectDatasourceModal = ({ open, setOpen }) => {
 				return <UnstructuredConnector workflow={workflowDetails} />;
 			case 'HYBRID':
 				return <HybridConnector workflow={workflowDetails} />;
+			case 'PDF_DEMO':
+				return <PdfDemoConnector workflow={workflowDetails} />;
 			default:
 				return null;
 		}

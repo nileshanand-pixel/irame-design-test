@@ -1,7 +1,9 @@
 import { useRef } from 'react';
+import { getAcceptString, UPLOAD_CONTEXTS } from '@/config/file-upload.config';
 
-export default function FilePicker({ trigger, onFileSelect }) {
+export default function FilePicker({ trigger, onFileSelect, context = 'COMMENTS' }) {
 	const inputRef = useRef();
+	const allowedFileTypes = UPLOAD_CONTEXTS[context] || UPLOAD_CONTEXTS.COMMENTS;
 
 	const handleTriggerClick = () => {
 		if (inputRef && inputRef.current) {
@@ -17,7 +19,7 @@ export default function FilePicker({ trigger, onFileSelect }) {
 				ref={inputRef}
 				hidden
 				multiple
-				accept="image/*,.pdf,.csv,.xls,.xlsx"
+				accept={getAcceptString(allowedFileTypes)}
 				onChange={onFileSelect}
 			/>
 		</div>

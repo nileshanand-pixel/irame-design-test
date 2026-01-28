@@ -12,6 +12,10 @@ import {
 import { ChevronDown, Trash2, Upload } from 'lucide-react';
 import FileItem from '../file-item';
 import { Button } from '@/components/ui/button';
+import { CONNECTOR_FILE_TYPES, getAcceptString } from '@/config/file-upload.config';
+
+// Get allowed file types for datasource (PDF supported)
+const ALLOWED_FILE_TYPES = CONNECTOR_FILE_TYPES.DATASOURCE;
 
 const SELECT_TYPES = {
 	ALL: 'ALL',
@@ -196,7 +200,7 @@ export default function FileListing({
 				<input
 					ref={inputRef}
 					type="file"
-					accept=".csv,.xlsx,.pdf"
+					accept={getAcceptString(ALLOWED_FILE_TYPES)}
 					multiple
 					className="hidden"
 					id="file-upload"

@@ -20,6 +20,11 @@ import { getShareableUsers } from '@/api/share.service';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from '@/lib/toast';
 import { AssignedToField } from '../../ResolutionTrailModal';
+import {
+	validateFiles,
+	getAcceptString,
+	UPLOAD_CONTEXTS,
+} from '@/config/file-upload.config';
 
 const BulkActions = ({
 	isBulkActionsVisible,
@@ -55,6 +60,8 @@ const BulkActions = ({
 		uploadedMetadata,
 	} = useFileUploadsV2();
 
+	const allowedFileTypes = UPLOAD_CONTEXTS.COMMENTS;
+
 	// Check if any bulk action is filled
 	const hasAnyBulkAction = useMemo(() => {
 		return (
@@ -69,7 +76,21 @@ const BulkActions = ({
 		const uploadedFiles = e.target.files;
 
 		if (uploadedFiles && uploadedFiles.length > 0) {
-			addFiles(uploadedFiles);
+			const filesArray = Array.from(uploadedFiles);
+			const validation = validateFiles(filesArray, allowedFileTypes);
+
+			if (!validation.valid) {
+				toast.error(validation.error);
+				// Only add valid files
+				const validFiles = filesArray.filter(
+					(file) => !validation.invalidFiles.includes(file),
+				);
+				if (validFiles.length > 0) {
+					addFiles(validFiles);
+				}
+			} else {
+				addFiles(filesArray);
+			}
 		}
 	};
 
@@ -268,6 +289,9 @@ const BulkActions = ({
 											<input
 												type="file"
 												multiple
+												accept={getAcceptString(
+													allowedFileTypes,
+												)}
 												onChange={handleFileAttachment}
 												className="hidden"
 											/>

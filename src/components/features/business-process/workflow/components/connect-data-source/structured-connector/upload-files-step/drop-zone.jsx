@@ -3,11 +3,18 @@ import { useDropzone } from 'react-dropzone';
 import { UploadActions } from './upload-actions';
 import { CloudArrowUp } from '@phosphor-icons/react';
 import { toast } from '@/lib/toast';
+import {
+	CONNECTOR_FILE_TYPES,
+	getMimeTypesForFileTypes,
+	formatFileTypesList,
+	getInvalidFileMessage,
+} from '@/config/file-upload.config';
 
 export const DropZone = ({
 	onFilesAdded,
 	onChooseExisting,
 	selectedDataSources,
+	allowedFileTypes = CONNECTOR_FILE_TYPES.STRUCTURED,
 }) => {
 	const onDrop = useCallback(
 		(acceptedFiles) => {
@@ -16,25 +23,27 @@ export const DropZone = ({
 		[onFilesAdded],
 	);
 
-	const onDropRejected = useCallback((rejectedFiles) => {
-		if (rejectedFiles.length > 0) {
-			toast.error(
-				`Unsupported file type. Please upload only .csv or .xlsx files.`,
-			);
-		}
-	}, []);
+	const onDropRejected = useCallback(
+		(rejectedFiles) => {
+			if (rejectedFiles.length > 0) {
+				toast.error(getInvalidFileMessage(allowedFileTypes));
+			}
+		},
+		[allowedFileTypes],
+	);
+
+	// Get accept config from centralized config
+	const acceptConfig = getMimeTypesForFileTypes(allowedFileTypes);
 
 	const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
 		onDrop,
 		onDropRejected,
 		multiple: true,
-		accept: {
-			'text/csv': ['.csv'],
-			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': [
-				'.xlsx',
-			],
-		},
+		accept: acceptConfig,
 	});
+
+	// Format file types for display
+	const fileTypesDisplay = formatFileTypesList(allowedFileTypes);
 
 	return (
 		<div className="bg-white flex flex-col gap-4 h-full rounded-lg py-4">
@@ -60,8 +69,7 @@ export const DropZone = ({
 					</p>
 					<p className="text-sm text-primary80">
 						Supported file types:{' '}
-						<span className="font-semibold">.csv</span> &{' '}
-						<span className="font-semibold">.xlsx</span> only
+						<span className="font-semibold">{fileTypesDisplay}</span>
 					</p>
 				</div>
 			</div>

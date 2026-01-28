@@ -7,6 +7,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Trash2 } from 'lucide-react';
 import { trackEvent, getErrorAnalyticsProps } from '@/lib/mixpanel';
 import { logError } from '@/lib/logger';
+import {
+	validateFiles,
+	getAcceptString,
+	UPLOAD_CONTEXTS,
+} from '@/config/file-upload.config';
+import { toast } from '@/lib/toast';
 
 const ModificationRequestModal = ({
 	isOpen,
@@ -63,21 +69,19 @@ const ModificationRequestModal = ({
 
 	const handleFileChange = (e) => {
 		const files = Array.from(e.target.files);
-		const validTypes = [
-			'application/vnd.ms-excel',
-			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-			'text/csv',
-			'image/jpeg',
-			'image/png',
-			'image/gif',
-			'application/pdf',
-		];
-		const validFiles = files.filter(
-			(file) =>
-				validTypes.includes(file.type) ||
-				file.name.match(/\.(xlsx|xls|csv|jpg|jpeg|png|gif|pdf)$/i),
-		);
-		setSelectedFiles(validFiles);
+		const allowedFileTypes = UPLOAD_CONTEXTS.WORKFLOW_TICKETS;
+
+		const validation = validateFiles(files, allowedFileTypes);
+		if (!validation.valid) {
+			toast.error(validation.error);
+			// Only add valid files
+			const validFiles = files.filter(
+				(file) => !validation.invalidFiles.includes(file),
+			);
+			setSelectedFiles(validFiles);
+		} else {
+			setSelectedFiles(files);
+		}
 	};
 
 	const removeFile = (index) => {
@@ -347,7 +351,9 @@ const ModificationRequestModal = ({
 								<input
 									type="file"
 									multiple
-									accept=".xlsx,.xls,.csv,.jpg,.jpeg,.png,.gif,.pdf"
+									accept={getAcceptString(
+										UPLOAD_CONTEXTS.WORKFLOW_TICKETS,
+									)}
 									onChange={handleFileChange}
 									className="hidden"
 									id="fileInput"

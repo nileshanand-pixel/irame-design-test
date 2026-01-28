@@ -12,24 +12,13 @@ export function isImageUrl(url) {
 	return /\.(jpeg|jpg|gif|png|webp|svg|bmp)$/i.test(urlWithoutQueryString);
 }
 
-export function getFileType(file) {
-	if (!file || !file.type) return '';
-
-	const mime = file.type;
-
-	// Check for PDF files
-	if (mime === 'application/pdf') return 'pdf';
-
-	// Check for Excel files (.xlsx)
-	if (mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-		return 'excel';
-
-	// Check for CSV files
-	if (mime === 'text/csv' || mime === 'application/vnd.ms-excel') return 'csv';
-
-	// Return empty string for all other file types
-	return '';
-}
+/**
+ * Get file type from file object
+ * Uses centralized config for comprehensive MIME type handling
+ * @deprecated For new code, use getFileTypeFromFile from @/config/file-upload.config.js.
+ * This export exists for legacy compatibility (e.g., mapping to 'pdf' / 'excel' / 'csv').
+ */
+export { getFileTypeLegacy as getFileType } from '@/config/file-upload.config';
 
 export const createSignedUrlFromS3Url = async (s3Url) => {
 	const url = removeQueryString(s3Url);
