@@ -102,7 +102,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	// Filter teams based on search query
 	const filteredTeams = teams.filter((team) =>
-		team.name.toLowerCase().includes(teamSearchQuery.toLowerCase()),
+		team?.name?.toLowerCase().includes(teamSearchQuery.toLowerCase()),
 	);
 
 	const {
