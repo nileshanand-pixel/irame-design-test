@@ -14,7 +14,7 @@ import { getLast7DaysRange, areDateRangesEqual } from '@/utils/dateRangeUtils';
 
 const EMPTY_STATE_CONFIG = {
 	image: logsEmpty,
-	heading: 'No Activity Logged Yet',
+	heading: 'No activity logs found',
 	descriptionLines: [
 		'This section will show a chronological record of all user',
 		'actions, system events, and data changes once they occur.',
@@ -89,8 +89,6 @@ export default function LogsTabContent() {
 		return { data: data.data, pagination: data.pagination };
 	}, [data]);
 
-	const isSearching = searchTerm !== debouncedSearch;
-
 	// Check if any filters are active
 	const hasActiveFilters = useMemo(() => {
 		const defaultRange = getLast7DaysRange();
@@ -108,6 +106,12 @@ export default function LogsTabContent() {
 			(dateFilterApplied && !isDefaultDate)
 		);
 	}, [searchTerm, categoryFilter, actionTypeFilter, dateRange]);
+
+	const isSearching = searchTerm !== debouncedSearch;
+
+	const isInitialLoading = isLoading && logs.data.length === 0;
+	const isEmptyDefaultRange =
+		logs.data.length === 0 && !hasActiveFilters && !isLoading && !isFetching;
 
 	// Handle filter changes
 	const handleSearchChange = (e) => {
@@ -183,20 +187,6 @@ export default function LogsTabContent() {
 		setIsDetailsDrawerOpen(true);
 	};
 
-	// Show loading state on initial load
-	if (isLoading && logs.data.length === 0) {
-		return (
-			<div className="flex items-center justify-center h-64">
-				<Loader2 className="h-8 w-8 animate-spin text-[#26064A]" />
-			</div>
-		);
-	}
-
-	// Show empty state ONLY when no logs, no filters, AND not loading
-	if (logs.data.length === 0 && !hasActiveFilters && !isLoading && !isFetching) {
-		return <EmptyState config={EMPTY_STATE_CONFIG} />;
-	}
-
 	return (
 		<div className="w-full h-full flex flex-col">
 			{/* Filters */}
@@ -219,18 +209,26 @@ export default function LogsTabContent() {
 			</div>
 
 			{/* Always show table - shows "no results" message when appropriate */}
-			<div className="flex-1 min-h-0">
-				<LogsTable
-					logs={logs}
-					pagination={pagination}
-					onPaginationChange={setPagination}
-					isLoading={isFetching || isSearching}
-					hasActiveFilters={hasActiveFilters}
-					onClearFilters={handleClearFilters}
-					onViewDetails={handleViewDetails}
-					stickyHeader={true}
-					stickyPagination={true}
-				/>
+			<div className="flex-1 min-h-0 flex flex-col">
+				{isInitialLoading ? (
+					<div className="flex items-center justify-center h-64">
+						<Loader2 className="h-8 w-8 animate-spin text-[#26064A]" />
+					</div>
+				) : isEmptyDefaultRange ? (
+					<EmptyState config={EMPTY_STATE_CONFIG} />
+				) : (
+					<LogsTable
+						logs={logs}
+						pagination={pagination}
+						onPaginationChange={setPagination}
+						isLoading={isFetching || isSearching}
+						hasActiveFilters={hasActiveFilters}
+						onClearFilters={handleClearFilters}
+						onViewDetails={handleViewDetails}
+						stickyHeader={true}
+						stickyPagination={true}
+					/>
+				)}
 			</div>
 
 			{/* Details Drawer */}
