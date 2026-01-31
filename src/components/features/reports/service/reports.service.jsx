@@ -3,7 +3,6 @@ import axiosClientV1, { axiosClientV2, axiosClientV3 } from '@/lib/axios';
 /**
  * Retrieves unified reports (user-owned and shared) with RBAC, search, sorting, and pagination
  * @param {Object} params - Query parameters
- * @param {string} params.team_id - Required: Team ID for RBAC context
  * @param {string} params.space - Required: 'personal' or 'shared'
  * @param {string} [params.search] - Search term for name, description, summary (partial match, case-insensitive)
  * @param {string} [params.sort_by='created_at'] - Sort field: 'name', 'created_at', 'updated_at'
@@ -14,7 +13,6 @@ import axiosClientV1, { axiosClientV2, axiosClientV3 } from '@/lib/axios';
  * @returns {Promise<{reports: Array, cursor: string|null}>} Unified reports list with pagination cursor
  */
 export const getUnifiedReports = async ({
-	team_id,
 	space = 'personal',
 	search = '',
 	sort_by = 'created_at',
@@ -26,7 +24,6 @@ export const getUnifiedReports = async ({
 	const params = {
 		space,
 		limit,
-		team_id,
 	};
 
 	// if(owner_ids && owner_ids.length !== 0) {

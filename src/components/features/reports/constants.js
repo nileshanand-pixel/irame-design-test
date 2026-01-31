@@ -34,7 +34,7 @@ export const TABS = {
 		fragment: 'shared-reports',
 		space: 'shared',
 		key: 'shared-reports',
-		isVisible: false,
+		isVisible: true,
 	},
 };
 export const TABS_ARRAY = Object.values(TABS);
