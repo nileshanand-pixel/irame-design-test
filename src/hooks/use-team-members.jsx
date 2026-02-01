@@ -10,11 +10,9 @@ import {
 import { toast } from 'react-toastify';
 
 export const useTeamMembers = (teamId) => {
-	console.log('useTeamMembers hook called with teamId:', teamId);
 	return useQuery({
 		queryKey: ['team-members', teamId],
 		queryFn: async () => {
-			console.log('Fetching team members with roles for teamId:', teamId);
 			const response = await getTeamMembersWithRoles(teamId);
 			return response.data;
 		},

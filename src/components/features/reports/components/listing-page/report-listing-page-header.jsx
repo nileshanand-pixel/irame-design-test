@@ -73,10 +73,13 @@ const ReportListingPageHeader = ({
 	const dispatch = useDispatch();
 
 	const handleCreateReport = () => {
+		const visibilityDefault =
+			activeTab.key === TABS.SHARED_REPORTS.key ? 'team' : 'private';
 		dispatch(
 			openModal({
 				modalName: 'createReport',
 				revalidateQuery: ['user-reports'],
+				defaultVisibility: visibilityDefault,
 			}),
 		);
 	};
@@ -143,7 +146,8 @@ const ReportListingPageHeader = ({
 
 					<ViewToggle view={view} setView={onViewChange} />
 
-					{activeTab.key === TABS.MY_REPORTS.key && (
+					{(activeTab.key === TABS.MY_REPORTS.key ||
+						activeTab.key === TABS.SHARED_REPORTS.key) && (
 						<Button
 							className="bg-primary hover:opacity-90 text-sm font-medium text-white rounded-lg px-3 py-2 flex items-center gap-0"
 							onClick={handleCreateReport}

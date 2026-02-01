@@ -117,7 +117,14 @@ export const getSharedReports = async () => {
 };
 
 export const createReport = async (reportData) => {
-	const response = await axiosClientV2.post('/reports', reportData, {
+	const payload = {
+		name: reportData.name,
+		description: reportData.description,
+	};
+	if (reportData.visibility) {
+		payload.visibility = reportData.visibility;
+	}
+	const response = await axiosClientV2.post('/reports', payload, {
 		headers: {},
 	});
 	return response.data;

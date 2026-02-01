@@ -50,7 +50,7 @@ export default function TeamsTabContent() {
 	const teams = useMemo(() => {
 		if (!data?.success || !data?.data) return [];
 		return data.data.map((team) => ({
-			id: team.externalId,
+			id: team.id,
 			teamName: team.name,
 			noOfUsers: team.memberCount || 0,
 			createdBy: team.createdBy || 'Unknown',
@@ -171,7 +171,7 @@ export default function TeamsTabContent() {
 				/>
 			)}
 
-			{isManageUsersDrawerOpen && (
+			{isManageUsersDrawerOpen && selectedTeam && (
 				<ManageUsersDrawer
 					open={!!isManageUsersDrawerOpen}
 					setOpen={setIsManageUsersDrawerOpen}

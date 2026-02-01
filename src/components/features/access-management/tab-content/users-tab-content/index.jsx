@@ -170,7 +170,11 @@ export default function UsersTabContent() {
 		try {
 			// Fetch fresh user data from the API
 			const userResponse = await userService.getUserById(user.id);
-			setSelectedUser(userResponse.data);
+			// Ensure userId is included (use id from list if API doesn't return userId)
+			setSelectedUser({
+				...userResponse.data,
+				userId: userResponse.data.userId || user.id,
+			});
 			setIsEditUserDrawerOpen(true);
 		} catch (error) {
 			toast.error('Failed to load user details');
