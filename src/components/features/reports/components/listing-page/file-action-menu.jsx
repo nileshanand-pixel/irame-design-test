@@ -10,13 +10,13 @@ export const FileActionsMenu = ({ onDownload, onShare, onDelete }) => {
 			icon: <Download className="size-4 text-primary60" />,
 			show: true,
 		},
-		// {
-		// 	type: 'item',
-		// 	label: 'Share',
-		// 	onClick: onShare,
-		// 	icon: <Share2 className="size-4 text-primary60" />,
-		// 	show: true,
-		// },
+		{
+			type: 'item',
+			label: 'Share',
+			onClick: onShare,
+			icon: <Share2 className="size-4 text-primary60" />,
+			show: true,
+		},
 		{
 			type: 'item',
 			label: 'Delete',

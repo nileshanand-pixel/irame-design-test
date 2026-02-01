@@ -64,15 +64,15 @@ const ReportHero = ({ reportDetails, pdfMode }) => {
 			icon: <FiDownload className="size-4 text-[#26064A99]" />,
 			show: true,
 		},
-		// {
-		// 	type: 'item',
-		// 	label: 'Share',
-		// 	onClick: () => {
-		// 		handleShare(reportDetails);
-		// 	},
-		// 	icon: <Share2 className="size-4 text-primary60" />,
-		// 	show: true,
-		// },
+		{
+			type: 'item',
+			label: 'Share',
+			onClick: () => {
+				handleShare(reportDetails);
+			},
+			icon: <Share2 className="size-4 text-primary60" />,
+			show: true,
+		},
 	];
 
 	return (

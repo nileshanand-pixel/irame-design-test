@@ -9,7 +9,7 @@ import { logError } from '@/lib/logger';
 export const getDashboardAccessUsers = async (dashboardId) => {
 	try {
 		const response = await axiosGatekeeper.get(
-			`/api/resources/dashboard/${dashboardId}/access-users`,
+			`/resources/dashboard/${dashboardId}/access-users`,
 		);
 		return response.data;
 	} catch (error) {
