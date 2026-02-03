@@ -69,6 +69,7 @@ export const login = async (data) => {
 		password: data.password,
 		grant_type: grantType.USER_PASS_AUTH,
 		redirect_uri: window.location.origin,
+		captcha_token: data?.captchaToken,
 	});
 	return [response.data, response.status];
 };

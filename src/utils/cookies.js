@@ -2,7 +2,7 @@ export const setCookie = (name, value, durationInMs) => {
 	const expires = new Date();
 	expires.setTime(expires.getTime() + durationInMs);
 
-	document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; path=/`;
+	document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires.toUTCString()}; SameSite=Strict; Secure; path=/`;
 };
 
 export const getCookie = (name) => {

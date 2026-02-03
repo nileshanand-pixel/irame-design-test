@@ -25,6 +25,7 @@ import {
 	getAcceptString,
 	UPLOAD_CONTEXTS,
 } from '@/config/file-upload.config';
+import { fileTypeFromBlob } from 'file-type';
 
 const BulkActions = ({
 	isBulkActionsVisible,
@@ -72,26 +73,106 @@ const BulkActions = ({
 		);
 	}, [selectedFlaggingType, bulkAssignedUsers, bulkComment, files]);
 
-	const handleFileAttachment = (e) => {
-		const uploadedFiles = e.target.files;
+	const getFilesWithSingleExtension = (allFiles) => {
+		const singleExtensionFiles = Array.from(allFiles).filter((file) => {
+			return file.name.split('.').length === 2;
+		});
 
-		if (uploadedFiles && uploadedFiles.length > 0) {
-			const filesArray = Array.from(uploadedFiles);
-			const validation = validateFiles(filesArray, allowedFileTypes);
+		return singleExtensionFiles;
+	};
 
-			if (!validation.valid) {
-				toast.error(validation.error);
-				// Only add valid files
-				const validFiles = filesArray.filter(
-					(file) => !validation.invalidFiles.includes(file),
-				);
-				if (validFiles.length > 0) {
-					addFiles(validFiles);
-				}
+	const getFilesHavingCorrectType = (files, filesInfo) => {
+		const filesHavingCorrectType = [];
+
+		files?.forEach((file, index) => {
+			const extInName = file.name.split('.')[1];
+			const fileInfo = filesInfo[index];
+			if (extInName === fileInfo?.ext) {
+				filesHavingCorrectType.push(file);
 			} else {
-				addFiles(filesArray);
+				filesHavingCorrectType.push(null);
+			}
+		});
+
+		return filesHavingCorrectType;
+	};
+
+	const getAllowedFiles = (allFiles, filesInfo) => {
+		const allowedFiles = [];
+		const allowedFileTypes = ['pdf', 'jpg', 'png', 'gif'];
+		let hasNotAllowedFiles = false;
+
+		allFiles.forEach((file, index) => {
+			if (!file) return;
+
+			if (allowedFileTypes.includes(filesInfo[index].ext)) {
+				allowedFiles.push(file);
+			} else {
+				hasNotAllowedFiles = true;
+			}
+		});
+
+		return [allowedFiles, hasNotAllowedFiles];
+	};
+
+	const getFilesInfo = async (files) => {
+		const filesInfo = [];
+		for (let i = 0; i < files.length; i++) {
+			const file = files[i];
+			const fileInfo = await fileTypeFromBlob(file);
+			if (fileInfo) {
+				filesInfo.push(fileInfo);
+			} else {
+				filesInfo.push({
+					ext: file?.name?.split('.')?.[1],
+					type: file.type,
+				});
 			}
 		}
+		return filesInfo;
+	};
+
+	const getAllowedValidFiles = async (files) => {
+		// remove files files more than 1 ext
+		const singleExtensionFiles = getFilesWithSingleExtension(files);
+		if (singleExtensionFiles.length !== files.length) {
+			toast.error('Some files have invalid names!');
+		}
+
+		// get files info
+		const filesInfo = await getFilesInfo(singleExtensionFiles);
+
+		// remove files having incorrect ext.
+		const filesHavingCorrectType = getFilesHavingCorrectType(
+			singleExtensionFiles,
+			filesInfo,
+		);
+		if (filesHavingCorrectType.includes(null)) {
+			toast.error('Some files have incorrect extensions!');
+		}
+
+		// remove allowed files
+		const [allowedFiles, hasNotAllowedFiles] = getAllowedFiles(
+			filesHavingCorrectType,
+			filesInfo,
+		);
+		if (hasNotAllowedFiles) {
+			toast.error('Some files are not supported!');
+		}
+
+		return allowedFiles;
+	};
+
+	const handleFileAttachment = async (e) => {
+		const uplodedFiles = e.target.files;
+
+		if (uplodedFiles.length === 0) {
+			return;
+		}
+
+		const allowedValidFiles = await getAllowedValidFiles(uplodedFiles);
+
+		addFiles(allowedValidFiles);
 	};
 
 	// Filter image and non-image files

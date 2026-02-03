@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import clsx from 'clsx';
-import { Label } from '../ui/label';
+import { RequiredLabel } from './required-label';
 
 export const Badge = ({ children, className }) => (
 	<span
@@ -22,6 +22,7 @@ export const Badge = ({ children, className }) => (
 
 function CustomSelect({
 	label,
+	required = false,
 	value,
 	onChange,
 	options,
@@ -54,10 +55,11 @@ function CustomSelect({
 
 	return (
 		<div className={clsx('w-full space-y-1', className)}>
-			{label && <Label className="text-sm text-black/60">{label}</Label>}
-
+			{label && <RequiredLabel children={label} required={required} />}
 			<Select value={value} onValueChange={onChange}>
-				<SelectTrigger className={cn('w-full', value && 'pl-0')}>
+				<SelectTrigger
+					className={cn('w-full text-primary40', value && 'pl-0')}
+				>
 					<SelectValue placeholder={placeholder}>
 						{renderValue()}
 					</SelectValue>

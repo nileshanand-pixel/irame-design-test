@@ -40,7 +40,9 @@ const getFileMeta = (aiDS, fileId) => {
 	for (const f of files) {
 		if (Array.isArray(f.sheets)) {
 			const sheet = f.sheets.find((s) => s.id === fileId);
-			if (sheet) return sheet;
+			if (sheet) {
+				return { ...sheet, filename: f?.filename };
+			}
 		}
 	}
 	return null;
@@ -56,11 +58,20 @@ const buildUploadedFileList = (
 		const uploaded = fileMapping.csv_files?.[req.file_name] ?? [];
 		return uploaded.map((u) => {
 			const meta = getFileMeta(aiDS, u.file_id);
+			let fileName = '';
+			if (meta?.worksheet) {
+				fileName = `${meta?.filename}(${meta?.worksheet}.csv)`;
+			} else if (meta?.filename) {
+				fileName = meta?.filename;
+			} else {
+				fileName = u.file_id + '.csv';
+			}
+
 			return {
 				requiredFileName: req.file_name, // e.g. "Inventory Data Set"
 				requiredColumns: req.required_columns, // checklist used for every sibling file
 				fileId: u.file_id,
-				fileName: meta?.worksheet ?? u.file_id,
+				fileName,
 				headers:
 					meta?.columns
 						?.filter((c) => c.name && c.name.trim()) // Only filter out empty names
@@ -490,8 +501,7 @@ export const ColumnMappingStep = ({
 										<h4 className="font-medium truncate">
 											{upperFirst(file.requiredFileName)}{' '}
 											<span className="text-[#6B7280] font-normal">
-												({upperFirst(file.fileName + '.csv')}
-												)
+												({upperFirst(file.fileName)})
 											</span>
 										</h4>
 									</div>

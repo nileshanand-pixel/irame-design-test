@@ -80,7 +80,7 @@ export const CONNECTOR_FILE_TYPES = {
 
 // Upload context configurations (Report Comment, Workflow Modification + )
 export const UPLOAD_CONTEXTS = {
-	COMMENTS: ['csv', 'xlsx', 'xls', 'pdf', 'jpg', 'png', 'gif'],
+	COMMENTS: ['pdf', 'jpg', 'png', 'gif'],
 	REPORT_EVIDENCE: ['csv', 'pdf'],
 	WORKFLOW_TICKETS: ['csv', 'xlsx', 'xls', 'pdf', 'jpg', 'png', 'gif'],
 	IMAGES: ['jpg', 'png', 'gif'],

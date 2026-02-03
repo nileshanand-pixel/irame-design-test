@@ -7,7 +7,6 @@ import {
 	DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from '@/lib/toast';
@@ -19,10 +18,10 @@ import { RISK_CATEGORIES, RISK_LEVELS } from '@/config/risks';
 import { queryClient } from '@/lib/react-query';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useRouter } from '@/hooks/useRouter';
-import { useSelector } from 'react-redux';
 import { trackEvent } from '@/lib/mixpanel';
 import { useNavigate } from 'react-router-dom';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
+import { RequiredLabel } from '@/components/elements/required-label';
 
 const AddQueryToNewReportDialog = ({
 	open,
@@ -35,8 +34,6 @@ const AddQueryToNewReportDialog = ({
 	const [riskCategory, setRiskCategory] = useState('');
 	const [riskLevel, setRiskLevel] = useState('');
 	const { query } = useRouter();
-	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
-	const utilReducer = useSelector((state) => state.utilReducer);
 	const navigate = useNavigate();
 
 	const { data: datasourceData } = useDatasourceDetailsV2();
@@ -106,11 +103,7 @@ const AddQueryToNewReportDialog = ({
 		});
 	};
 
-	const isDisabled =
-		!reportName.trim() ||
-		!reportDescription.trim() ||
-		!riskLevel ||
-		!riskCategory;
+	const isDisabled = !reportName.trim() || !riskLevel || !riskCategory;
 
 	return (
 		<Dialog open={open} onOpenChange={onClose}>
@@ -131,29 +124,30 @@ const AddQueryToNewReportDialog = ({
 				{/* ── Form Fields ─────────────────────────────── */}
 				<div className="space-y-4">
 					<div className="space-y-2">
-						<Label className="text-sm text-black/60">Report</Label>
+						<RequiredLabel>Report</RequiredLabel>
 						<Input
 							value={reportName}
 							onChange={(e) => setReportName(e.target.value)}
 							placeholder="Report 01 - April 01, 2025"
 							disabled={mutation.isPending}
+							className="placeholder:!text-primary40"
 						/>
 					</div>
 
 					<div className="space-y-2">
-						<Label className="text-sm text-black/60">
-							Add a description this Workflow
-						</Label>
+						<RequiredLabel required={false}>Description</RequiredLabel>
 						<Input
 							value={reportDescription}
 							onChange={(e) => setReportDescription(e.target.value)}
 							placeholder="Report Description goes here"
 							disabled={mutation.isPending}
+							className="placeholder:!text-primary40"
 						/>
 					</div>
 
 					<CustomSelect
 						label="Risk Category"
+						required
 						value={riskCategory}
 						onChange={setRiskCategory}
 						options={RISK_CATEGORIES.map((opt) => ({
@@ -164,6 +158,7 @@ const AddQueryToNewReportDialog = ({
 
 					<CustomSelect
 						label="Severity"
+						required
 						value={riskLevel}
 						onChange={setRiskLevel}
 						options={RISK_LEVELS}

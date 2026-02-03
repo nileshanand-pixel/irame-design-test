@@ -25,16 +25,13 @@ import {
 	NOTIFICATION_TYPES,
 } from '@/constants/notification.constant';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
-import shareIcon from '@/assets/icons/share.svg';
 import { formatRelativeTime } from '@/utils/date-utils';
 import { ArrowRight, Download } from 'lucide-react';
 import { FiRefreshCcw } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from '@/lib/toast';
-import completedIcon from '@/assets/icons/completed.svg';
-import patchNotesIcon from '@/assets/icons/patch-notes.svg';
-import csvIcon from '@/assets/icons/csv_icon.svg';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { getNotificationConfig } from '@/config/notification-types.config';
 
 export default function NotificationDrawer({ isOpen, setIsOpen }) {
 	const [supademoUrl, setSupademoUrl] = useState(null);
@@ -45,6 +42,7 @@ export default function NotificationDrawer({ isOpen, setIsOpen }) {
 	const [downloadingNotificationId, setDownloadingNotificationId] = useState(null);
 
 	const navigate = useNavigate();
+	const location = useLocation();
 	const queryClient = useQueryClient();
 	const observerRef = useRef();
 	const scrollContainerRef = useRef();
@@ -153,268 +151,74 @@ export default function NotificationDrawer({ isOpen, setIsOpen }) {
 		},
 	});
 
-	const renderNotificationButton = (notification) => {
-		let isBtnPresent = false;
-		let content = '';
-		let clickHandler = () => {};
-
-		if (notification.type === NOTIFICATION_TYPES.REPORT_SHARED) {
-			isBtnPresent = true;
-			content = (
-				<>
-					<span>View report</span>
-					<ArrowRight className="size-4" />
-				</>
-			);
-			clickHandler = () => {
-				navigate(`/app/reports/${notification?.metadata?.report_id}`);
-				setIsOpen(false);
-			};
-		} else if (notification.type === NOTIFICATION_TYPES.WORKFLOW_RUN_COMPLETED) {
-			isBtnPresent = true;
-			content = (
-				<>
-					<span>View workflow</span>
-					<ArrowRight className="size-4" />
-				</>
-			);
-			clickHandler = () => {
-				if (
-					notification?.metadata?.session_id &&
-					notification?.metadata?.datasource_id
-				) {
-					navigate(
-						`/app/new-chat/session?sessionId=${notification?.metadata?.session_id}&datasource_id=${notification?.metadata?.datasource_id}`,
-					);
-					setIsOpen(false);
-				} else {
-					toast.error('Session or datasource not found');
-				}
-			};
-		} else if (notification.type === NOTIFICATION_TYPES.PATCH_NOTES) {
-			isBtnPresent = true;
-			content = (
-				<>
-					<span>
-						{notification?.metadata?.cta_text || 'View patch notes'}
-					</span>
-					<ArrowRight className="size-4" />
-				</>
-			);
-			clickHandler = () => {
-				if (notification?.metadata?.url) {
-					if (notification?.metadata?.cta_type === 'supademo') {
-						setSupademoUrl(notification?.metadata?.url);
-						setIsSupademoOpen(true);
-					} else {
-						window.open(notification?.metadata?.url, '_blank');
-					}
-				} else {
-					toast.error('URL not found');
-				}
-			};
-		} else if (notification.type === NOTIFICATION_TYPES.SESSION_SHARED) {
-			isBtnPresent = true;
-			content = (
-				<>
-					<span>View session</span>
-					<ArrowRight className="size-4" />
-				</>
-			);
-			clickHandler = () => {
-				navigate(
-					`/app/new-chat/session?sessionId=${notification?.metadata?.session_id}&datasource_id=${notification?.metadata?.datasource_id}`,
-				);
-				setIsOpen(false);
-			};
-		} else if (notification.type === NOTIFICATION_TYPES.CSV_EXPORT_READY) {
-			isBtnPresent = true;
-			const isDownloadingThis =
-				downloadingNotificationId === notification.external_id;
-			content = (
-				<>
-					{isDownloadingThis ? (
-						<>
-							<span>Downloading...</span>
-							<CircularLoader className="animate-spin size-4" />
-						</>
-					) : (
-						<>
-							<span>Download CSV</span>
-							<Download className="size-4" />
-						</>
-					)}
-				</>
-			);
-			clickHandler = async () => {
-				if (notification?.metadata?.csv_url) {
-					try {
-						setDownloadingNotificationId(notification.external_id);
-						const fileName =
-							notification?.metadata?.file_name || 'export.csv';
-						await downloadS3File(
-							notification.metadata.csv_url,
-							fileName,
-						);
-					} finally {
-						setDownloadingNotificationId(null);
-					}
-				} else {
-					toast.error('CSV URL not found');
-				}
-			};
-		} else if (
-			notification.type === NOTIFICATION_TYPES.DASHBOARD_REFRESH_COMPLETED
-		) {
-			isBtnPresent = true;
-			content = (
-				<>
-					<span>View dashboard</span>
-					<ArrowRight className="size-4" />
-				</>
-			);
-			clickHandler = () => {
-				if (notification?.metadata?.dashboard_id) {
-					navigate(
-						`/app/dashboard/content?id=${notification?.metadata?.dashboard_id}`,
-					);
-					setIsOpen(false);
-				} else {
-					toast.error('Dashboard not found');
-				}
-			};
-		}
-
-		if (isBtnPresent) {
-			const isCurrentlyDownloading =
-				notification.type === NOTIFICATION_TYPES.CSV_EXPORT_READY &&
-				downloadingNotificationId === notification.external_id;
-
-			return (
-				<div>
-					<Button
-						variant="outline"
-						className="border-1 border-[#D0D5DD] text-[#00000099] flex gap-2"
-						onClick={clickHandler}
-						disabled={isCurrentlyDownloading}
-					>
-						{content}
-					</Button>
-				</div>
-			);
-		}
-
-		return null;
-	};
-
+	// Helper function to render notification icon
 	const renderNotificationIcon = (notification) => {
-		if (
-			notification.type === NOTIFICATION_TYPES.REPORT_SHARED ||
-			notification.type === NOTIFICATION_TYPES.SESSION_SHARED
-		) {
-			return <img src={shareIcon} className="size-5" />;
-		} else if (notification.type === NOTIFICATION_TYPES.WORKFLOW_RUN_COMPLETED) {
-			return <img src={completedIcon} className="size-5" />;
-		} else if (notification.type === NOTIFICATION_TYPES.PATCH_NOTES) {
-			return <img src={patchNotesIcon} className="size-5" />;
-		} else if (
-			notification.type === NOTIFICATION_TYPES.DASHBOARD_REFRESH_COMPLETED
-		) {
-			return <FiRefreshCcw className="size-5 text-[#6A12CD]" />;
-		} else if (notification.type === NOTIFICATION_TYPES.CSV_EXPORT_READY) {
-			return <img src={csvIcon} className="size-5" />;
+		const config = getNotificationConfig(notification.type);
+		if (!config) return null;
+
+		if (config.renderIcon) {
+			return config.renderIcon(notification);
+		}
+		if (config.icon) {
+			return <img src={config.icon} className="size-5" />;
 		}
 		return null;
 	};
 
-	const capitalizeWords = (str) => {
-		if (!str) return '';
-		return str
-			.split(' ')
-			.map(
-				(word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-			)
-			.join(' ');
+	// Helper function to render notification message
+	const renderNotificationMessage = (notification, config) => {
+		if (config?.renderMessage) {
+			return config.renderMessage(notification);
+		}
+		return null;
 	};
 
-	const renderNotificationMessage = (notification) => {
-		if (notification.type === NOTIFICATION_TYPES.REPORT_SHARED) {
-			return (
-				<div className="text-sm text-[#000000CC] break-words">
-					<span>
-						{capitalizeWords(
-							notification?.metadata?.shared_by_user_name,
-						)}{' '}
-						shared the{' '}
-					</span>
-					<span className="font-semibold break-words">
-						"{notification?.metadata?.report_name}"
-					</span>
-					<span> report with you.</span>
-				</div>
-			);
-		} else if (notification.type === NOTIFICATION_TYPES.WORKFLOW_RUN_COMPLETED) {
-			return (
-				<div className="text-sm text-[#000000CC] break-words">
-					<span>Workflow</span>{' '}
-					<span className="font-semibold break-words">
-						"{notification?.metadata?.workflow_run_name}"
-					</span>{' '}
-					<span>has been completed successfully.</span>
-				</div>
-			);
-		} else if (notification.type === NOTIFICATION_TYPES.PATCH_NOTES) {
-			return (
-				<div className="text-sm text-[#000000CC] break-words">
-					<div
-						dangerouslySetInnerHTML={{ __html: notification?.message }}
-					/>
-				</div>
-			);
-		} else if (
-			notification.type === NOTIFICATION_TYPES.DASHBOARD_REFRESH_COMPLETED
-		) {
-			return (
-				<div className="text-sm text-[#000000CC] break-words">
-					<span>Dashboard</span>{' '}
-					<span className="font-semibold break-words">
-						"{notification?.metadata?.dashboard_name}"
-					</span>{' '}
-					<span>has been refreshed successfully.</span>
-				</div>
-			);
-		} else if (notification.type === NOTIFICATION_TYPES.SESSION_SHARED) {
-			return (
-				<div className="text-sm text-[#000000CC] break-words">
-					<span>
-						{capitalizeWords(
-							notification?.metadata?.shared_by_user_name,
-						)}{' '}
-						shared the{' '}
-					</span>
-					<span className="font-semibold break-words">
-						"{notification?.metadata?.session_name}"
-					</span>
-					<span> session with you.</span>
-				</div>
-			);
-		} else if (notification.type === NOTIFICATION_TYPES.CSV_EXPORT_READY) {
-			return (
-				<div className="text-sm text-[#000000CC] break-words">
-					<span>Your CSV export for report</span>{' '}
-					<span className="font-semibold break-words">
-						"{notification?.metadata?.report_name}"
-					</span>
-					<span>is ready to download.</span>
-				</div>
-			);
-		}
+	const renderNotificationButton = (notification) => {
+		const config = getNotificationConfig(notification.type);
+		if (!config?.button?.isBtnPresent) return null;
 
-		return null;
+		const { content, clickHandler, disabled } = config.button;
+
+		const context = {
+			navigate,
+			setIsOpen,
+			setSupademoUrl,
+			setIsSupademoOpen,
+			downloadS3File,
+			downloadingNotificationId,
+			setDownloadingNotificationId,
+		};
+
+		const buttonContent =
+			typeof content === 'function' ? content(notification, context) : content;
+
+		const isDisabled =
+			typeof disabled === 'function'
+				? disabled(notification, context)
+				: disabled;
+
+		return (
+			<div>
+				<Button
+					variant="outline"
+					className="border-1 border-[#D0D5DD] text-[#00000099] flex gap-2"
+					onClick={(e) => {
+						e.stopPropagation();
+						if (clickHandler) {
+							clickHandler(notification, context);
+						}
+					}}
+					disabled={isDisabled}
+				>
+					{buttonContent}
+				</Button>
+			</div>
+		);
 	};
 
 	const renderNotification = (notification, ref = null) => {
 		const isUnread = !notification?.is_read;
+		const config = getNotificationConfig(notification.type);
 
 		return (
 			<div
@@ -443,7 +247,7 @@ export default function NotificationDrawer({ isOpen, setIsOpen }) {
 				</div>
 
 				<div className="flex flex-col gap-2 border-b-1 border-b-[#0000001A pb-8 w-full pr-6 overflow-hidden">
-					{renderNotificationMessage(notification)}
+					{renderNotificationMessage(notification, config)}
 
 					{renderNotificationButton(notification)}
 
@@ -482,6 +286,7 @@ export default function NotificationDrawer({ isOpen, setIsOpen }) {
 							<div className="flex items-center gap-2">
 								{NOTIFICATION_TABS?.map((notification) => (
 									<Button
+										key={notification.value}
 										variant="ghost"
 										className={cn(
 											'text-[#6A12CD] !text-sm font-medium py-1 px-3 flex gap-1',

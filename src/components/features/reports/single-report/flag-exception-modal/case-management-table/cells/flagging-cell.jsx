@@ -1,3 +1,4 @@
+import { useReportPermission } from '@/contexts/ReportPermissionContext';
 import Flag, { FLAG_TYPES } from '../../flag';
 
 export default function FlaggingCell({
@@ -9,6 +10,8 @@ export default function FlaggingCell({
 }) {
 	const isPositive = value === FLAG_TYPES.FALSE_POSITIVE;
 	const isNegative = value === FLAG_TYPES.TRUE_EXCEPTION;
+
+	const { isOwner } = useReportPermission();
 
 	const handleFlagClick = (type) => {
 		if (isLoading) return; // Prevent clicks while loading
@@ -32,12 +35,14 @@ export default function FlaggingCell({
 				onClickHandler={() => {
 					onOpenTrail(caseData);
 				}}
+				disabled={!isOwner}
 			/>
 
 			<Flag
 				type={FLAG_TYPES.FALSE_POSITIVE}
 				isActive={isPositive}
 				onClickHandler={() => handleFlagClick(FLAG_TYPES.FALSE_POSITIVE)}
+				disabled={!isOwner}
 			/>
 		</div>
 	);

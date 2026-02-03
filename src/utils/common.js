@@ -1,3 +1,11 @@
+export const capitalizeWords = (str) => {
+	if (!str) return '';
+	return str
+		.split(' ')
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+		.join(' ');
+};
+
 export const getUserInitials = (username) => {
 	const words = username.trim().split(/\s+/); // split by spaces, handle multiple spaces
 	return words

@@ -26,9 +26,10 @@ import {
 import ResolutionTrailModal from '../../../ResolutionTrailModal';
 import { useRouter } from '@/hooks/useRouter';
 import { cn } from '@/lib/utils';
+import { useReportPermission } from '@/contexts/ReportPermissionContext';
 
 export default function CaseManagementTable({
-	isLoadingCases,
+	isFetchingCases,
 	casesData,
 	selectedCaseIds,
 	setSelectedCaseIds,
@@ -40,6 +41,7 @@ export default function CaseManagementTable({
 	const [updatingCell, setUpdatingCell] = useState(null); // { caseId, columnKey }
 	const queryClient = useQueryClient();
 	const { navigate, location } = useRouter();
+	const { isOwner } = useReportPermission();
 
 	const handleCloseResolutionTrail = () => {
 		setResolutionTrailModalOpen(false);
@@ -56,6 +58,8 @@ export default function CaseManagementTable({
 	};
 
 	const handleSelectCase = (caseId) => {
+		if (!isOwner) return;
+
 		setSelectedCaseIds((prev) => {
 			if (prev.includes(caseId)) {
 				return prev.filter((id) => id !== caseId);
@@ -118,7 +122,7 @@ export default function CaseManagementTable({
 		<TooltipProvider delayDuration={0}>
 			<div className="border border-[#E5E7EB] rounded-lg overflow-hidden flex-1 flex flex-col min-w-0 relative">
 				{/* Loading State Overlay */}
-				{isLoadingCases && (
+				{isFetchingCases && (
 					<div className="absolute inset-0 bg-white z-30 flex items-center justify-center">
 						<div className="flex items-center gap-2 text-[#6B7280]">
 							<div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#6A12CE]"></div>
@@ -128,7 +132,7 @@ export default function CaseManagementTable({
 				)}
 
 				{/* Empty State Overlay */}
-				{!isLoadingCases && tableData.length === 0 && (
+				{!isFetchingCases && tableData.length === 0 && (
 					<div className="absolute inset-0 bg-white z-30 flex items-center justify-center">
 						<div className="text-[#6B7280]">No cases found</div>
 					</div>
@@ -153,7 +157,7 @@ export default function CaseManagementTable({
 											left:
 												column.key ===
 												PRE_DEFINED_COLUMN_KEYS.CASE_ID
-													? '3rem'
+													? '2.9rem'
 													: 'auto',
 											zIndex:
 												column.key ===
@@ -206,6 +210,7 @@ export default function CaseManagementTable({
 														caseData?.case_id,
 													)
 												}
+												disabled={!isOwner}
 											/>
 										</td>
 										{columnsConfig.map((columnConfig) => {
@@ -231,7 +236,7 @@ export default function CaseManagementTable({
 														left:
 															columnConfig.key ===
 															PRE_DEFINED_COLUMN_KEYS.CASE_ID
-																? '3rem'
+																? '2.9rem'
 																: 'auto',
 														zIndex:
 															columnConfig.key ===

@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useRef, useState, useEffect } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { LuPencil, LuLayoutGrid } from 'react-icons/lu';
 import { MdRefresh } from 'react-icons/md';
@@ -33,9 +33,13 @@ const DashboardDetailsPageHeader = memo(
 		setIsEditMode,
 		isEditModeModalOpen,
 		setIsEditModeModalOpen,
+		setIsNewContentAvailable,
+		dashboardMetadata,
 	}) => {
 		const { navigate } = useRouter();
 		const [ConfirmationDialog, confirm] = useConfirmDialog();
+		const previousRefreshTimeRef = useRef(null);
+		const [relativeRefreshTime, setRelativeRefreshTime] = useState('');
 
 		const handleEditModeToggle = useCallback((checked) => {
 			setIsEditMode(checked);
@@ -46,22 +50,33 @@ const DashboardDetailsPageHeader = memo(
 			}
 		}, []);
 
-		const { data: dashboardMetadata } = useQuery({
-			queryKey: ['dashboard-metadata', dashboardId],
-			queryFn: () => getDashboardById(dashboardId),
-			enabled: !!dashboardId,
-			onError: (error) => {
-				logError(error, {
-					feature: 'dashboard',
-					action: 'fetch-dashboard-metadata',
-					extra: {
-						errorMessage: error.message,
-						status: error.response?.status,
-						dashboardId,
-					},
-				});
-			},
-		});
+		// Check if last_refresh_time has changed and update relative time
+		useEffect(() => {
+			if (!dashboardMetadata?.last_refresh_time) return;
+
+			const currentRefreshTime = dashboardMetadata.last_refresh_time;
+
+			// Check if last_refresh_time has changed
+			if (
+				previousRefreshTimeRef.current &&
+				previousRefreshTimeRef.current !== currentRefreshTime
+			) {
+				setIsNewContentAvailable(true);
+			}
+
+			// Update the ref with the current value
+			previousRefreshTimeRef.current = currentRefreshTime;
+
+			// Update relative time immediately
+			setRelativeRefreshTime(formatRelativeTime(currentRefreshTime));
+
+			// Update every 10 seconds to keep the relative time current
+			const interval = setInterval(() => {
+				setRelativeRefreshTime(formatRelativeTime(currentRefreshTime));
+			}, 10000);
+
+			return () => clearInterval(interval);
+		}, [dashboardMetadata?.last_refresh_time]);
 
 		const refreshMutation = useMutation({
 			mutationFn: () => refreshDashboard(dashboardId),
@@ -201,11 +216,8 @@ const DashboardDetailsPageHeader = memo(
 											/>
 											{refreshMutation.isPending
 												? 'Refreshing...'
-												: dashboardMetadata?.last_refresh_time
-													? 'Refreshed ' +
-														formatRelativeTime(
-															dashboardMetadata?.last_refresh_time,
-														)
+												: relativeRefreshTime
+													? `Refreshed ${relativeRefreshTime}`
 													: 'Refresh'}
 										</button>
 										<AutoRefreshDropdown
@@ -215,7 +227,11 @@ const DashboardDetailsPageHeader = memo(
 									</>
 								)}
 
-								<AddQueryCta />
+								<AddQueryCta
+									isLiveDashboard={
+										dashboardMetadata?.type === 'LIVE'
+									}
+								/>
 							</div>
 						)}
 					</div>

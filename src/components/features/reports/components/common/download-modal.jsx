@@ -3,11 +3,32 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/lib/toast';
 import { Download } from 'lucide-react';
 import { useState } from 'react';
-import { generatePDF } from '@/utils/reportDownload';
+import { downloadReport } from '../../service/reports.service';
+import { base64ToBlob, downloadBlob } from '@/lib/utils';
+import { useMutation } from '@tanstack/react-query';
 
 export function DownloadModal({ open, onClose, reportId, reportName }) {
 	const [format, setFormat] = useState('pdf');
-	const [isDownloading, setIsDownloading] = useState(false);
+
+	const downloadReportMutation = useMutation({
+		mutationFn: () => downloadReport({ reportId, type: format }),
+		onSuccess: (data) => {
+			console.log(data, 'download data');
+			toast.success('Report downloaded successfully');
+
+			const blob = base64ToBlob(data[format], format);
+
+			downloadBlob(blob, `${reportName}.${format}`);
+			onClose && onClose();
+		},
+		onError: (error) => {
+			const errorMessage =
+				error.response?.data?.message ||
+				error.message ||
+				'Failed to download report';
+			toast.error(errorMessage);
+		},
+	});
 
 	const handleGenerateDownload = async (format) => {
 		if (!reportId) {
@@ -15,23 +36,9 @@ export function DownloadModal({ open, onClose, reportId, reportName }) {
 			return;
 		}
 
-		setIsDownloading(true);
 		toast.info('Generating report...');
 
-		try {
-			await generatePDF(reportId, reportName, format);
-			toast.success('Report downloaded successfully');
-			onClose && onClose();
-		} catch (error) {
-			console.error('Error downloading report:', error);
-			const errorMessage =
-				error.response?.data?.message ||
-				error.message ||
-				'Failed to download report';
-			toast.error(errorMessage);
-		} finally {
-			setIsDownloading(false);
-		}
+		downloadReportMutation.mutate();
 	};
 
 	return (
@@ -55,7 +62,7 @@ export function DownloadModal({ open, onClose, reportId, reportName }) {
 
 				<div className="mt-6 flex flex-col items-center gap-2">
 					{[
-						// { id: 'docx', label: 'Microsoft Word (.docx)' },
+						{ id: 'docx', label: 'Microsoft Word (.docx)' },
 						{ id: 'pdf', label: 'PDF Document (.pdf)' },
 					].map((opt) => (
 						<div
@@ -79,16 +86,18 @@ export function DownloadModal({ open, onClose, reportId, reportName }) {
 					<Button
 						className="text-sm px-4 py-2 bg-primary rounded-lg text-white font-medium"
 						onClick={() => handleGenerateDownload(format)}
-						disabled={isDownloading}
+						disabled={downloadReportMutation?.isPending}
 					>
-						{isDownloading ? 'Downloading...' : 'Download'}
+						{downloadReportMutation?.isPending
+							? 'Downloading...'
+							: 'Download'}
 					</Button>
 
 					<Button
 						variant="outline"
 						className="text-sm px-4 py-2 border border-primary rounded-lg !text-primary font-medium"
 						onClick={onClose}
-						disabled={isDownloading}
+						disabled={downloadReportMutation?.isPending}
 					>
 						Cancel
 					</Button>

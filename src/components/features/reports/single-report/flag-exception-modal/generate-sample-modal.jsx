@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,16 +8,27 @@ import { useMutation } from '@tanstack/react-query';
 import { generateSampleData } from '../../service/reports.service';
 import { toast } from '@/lib/toast';
 import { queryClient } from '@/lib/react-query';
+import InputText from '@/components/elements/InputText';
 
 const GenerateSampleModal = ({
 	open,
 	onClose,
 	reportId,
 	cardId,
-	showSampleData,
+	samplesData,
+	setSelectedSampleId,
 }) => {
+	const [sampleName, setSampleName] = useState(() => {
+		return `Sample Data ${samplesData?.samples?.length + 1}`;
+	});
 	const [percentage, setPercentage] = useState(80);
 
+	useEffect(() => {
+		if (open) {
+			setSampleName(`Sample Data ${samplesData?.samples?.length + 1}`);
+			setPercentage(80);
+		}
+	}, [open, samplesData]);
 	// Mutation for generating sample data
 	const generateSampleMutation = useMutation({
 		mutationFn: ({ percentageCount, filters }) =>
@@ -26,8 +37,9 @@ const GenerateSampleModal = ({
 				cardId,
 				percentageCount,
 				filters,
+				sampleName,
 			}),
-		onSuccess: () => {
+		onSuccess: (data) => {
 			// Invalidate queries to refetch data
 			queryClient.invalidateQueries(['report-card-cases', reportId, cardId]);
 			queryClient.invalidateQueries([
@@ -35,8 +47,8 @@ const GenerateSampleModal = ({
 				reportId,
 				cardId,
 			]);
-			toast.success('Sample data generated successfully');
-			showSampleData();
+			toast.success('Sample data generation initiated successfully');
+			setSelectedSampleId(data?.sample_id);
 			onClose();
 		},
 		onError: (error) => {
@@ -49,6 +61,10 @@ const GenerateSampleModal = ({
 	});
 
 	const handleGenerateSample = () => {
+		if (!sampleName.trim()) {
+			toast.error('Sample name is required');
+			return;
+		}
 		if (percentage === 0) {
 			toast.error("Percentage can't be 0%");
 			return;
@@ -87,91 +103,20 @@ const GenerateSampleModal = ({
 				<div className="flex flex-col gap-5 py-4">
 					{/* File Name */}
 					<div>
-						<label className="text-sm font-medium text-[#6B7280] mb-2 block">
-							File Name
-						</label>
-						<div className="text-sm text-[#26064ACC] font-medium">
-							Sample Data
-						</div>
+						<InputText
+							required={true}
+							placeholder="Enter sample name here"
+							label="File Name"
+							value={sampleName}
+							setValue={(e) => setSampleName(e)}
+							labelClassName="text-sm font-medium text-[#6B7280] mb-2 block"
+						/>
 					</div>
 
-					{/* Filter by */}
-					{/* <div>
-						<label className="text-sm font-medium text-[#6B7280] mb-3 block">
-							Filter by
-						</label>
-						<div className="flex flex-col gap-3">
-							<div className="max-h-[10rem] overflow-auto flex flex-col gap-3">
-								{filters.map((filter) => (
-									<div
-										key={filter.id}
-										className="flex items-center gap-3 "
-									>
-										<Select
-											value={filter.column}
-											onValueChange={(value) =>
-												handleFilterChange(
-													filter.id,
-													'column',
-													value,
-												)
-											}
-										>
-											<SelectTrigger className="flex-1 bg-white border-[#E5E7EB]">
-												<SelectValue placeholder="Column Name" />
-											</SelectTrigger>
-											<SelectContent>
-												{columnOptions.map((option) => (
-													<SelectItem
-														key={option.value}
-														value={option.value}
-													>
-														{option.label}
-													</SelectItem>
-												))}
-											</SelectContent>
-										</Select>
-
-										<Input
-											placeholder="Value for filter"
-											value={filter.value}
-											onChange={(e) =>
-												handleFilterChange(
-													filter.id,
-													'value',
-													e.target.value,
-												)
-											}
-											className="flex-1"
-										/>
-
-										<button
-											onClick={() =>
-												handleRemoveFilter(filter.id)
-											}
-											disabled={filters.length === 1}
-											className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-										>
-											<Trash2 className="w-5 h-5 text-[#6B7280]" />
-										</button>
-									</div>
-								))}
-							</div>
-
-							<Button
-								variant="outline"
-								onClick={handleAddFilter}
-								className="w-fit text-[#6A12CE] border-[#E5E7EB]"
-							>
-								Add another item
-							</Button>
-						</div>
-					</div> */}
-
-					{/* Sample Rows */}
 					<div>
 						<label className="text-sm font-medium text-[#6B7280] mb-2 block">
-							Percentage
+							<span>Percentage</span>
+							<span className="text-red-400 ms-1">*</span>
 						</label>
 
 						<div className="relative mb-4">

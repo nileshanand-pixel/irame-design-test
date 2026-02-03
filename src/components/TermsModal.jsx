@@ -15,7 +15,11 @@ const TermsModal = () => {
 	}, []);
 
 	const handleAgree = () => {
-		Cookies.set('termsAccepted', 'true', { expires: 365 });
+		Cookies.set('termsAccepted', 'true', {
+			expires: 365,
+			secure: true,
+			sameSite: 'strict',
+		});
 		trackEvent(EVENTS_ENUM.TNC_ACCEPTED, EVENTS_REGISTRY.TNC_ACCEPTED, () => ({
 			tnc_version: '1.0',
 		}));

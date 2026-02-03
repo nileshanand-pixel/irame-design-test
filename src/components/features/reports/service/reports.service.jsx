@@ -29,9 +29,9 @@ export const getUnifiedReports = async ({
 		team_id,
 	};
 
-	// if(owner_ids && owner_ids.length !== 0) {
-	// 	params.owner_ids = owner_ids;
-	// }
+	if (owner_ids && owner_ids.length !== 0) {
+		params.owner_ids = owner_ids;
+	}
 
 	if (search && search.trim()) {
 		params.search = search;
@@ -49,7 +49,7 @@ export const getUnifiedReports = async ({
 		params.cursor = cursor;
 	}
 
-	const response = await axiosClientV3.get('/reports', {
+	const response = await axiosClientV3.get(`/reports`, {
 		params,
 		headers: {},
 	});
@@ -332,21 +332,26 @@ export const getReportCardCases = async ({
 	cardId,
 	filters,
 	pagination,
-	isSample = false,
+	sampleId,
 }) => {
+	const payload = {
+		filters: filters || [],
+		pagination: pagination || { page: 1, page_size: 10 },
+		sortings: [
+			{
+				column_name: 'case_id',
+				sort_type: 'asc',
+			},
+		],
+	};
+
+	if (sampleId) {
+		payload.sample_id = sampleId;
+	}
+
 	const response = await axiosClientV1.post(
 		`/report-cards/${reportId}/cards/${cardId}/cases`,
-		{
-			filters: filters || [],
-			pagination: pagination || { page: 1, page_size: 10 },
-			is_sample: isSample,
-			sortings: [
-				{
-					column_name: 'case_id',
-					sort_type: 'asc',
-				},
-			],
-		},
+		payload,
 		{
 			headers: {},
 		},
@@ -393,11 +398,17 @@ export const bulkUpdateReportCardCases = async ({
 	return response.data;
 };
 
-export const generateSampleData = async ({ reportId, cardId, percentageCount }) => {
+export const generateSampleData = async ({
+	reportId,
+	cardId,
+	percentageCount,
+	sampleName,
+}) => {
 	const response = await axiosClientV1.post(
 		`/report-cards/${reportId}/cards/${cardId}/sample`,
 		{
 			percentage_count: percentageCount,
+			name: sampleName,
 			pagination: {
 				page: 1,
 				page_size: 10,
@@ -410,17 +421,55 @@ export const generateSampleData = async ({ reportId, cardId, percentageCount }) 
 	return response.data;
 };
 
-export const exportReportCardCases = async ({
-	reportId,
-	cardId,
-	isSample = false,
-}) => {
+export const exportReportCardCases = async ({ reportId, cardId, sampleId }) => {
 	const response = await axiosClientV1.get(
 		`/report-cards/${reportId}/cards/${cardId}/export`,
 		{
 			params: {
-				is_sample: isSample,
+				sample_id: sampleId,
 			},
+			headers: {},
+		},
+	);
+	return response.data;
+};
+
+export const getReportCardSamples = async ({ reportId, cardId }) => {
+	const response = await axiosClientV1.get(
+		`/report-cards/${reportId}/cards/${cardId}/samples`,
+		{
+			headers: {},
+		},
+	);
+	return response.data;
+};
+
+export const retrySampleGeneration = async ({ reportId, cardId, sampleId }) => {
+	const response = await axiosClientV1.post(
+		`/report-cards/${reportId}/cards/${cardId}/samples/${sampleId}/retryGenerate`,
+		{},
+		{
+			headers: {},
+		},
+	);
+	return response.data;
+};
+
+export const getReportCardsCaseGenerationStatus = async (reportId) => {
+	const response = await axiosClientV2.get(
+		`/reports/${reportId}/report-cards/status`,
+	);
+	return response.data;
+};
+
+export const downloadReport = async ({ reportId, type }) => {
+	const response = await axiosClientV2.post(
+		`reports/generateReport`,
+		{
+			report_id: reportId,
+			type,
+		},
+		{
 			headers: {},
 		},
 	);

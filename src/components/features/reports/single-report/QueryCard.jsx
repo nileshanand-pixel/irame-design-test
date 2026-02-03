@@ -27,11 +27,20 @@ import FlagExceptionsModal from './flag-exception-modal';
 import Kpis from './kpis';
 import { FiDownload, FiFlag } from 'react-icons/fi';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
+import { CASE_GENERATION_STATUS } from '../constants';
 
-export const QueryCard = ({ report, card, pdfMode }) => {
+export const QueryCard = ({
+	report,
+	card,
+	pdfMode,
+	reportCardsCaseGenerationStatus,
+}) => {
 	const queryNumber = card?.order_no || 1;
 	const { isOwner } = useReportPermission();
 	const [searchParams, setSearchParams] = useSearchParams();
+	const [cardStatus, setCardStatus] = useState(
+		reportCardsCaseGenerationStatus?.[card.external_id],
+	);
 
 	const [status, setStatus] = useState(card?.status || 'in_review');
 	const [riskTypes, setRiskTypes] = useState(
@@ -45,6 +54,9 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 	const { isDownloading, downloadS3File } = useS3File();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
+	useEffect(() => {
+		setCardStatus(reportCardsCaseGenerationStatus?.[card.external_id]);
+	}, [reportCardsCaseGenerationStatus, card.external_id]);
 	// Check URL for card_id on mount and when searchParams change
 	useEffect(() => {
 		if (searchParams.get('card_id') === card.external_id) {
@@ -72,10 +84,14 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 	const generateCasesMutation = useMutation({
 		mutationFn: generateCases,
 		onSuccess: () => {
-			toast.success('Cases generated successfully');
 			queryClient.invalidateQueries(['report-details', report.report_id]);
+			queryClient.invalidateQueries([
+				'report-cards-case-generation-status',
+				report.report_id,
+			]);
 		},
 		onError: (error) => {
+			setCardStatus(reportCardsCaseGenerationStatus?.[card.external_id]);
 			logError(error, {
 				feature: 'reports',
 				action: 'generate-cases',
@@ -89,6 +105,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 	});
 
 	const handleGenerateCases = () => {
+		setCardStatus(CASE_GENERATION_STATUS.GENERATING);
 		generateCasesMutation.mutate({
 			reportId: report.report_id,
 			cardId: card.external_id,
@@ -150,7 +167,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 			label: 'Open Query ',
 			onClick: openQuery,
 			icon: <ArrowSquareOut className="size-5" />,
-			show: true,
+			show: isOwner,
 		},
 		{
 			type: 'item',
@@ -173,7 +190,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 			type: 'item',
 			label: 'Add Graph',
 			icon: <ChartLineUp className="size-6" />,
-			show: true,
+			show: isOwner,
 			onClick: () => setShowAddGraph(true),
 		},
 		{
@@ -216,6 +233,86 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 			}}
 		/>
 	);
+	const renderCaseRelatedCta = () => {
+		if (cardStatus === CASE_GENERATION_STATUS.GENERATING) {
+			return (
+				<Button variant="outline" size="sm" disabled={true}>
+					<div className="flex gap-2 items-center">
+						<CircularLoader size="sm" />
+						<span>Generating cases...</span>
+					</div>
+				</Button>
+			);
+		}
+
+		if (cardStatus === CASE_GENERATION_STATUS.FAILED) {
+			return (
+				<div className="flex items-center gap-2">
+					<div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 rounded-md border border-red-200">
+						<div className="flex items-center gap-1.5">
+							<span className="text-red-700 text-xs font-medium">
+								Generation failed
+							</span>
+						</div>
+					</div>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={handleGenerateCases}
+						className="flex items-center gap-1.5 border-red-200 hover:bg-red-50 disabled:pointer-events-auto disabled:cursor-not-allowed"
+						disabled={!isOwner}
+					>
+						<svg
+							className="size-4"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+							/>
+						</svg>
+						<span className="text-xs">Retry</span>
+					</Button>
+				</div>
+			);
+		}
+
+		if (cardStatus === CASE_GENERATION_STATUS.NOT_GENERATED) {
+			return (
+				<Button
+					variant="outline"
+					size="sm"
+					onClick={handleGenerateCases}
+					disabled={!isOwner}
+					className="disabled:pointer-events-auto disabled:cursor-not-allowed"
+				>
+					Generate Cases
+				</Button>
+			);
+		}
+
+		if (CASE_GENERATION_STATUS.GENERATED === cardStatus) {
+			return (
+				<Button
+					variant="outline"
+					size="sm"
+					className="flex items-center gap-2"
+					onClick={handleFlagExceptions}
+				>
+					<FiFlag className="size-4 text-[#26064A99]" />
+					<span className="text-[#26064ACC] text-xs">
+						Manage Exceptions
+					</span>
+					<div className="w-[0.0625rem] h-5 bg-[#26064A66]"></div>
+					<img src={redirectIcon} alt="flag icon" className="size-4" />
+				</Button>
+			);
+		}
+	};
 
 	return (
 		<Card
@@ -283,45 +380,7 @@ export const QueryCard = ({ report, card, pdfMode }) => {
 							</div>
 						</div>
 					</div>
-					{!pdfMode && (
-						<div>
-							{card?.cases_generated ? (
-								<Button
-									variant="outline"
-									size="sm"
-									className="flex items-center gap-2"
-									onClick={handleFlagExceptions}
-								>
-									<FiFlag className="size-4 text-[#26064A99]" />
-									<span className="text-[#26064ACC] text-xs">
-										Manage Exceptions
-									</span>
-									<div className="w-[0.0625rem] h-5 bg-[#26064A66]"></div>
-									<img
-										src={redirectIcon}
-										alt="flag icon"
-										className="size-4"
-									/>
-								</Button>
-							) : (
-								<Button
-									variant="outline"
-									size="sm"
-									onClick={handleGenerateCases}
-									disabled={generateCasesMutation.isPending}
-								>
-									{generateCasesMutation.isPending ? (
-										<div className="flex gap-2 items-center">
-											<CircularLoader size="sm" />
-											<span>Generating...</span>
-										</div>
-									) : (
-										'Generate Cases'
-									)}
-								</Button>
-							)}
-						</div>
-					)}
+					{!pdfMode && renderCaseRelatedCta()}
 				</div>
 			</CardHeader>
 

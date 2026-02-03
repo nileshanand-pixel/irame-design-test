@@ -46,6 +46,14 @@ export const getUserSession = async (params = {}) => {
 	return response.data;
 };
 
+export const getSqlSessions = async (params = {}) => {
+	const response = await axiosClientV1.get(`/sessions/sql`, {
+		headers: {},
+		params,
+	});
+	return response.data;
+};
+
 export const getSession = async (sessionId) => {
 	const response = await axiosClientV1.get(`/sessions/${sessionId}`, {
 		headers: {},

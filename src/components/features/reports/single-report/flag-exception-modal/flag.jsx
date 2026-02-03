@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import { FlagIcon } from 'lucide-react';
 
 export const FLAG_TYPES = {
@@ -20,16 +21,24 @@ export const FLAG_CONFIG = {
 	},
 };
 
-export default function Flag({ type, isActive, onClickHandler = () => {} }) {
+export default function Flag({
+	type,
+	isActive,
+	onClickHandler = () => {},
+	disabled,
+}) {
 	return (
 		<div
-			className="size-7 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110"
+			className={cn(
+				'size-7 rounded-full flex items-center justify-center cursor-pointer transition-all hover:scale-110',
+				{ 'opacity-80 cursor-not-allowed': disabled },
+			)}
 			style={{
 				backgroundColor: isActive
 					? FLAG_CONFIG[type].bgColor
 					: 'transparent',
 			}}
-			onClick={onClickHandler}
+			onClick={() => !disabled && onClickHandler()}
 		>
 			<FlagIcon
 				className="w-4 h-4"

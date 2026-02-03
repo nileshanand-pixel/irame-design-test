@@ -4,13 +4,14 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import {
 	getDashboardContent,
 	deleteDashboardContentItem,
+	getDashboardById,
 } from '../service/dashboard.service';
 import EmptyDashboardState from './EmptyDashboardState';
 import GraphDetailModal from './GraphDetailModal/GraphDetailModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import DashboardGraphCard from './DashboardGraphCard';
 import DashboardTableCard from './DashboardTableCard';
-import { getSupportedGraphs } from '@/lib/utils';
+import { cn, getSupportedGraphs } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 import { logError } from '@/lib/logger';
 import { normalizeGraphData } from '@/utils/graph.utils';
@@ -39,6 +40,7 @@ const DashboardDetailPageNew = () => {
 	const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 	const [selectedGraph, setSelectedGraph] = useState(null);
 	const [selectedContentItem, setSelectedContentItem] = useState(null);
+	const [isNewContentAvailable, setIsNewContentAvailable] = useState(false);
 
 	const [dashboardWidgets, setDashboardWidgets] = useState([]);
 	const [isEditModeActive, setIsEditModeActive] = useState(false);
@@ -98,7 +100,11 @@ const DashboardDetailPageNew = () => {
 		},
 	});
 
-	const { data: dashboardContent, isLoading } = useQuery({
+	const {
+		data: dashboardContent,
+		isLoading,
+		refetch,
+	} = useQuery({
 		queryKey: QUERY_KEYS.DASHBOARD_DETAILS(dashboardId),
 		queryFn: () => getDashboardContent(dashboardId),
 		enabled: !!dashboardId,
@@ -123,6 +129,32 @@ const DashboardDetailPageNew = () => {
 			dashboardContent.length > 0,
 		[isLoading, dashboardContent],
 	);
+
+	const {
+		data: dashboardMetadata,
+		isError,
+		error,
+	} = useQuery({
+		queryKey: ['dashboard-metadata', dashboardId],
+		queryFn: () => getDashboardById(dashboardId),
+		enabled: !!dashboardId,
+		refetchInterval: 60000,
+		refetchIntervalInBackground: true,
+	});
+
+	useEffect(() => {
+		if (isError && error) {
+			logError(error, {
+				feature: 'dashboard',
+				action: 'fetch-dashboard-metadata',
+				extra: {
+					errorMessage: error.message,
+					status: error.response?.status,
+					dashboardId,
+				},
+			});
+		}
+	}, [isError, error, dashboardId]);
 
 	const processedDashboard = useMemo(() => {
 		if (!dashboardContent || !Array.isArray(dashboardContent)) {
@@ -332,8 +364,9 @@ const DashboardDetailPageNew = () => {
 			setIsEditMode: setIsEditModeActive,
 			isEditModeModalOpen: isEditModeModalOpen,
 			setIsEditModeModalOpen: setIsEditModeModalOpen,
+			dashboardMetadata: dashboardMetadata,
 		}),
-		[dashboardId, isEditModeActive, isEditModeModalOpen],
+		[dashboardId, isEditModeActive, isEditModeModalOpen, dashboardMetadata],
 	);
 
 	if (isLoading) {
@@ -354,7 +387,9 @@ const DashboardDetailPageNew = () => {
 						showActions={false}
 					/>
 					<div className="h-[calc(100%-9.3rem)]">
-						<EmptyDashboardState />
+						<EmptyDashboardState
+							isLiveDashboard={dashboardMetadata?.type === 'LIVE'}
+						/>
 					</div>
 				</div>
 			</>
@@ -370,10 +405,30 @@ const DashboardDetailPageNew = () => {
 					<DashboardDetailsPageHeader
 						{...commonHeaderProps}
 						showActions={true}
+						setIsNewContentAvailable={setIsNewContentAvailable}
 					/>
 				</div>
 
 				<div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pb-4 pt-4">
+					<div
+						className={cn(
+							'mb-4 flex justify-center transition-all duration-300 ease-in-out overflow-hidden',
+							isNewContentAvailable ? 'h-auto' : 'h-0 ',
+						)}
+					>
+						<button
+							onClick={() => {
+								refetch();
+								setIsNewContentAvailable(false);
+							}}
+							className="flex items-center gap-2 px-4 py-2 bg-[#6A12CD] text-white rounded-lg hover:bg-[#5a0fad] transition-colors shadow-md"
+						>
+							<i className="bi bi-arrow-clockwise"></i>
+							<span className="font-medium">
+								New content available - Reload
+							</span>
+						</button>
+					</div>
 					<div className="grid grid-cols-2 gap-5 min-w-0">
 						{renderWidgets}
 					</div>

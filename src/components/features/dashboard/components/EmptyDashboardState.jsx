@@ -2,7 +2,7 @@ import React from 'react';
 import emptyDashSvg from '@/assets/icons/empty-dash.svg';
 import AddQueryCta, { ADD_QUERY_CTA_SIZES } from './add-query-cta';
 
-const EmptyDashboardState = () => {
+const EmptyDashboardState = ({ isLiveDashboard }) => {
 	return (
 		<>
 			<div className="col-span-2 flex flex-col items-center justify-center w-full h-full">
@@ -23,7 +23,10 @@ const EmptyDashboardState = () => {
 					</p>
 				</div>
 
-				<AddQueryCta size={ADD_QUERY_CTA_SIZES.LARGE} />
+				<AddQueryCta
+					size={ADD_QUERY_CTA_SIZES.LARGE}
+					isLiveDashboard={isLiveDashboard}
+				/>
 			</div>
 		</>
 	);

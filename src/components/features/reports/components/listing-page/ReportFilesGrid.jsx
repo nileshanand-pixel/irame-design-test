@@ -6,6 +6,7 @@ import { getInitials } from '@/lib/utils';
 import { formatUpdatedDate } from '@/utils/dateFormatter';
 import { SPACES } from '../../constants';
 import { FileActionsMenu } from './file-action-menu';
+import upperFirst from 'lodash.upperfirst';
 
 const ReportFilesGrid = ({
 	displayReports,
@@ -49,6 +50,7 @@ const ReportFilesGrid = ({
 									onDownload={() => handleDownload(row)}
 									onShare={() => handleShare(row)}
 									onDelete={() => handleDelete(row)}
+									isOwner={space === SPACES.PERSONAL}
 								/>
 							</div>
 						</div>
@@ -73,7 +75,7 @@ const ReportFilesGrid = ({
 									</Avatar>
 
 									<span className="ml-1	text-sm text-primary80 whitespace-nowrap max-w-0 opacity-0 group-hover:max-w-36 group-hover:opacity-100 transition-all duration-500 ease-in-out truncate-ellipsis-1">
-										{row.user_name}
+										{upperFirst(row.user_name)}
 									</span>
 								</div>
 							)}

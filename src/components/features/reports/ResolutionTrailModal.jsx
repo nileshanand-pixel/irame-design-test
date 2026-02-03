@@ -30,6 +30,7 @@ import { Calendar as ShadcnCalendar } from '@/components/ui/calendar';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from '@/hooks/useRouter';
 import useAuth from '@/hooks/useAuth';
+import { useReportPermission } from '@/contexts/ReportPermissionContext';
 import {
 	getResolutionTrail,
 	updateCaseData,
@@ -68,6 +69,7 @@ import Flag, {
 	FLAG_CONFIG,
 	FLAG_TYPES,
 } from './single-report/flag-exception-modal/flag';
+import { fileTypeFromBlob } from 'file-type';
 
 /* ================================================================
    SMALL INLINE COMPONENTS
@@ -769,6 +771,7 @@ function CaseGridMemo({
 	initialAssignedUsers,
 	setDescription,
 	initialState,
+	isOwner,
 }) {
 	// Check if flagging is "False Positive" (red = TRUE_EXCEPTION in this config)
 	// Based on FLAG_CONFIG, 'red' has label 'True Exception', 'green' has label 'False Positive'
@@ -870,7 +873,7 @@ function CaseGridMemo({
 				/>
 			</FormField>
 
-			<FormField label="Mark as">
+			<FormField label="Mark as" disabled={!isOwner}>
 				<Select value={flagging} onValueChange={handleSetFlagging}>
 					<SelectTrigger className="w-full h-12 bg-white border-[#E5E7EB]">
 						{flagging ? (
@@ -905,7 +908,7 @@ function CaseGridMemo({
 				</Select>
 			</FormField>
 
-			<FormField label="Action" disabled={isFalsePositive}>
+			<FormField label="Action" disabled={isFalsePositive || !isOwner}>
 				<PillSelect
 					value={action}
 					onChange={handleSetAction}
@@ -914,7 +917,7 @@ function CaseGridMemo({
 				/>
 			</FormField>
 
-			<FormField label="Assigned to">
+			<FormField label="Assigned to" disabled={!isOwner}>
 				<AssignedToField
 					users={users}
 					assignedUsers={assignedUsers}
@@ -924,11 +927,11 @@ function CaseGridMemo({
 				/>
 			</FormField>
 
-			<FormField label="Due Date" disabled={isFalsePositive}>
+			<FormField label="Due Date" disabled={isFalsePositive || !isOwner}>
 				<DatePicker value={dueDate} onChange={handleSetDueDate} />
 			</FormField>
 
-			<FormField label="Severity" disabled={isFalsePositive}>
+			<FormField label="Severity" disabled={isFalsePositive || !isOwner}>
 				<PillSelect
 					value={severity}
 					onChange={handleSetSeverity}
@@ -942,7 +945,13 @@ function CaseGridMemo({
 
 const CaseGrid = memo(CaseGridMemo);
 
-function DescriptionField({ value, onChange, disabled, assignedUsers }) {
+function DescriptionField({
+	value,
+	onChange,
+	disabled,
+	assignedUsers,
+	isOwner = true,
+}) {
 	const handleChange = useCallback(
 		(e) => {
 			if (assignedUsers?.length === 0) {
@@ -954,18 +963,20 @@ function DescriptionField({ value, onChange, disabled, assignedUsers }) {
 		[assignedUsers, onChange],
 	);
 
+	const isDisabled = disabled || !isOwner;
+
 	return (
 		<FormField label="Description">
 			<textarea
 				className={cn(
 					'w-full border max-h-40 min-h-20 border-primary8 text-primary80 rounded-lg px-3.5 py-2.5 text-sm',
-					disabled && 'bg-gray-100 cursor-not-allowed opacity-60',
+					isDisabled && 'bg-gray-100 cursor-not-allowed opacity-60',
 				)}
 				rows={3}
 				value={value}
-				onChange={disabled ? undefined : handleChange}
+				onChange={isDisabled ? undefined : handleChange}
 				placeholder="Add description..."
-				disabled={disabled}
+				disabled={isDisabled}
 			/>
 		</FormField>
 	);
@@ -998,28 +1009,109 @@ function CommentComposerComponent({
 	users,
 }) {
 	const fileInputRef = React.useRef(null);
-	const allowedFileTypes = UPLOAD_CONTEXTS.REPORT_EVIDENCE;
+	const allowedFileTypes = UPLOAD_CONTEXTS.COMMENTS;
+
+	const getFilesWithSingleExtension = (allFiles) => {
+		const singleExtensionFiles = Array.from(allFiles).filter((file) => {
+			return file.name.split('.').length === 2;
+		});
+
+		return singleExtensionFiles;
+	};
+
+	const getFilesHavingCorrectType = (files, filesInfo) => {
+		const filesHavingCorrectType = [];
+
+		files?.forEach((file, index) => {
+			const extInName = file.name.split('.')[1];
+			const fileInfo = filesInfo[index];
+			if (extInName === fileInfo?.ext) {
+				filesHavingCorrectType.push(file);
+			} else {
+				filesHavingCorrectType.push(null);
+			}
+		});
+
+		return filesHavingCorrectType;
+	};
+
+	const getAllowedFiles = (allFiles, filesInfo) => {
+		const allowedFiles = [];
+		const allowedFileTypes = ['pdf', 'jpg', 'png', 'gif'];
+		let hasNotAllowedFiles = false;
+
+		allFiles.forEach((file, index) => {
+			if (!file) return;
+
+			if (allowedFileTypes.includes(filesInfo[index].ext)) {
+				allowedFiles.push(file);
+			} else {
+				hasNotAllowedFiles = true;
+			}
+		});
+
+		return [allowedFiles, hasNotAllowedFiles];
+	};
+
+	const getFilesInfo = async (files) => {
+		const filesInfo = [];
+		for (let i = 0; i < files.length; i++) {
+			const file = files[i];
+			const fileInfo = await fileTypeFromBlob(file);
+			if (fileInfo) {
+				filesInfo.push(fileInfo);
+			} else {
+				filesInfo.push({
+					ext: file?.name?.split('.')?.[1],
+					type: file.type,
+				});
+			}
+		}
+		return filesInfo;
+	};
+
+	const getAllowedValidFiles = async (files) => {
+		// remove files files more than 1 ext
+		const singleExtensionFiles = getFilesWithSingleExtension(files);
+		if (singleExtensionFiles.length !== files.length) {
+			toast.error('Some files have invalid names!');
+		}
+
+		// get files info
+		const filesInfo = await getFilesInfo(singleExtensionFiles);
+
+		// remove files having incorrect ext.
+		const filesHavingCorrectType = getFilesHavingCorrectType(
+			singleExtensionFiles,
+			filesInfo,
+		);
+		if (filesHavingCorrectType.includes(null)) {
+			toast.error('Some files have incorrect extensions!');
+		}
+
+		// remove allowed files
+		const [allowedFiles, hasNotAllowedFiles] = getAllowedFiles(
+			filesHavingCorrectType,
+			filesInfo,
+		);
+		if (hasNotAllowedFiles) {
+			toast.error('Some files are not supported!');
+		}
+
+		return allowedFiles;
+	};
 
 	const handleFileSelect = useCallback(
-		(e) => {
-			const uploadedFiles = e.target.files;
-			if (uploadedFiles && uploadedFiles.length > 0) {
-				const filesArray = Array.from(uploadedFiles);
-				const validation = validateFiles(filesArray, allowedFileTypes);
+		async (e) => {
+			const uplodedFiles = e.target.files;
 
-				if (!validation.valid) {
-					toast.error(validation.error);
-					// Only add valid files
-					const validFiles = filesArray.filter(
-						(file) => !validation.invalidFiles.includes(file),
-					);
-					if (validFiles.length > 0) {
-						addFiles(validFiles);
-					}
-				} else {
-					addFiles(filesArray);
-				}
+			if (uplodedFiles.length === 0) {
+				return;
 			}
+
+			const allowedValidFiles = await getAllowedValidFiles(uplodedFiles);
+
+			addFiles(allowedValidFiles);
 			if (fileInputRef.current) {
 				fileInputRef.current.value = '';
 			}
@@ -1149,6 +1241,7 @@ function CommentComposerComponent({
 
 export default function ResolutionTrailModal({ open, onClose }) {
 	const { userDetails: user } = useAuth();
+	const { isOwner } = useReportPermission();
 	const userId = user?.external_id || user?.id || user?.user_id;
 	const { query, params } = useRouter();
 
@@ -1640,6 +1733,7 @@ export default function ResolutionTrailModal({ open, onClose }) {
 						initialAssignedUsers={initialState?.assignedUsers}
 						setDescription={setDescription}
 						initialState={initialState}
+						isOwner={isOwner}
 					/>
 					<div className="mt-3">
 						<DescriptionField
@@ -1647,6 +1741,7 @@ export default function ResolutionTrailModal({ open, onClose }) {
 							onChange={handleDescriptionChange}
 							disabled={flagging === FLAG_TYPES.FALSE_POSITIVE}
 							assignedUsers={assignedUsers}
+							isOwner={isOwner}
 						/>
 					</div>
 

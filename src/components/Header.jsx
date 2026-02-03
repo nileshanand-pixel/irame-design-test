@@ -51,6 +51,8 @@ import { getDataSourcesV2 } from './features/configuration/service/configuration
 import { ShareChatModal } from './ShareChatModal';
 import bellIcon from '@/assets/icons/bell.svg';
 import NotificationDrawer from './features/notification/components/notification-drawer';
+import LiveTag from './elements/live-tag';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 
 export function useDataSources() {
 	const { data, isLoading, error } = useQuery({
@@ -134,6 +136,7 @@ export const DataSourceSwitcher = () => {
 		return () => document.removeEventListener('mousedown', handleClickOutside);
 	}, []);
 
+	// console.log(activeDataSource?.datasource_type, "activeDataSource");
 	return (
 		<div ref={containerRef} className="relative inline-block">
 			<button
@@ -141,7 +144,11 @@ export const DataSourceSwitcher = () => {
 				onClick={() => setOpen(!open)}
 			>
 				<DatabaseIcon className="mr-2 size-4 text-primary80" />
-				{activeDataSource ? activeDataSource.name : 'Select Datasource'}
+				<span className="mr-2">
+					{activeDataSource ? activeDataSource.name : 'Select Datasource'}
+				</span>
+				{activeDataSource?.datasource_type ===
+					DATASOURCE_TYPES.SQL_GENERATED && <LiveTag />}
 				<ChevronDownIcon className="ml-2 size-4 text-primary60" />
 			</button>
 
@@ -175,7 +182,7 @@ export const DataSourceSwitcher = () => {
 								<button
 									key={ds.datasource_id}
 									className={cn(
-										'flex items-center gap-2 p-2 rounded-md cursor-pointer text-sm text-left',
+										'flex items-center justify-between gap-2 p-2 rounded-md cursor-pointer text-sm text-left',
 										String(activeDataSourceId) ===
 											String(ds.datasource_id)
 											? 'bg-purple-4 text-primary60'
@@ -183,11 +190,20 @@ export const DataSourceSwitcher = () => {
 									)}
 									onClick={() => handleDatasourceClick(ds)}
 								>
-									<DatabaseIcon
-										className="flex-shrink-0 w-4 h-4 text-primary60"
-										strokeWidth={2.5}
-									/>
-									<span className="truncate">{ds.name}</span>
+									<div className="flex items-center gap-2 w-[calc(100%-5rem)]">
+										<DatabaseIcon
+											className="flex-shrink-0 w-4 h-4 text-primary60"
+											strokeWidth={2.5}
+										/>
+										{/* <div className="flex items-center justify-between"> */}
+										<span className="truncate">{ds.name}</span>
+									</div>
+
+									{ds?.datasource_type ===
+										DATASOURCE_TYPES.SQL_GENERATED && (
+										<LiveTag />
+									)}
+									{/* </div> */}
 								</button>
 							))
 						) : (
@@ -411,8 +427,13 @@ const Header = () => {
 		}
 	}, [sessionData]);
 
-	const isDownloadAndShareEnabled =
+	const isShareEnabled =
 		isSessionPage && isValidSession && !sessionData?.metadata?.shared;
+
+	const isDownloadEnabled =
+		isSessionPage &&
+		isValidSession &&
+		datasourceDetails?.datasource_type !== DATASOURCE_TYPES.SQL_GENERATED;
 
 	useEffect(() => {
 		if (userDetails) {
@@ -562,25 +583,23 @@ const Header = () => {
 						)}
 					</>
 				)} */}
-				{isDownloadAndShareEnabled &&
-					datasourceDetails?.files?.length > 0 && (
-						<DownloadFilesDropdown
-							files={datasourceDetails.files}
-							dataSourceName={datasourceDetails.name}
-						/>
-					)}
+				{isDownloadEnabled && datasourceDetails?.files?.length > 0 && (
+					<DownloadFilesDropdown
+						files={datasourceDetails.files}
+						dataSourceName={datasourceDetails.name}
+					/>
+				)}
 
-				{isDownloadAndShareEnabled &&
-					!sessionData?.metadata?.workflow_run_id && (
-						<Button
-							variant="outline"
-							className="py-2 px-3 text-sm flex items-center font-semibold !text-primary80 rounded-lg"
-							onClick={() => setOpen(true)}
-						>
-							<Share2 className="size-4 mr-2" />
-							Share
-						</Button>
-					)}
+				{isShareEnabled && (
+					<Button
+						variant="outline"
+						className="py-2 px-3 text-sm flex items-center font-semibold !text-primary80 rounded-lg"
+						onClick={() => setOpen(true)}
+					>
+						<Share2 className="size-4 mr-2" />
+						Share
+					</Button>
+				)}
 				<div
 					className="relative p-2 bg-[#F9FAFB] rounded-lg flex items-center justify-center cursor-pointer"
 					onClick={() => setIsNotificationOpen(true)}

@@ -14,6 +14,7 @@ import DotsDropdown from '@/components/elements/DotsDropdown';
 import upperFirst from 'lodash.upperfirst';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
 import { Trash2 } from 'lucide-react';
+import LiveTag from '@/components/elements/live-tag';
 
 const DashboardCard = ({ dashboard, onClick, isShared = false }) => {
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
@@ -103,14 +104,7 @@ const DashboardCard = ({ dashboard, onClick, isShared = false }) => {
 							{upperFirst(dashboard.title)}
 						</h3>
 						{/* Type badge */}
-						{dashboard.type === 'LIVE' && (
-							<div className="flex items-center shrink-0">
-								<span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-semibold rounded-full">
-									<span className="size-2 bg-green-600 rounded-full animate-pulse"></span>
-									Live
-								</span>
-							</div>
-						)}
+						{dashboard.type === 'LIVE' && <LiveTag />}
 					</div>
 					<p className="text-xs text-[#26064ACC] line-clamp-1 leading-5">
 						{dashboard.description || 'No description'}

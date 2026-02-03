@@ -7,6 +7,8 @@ export default function Form({ setIsLoading, email, setEmail }) {
 	const [isResetPasswordFormVisible, setIsResetPasswordFormVisible] =
 		useState(false);
 
+	const isRecaptchaEnabled = import.meta.env.VITE_IS_RECAPTCHA_ENABLED === 'true';
+
 	return (
 		<>
 			{isResetPasswordFormVisible ? (
@@ -32,6 +34,25 @@ export default function Form({ setIsLoading, email, setEmail }) {
 						setIsResetPasswordFormVisible={setIsResetPasswordFormVisible}
 					/>
 					<SSOLoginForm setIsLoading={setIsLoading} />
+					{isRecaptchaEnabled && (
+						<p className="text-xs text-primary60 mt-4 text-center">
+							This site is protected by reCAPTCHA and the Google{' '}
+							<a
+								href="https://policies.google.com/privacy"
+								className="text-primary80 underline"
+							>
+								Privacy Policy
+							</a>{' '}
+							and{' '}
+							<a
+								href="https://policies.google.com/terms"
+								className="text-primary80 underline"
+							>
+								Terms of Service
+							</a>{' '}
+							apply.
+						</p>
+					)}
 				</div>
 			)}
 		</>

@@ -19,13 +19,13 @@ const ReportFilesList = ({
 	return (
 		<div className="w-full bg-white">
 			<div
-				className={`grid px-4 gap-2 py-3 text-sm font-medium text-primary80 ${space === SPACES.PERSONAL ? 'grid-cols-[3fr_0.5fr_0.5fr_0.35fr_max-content]' : 'grid-cols-[3fr_0.5fr_0.5fr_0.5fr_0.35fr_max-content]'}`}
+				className={`grid px-4 gap-2 py-3 text-sm font-medium text-primary80 ${space === SPACES.PERSONAL ? 'grid-cols-[3fr_0.5fr_0.5fr_max-content]' : 'grid-cols-[3fr_0.5fr_0.5fr_0.5fr_max-content]'}`}
 			>
 				<div>Name</div>
 				{space !== SPACES.PERSONAL && <div>Owner</div>}
 				<div>Last Modified</div>
 				<div>Date Created</div>
-				<div>Size</div>
+				{/* <div>Size</div> */}
 
 				<div className="flex justify-end items-center px-2">
 					<MoreVertical className="w-5 h-5 text-transparent" />
@@ -38,7 +38,7 @@ const ReportFilesList = ({
 				{displayReports?.map((row) => (
 					<div
 						key={row.report_id}
-						className={`grid gap-2 px-4 py-3 items-center text-sm border-t-[0.1rem] border-primary4 last:border-b-[0.1rem] last:border-primary4 hover:bg-primary2 cursor-pointer ${space === SPACES.PERSONAL ? 'grid-cols-[3fr_0.5fr_0.5fr_0.35fr_max-content]' : 'grid-cols-[3fr_0.5fr_0.5fr_0.5fr_0.35fr_max-content]'}`}
+						className={`grid gap-2 px-4 py-3 items-center text-sm border-t-[0.1rem] border-primary4 last:border-b-[0.1rem] last:border-primary4 hover:bg-primary2 cursor-pointer ${space === SPACES.PERSONAL ? 'grid-cols-[3fr_0.5fr_0.5fr_max-content]' : 'grid-cols-[3fr_0.5fr_0.5fr_0.5fr_max-content]'}`}
 						onClick={() => navigate(`/app/reports/${row.report_id}`)}
 					>
 						<div className="flex items-center gap-2 min-w-0">
@@ -66,15 +66,16 @@ const ReportFilesList = ({
 							{formatCreatedDate(row.created_at)}
 						</div>
 
-						<div className="text-primary60 truncate-ellipsis-1">
+						{/* <div className="text-primary60 truncate-ellipsis-1">
 							{formatFileSize(row.size)}
-						</div>
+						</div> */}
 
 						<div onClick={(e) => e.stopPropagation()}>
 							<FileActionsMenu
 								onDownload={() => handleDownload(row)}
 								onShare={() => handleShare(row)}
 								onDelete={() => handleDelete(row)}
+								isOwner={space === SPACES.PERSONAL}
 							/>
 						</div>
 					</div>

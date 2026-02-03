@@ -1,7 +1,12 @@
 import React from 'react';
 import { QueryCard } from './QueryCard';
 
-export default function QueryList({ reportDetails, pdfMode, cards }) {
+export default function QueryList({
+	reportDetails,
+	pdfMode,
+	cards,
+	reportCardsCaseGenerationStatus,
+}) {
 	return (
 		<div className={'w-full'}>
 			{pdfMode ? (
@@ -25,7 +30,13 @@ export default function QueryList({ reportDetails, pdfMode, cards }) {
 							className="scroll-m-5"
 							id={card.external_id}
 						>
-							<QueryCard report={reportDetails.report} card={card} />
+							<QueryCard
+								report={reportDetails.report}
+								card={card}
+								reportCardsCaseGenerationStatus={
+									reportCardsCaseGenerationStatus
+								}
+							/>
 						</div>
 					))}
 				</div>

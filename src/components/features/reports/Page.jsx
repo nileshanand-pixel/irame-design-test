@@ -26,13 +26,18 @@ const ReportsPage = () => {
 	const [sortValue, setSortValue] = useState(null);
 
 	// const [teamFilter, setTeamFilter] = useState(null);
-	const [ownerFilter, setOwnerFilter] = useState(null);
+	const [ownerFilter, setOwnerFilter] = useState([]);
 
 	// Update URL fragment when activeTab changes
 	useEffect(() => {
 		window.history.replaceState(null, '', `#${activeTab.fragment}`);
 	}, [activeTab]);
 
+	useEffect(() => {
+		if (activeTab === TABS.MY_REPORTS) {
+			setOwnerFilter([]);
+		}
+	}, [activeTab]);
 	// Listen for hash changes (e.g., browser back/forward)
 	useEffect(() => {
 		const handleHashChange = () => {

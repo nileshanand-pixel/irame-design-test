@@ -9,8 +9,9 @@ import { createOrUpdateUserSession } from '@/components/features/user-session-ma
 import { useNavigate } from 'react-router-dom';
 import { logError } from '@/lib/logger';
 import { toast } from '@/lib/toast';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { REDIRECTION_URL_AFTER_LOGIN } from '@/constants/login-constants';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function LoginWithEmailForm({
 	setIsLoading,
@@ -19,6 +20,8 @@ export default function LoginWithEmailForm({
 	setIsResetPasswordFormVisible,
 }) {
 	const [showPassword, setShowPassword] = useState(false);
+	const [error, setError] = useState('');
+	const recaptchaRef = useRef(null);
 
 	const navigate = useNavigate();
 
@@ -124,15 +127,34 @@ export default function LoginWithEmailForm({
 		}
 	};
 
-	const onSubmit = (data) => {
+	const isRecaptchaEnabled = import.meta.env.VITE_IS_RECAPTCHA_ENABLED === 'true';
+
+	const onSubmit = async (data) => {
 		if (!data.email || !data.password) {
 			return;
 		}
-		handleContinue(data);
+
+		let captchaToken = '';
+		if (isRecaptchaEnabled) {
+			captchaToken = await recaptchaRef.current.executeAsync();
+
+			if (!captchaToken) {
+				setError('Recaptcha verification failed! Try again.');
+				return;
+			} else {
+				setError('');
+				console.log(captchaToken, 'captchaToken');
+			}
+		}
+
+		handleContinue({
+			...data,
+			captchaToken: captchaToken,
+		});
 	};
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="space-y-[4.5rem]">
+		<form onSubmit={handleSubmit(onSubmit)} className="space-y-[3rem]">
 			<div className="space-y-2">
 				<div className="space-y-5">
 					<div>
@@ -214,17 +236,29 @@ export default function LoginWithEmailForm({
 						Forgot Password?
 					</span>
 				</div>
+
+				{isRecaptchaEnabled && (
+					<ReCAPTCHA
+						ref={recaptchaRef}
+						sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+						size="invisible"
+					/>
+				)}
 			</div>
 
-			<Button
-				type="submit"
-				disabled={isSubmitting || !isValid}
-				className={`w-full text-white bg-primary hover:bg-purple-80/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center ${
-					isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-				}`}
-			>
-				Continue
-			</Button>
+			<div className="flex flex-col gap-1">
+				{error && <div className="text-xs text-red-500">{error}</div>}
+
+				<Button
+					type="submit"
+					disabled={isSubmitting || !isValid}
+					className={`w-full text-white bg-primary hover:bg-purple-80/80 font-medium rounded-lg text-sm px-5 py-2.5 text-center ${
+						isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+					}`}
+				>
+					Continue
+				</Button>
+			</div>
 		</form>
 	);
 }

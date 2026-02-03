@@ -1,3 +1,4 @@
+import { useReportPermission } from '@/contexts/ReportPermissionContext';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
@@ -39,11 +40,16 @@ export default function SeverityCell({ value, onOpenTrail, caseData }) {
 	const severityStyle =
 		SEVERITY_CONFIG[value] || SEVERITY_CONFIG[SEVERITY_LEVELS.LOW];
 
+	const { isOwner } = useReportPermission();
+
 	return (
 		<div className="relative">
 			<div
-				className={`cursor-pointer flex items-center justify-between px-4 py-2 rounded-full ${severityStyle?.bgColor}`}
-				onClick={() => onOpenTrail(caseData)}
+				className={cn(
+					`cursor-pointer flex items-center justify-between px-4 py-2 rounded-full ${severityStyle?.bgColor}`,
+					{ 'opacity-80 cursor-not-allowed': !isOwner },
+				)}
+				onClick={() => isOwner && onOpenTrail(caseData)}
 			>
 				<div className="flex items-center gap-2">
 					<span

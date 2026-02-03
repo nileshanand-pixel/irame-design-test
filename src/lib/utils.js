@@ -103,7 +103,12 @@ export const getPdfPageCount = async (url) => {
 	}
 };
 
-export const base64ToBlob = (base64, mimeType) => {
+const MIME_MAP = {
+	pdf: 'application/pdf',
+	docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+};
+
+export const base64ToBlob = (base64, format) => {
 	const byteCharacters = atob(base64);
 	const byteArrays = [];
 	for (let offset = 0; offset < byteCharacters.length; offset += 512) {
@@ -115,8 +120,19 @@ export const base64ToBlob = (base64, mimeType) => {
 		const byteArray = new Uint8Array(byteNumbers);
 		byteArrays.push(byteArray);
 	}
-	return new Blob(byteArrays, { type: mimeType });
+	return new Blob(byteArrays, { type: MIME_MAP[format] });
 };
+
+export function downloadBlob(blob, filename) {
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement('a');
+	link.href = url;
+	link.download = filename;
+	document.body.appendChild(link);
+	link.click();
+	link.remove();
+	URL.revokeObjectURL(url);
+}
 
 export const getSupportedGraphs = (graphList = []) => {
 	if (!graphList.length) return [];

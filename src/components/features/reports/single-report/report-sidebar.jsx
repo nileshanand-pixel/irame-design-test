@@ -105,7 +105,7 @@ export default function ReportSidebar({ reportDetails, cards, setCards }) {
 	};
 
 	return (
-		<div className="pt-6 px-3">
+		<div className="pt-6 px-3 flex flex-col">
 			<div
 				className="p-4 rounded-full hover:bg-[#6A12CD1A] cursor-pointer mb-2 size-[3rem]"
 				onClick={() => setShowIndex((prev) => !prev)}
@@ -114,91 +114,93 @@ export default function ReportSidebar({ reportDetails, cards, setCards }) {
 			</div>
 
 			{showIndex && (
-				<div className="w-[12.5rem] pr-3">
+				<div className="w-[12.5rem] pr-3 flex flex-col overflow-auto">
 					<div className="p-2 pl-0 pt-1 border-b border-[#26064A33] mb-2 truncate">
 						{reportDetails?.report?.name}
 					</div>
 
-					<div>
-						{TOP_TABS.map((tab) => (
-							<div
-								key={tab.id}
-								className={cn(
-									'p-2 pl-3 truncate border-l-2 border-[#26064A33] cursor-pointer hover:bg-[#6A12CD0A]',
-									activeTab === tab.id &&
-										'bg-[#6A12CD0A] border-[#6A12CD]',
-								)}
-								onClick={() => handleTabClick(tab.id)}
-							>
-								{tab.title}
-							</div>
-						))}
-					</div>
-
-					<DragDropContext onDragEnd={handleDragEnd}>
-						<Droppable roppable droppableId="query-list">
-							{(provided) => (
+					<div className="flex-1 overflow-auto">
+						<div>
+							{TOP_TABS.map((tab) => (
 								<div
-									{...provided.droppableProps}
-									ref={provided.innerRef}
+									key={tab.id}
+									className={cn(
+										'p-2 pl-3 truncate border-l-2 border-[#26064A33] cursor-pointer hover:bg-[#6A12CD0A]',
+										activeTab === tab.id &&
+											'bg-[#6A12CD0A] border-[#6A12CD]',
+									)}
+									onClick={() => handleTabClick(tab.id)}
 								>
-									{CARD_TABS.map((tab, index) => (
-										<Draggable
-											key={tab.id}
-											draggableId={String(tab.id)}
-											index={index}
-											isDragDisabled={!isOwner}
-										>
-											{(provided) => (
-												<div
-													ref={provided.innerRef}
-													{...provided.draggableProps}
-													className={cn(
-														'group p-2 truncate border-l-2 border-[#26064A33] cursor-pointer hover:bg-[#6A12CD0A] flex items-center gap-1',
-														activeTab === tab.id &&
-															'bg-[#6A12CD0A] border-[#6A12CD]',
-													)}
-													onClick={() =>
-														handleTabClick(tab.id)
-													}
-												>
-													<div
-														{...provided.dragHandleProps}
-														className={cn(
-															'cursor-grab hidden group-hover:block',
-															!isOwner &&
-																'cursor-not-allowed',
-														)}
-													>
-														<DotsSixVertical className="size-5" />
-													</div>
-													<div className="flex-1 truncate">
-														{tab.title}
-													</div>
-												</div>
-											)}
-										</Draggable>
-									))}
-									{provided.placeholder}
+									{tab.title}
 								</div>
-							)}
-						</Droppable>
-					</DragDropContext>
+							))}
+						</div>
 
-					<div>
-						{BOTTOM_TABS.map((tab) => (
-							<div
-								key={tab.id}
-								className={cn(
-									'p-2 pl-3 truncate border-l-2 border-[#26064A33] cursor-pointer hover:bg-[#6A12CD0A]',
-									activeTab === tab.id &&
-										'bg-[#6A12CD0A] border-[#6A12CD]',
+						<DragDropContext onDragEnd={handleDragEnd}>
+							<Droppable roppable droppableId="query-list">
+								{(provided) => (
+									<div
+										{...provided.droppableProps}
+										ref={provided.innerRef}
+									>
+										{CARD_TABS.map((tab, index) => (
+											<Draggable
+												key={tab.id}
+												draggableId={String(tab.id)}
+												index={index}
+												isDragDisabled={!isOwner}
+											>
+												{(provided) => (
+													<div
+														ref={provided.innerRef}
+														{...provided.draggableProps}
+														className={cn(
+															'group p-2 truncate border-l-2 border-[#26064A33] cursor-pointer hover:bg-[#6A12CD0A] flex items-center gap-1',
+															activeTab === tab.id &&
+																'bg-[#6A12CD0A] border-[#6A12CD]',
+														)}
+														onClick={() =>
+															handleTabClick(tab.id)
+														}
+													>
+														<div
+															{...provided.dragHandleProps}
+															className={cn(
+																'cursor-grab hidden group-hover:block',
+																!isOwner &&
+																	'cursor-not-allowed',
+															)}
+														>
+															<DotsSixVertical className="size-5" />
+														</div>
+														<div className="flex-1 truncate">
+															{tab.title}
+														</div>
+													</div>
+												)}
+											</Draggable>
+										))}
+										{provided.placeholder}
+									</div>
 								)}
-								onClick={() => handleTabClick(tab.id)}
-							>
-								{tab.title}
-							</div>
-						))}
+							</Droppable>
+						</DragDropContext>
+
+						<div>
+							{BOTTOM_TABS.map((tab) => (
+								<div
+									key={tab.id}
+									className={cn(
+										'p-2 pl-3 truncate border-l-2 border-[#26064A33] cursor-pointer hover:bg-[#6A12CD0A]',
+										activeTab === tab.id &&
+											'bg-[#6A12CD0A] border-[#6A12CD]',
+									)}
+									onClick={() => handleTabClick(tab.id)}
+								>
+									{tab.title}
+								</div>
+							))}
+						</div>
 					</div>
 				</div>
 			)}

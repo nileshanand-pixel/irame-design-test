@@ -9,7 +9,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { closeModal } from '@/redux/reducer/modalReducer';
-import { Label } from '@/components/ui/label';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from '@/lib/toast';
 import { logError } from '@/lib/logger';
@@ -17,6 +16,7 @@ import { Loader2 } from 'lucide-react'; // assuming you're using lucide-react fo
 import { createReport } from '../service/reports.service';
 import { queryClient } from '@/lib/react-query';
 import { useSelector } from 'react-redux';
+import { RequiredLabel } from '@/components/elements/required-label';
 
 const CreateReportModal = () => {
 	const dispatch = useDispatch();
@@ -65,13 +65,11 @@ const CreateReportModal = () => {
 	};
 
 	const trimmedTitle = title.trim();
-	const trimmedDescription = description.trim();
-	const isSubmitDisabled =
-		!trimmedTitle || !trimmedDescription || createReportMutation.isLoading;
+	const isSubmitDisabled = !trimmedTitle || createReportMutation.isPending;
 
 	return (
 		<Dialog open onOpenChange={handleClose}>
-			<DialogContent className="sm:max-w-[600px] p-6">
+			<DialogContent className="sm:max-w-[37.5rem] p-6">
 				<DialogHeader>
 					<DialogTitle className="text-black/90">
 						Create Report
@@ -79,24 +77,23 @@ const CreateReportModal = () => {
 				</DialogHeader>
 				<form onSubmit={handleSubmit} className="space-y-4 ">
 					<div className="space-y-2">
-						<Label className="text-sm text-black/60">Report</Label>
+						<RequiredLabel>Report</RequiredLabel>
 						<Input
 							value={title}
 							onChange={(e) => setTitle(e.target.value)}
-							required
 							placeholder="Report 01 - April 01, 2025"
 							disabled={createReportMutation.isPending}
+							className="placeholder:!text-primary40"
 						/>
 					</div>
 					<div className="space-y-2">
-						<Label className="text-sm text-black/60">
-							Add a description this Workflow
-						</Label>
+						<RequiredLabel required={false}>Description</RequiredLabel>
 						<Input
 							value={description}
 							onChange={(e) => setDescription(e.target.value)}
 							placeholder="Report Description goes here"
 							disabled={createReportMutation.isLoading}
+							className="placeholder:!text-primary40"
 						/>
 					</div>
 

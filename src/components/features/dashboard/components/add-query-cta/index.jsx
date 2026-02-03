@@ -1,15 +1,18 @@
 import { useCallback, useState } from 'react';
-import ChooseQuerySessionModal from './ChooseQuerySessionModal';
 import { Button } from '@/components/ui/button';
 import { ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ChooseQuerySessionDialog from '@/components/features/reports/components/ChooseQuerySessionDialog';
 
 export const ADD_QUERY_CTA_SIZES = {
 	LARGE: 'large',
 	SMALL: 'small',
 };
 
-export default function AddQueryCta({ size = ADD_QUERY_CTA_SIZES.SMALL }) {
+export default function AddQueryCta({
+	size = ADD_QUERY_CTA_SIZES.SMALL,
+	isLiveDashboard = false,
+}) {
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	const handleAddQuery = useCallback(() => {
@@ -31,9 +34,10 @@ export default function AddQueryCta({ size = ADD_QUERY_CTA_SIZES.SMALL }) {
 					<ArrowUpRight className="size-4" color="#fff" />
 				)}
 			</Button>
-			<ChooseQuerySessionModal
+			<ChooseQuerySessionDialog
 				open={isModalOpen}
 				onOpenChange={setIsModalOpen}
+				showLiveSessions={isLiveDashboard}
 			/>
 		</>
 	);

@@ -13,6 +13,7 @@ import { Share2 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { updateReportStoreProp } from '@/redux/reducer/reportReducer';
 import { openModal } from '@/redux/reducer/modalReducer';
+import { useReportPermission } from '@/contexts/ReportPermissionContext';
 
 const ReportHero = ({ reportDetails, pdfMode }) => {
 	const [isAddQueryModalOpen, setIsAddQueryModalOpen] = useState(false);
@@ -20,6 +21,8 @@ const ReportHero = ({ reportDetails, pdfMode }) => {
 	const [status, setStatus] = useState(reportDetails?.report?.status);
 
 	const dispatch = useDispatch();
+
+	const { isOwner } = useReportPermission();
 
 	const readTime = useMemo(() => {
 		const allText = [
@@ -53,7 +56,7 @@ const ReportHero = ({ reportDetails, pdfMode }) => {
 				setIsAddQueryModalOpen(true);
 			},
 			icon: <img src={plusIcon} alt="plus" className="size-3" />,
-			show: true,
+			show: isOwner,
 		},
 		{
 			type: 'item',
@@ -64,15 +67,15 @@ const ReportHero = ({ reportDetails, pdfMode }) => {
 			icon: <FiDownload className="size-4 text-[#26064A99]" />,
 			show: true,
 		},
-		// {
-		// 	type: 'item',
-		// 	label: 'Share',
-		// 	onClick: () => {
-		// 		handleShare(reportDetails);
-		// 	},
-		// 	icon: <Share2 className="size-4 text-primary60" />,
-		// 	show: true,
-		// },
+		{
+			type: 'item',
+			label: 'Share',
+			onClick: () => {
+				handleShare(reportDetails);
+			},
+			icon: <Share2 className="size-4 text-primary60" />,
+			show: isOwner,
+		},
 	];
 
 	return (
@@ -121,7 +124,7 @@ const ReportHero = ({ reportDetails, pdfMode }) => {
 
 			<ChooseQuerySessionDialog
 				open={isAddQueryModalOpen}
-				onClose={() => setIsAddQueryModalOpen(false)}
+				onOpenChange={() => setIsAddQueryModalOpen(false)}
 			/>
 
 			<DownloadModal

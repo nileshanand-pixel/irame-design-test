@@ -367,7 +367,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						)}
 					</div>
 
-					<div className="ml-3 min-w-0 flex-1">
+					<div className="ml-3 min-w-0 flex-1 flex items-center gap-2">
 						{isEditing === session.session_id ? (
 							<InputText
 								value={sessionTitle}
@@ -513,10 +513,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							/>
 						)}
 					</div>
-
-					<span className="truncate text-primary80 flex-1 min-w-0">
-						{workflow.workflow_check_name}
-					</span>
+					<div className="flex gap-2 items-center flex-1 min-w-0">
+						<span className="truncate text-primary80">
+							{workflow.workflow_check_name}
+						</span>
+					</div>
 
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>

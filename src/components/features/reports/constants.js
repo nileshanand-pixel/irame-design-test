@@ -34,7 +34,7 @@ export const TABS = {
 		fragment: 'shared-reports',
 		space: 'shared',
 		key: 'shared-reports',
-		isVisible: false,
+		isVisible: true,
 	},
 };
 export const TABS_ARRAY = Object.values(TABS);
@@ -64,6 +64,12 @@ export const DESC = ORDERS.DESC;
 export const UPDATED_AT = ORDERS.UPDATED_AT;
 export const CREATED_AT = ORDERS.CREATED_AT;
 
+export const CASE_GENERATION_STATUS = {
+	GENERATED: 'GENERATED',
+	GENERATING: 'GENERATING',
+	FAILED: 'FAILED',
+	NOT_GENERATED: 'NOT_GENERATED',
+};
 export default {
 	VIEWS,
 	TABS,

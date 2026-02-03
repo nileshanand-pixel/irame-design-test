@@ -15,7 +15,7 @@ import { logError } from '@/lib/logger';
 import { queryClient } from '@/lib/react-query';
 
 const REFRESH_OPTIONS = [
-	// { label: 'Off', value: 'off' },
+	{ label: 'Off', value: 'off' },
 	{ label: 'Daily', value: '1440' },
 	{ label: 'Weekly', value: '10080' },
 	{ label: 'Biweekly', value: '20160' },
@@ -96,7 +96,7 @@ const AutoRefreshDropdown = ({ dashboardMetadata, dashboardId }) => {
 		} else {
 			setAutoRefresh('off');
 		}
-	}, [dashboardMetadata]);
+	}, [dashboardMetadata, refreshOptions]);
 
 	const handleChange = (value) => {
 		// Convert minutes to seconds (0 if 'off')
@@ -117,7 +117,7 @@ const AutoRefreshDropdown = ({ dashboardMetadata, dashboardId }) => {
 		>
 			<SelectTrigger
 				className={cn(
-					'px-3 py-[0.375rem] rounded-lg bg-white border border-[#26064A1A] shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]',
+					'px-1 py-[0.375rem] rounded-lg bg-white border border-[#26064A1A] shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]',
 					'hover:bg-white focus:ring-0 focus:ring-offset-0',
 					'[&>svg]:text-transparent flex justify-center w-[16.25rem]',
 				)}

@@ -820,3 +820,7 @@
 .mentions-input--locked .mentions-input__input {
 	cursor: not-allowed;
 }
+
+.grecaptcha-badge {
+	visibility: hidden;
+  }
