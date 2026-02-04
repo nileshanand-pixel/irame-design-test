@@ -21,6 +21,7 @@ import { useSelector } from 'react-redux';
 import { cn } from '@/lib/utils';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 import { Activity, Code, FileSearch } from 'lucide-react';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 
 const Workspace = ({
 	handleTabClick,
