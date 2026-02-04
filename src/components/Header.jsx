@@ -561,7 +561,7 @@ const Header = () => {
 
 			<div className="flex gap-6 items-center">
 				{/* <ThemeToggle /> */}
-				{/* {isSessionPage && isValidSession && (
+				{isSessionPage && isValidSession && (
 					<>
 						{isSessionDataLoading ? (
 							<div className="flex items-center gap-3">
@@ -582,7 +582,7 @@ const Header = () => {
 							</div>
 						)}
 					</>
-				)} */}
+				)}
 				{isDownloadEnabled && datasourceDetails?.files?.length > 0 && (
 					<DownloadFilesDropdown
 						files={datasourceDetails.files}

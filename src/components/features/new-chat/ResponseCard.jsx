@@ -50,6 +50,7 @@ import {
 } from '@/api/feedback/feedback.service';
 import { cn } from '@/lib/utils';
 import { getURLSearchParams } from '@/utils/url';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 
 const OptionsClarification = ({ question, onConfirm }) => {
 	const [customValue, setCustomValue] = useState('');
@@ -104,6 +105,7 @@ export function AddToDropdown({
 	handleAddQueryToReport,
 	handleAddToDashboard,
 	handleAddToWorkflow,
+	sessionQueriesData,
 }) {
 	const [open, setOpen] = useState(false);
 	const isWorkflowQuery =
@@ -133,16 +135,18 @@ export function AddToDropdown({
 				</DropdownMenuLabel>
 				<DropdownMenuSeparator className="m-0" />
 
-				{showGraph && (
-					<AddToDropdownItem
-						icon={LayoutDashboard}
-						label="Dashboard"
-						onClick={() => {
-							handleAddToDashboard();
-							setOpen(false);
-						}}
-					/>
-				)}
+				{showGraph &&
+					sessionQueriesData?.datasource_details?.datasource_type !==
+						DATASOURCE_TYPES.SQL_GENERATED && (
+						<AddToDropdownItem
+							icon={LayoutDashboard}
+							label="Dashboard"
+							onClick={() => {
+								handleAddToDashboard();
+								setOpen(false);
+							}}
+						/>
+					)}
 
 				{safeHTML && answerResp?.status === 'done' && (
 					<AddToDropdownItem
@@ -155,16 +159,18 @@ export function AddToDropdown({
 					/>
 				)}
 
-				{!isWorkflowQuery && (
-					<AddToDropdownItem
-						icon={Plus}
-						label="Workflows"
-						onClick={() => {
-							handleAddToWorkflow();
-							setOpen(false);
-						}}
-					/>
-				)}
+				{!isWorkflowQuery &&
+					sessionQueriesData?.datasource_details?.datasource_type !==
+						DATASOURCE_TYPES.SQL_GENERATED && (
+						<AddToDropdownItem
+							icon={Plus}
+							label="Workflows"
+							onClick={() => {
+								handleAddToWorkflow();
+								setOpen(false);
+							}}
+						/>
+					)}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
@@ -193,6 +199,7 @@ const ResponseCard = ({
 	isLastQuery,
 	updatedAt,
 	currentSessionData,
+	sessionQueriesData,
 }) => {
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
@@ -621,6 +628,7 @@ const ResponseCard = ({
 										handleAddToWorkflow={() =>
 											setWorkflowModal(true)
 										}
+										sessionQueriesData={sessionQueriesData}
 									/>
 									{showWorkspaceToggle && (
 										<Button

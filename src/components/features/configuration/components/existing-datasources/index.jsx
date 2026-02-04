@@ -32,17 +32,23 @@ import { useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useSearchParams } from 'react-router-dom';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 
 const TABS = [
 	{
 		label: 'Uploaded',
 		description: 'These are the dataset uploaded by you for querying.',
-		type: 'user_generated',
+		type: DATASOURCE_TYPES.USER_GENERATED,
 	},
 	{
 		label: 'System Generated',
 		description: 'These are the dataset uploaded by you for Workflows.',
-		type: 'system_generated',
+		type: DATASOURCE_TYPES.SYSTEM_GENERATED,
+	},
+	{
+		label: 'Live',
+		description: 'These are the dataset generated for your SQL queries.',
+		type: DATASOURCE_TYPES.SQL_GENERATED,
 	},
 ];
 
@@ -284,6 +290,10 @@ export default function ExistingDataSources({ showForm }) {
 															2,
 														);
 
+											const isSqlGenerated =
+												source?.datasource_type ===
+												DATASOURCE_TYPES.SQL_GENERATED;
+
 											return (
 												<div
 													className={cn(
@@ -364,48 +374,59 @@ export default function ExistingDataSources({ showForm }) {
 														</div>
 													</p>
 
-													{!isFailed && !isProcessing && (
-														<div className="flex gap-1 items-center shrink-0">
-															<DropdownMenu>
-																<DropdownMenuTrigger>
-																	<DotsThreeVertical
-																		className="size-7 hover:bg-purple-4 rounded-md p-1"
-																		weight="bold"
-																	/>
-																</DropdownMenuTrigger>
-																<DropdownMenuContent align="start">
-																	<DropdownMenuItem
-																		className="text-primary80 font-medium hover:!bg-purple-4"
-																		onClick={(
-																			e,
-																		) => {
-																			e.stopPropagation();
-																			navigate(
-																				`datasource?id=${source.datasource_id}`,
-																			);
-																		}}
-																	>
-																		<i className="bi-pencil me-2 text-primary80 font-medium"></i>
-																		Edit
-																	</DropdownMenuItem>
-																	<DropdownMenuItem
-																		className="text-primary80 font-medium hover:!bg-purple-4"
-																		onClick={(
-																			e,
-																		) =>
-																			handleDeleteDataSource(
-																				e,
-																				source,
-																			)
-																		}
-																	>
-																		<i className="bi-trash me-2 text-primary80 font-medium"></i>
-																		Delete
-																	</DropdownMenuItem>
-																</DropdownMenuContent>
-															</DropdownMenu>
+													{isSqlGenerated && (
+														<div className="flex items-center shrink-0">
+															<span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-semibold rounded-full">
+																<span className="size-2 bg-green-600 rounded-full animate-pulse"></span>
+																Live
+															</span>
 														</div>
 													)}
+
+													{!isFailed &&
+														!isProcessing &&
+														!isSqlGenerated && (
+															<div className="flex gap-1 items-center shrink-0">
+																<DropdownMenu>
+																	<DropdownMenuTrigger>
+																		<DotsThreeVertical
+																			className="size-7 hover:bg-purple-4 rounded-md p-1"
+																			weight="bold"
+																		/>
+																	</DropdownMenuTrigger>
+																	<DropdownMenuContent align="start">
+																		<DropdownMenuItem
+																			className="text-primary80 font-medium hover:!bg-purple-4"
+																			onClick={(
+																				e,
+																			) => {
+																				e.stopPropagation();
+																				navigate(
+																					`datasource?id=${source.datasource_id}`,
+																				);
+																			}}
+																		>
+																			<i className="bi-pencil me-2 text-primary80 font-medium"></i>
+																			Edit
+																		</DropdownMenuItem>
+																		<DropdownMenuItem
+																			className="text-primary80 font-medium hover:!bg-purple-4"
+																			onClick={(
+																				e,
+																			) =>
+																				handleDeleteDataSource(
+																					e,
+																					source,
+																				)
+																			}
+																		>
+																			<i className="bi-trash me-2 text-primary80 font-medium"></i>
+																			Delete
+																		</DropdownMenuItem>
+																	</DropdownMenuContent>
+																</DropdownMenu>
+															</div>
+														)}
 												</div>
 											);
 										})}
