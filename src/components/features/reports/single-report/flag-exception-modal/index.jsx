@@ -387,9 +387,10 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 
 								{/* Pagination and Actions */}
 								<div className="flex items-center justify-between">
-									<div className="flex items-center gap-3">
+									<div className="flex items-center gap-3 min-w-0 flex-1">
 										<div
 											className={cn(
+												'flex-shrink-0',
 												!isOwner && 'cursor-not-allowed',
 											)}
 										>
@@ -417,29 +418,34 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 
 										{/* Data View Tabs - Only show if sample data exists */}
 										{hasSampleData && (
-											<Tabs
-												value={selectedSampleId}
-												onValueChange={setSelectedSampleId}
-												className="w-auto"
-											>
-												<TabsList className="h-9 bg-transparent p-1">
-													{viewTabs.map((tab) => (
-														<TabsTrigger
-															key={tab.value}
-															value={tab.value}
-															className="text-sm px-4 data-[state=active]:bg-[#6A12CD0A] data-[state=active]:text-[#26064ACC] data-[state=active]:shadow-sm truncate"
-														>
-															{tab.label.length > 15
-																? `${tab.label.slice(0, 15)}...`
-																: tab.label}
-														</TabsTrigger>
-													))}
-												</TabsList>
-											</Tabs>
+											<div className="min-w-0 flex-1 overflow-hidden">
+												<Tabs
+													value={selectedSampleId}
+													onValueChange={
+														setSelectedSampleId
+													}
+													className="max-w-2xl"
+												>
+													<TabsList className="h-9 bg-transparent p-1 overflow-x-auto flex-nowrap w-full justify-start [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
+														{viewTabs.map((tab) => (
+															<TabsTrigger
+																key={tab.value}
+																value={tab.value}
+																className="text-sm px-4 data-[state=active]:bg-[#6A12CD0A] data-[state=active]:text-[#26064ACC] data-[state=active]:shadow-sm whitespace-nowrap flex-shrink-0"
+															>
+																{tab.label.length >
+																15
+																	? `${tab.label.slice(0, 15)}...`
+																	: tab.label}
+															</TabsTrigger>
+														))}
+													</TabsList>
+												</Tabs>
+											</div>
 										)}
 									</div>
 
-									<div className="flex items-center gap-4">
+									<div className="flex items-center gap-4 flex-shrink-0 ml-10">
 										<div className="flex items-center space-x-2 text-sm font-normal text-primary80">
 											<p className="whitespace-nowrap">
 												Rows per page :

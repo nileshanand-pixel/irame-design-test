@@ -310,7 +310,7 @@ export default function CaseManagementTable({
 											left:
 												column.key ===
 												PRE_DEFINED_COLUMN_KEYS.CASE_ID
-													? '5rem'
+													? '4rem'
 													: 'auto',
 											zIndex:
 												column.key ===
@@ -390,7 +390,7 @@ export default function CaseManagementTable({
 														left:
 															columnConfig.key ===
 															PRE_DEFINED_COLUMN_KEYS.CASE_ID
-																? '5rem'
+																? '4rem'
 																: 'auto',
 														zIndex:
 															columnConfig.key ===

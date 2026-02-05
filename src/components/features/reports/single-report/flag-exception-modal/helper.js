@@ -30,7 +30,7 @@ export const createColumnsConfig = (casesData, cellComponents) => {
 		key: PRE_DEFINED_COLUMN_KEYS.CASE_ID,
 		label: 'Case ID',
 		type: 'text',
-		width: '5rem',
+		width: '4rem',
 		Component: TextCell,
 	});
 
