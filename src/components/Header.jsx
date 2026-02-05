@@ -8,7 +8,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { getInitials, cn } from '@/lib/utils';
+import { getInitials, cn, toTitleCase } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -18,6 +18,7 @@ import { logError } from '@/lib/logger';
 import { authUserDetails } from './features/login/service/auth.service';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { ENABLE_RBAC } from '@/config';
 import {
 	Dialog,
 	DialogContent,
@@ -659,6 +660,22 @@ const Header = () => {
 									<span className="text-xs text-[#26064ACC] truncate">
 										{value?.email}
 									</span>
+									{ENABLE_RBAC && value?.role_name && (
+										<span className="text-[10px] text-[#26064ACC]/80 truncate mt-0.5">
+											<span className="font-semibold">
+												Role:
+											</span>{' '}
+											{toTitleCase(value?.role_name)}
+										</span>
+									)}
+									{ENABLE_RBAC && value?.tenant_name && (
+										<span className="text-[10px] text-[#26064ACC]/80 truncate mt-0.5">
+											<span className="font-semibold">
+												Organisation:
+											</span>{' '}
+											{toTitleCase(value?.tenant_name)}
+										</span>
+									)}
 								</div>
 							</div>
 						</div>
