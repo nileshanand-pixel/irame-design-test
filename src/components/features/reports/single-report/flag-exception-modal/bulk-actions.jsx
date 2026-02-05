@@ -30,6 +30,7 @@ import { fileTypeFromBlob } from 'file-type';
 const BulkActions = ({
 	isBulkActionsVisible,
 	selectedCaseIds,
+	onCancel,
 	reportId,
 	cardId,
 	isSample = false,
@@ -252,6 +253,7 @@ const BulkActions = ({
 
 	const handleBulkActionsCancel = () => {
 		resetBulkActions();
+		onCancel?.();
 	};
 
 	return (

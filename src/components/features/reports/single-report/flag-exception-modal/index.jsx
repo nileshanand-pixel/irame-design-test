@@ -12,6 +12,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
 	getReportCardCases,
@@ -29,7 +36,7 @@ import { useReportPermission } from '@/contexts/ReportPermissionContext';
 import { CASE_GENERATION_STATUS } from '../../constants';
 import { queryClient } from '@/lib/react-query';
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 20;
 
 const KPI_KEY_AND_FILTER_MAP = {
 	[KPI_KEYS.TOTAL_EXCEPTIONS_FLAGGED_BY_IRA]: null,
@@ -57,6 +64,7 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 	const [selectedCaseIds, setSelectedCaseIds] = useState([]);
 
 	const [currentPage, setCurrentPage] = useState(1);
+	const [rowsPerPage, setRowsPerPage] = useState(PAGE_SIZE);
 	const [generateSampleModalOpen, setGenerateSampleModalOpen] = useState(false);
 	const [exportPopoverOpen, setExportPopoverOpen] = useState(false);
 
@@ -111,7 +119,7 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 			cardId,
 			apiFilters,
 			currentPage,
-			PAGE_SIZE,
+			rowsPerPage,
 			selectedSampleId ?? 'all',
 		],
 		queryFn: () =>
@@ -121,7 +129,7 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 				filters: apiFilters,
 				pagination: {
 					page: currentPage,
-					page_size: PAGE_SIZE,
+					page_size: rowsPerPage,
 				},
 				sampleId: selectedSampleId,
 			}),
@@ -219,6 +227,11 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 	};
 
 	const isBulkActionsVisible = selectedCaseIds.length !== 0;
+	const rowsPerPageOptions = useMemo(() => {
+		const base = [10, 20, 30, 40, 50];
+		if (!base.includes(rowsPerPage)) base.push(rowsPerPage);
+		return base.sort((a, b) => a - b);
+	}, [rowsPerPage]);
 
 	const hasSampleData = samplesData && samplesData?.samples?.length > 0;
 
@@ -427,6 +440,41 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 									</div>
 
 									<div className="flex items-center gap-4">
+										<div className="flex items-center space-x-2 text-sm font-normal text-primary80">
+											<p className="whitespace-nowrap">
+												Rows per page :
+											</p>
+											<Select
+												value={`${rowsPerPage}`}
+												onValueChange={(value) => {
+													setCurrentPage(1);
+													setSelectedCaseIds([]);
+													setRowsPerPage(Number(value));
+												}}
+											>
+												<SelectTrigger className="h-9 w-16 text-xs font-normal text-primary100 [&>svg]:text-primary100 [&>svg]:opacity-100 px-2">
+													<SelectValue
+														placeholder={rowsPerPage}
+													/>
+												</SelectTrigger>
+												<SelectContent
+													side="top"
+													className="text-xs font-normal textprimary80 py-2"
+												>
+													{rowsPerPageOptions.map(
+														(size) => (
+															<SelectItem
+																key={size}
+																value={`${size}`}
+																className="text-xs font-normal textprimary80 hover:bg-purple-2 cursor-pointer data-[state=checked]:bg-purple-4 data-[state=checked]:font-medium"
+															>
+																<span>{size}</span>
+															</SelectItem>
+														),
+													)}
+												</SelectContent>
+											</Select>
+										</div>
 										<Popover
 											open={exportPopoverOpen}
 											onOpenChange={setExportPopoverOpen}
@@ -566,6 +614,7 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 							<BulkActions
 								isBulkActionsVisible={isBulkActionsVisible}
 								selectedCaseIds={selectedCaseIds}
+								onCancel={() => setSelectedCaseIds([])}
 								reportId={reportId}
 								cardId={cardId}
 								isSample={selectedCaseIds !== null}
