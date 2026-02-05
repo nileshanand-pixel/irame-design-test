@@ -45,7 +45,7 @@ import {
 } from './features/new-chat/service/new-chat.service';
 import { useNavigate } from 'react-router-dom';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
-import { getDataSourcesV2 } from './features/configuration/service/configuration.service';
+import { useDataSources } from '@/hooks/useDataSources';
 import { ShareChatModal } from './ShareChatModal';
 import bellIcon from '@/assets/icons/bell.svg';
 import NotificationDrawer from './features/notification/components/notification-drawer';
@@ -55,19 +55,6 @@ import questionIcon from '@/assets/icons/question.svg';
 import chevronRightIcon from '@/assets/icons/chevron-right.svg';
 import logoutIcon from '@/assets/icons/logout.svg';
 import redirect from '@/assets/icons/redirect.svg';
-
-export function useDataSources() {
-	const { data, isLoading, error } = useQuery({
-		queryKey: ['data-sources'],
-		queryFn: async () => {
-			const response = await getDataSourcesV2();
-			return Array.isArray(response) ? response : [];
-		},
-		staleTime: 1000 * 60,
-	});
-
-	return { dataSources: data || [], isLoading, error };
-}
 
 export const DataSourceSwitcher = () => {
 	const { dataSources, isLoading } = useDataSources();

@@ -17,9 +17,8 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import InputText from './elements/InputText';
-import { getDataSourcesV2 } from './features/configuration/service/configuration.service';
 import { resetChatStore, updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
-import { useQuery } from '@tanstack/react-query';
+import { useDataSources } from '@/hooks/useDataSources';
 import useInfiniteScroll from '@/hooks/useInfiniteScroll';
 import Spinner from './elements/loading/Spinner';
 import dayjs from 'dayjs';
@@ -47,6 +46,7 @@ import { Check, Share2 } from 'lucide-react';
 import homeIcon from '@/assets/icons/home.svg';
 import sidenavIcon from '@/assets/icons/sidenav.svg';
 import chevronDownIcon from '@/assets/icons/chevron-down.svg';
+import { useQuery } from '@tanstack/react-query';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -187,16 +187,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		},
 	];
 
-	const fetchDataSources = async () => {
-		const data = await getDataSourcesV2();
-		dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
-		return Array.isArray(data) ? data : [];
-	};
-
-	const { data: dataSources } = useQuery({
-		queryKey: ['data-sources'],
-		queryFn: fetchDataSources,
-	});
+	// Use custom hook that handles team-based caching properly
+	const { dataSources } = useDataSources();
 
 	const getChatHistoryDataSourceName = (dataSourceId) => {
 		const dataSource = dataSources?.find(
