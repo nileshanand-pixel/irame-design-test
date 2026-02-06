@@ -198,8 +198,9 @@ const BulkActions = ({
 			// Invalidate and refetch cases data
 			queryClient.invalidateQueries(['report-card-cases', reportId, cardId]);
 			const appliedCount = operations?.[0]?.case_ids?.length ?? 0;
+			const rowLabel = appliedCount === 1 ? 'row' : 'rows';
 			toast.success(
-				`Applied bulk actions on ${appliedCount} rows successfully.`,
+				`Applied bulk action on ${appliedCount} ${rowLabel} successfully.`,
 			);
 			resetBulkActions();
 			// Clear selection so the bulk actions panel closes.
