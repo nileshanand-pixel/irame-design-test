@@ -110,7 +110,8 @@ export function AddToDropdown({
 	const [open, setOpen] = useState(false);
 	const isWorkflowQuery =
 		answerResp?.type === QUERY_TYPES.WORKFLOW ||
-		answerResp?.type === QUERY_TYPES.SQL_WORKFLOW;
+		answerResp?.type === QUERY_TYPES.SQL_WORKFLOW ||
+		sessionQueriesData?.session_metadata?.workflow_run_id;
 
 	return (
 		<DropdownMenu open={open} onOpenChange={setOpen}>
