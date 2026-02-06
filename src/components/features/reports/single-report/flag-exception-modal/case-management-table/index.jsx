@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
 	Select,
@@ -35,7 +35,10 @@ import { useReportPermission } from '@/contexts/ReportPermissionContext';
 import {
 	CASE_SELECTION_SCOPES,
 	DEFAULT_CASE_SELECTION_SCOPE_OPTIONS,
-} from './selection-scope.config';
+	addIndexRangeToArraySelection,
+	toggleIdInArraySelection,
+	useShiftKeyPressedRef,
+} from './row-selection-helpers';
 
 export default function CaseManagementTable({
 	isFetchingCases,
@@ -53,6 +56,10 @@ export default function CaseManagementTable({
 	const queryClient = useQueryClient();
 	const { navigate, location } = useRouter();
 	const { isOwner } = useReportPermission();
+	// Tracks Shift globally
+	const shiftKeyPressedRef = useShiftKeyPressedRef();
+	// Anchor index for Shift+Click range selection (last interacted row on the current page).
+	const lastSelectedIndexRef = useRef(null);
 
 	const handleCloseResolutionTrail = () => {
 		setResolutionTrailModalOpen(false);
@@ -67,20 +74,6 @@ export default function CaseManagementTable({
 		params.set('case_id', tableRowData.case_id);
 		navigate(`${location.pathname}?${params.toString()}`, { replace: true });
 	};
-
-	const handleSelectCase = useCallback(
-		(caseId) => {
-			if (!isOwner) return;
-
-			setSelectedCaseIds((prev) => {
-				if (prev.includes(caseId)) {
-					return prev.filter((id) => id !== caseId);
-				}
-				return [...prev, caseId];
-			});
-		},
-		[setSelectedCaseIds],
-	);
 
 	const columnsConfig = useMemo(() => {
 		return createColumnsConfig(casesData, {
@@ -107,6 +100,48 @@ export default function CaseManagementTable({
 	const currentPageCaseIds = useMemo(() => {
 		return tableData.map((caseData) => caseData.case_id);
 	}, [tableData]);
+
+	const handleSelectCase = useCallback(
+		(caseId, caseIndex) => {
+			if (!isOwner) return;
+
+			const isShiftPressed = shiftKeyPressedRef.current;
+			const anchorIndex = lastSelectedIndexRef.current;
+
+			setSelectedCaseIds((prev) => {
+				// Shift+Click selects the full range from anchor -> clicked row. Existing selections outside the range are preserved.
+				if (
+					isShiftPressed &&
+					anchorIndex !== null &&
+					Number.isInteger(anchorIndex) &&
+					Number.isInteger(caseIndex)
+				) {
+					return addIndexRangeToArraySelection(
+						prev,
+						currentPageCaseIds,
+						anchorIndex,
+						caseIndex,
+					);
+				}
+
+				// Normal click toggles the clicked row only.
+				return toggleIdInArraySelection(prev, caseId);
+			});
+
+			lastSelectedIndexRef.current = caseIndex;
+		},
+		[currentPageCaseIds, isOwner, setSelectedCaseIds],
+	);
+
+	// Reset anchor when the visible rows change (pagination/filter/sort).
+	useEffect(() => {
+		lastSelectedIndexRef.current = null;
+	}, [currentPageCaseIds]);
+
+	// Reset anchor when selection is cleared via bulk deselect.
+	useEffect(() => {
+		if (selectedCaseIds.length === 0) lastSelectedIndexRef.current = null;
+	}, [selectedCaseIds.length]);
 
 	const currentPageCaseIdSet = useMemo(() => {
 		return new Set(currentPageCaseIds);
@@ -167,6 +202,7 @@ export default function CaseManagementTable({
 	const handleSelectAll = useCallback(
 		(checked) => {
 			if (selectionScope !== CASE_SELECTION_SCOPES.PAGE) return;
+			lastSelectedIndexRef.current = null;
 
 			if (checked === true || checked === 'indeterminate') {
 				selectCurrentPageCases();
@@ -341,7 +377,7 @@ export default function CaseManagementTable({
 						</thead>
 
 						<tbody className="bg-white">
-							{tableData.map((caseData) => {
+							{tableData.map((caseData, caseIndex) => {
 								const isSelected = selectedCaseIdSet.has(
 									caseData?.case_id,
 								);
@@ -361,6 +397,7 @@ export default function CaseManagementTable({
 												onCheckedChange={() =>
 													handleSelectCase(
 														caseData?.case_id,
+														caseIndex,
 													)
 												}
 												disabled={!isOwner}
