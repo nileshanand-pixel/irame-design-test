@@ -194,11 +194,16 @@ const BulkActions = ({
 				operations,
 				isSample: isSample,
 			}),
-		onSuccess: () => {
+		onSuccess: (_data, operations) => {
 			// Invalidate and refetch cases data
 			queryClient.invalidateQueries(['report-card-cases', reportId, cardId]);
-			toast.success('Bulk actions applied successfully');
+			const appliedCount = operations?.[0]?.case_ids?.length ?? 0;
+			toast.success(
+				`Applied bulk actions on ${appliedCount} rows successfully.`,
+			);
 			resetBulkActions();
+			// Clear selection so the bulk actions panel closes.
+			onCancel?.();
 		},
 		onError: (error) => {
 			console.error('Error applying bulk actions:', error);

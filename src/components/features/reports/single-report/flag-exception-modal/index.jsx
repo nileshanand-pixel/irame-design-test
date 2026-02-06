@@ -266,10 +266,10 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 						</div>
 
 						<div>
-							<div className="text-[#26064ACC] font-semibold">
+							<div className="text-[#26064ACC] font-semibold text-xl">
 								Flag as Exceptions
 							</div>
-							<div className="text-[#26064A99] text-xs">
+							<div className="text-[#26064A99] text-sm">
 								Review and manage exceptions for this query. Update
 								status and add comments to track progress.
 							</div>
