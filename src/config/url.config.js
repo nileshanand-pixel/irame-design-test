@@ -4,7 +4,7 @@ const servicePathMap = {
 	DATA_MANAGER_V1: '/datamanager/app/v1',
 	DATA_MANAGER_V2: '/datamanager/app/v2',
 	DATA_MANAGER_V3: '/datamanager/app/v3',
-	GATEKEEPER_V1: '/v1',
+	GATEKEEPER_V1: 'gatekeeper/v1',
 	OAUTH: '/oauth',
 };
 
