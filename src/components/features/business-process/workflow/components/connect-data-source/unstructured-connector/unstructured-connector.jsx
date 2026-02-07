@@ -656,6 +656,8 @@ function UploadManager({
 	setRequiredFilesError,
 	setRequiredFilesStatus,
 	onSelectedFileStatusChange,
+	isSizeLimitEnabled,
+	maxTotalSizeMB,
 }) {
 	const [datasourceId, setDatasourceId] = useState('');
 	const [files, setFiles] = useState([]);
@@ -1226,7 +1228,7 @@ function UploadManager({
 			return;
 		}
 
-		const MAX_TOTAL_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
+		const MAX_TOTAL_SIZE_BYTES = maxTotalSizeMB * 1024 * 1024; // dynamic MB
 		let totalSize = Array.from(pdfFiles).reduce(
 			(acc, file) => acc + file.size,
 			0,
@@ -1234,9 +1236,9 @@ function UploadManager({
 
 		totalSize += currentFiles?.reduce((acc, file) => acc + (file.size ?? 0), 0);
 
-		if (totalSize > MAX_TOTAL_SIZE_BYTES) {
+		if (isSizeLimitEnabled && totalSize > MAX_TOTAL_SIZE_BYTES) {
 			setLimitReachedDescription(
-				`The total size of your selected files exceeds the 100MB limit. Please adjust your selection and try again.`,
+				`The total size of your selected files exceeds the ${maxTotalSizeMB}MB limit. Please adjust your selection and try again.`,
 			);
 			setIsFileLimitReachedModalVisible(true);
 			return;
@@ -1273,7 +1275,7 @@ function UploadManager({
 			{currentFiles.length === 0 ? (
 				<DropZone
 					messages={[
-						`Maximum ${selectedRequiredFile?.limit} files, total size up to 100 MB`,
+						`Maximum ${selectedRequiredFile?.limit} files${isSizeLimitEnabled ? `, total size up to ${maxTotalSizeMB} MB` : ''}`,
 						`Supported file types: .pdf only`,
 					]}
 					onFileSelect={handleFileSelect}
@@ -1296,6 +1298,8 @@ function MainContent({
 	setRequiredFilesError,
 	setRequiredFilesStatus,
 	onSelectedFileStatusChange,
+	isSizeLimitEnabled,
+	maxTotalSizeMB,
 }) {
 	return (
 		<div className="flex-1 p-4 bg-purple-2 flex flex-col gap-4 overflow-auto">
@@ -1325,6 +1329,8 @@ function MainContent({
 				setRequiredFilesError={setRequiredFilesError}
 				setRequiredFilesStatus={setRequiredFilesStatus}
 				onSelectedFileStatusChange={onSelectedFileStatusChange}
+				isSizeLimitEnabled={isSizeLimitEnabled}
+				maxTotalSizeMB={maxTotalSizeMB}
 			/>
 		</div>
 	);
@@ -1342,6 +1348,11 @@ export default function UnstructuredDatasourceConnector({ workflow }) {
 	);
 	const [isInitiatingWorkflowChecks, setIsInitiatingWorkflowChecks] =
 		useState(false);
+
+	const isSizeLimitEnabled =
+		import.meta.env.VITE_PDF_SIZE_LIMIT_ENABLED !== 'false';
+	const maxTotalSizeMB =
+		parseInt(import.meta.env.VITE_PDF_MAX_TOTAL_SIZE_MB) || 100;
 
 	const requiredFiles = workflow?.data?.required_files?.pdf_files;
 
@@ -1577,6 +1588,8 @@ export default function UnstructuredDatasourceConnector({ workflow }) {
 						setRequiredFilesError={setRequiredFilesError}
 						setRequiredFilesStatus={setRequiredFilesStatus}
 						onSelectedFileStatusChange={handleSelectedFileStatusChange}
+						isSizeLimitEnabled={isSizeLimitEnabled}
+						maxTotalSizeMB={maxTotalSizeMB}
 					/>
 				</>
 			)}
