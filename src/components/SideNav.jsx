@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { cn } from '@/lib/utils';
@@ -70,13 +70,16 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const dispatch = useDispatch();
 
 	// Fetch teams from Gatekeeper
+	const teamsQueryKey = useMemo(() => ['user-teams', user_id], [user_id]);
 	const { data: teamsData, isLoading: isTeamsLoading } = useQuery({
-		queryKey: ['user-teams', user_id],
+		queryKey: teamsQueryKey,
 		queryFn: getUserTeams,
 		enabled: ENABLE_RBAC && !!user_id,
+		staleTime: 60000, // 1 minute
 	});
 
-	const teams = teamsData?.data || [];
+	// Use useMemo to avoid new array reference on every render
+	const teams = useMemo(() => teamsData?.data || [], [teamsData]);
 
 	// Handle team selection and persistence
 	useEffect(() => {
@@ -95,16 +98,23 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	}, [user_id, teams, selectedTeamId, dispatch]);
 
 	// Get selected team name
-	const selectedTeamData = teams.find(
-		(team) => (team.externalId || team.id) === selectedTeamId,
+	const selectedTeamData = useMemo(
+		() => teams.find((team) => (team.externalId || team.id) === selectedTeamId),
+		[teams, selectedTeamId],
 	);
+
 	const selectedTeamName = selectedTeamData?.name || 'Select Team';
 
 	// Filter teams based on search query
-	const filteredTeams = teams.filter((team) =>
-		team?.name?.toLowerCase().includes(teamSearchQuery.toLowerCase()),
+	const filteredTeams = useMemo(
+		() =>
+			teams.filter((team) =>
+				team?.name?.toLowerCase().includes(teamSearchQuery.toLowerCase()),
+			),
+		[teams, teamSearchQuery],
 	);
 
+	const chatHistoryQueryKey = useMemo(() => ['chat-history'], []);
 	const {
 		data: sessionsData,
 		isLoading,
@@ -113,11 +123,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		fetchNextPage,
 		Sentinel,
 	} = useInfiniteScroll({
-		queryKey: ['chat-history'],
+		queryKey: chatHistoryQueryKey,
 		queryFn: getUserSession,
 		paginationType: 'cursor',
 		options: {
-			limit: 20, // Back to original limit
+			limit: 20,
 			refetchInterval: 20000,
 		},
 	});

@@ -12,9 +12,10 @@ const servicePathMap = {
 const safeJoin = (base, path) => {
 	if (!base) return path;
 	const cleanedBase = base.replace(/\/+$/g, '');
+	const cleanedPath = path.startsWith('/') ? path : `/${path}`;
 	// If base already ends with the same path segment, don't append it again
 	if (path && cleanedBase.endsWith(path)) return cleanedBase;
-	return `${cleanedBase}${path}`;
+	return `${cleanedBase}${cleanedPath}`;
 };
 
 export const serviceUrlMap = {
