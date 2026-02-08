@@ -51,6 +51,11 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { getFileSize } from '@/utils/file';
+import {
+	CONNECTOR_FILE_TYPES,
+	getAcceptString,
+	validateFileType,
+} from '@/config/file-upload.config';
 
 function Sidebar({
 	requiredFiles,
@@ -92,7 +97,7 @@ function Sidebar({
 
 				<div className="flex flex-col gap-4">
 					{/* {[...requiredFiles, ...requiredFiles, ...requiredFiles, ...requiredFiles, ...requiredFiles, ...requiredFiles ,...requiredFiles, ...requiredFiles, ...requiredFiles].map((requiredFile) => { */}
-					{requiredFiles.map((requiredFile) => {
+					{requiredFiles?.map((requiredFile) => {
 						const isActive =
 							selectedRequiredFile?.required_file_id ===
 							requiredFile?.required_file_id;
@@ -230,7 +235,7 @@ function DropZone({ messages, onFileSelect }) {
 
 			<input
 				type="file"
-				accept=".pdf"
+				accept={getAcceptString(CONNECTOR_FILE_TYPES.UNSTRUCTURED)}
 				multiple
 				className="hidden"
 				id="file-upload"
@@ -314,7 +319,9 @@ function FileItem({
 					FILE_STATUS.AI_PROCESSING,
 				].includes(fileObj.status) ? (
 					<div className="w-10 h-10 flex items-center justify-center rounded-md border border-gray-300">
-						<span className="text-xs font-bold text-primary">PDF</span>
+						<span className="text-xs font-bold text-primary uppercase">
+							{fileObj.name?.split('.').pop()?.toUpperCase() || 'FILE'}
+						</span>
 					</div>
 				) : (
 					<CustomCheckbox
@@ -326,7 +333,7 @@ function FileItem({
 				<div className="flex flex-1 gap-2 items-center">
 					<div className="flex flex-col flex-1">
 						<span className="text-sm font-medium text-primary100 truncate max-w-[12.5rem]">
-							{fileObj.name}
+							{fileObj.name || 'Unknown File'}
 						</span>
 						{fileObj.size ? (
 							<span className="text-xs text-primary100 font-normal">
@@ -559,7 +566,7 @@ function FileListing({
 				<input
 					ref={inputRef}
 					type="file"
-					accept=".pdf"
+					accept={getAcceptString(CONNECTOR_FILE_TYPES.UNSTRUCTURED)}
 					multiple
 					className="hidden"
 					id="file-upload"
@@ -1202,23 +1209,30 @@ function UploadManager({
 	};
 
 	const handleFileSelect = (userSelectedFiles) => {
-		if (userSelectedFiles.length === 0) {
+		if (!userSelectedFiles || userSelectedFiles.length === 0) {
 			return;
 		}
 
-		const pdfFiles = Array.from(userSelectedFiles).filter(
-			(file) => file.type === 'application/pdf',
+		const filteredFiles = Array.from(userSelectedFiles).filter(
+			(file) =>
+				validateFileType(file, CONNECTOR_FILE_TYPES.UNSTRUCTURED).valid,
 		);
-		if (pdfFiles.length !== userSelectedFiles.length) {
+		if (filteredFiles.length !== userSelectedFiles.length) {
 			toast.error(
-				'Please upload only PDF files. Other file types are not supported.',
+				`Please upload only supported files (${getAcceptString(
+					CONNECTOR_FILE_TYPES.UNSTRUCTURED,
+				)}). Other file types are not supported.`,
 			);
+		}
+
+		if (filteredFiles.length === 0) {
+			return;
 		}
 
 		// check file limit
 		const previouslyUploadedFilesCount = currentFiles?.length;
 		if (
-			previouslyUploadedFilesCount + pdfFiles?.length >
+			previouslyUploadedFilesCount + filteredFiles?.length >
 			selectedRequiredFile?.limit
 		) {
 			setLimitReachedDescription(
@@ -1229,7 +1243,7 @@ function UploadManager({
 		}
 
 		const MAX_TOTAL_SIZE_BYTES = maxTotalSizeMB * 1024 * 1024; // dynamic MB
-		let totalSize = Array.from(pdfFiles).reduce(
+		let totalSize = Array.from(filteredFiles).reduce(
 			(acc, file) => acc + file.size,
 			0,
 		);
@@ -1252,13 +1266,13 @@ function UploadManager({
 				{
 					onSuccess: (data) => {
 						setDatasourceId(data?.datasource_id);
-						uploadFilesOnS3(pdfFiles);
+						uploadFilesOnS3(filteredFiles);
 						setSearchParams({ datasource_id: data?.datasource_id });
 					},
 				},
 			);
 		} else {
-			uploadFilesOnS3(pdfFiles);
+			uploadFilesOnS3(filteredFiles);
 		}
 	};
 
@@ -1276,7 +1290,9 @@ function UploadManager({
 				<DropZone
 					messages={[
 						`Maximum ${selectedRequiredFile?.limit} files${isSizeLimitEnabled ? `, total size up to ${maxTotalSizeMB} MB` : ''}`,
-						`Supported file types: .pdf only`,
+						`Supported file types: ${getAcceptString(
+							CONNECTOR_FILE_TYPES.UNSTRUCTURED,
+						)}`,
 					]}
 					onFileSelect={handleFileSelect}
 				/>
@@ -1310,7 +1326,7 @@ function MainContent({
 						<div className="text-primary100 text-base font-medium flex items-center gap-2">
 							{selectedRequiredFile?.file_name}
 							<span className="text-xs font-normal bg-gray-100 text-gray-700 px-2 py-0.5 rounded-xl">
-								PDF
+								Unstructured
 							</span>
 							<span className="text-xs font-normal bg-gray-100 text-gray-700 px-2 py-0.5 rounded-xl">
 								Limit: {selectedRequiredFile?.limit} files
