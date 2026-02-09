@@ -3,29 +3,28 @@ import { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { welcomeTypography } from './config';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import upperFirst from 'lodash.upperfirst';
-import { getDataSourcesWithLimit } from '../configuration/service/configuration.service';
 import DividerWithText from '@/components/elements/DividerWithText';
 import { useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
+import { useDataSources } from '@/hooks/useDataSources';
 
 const UploadInput = ({ progress, setOpen, handleNextStep }) => {
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
 	useEffect(() => {}, [progress]);
 
-	const fetchDataSources = async () => {
-		const data = await getDataSourcesWithLimit(3);
-		return Array.isArray(data) ? data : [];
-	};
+	// Use unified hook and filter to get 3 most recent datasources
+	const { dataSources: allDataSources = [], isLoading: isFetchingData } =
+		useDataSources();
 
-	const { data: filteredList = [], isLoading: isFetchingData } = useQuery({
-		queryKey: ['data-sources', 3],
-		queryFn: fetchDataSources,
-	});
+	// Filter to get 3 most recent active datasources, sorted by created_at descending
+	const filteredList = (allDataSources || [])
+		.filter((ds) => ds.status === 'active')
+		.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+		.slice(0, 3);
 
 	const handleDataSourceClick = (data, clickedOn) => {
 		if (!data?.datasource_id) return;

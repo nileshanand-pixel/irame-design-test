@@ -1,22 +1,7 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { updateUtilProp } from '@/redux/reducer/utilReducer';
-import { useQuery } from '@tanstack/react-query';
-import { fetchDataSources } from '@/services/data-source.service';
-const useDataSourceName = (dataSourceId) => {
-	const dispatch = useDispatch();
-	const utilReducer = useSelector((state) => state.util);
+import { useDataSources } from '@/hooks/useDataSources';
 
-	const {
-		data: dataSources,
-		isLoading,
-		error,
-	} = useQuery({
-		queryKey: ['data-sources'],
-		queryFn: fetchDataSources,
-		onSuccess: (data) => {
-			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
-		},
-	});
+const useDataSourceName = (dataSourceId) => {
+	const { dataSources, isLoading, error } = useDataSources();
 
 	const dataSource = dataSources?.find(
 		(source) => source.datasource_id === dataSourceId,
@@ -24,3 +9,5 @@ const useDataSourceName = (dataSourceId) => {
 
 	return { dataSourceName: dataSource?.name, isLoading, error };
 };
+
+export default useDataSourceName;

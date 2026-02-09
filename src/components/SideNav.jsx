@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { cn } from '@/lib/utils';
@@ -17,20 +17,21 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import InputText from './elements/InputText';
-import { getDataSourcesV2 } from './features/configuration/service/configuration.service';
 import { resetChatStore, updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
-import { useQuery } from '@tanstack/react-query';
+import { useDataSources } from '@/hooks/useDataSources';
 import useInfiniteScroll from '@/hooks/useInfiniteScroll';
 import Spinner from './elements/loading/Spinner';
 import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import GradientSpinner from './elements/loading/GradientSpinner';
-import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
+import { updateAuthStoreProp, setSelectedTeam } from '@/redux/reducer/authReducer';
 import {
 	deleteRunningWorkflow,
 	getRecentWorkflowsRunsHomePage,
 } from './features/business-process/service/workflow.service';
+import { getUserTeams } from '@/api/gatekeeper/team.service';
+import { ENABLE_RBAC } from '@/config';
 import upperFirst from 'lodash.upperfirst';
 import { resetAllStores } from '@/redux/GlobalStore';
 import { Hint } from './Hint';
@@ -41,8 +42,11 @@ import { useSessionId } from '@/hooks/use-session-id';
 import { queryClient } from '@/lib/react-query';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
 import SessionSkeleton from './elements/SessionSkeleton';
-import { Share2 } from 'lucide-react';
+import { Check, Share2 } from 'lucide-react';
 import homeIcon from '@/assets/icons/home.svg';
+import sidenavIcon from '@/assets/icons/sidenav.svg';
+import chevronDownIcon from '@/assets/icons/chevron-down.svg';
+import { useQuery } from '@tanstack/react-query';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -54,12 +58,63 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const [expandedBusinessProcesses, setExpandedBusinessProcesses] = useState([]);
 	const sessionId = useSessionId();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
+	const [teamSearchQuery, setTeamSearchQuery] = useState('');
 
 	const { pathname, navigate } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
+	// auth slice is registered under `authStoreReducer` in GlobalStore
+	const { user_id, selectedTeamId } = useSelector(
+		(state) => state.authStoreReducer || {},
+	);
 	const dispatch = useDispatch();
 
+	// Fetch teams from Gatekeeper
+	const teamsQueryKey = useMemo(() => ['user-teams', user_id], [user_id]);
+	const { data: teamsData, isLoading: isTeamsLoading } = useQuery({
+		queryKey: teamsQueryKey,
+		queryFn: getUserTeams,
+		enabled: ENABLE_RBAC && !!user_id,
+		staleTime: 60000, // 1 minute
+	});
+
+	// Use useMemo to avoid new array reference on every render
+	const teams = useMemo(() => teamsData?.data || [], [teamsData]);
+
+	// Handle team selection and persistence
+	useEffect(() => {
+		if (ENABLE_RBAC && user_id && teams.length > 0 && !selectedTeamId) {
+			const savedTeamId = localStorage.getItem(`team_${user_id}`);
+			if (
+				savedTeamId &&
+				teams.some((t) => (t.externalId || t.id) === savedTeamId)
+			) {
+				dispatch(setSelectedTeam(savedTeamId));
+			} else {
+				const firstTeamId = teams[0].externalId || teams[0].id;
+				dispatch(setSelectedTeam(firstTeamId));
+			}
+		}
+	}, [user_id, teams, selectedTeamId, dispatch]);
+
+	// Get selected team name
+	const selectedTeamData = useMemo(
+		() => teams.find((team) => (team.externalId || team.id) === selectedTeamId),
+		[teams, selectedTeamId],
+	);
+
+	const selectedTeamName = selectedTeamData?.name || 'Select Team';
+
+	// Filter teams based on search query
+	const filteredTeams = useMemo(
+		() =>
+			teams.filter((team) =>
+				team?.name?.toLowerCase().includes(teamSearchQuery.toLowerCase()),
+			),
+		[teams, teamSearchQuery],
+	);
+
+	const chatHistoryQueryKey = useMemo(() => ['chat-history'], []);
 	const {
 		data: sessionsData,
 		isLoading,
@@ -68,27 +123,14 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		fetchNextPage,
 		Sentinel,
 	} = useInfiniteScroll({
-		queryKey: ['chat-history'],
+		queryKey: chatHistoryQueryKey,
 		queryFn: getUserSession,
 		paginationType: 'cursor',
 		options: {
-			limit: 20, // Back to original limit
+			limit: 20,
 			refetchInterval: 20000,
 		},
 	});
-
-	useEffect(() => {
-		if (sessionsData && sessionsData.length > 0 && sessionsData[0]?.user_id) {
-			dispatch(
-				updateAuthStoreProp([
-					{
-						key: 'user_id',
-						value: sessionsData[0].user_id,
-					},
-				]),
-			);
-		}
-	}, [sessionsData, dispatch]);
 
 	const { data: recentWorkflowRuns, isLoading: isBusinessLoading } = useQuery({
 		queryKey: ['get-business-processes-home-page'],
@@ -155,16 +197,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		},
 	];
 
-	const fetchDataSources = async () => {
-		const data = await getDataSourcesV2();
-		dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
-		return Array.isArray(data) ? data : [];
-	};
-
-	const { data: dataSources } = useQuery({
-		queryKey: ['data-sources'],
-		queryFn: fetchDataSources,
-	});
+	// Use custom hook that handles team-based caching properly
+	const { dataSources } = useDataSources();
 
 	const getChatHistoryDataSourceName = (dataSourceId) => {
 		const dataSource = dataSources?.find(
@@ -606,13 +640,136 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		>
 			<ConfirmationDialog />
 			{/* SideNav Expand Collapse | Hamburger */}
-			<div className="flex-none m-4">
-				<img
-					src="https://d2vkmtgu2mxkyq.cloudfront.net/hamburger_menu.svg"
-					alt="menu"
-					className="size-10 cursor-pointer hover:bg-purple-4 rounded-full p-2"
-					onClick={toggleSideNav}
-				/>
+			<div className="m-4 flex items-start">
+				<div
+					className={cn(
+						'w-full flex gap-3 items-start',
+						!isSideNavOpen && 'justify-center',
+					)}
+				>
+					<div>
+						<img
+							src={sidenavIcon}
+							className="size-5 mt-1"
+							onClick={toggleSideNav}
+						/>
+					</div>
+
+					{isSideNavOpen && ENABLE_RBAC && teams.length > 0 && (
+						<div className="w-[calc(100%-1.75rem)]">
+							<DropdownMenu
+								onOpenChange={(open) => {
+									if (!open) {
+										setTeamSearchQuery('');
+									}
+								}}
+							>
+								<DropdownMenuTrigger
+									asChild
+									className="!p-0 hover:bg-transparent"
+								>
+									<div className="w-full cursor-pointer rounded-lg hover:bg-purple-4 p-1 -ml-1 outline-none">
+										<div className="flex justify-between items-start w-full">
+											<div className="flex-1 min-w-0">
+												<div className="text-sm text-[#26064ACC] font-medium truncate text-left">
+													{selectedTeamName}
+												</div>
+												<div className="text-xs text-[#26064A] font-semibold text-left">
+													Irame.ai
+												</div>
+											</div>
+											<img
+												src={chevronDownIcon}
+												className="size-6 ml-2 shrink-0"
+											/>
+										</div>
+									</div>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent
+									className="w-[18rem] p-0"
+									align="start"
+									side="bottom"
+								>
+									{/* Header */}
+									<div className="px-3 py-3 border-b border-gray-200">
+										{/* Search Input */}
+										<div className="relative">
+											<i className="bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+											<input
+												type="text"
+												placeholder="Search Team"
+												value={teamSearchQuery}
+												onChange={(e) =>
+													setTeamSearchQuery(
+														e.target.value,
+													)
+												}
+												className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 placeholder:text-gray-400"
+												onClick={(e) => e.stopPropagation()}
+												onMouseDown={(e) =>
+													e.stopPropagation()
+												}
+												onKeyDown={(e) =>
+													e.stopPropagation()
+												}
+											/>
+										</div>
+									</div>
+
+									{/* Teams List */}
+									<div className="py-1 max-h-64 overflow-y-auto">
+										{filteredTeams.length > 0 ? (
+											filteredTeams.map((team) => {
+												const teamId =
+													team.externalId || team.id;
+												const isSelected =
+													selectedTeamId === teamId;
+												return (
+													<DropdownMenuItem
+														key={teamId}
+														className="cursor-pointer focus:bg-purple-4 hover:!bg-purple-4 px-3 py-3 outline-none"
+														onClick={() => {
+															dispatch(
+																setSelectedTeam(
+																	teamId,
+																),
+															);
+															queryClient.invalidateQueries();
+															setTeamSearchQuery('');
+														}}
+													>
+														<div className="flex items-center justify-between w-full">
+															<span className="text-[#26064A] text-sm font-medium truncate">
+																{team.name}
+															</span>
+															{isSelected && (
+																<div className="size-4 rounded-full bg-purple-100 flex items-center justify-center shrink-0 ml-2">
+																	<Check
+																		className="size-2 text-white"
+																		strokeWidth={
+																			4
+																		}
+																	/>
+																</div>
+															)}
+															{!isSelected && (
+																<div className="size-4 rounded-full border-2 border-gray-300 shrink-0 ml-2"></div>
+															)}
+														</div>
+													</DropdownMenuItem>
+												);
+											})
+										) : (
+											<div className="px-3 py-8 text-center text-gray-500 text-sm">
+												No teams found
+											</div>
+										)}
+									</div>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+					)}
+				</div>
 			</div>
 
 			{/* Ask IRA Button */}

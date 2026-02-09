@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import {
 	Dialog,
@@ -22,9 +22,10 @@ const CreateReportModal = () => {
 	const dispatch = useDispatch();
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
+	const [visibility, setVisibility] = useState('private');
 
-	const revalidateQuery = useSelector(
-		(state) => state.modalReducer.revalidateQuery,
+	const { revalidateQuery, defaultVisibility } = useSelector(
+		(state) => state.modalReducer,
 	);
 
 	const handleClose = () => {
@@ -32,7 +33,14 @@ const CreateReportModal = () => {
 		dispatch(closeModal('createReport'));
 		setTitle('');
 		setDescription('');
+		setVisibility('private');
 	};
+
+	useEffect(() => {
+		if (defaultVisibility) {
+			setVisibility(defaultVisibility);
+		}
+	}, [defaultVisibility]);
 
 	const createReportMutation = useMutation({
 		mutationFn: async (data) => {
@@ -61,6 +69,7 @@ const CreateReportModal = () => {
 		createReportMutation.mutate({
 			name: trimmedTitle,
 			description: trimmedDescription,
+			visibility: visibility === 'private' ? null : visibility,
 		});
 	};
 
@@ -95,6 +104,36 @@ const CreateReportModal = () => {
 							disabled={createReportMutation.isLoading}
 							className="placeholder:!text-primary40"
 						/>
+					</div>
+
+					<div className="space-y-3 pt-2">
+						<Label className="text-sm font-medium text-[#26064A]">
+							Visibility
+						</Label>
+						<div className="flex gap-4">
+							<label className="flex items-center gap-2">
+								<input
+									type="radio"
+									name="visibility"
+									value="private"
+									checked={visibility === 'private'}
+									onChange={() => setVisibility('private')}
+								/>
+								<span className="text-sm text-black/70">
+									Private
+								</span>
+							</label>
+							<label className="flex items-center gap-2">
+								<input
+									type="radio"
+									name="visibility"
+									value="team"
+									checked={visibility === 'team'}
+									onChange={() => setVisibility('team')}
+								/>
+								<span className="text-sm text-black/70">Team</span>
+							</label>
+						</div>
 					</div>
 
 					<div className="flex flex-col sm:flex-row gap-4 pt-4">
