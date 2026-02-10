@@ -53,18 +53,6 @@ import NotificationDrawer from './features/notification/components/notification-
 import LiveTag from './elements/live-tag';
 import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 
-export function useDataSources() {
-	const { data, isLoading, error } = useQuery({
-		queryKey: ['data-sources'],
-		queryFn: async () => {
-			const response = await getDataSourcesV2();
-			return Array.isArray(response) ? response : [];
-		},
-		staleTime: 1000 * 60,
-	});
-
-	return { dataSources: data || [], isLoading, error };
-}
 import userProfileIcon from '@/assets/icons/user-profile.svg';
 import shieldIcon from '@/assets/icons/shield.svg';
 import questionIcon from '@/assets/icons/question.svg';
