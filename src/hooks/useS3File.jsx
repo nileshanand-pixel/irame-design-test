@@ -11,6 +11,16 @@ export default function useS3File() {
 	const downloadS3File = async (s3Url, fileName) => {
 		try {
 			setIsDownloading(true);
+
+			// If it's already a direct URL (including presigned URLs), download directly.
+			if (
+				s3Url &&
+				(s3Url.startsWith('http://') || s3Url.startsWith('https://'))
+			) {
+				downloadFile(s3Url, fileName);
+				return;
+			}
+
 			const signedUrl = await createSignedUrlFromS3Url(s3Url);
 			downloadFile(signedUrl, fileName);
 		} catch (error) {

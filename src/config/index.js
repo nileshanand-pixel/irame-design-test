@@ -3,3 +3,6 @@ export const STAGE_APP_TOKEN = import.meta.env.VITE_STAGE_APP_TOKEN;
 export const GOOGLE_AUTH_API_URL = import.meta.env.VITE_GOOGLE_AUTH_API_URL;
 export const COGNITO_CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID;
 export const MIXPANEL_URL = import.meta.env.VITE_MIXPANEL_URL;
+
+// Export file format configuration (xlsx or xlsb for future)
+export const EXPORT_FILE_FORMAT = 'xlsx';

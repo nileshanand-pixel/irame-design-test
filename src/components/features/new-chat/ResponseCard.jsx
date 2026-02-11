@@ -16,7 +16,6 @@ import {
 	Check,
 	ChevronDown,
 	Copy,
-	Download,
 	LayoutDashboard,
 	// MoreHorizontal,
 	Plus,
@@ -42,6 +41,12 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '@/components/ui/tooltip';
 import WorkflowModal from './WorkflowModal';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import {
@@ -51,6 +56,7 @@ import {
 import { cn } from '@/lib/utils';
 import { getURLSearchParams } from '@/utils/url';
 import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
+import { EXPORT_FILE_FORMAT } from '@/config';
 
 const OptionsClarification = ({ question, onConfirm }) => {
 	const [customValue, setCustomValue] = useState('');
@@ -201,6 +207,7 @@ const ResponseCard = ({
 	updatedAt,
 	currentSessionData,
 	sessionQueriesData,
+	exportStatus,
 }) => {
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
@@ -275,6 +282,28 @@ const ResponseCard = ({
 		([key, value]) => value?.tool_type === WorkspaceEnum.DataFrame,
 	);
 
+	// Get consolidated_export from answer as fallback
+	const consolidatedExportItem = Object.entries(answerResp?.answer || {}).find(
+		([key, value]) => value?.tool_type === 'consolidated_export',
+	);
+	const consolidatedExportData = consolidatedExportItem?.[1]?.tool_data;
+
+	// Export status - prefer polling hook data, fallback to consolidated_export
+	const exportStatusValue =
+		exportStatus?.status || consolidatedExportData?.status || 'NOT_CREATED';
+	const excelUrl = exportStatus?.excel_url || consolidatedExportData?.excel_url;
+	const csvUrlFromExport = exportStatus?.csv_url;
+
+	// Determine export button states based on status
+	const isExportCompleted = exportStatusValue === 'COMPLETED' && !!excelUrl;
+	const isExportFailed = exportStatusValue === 'FAILED';
+	const isExportInProgress = exportStatusValue === 'IN_PROGRESS';
+	const isExportNotCreated = exportStatusValue === 'NOT_CREATED';
+
+	const exportFileName = useMemo(() => {
+		return `consolidated_export_${answerResp?.query_id || 'export'}.${EXPORT_FILE_FORMAT}`;
+	}, [answerResp?.query_id]);
+
 	const displayLogic = useMemo(() => {
 		const hasGraphData = !!graphDataItem;
 		const hasTableData = !!dataFrameItem;
@@ -304,7 +333,13 @@ const ResponseCard = ({
 			showResponseContent: hasText || (mainItems && mainItems.length > 0),
 
 			// Feature availability
-			canDownloadCsv: hasTableData && !!dataFrameItem[1]?.tool_data?.csv_url,
+			canExportExcel: isExportCompleted,
+			exportInProgress: isExportInProgress,
+			exportFailed: isExportFailed,
+			exportNotCreated: isExportNotCreated,
+			canDownloadCsv:
+				hasTableData &&
+				(!!csvUrlFromExport || !!dataFrameItem[1]?.tool_data?.csv_url),
 			canAddToReport: hasText && isQueryDone,
 			canAddToDashboard: hasGraphData,
 
@@ -329,6 +364,13 @@ const ResponseCard = ({
 		isLastQuery,
 		mainItems,
 		clarificationItem,
+		exportStatusValue,
+		excelUrl,
+		csvUrlFromExport,
+		isExportCompleted,
+		isExportFailed,
+		isExportInProgress,
+		isExportNotCreated,
 	]);
 
 	const handleAddQueryToReport = () => {
@@ -573,46 +615,123 @@ const ResponseCard = ({
 
 						{displayLogic.hasVisualData && (
 							<div className="my-4 flex justify-between">
-								{displayLogic.canDownloadCsv && (
-									<Button
-										variant="outline"
-										className="ext-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer"
-										onClick={() => {
-											if (isDownloading) return;
+								{displayLogic.exportFailed ||
+								displayLogic.exportNotCreated ? (
+									displayLogic.canDownloadCsv ? (
+										<Button
+											variant="outline"
+											className="ext-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer"
+											onClick={() => {
+												if (isDownloading) return;
 
-											trackEvent(
-												EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
-												EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
-												() => ({
-													chat_session_id:
-														query?.sessionId,
-													dataset_id:
-														datasourceData?.datasource_id,
-													dataset_name:
-														datasourceData?.name,
-													query_id: answerResp?.query_id,
-												}),
-											);
+												trackEvent(
+													EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
+													EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
+													() => ({
+														chat_session_id:
+															query?.sessionId,
+														dataset_id:
+															datasourceData?.datasource_id,
+														dataset_name:
+															datasourceData?.name,
+														query_id:
+															answerResp?.query_id,
+													}),
+												);
 
-											downloadS3File(
-												dataFrameItem[1]?.tool_data?.csv_url,
-											);
-										}}
-									>
-										{isDownloading ? (
-											<>
-												<span className="mr-2">
-													<CircularLoader size="md" />
+												const csvUrl =
+													csvUrlFromExport ||
+													dataFrameItem[1]?.tool_data
+														?.csv_url;
+												downloadS3File(
+													csvUrl,
+													`query_${answerResp?.query_id || 'data'}.csv`,
+												);
+											}}
+										>
+											{isDownloading ? (
+												<>
+													<span className="mr-2">
+														<CircularLoader size="md" />
+													</span>
+													Downloading...
+												</>
+											) : (
+												<>
+													<ArrowDownToLine className="mr-2 font-medium h-4 w-4" />
+													Download CSV
+												</>
+											)}
+										</Button>
+									) : null
+								) : (
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<span>
+													<Button
+														variant="outline"
+														disabled={
+															isDownloading ||
+															displayLogic.exportInProgress
+														}
+														className="ext-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+														onClick={() => {
+															if (isDownloading)
+																return;
+															if (
+																displayLogic.exportInProgress
+															)
+																return;
+															if (
+																!displayLogic.canExportExcel
+															)
+																return;
+
+															trackEvent(
+																EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
+																EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
+																() => ({
+																	chat_session_id:
+																		query?.sessionId,
+																	dataset_id:
+																		datasourceData?.datasource_id,
+																	dataset_name:
+																		datasourceData?.name,
+																	query_id:
+																		answerResp?.query_id,
+																}),
+															);
+
+															downloadS3File(
+																excelUrl,
+																exportFileName,
+															);
+														}}
+													>
+														{isDownloading ? (
+															<>
+																<span className="mr-2">
+																	<CircularLoader size="md" />
+																</span>
+																Exporting...
+															</>
+														) : (
+															<>
+																<ArrowDownToLine className="mr-2 font-medium h-4 w-4" />
+																Export
+															</>
+														)}
+													</Button>
 												</span>
-												Downloading...
-											</>
-										) : (
-											<>
-												<Download className="mr-2 font-medium h-4 w-4" />
-												Download CSV
-											</>
-										)}
-									</Button>
+											</TooltipTrigger>
+											{displayLogic.exportInProgress && (
+												<TooltipContent>
+													Export URL is being generated.
+												</TooltipContent>
+											)}
+										</Tooltip>
+									</TooltipProvider>
 								)}
 								<div className="flex gap-2">
 									<AddToDropdown
