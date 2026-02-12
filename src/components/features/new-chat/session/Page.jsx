@@ -134,7 +134,6 @@ const Workzone = () => {
 		refetchIntervalInBackground: true,
 	});
 
-	// Fetch export status for all queries in the session with polling
 	const { exportStatusMap } = useSessionExportStatus(currentSessionId);
 
 	useEffect(() => {

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getSessionExportStatus } from '../service/new-chat.service';
 
@@ -10,7 +10,7 @@ import { getSessionExportStatus } from '../service/new-chat.service';
  * @param {boolean} enabled - Whether polling is enabled (default: true)
  * @returns {Object} - { exportStatusMap, allTerminal, isLoading, error, refetch }
  */
-export const useSessionExportStatus = (sessionId, enabled = true) => {
+export const useSessionExportStatus = (sessionId) => {
 	const [isTerminal, setIsTerminal] = useState(false);
 
 	const {
@@ -21,34 +21,30 @@ export const useSessionExportStatus = (sessionId, enabled = true) => {
 	} = useQuery({
 		queryKey: ['session-export-status', sessionId],
 		queryFn: () => getSessionExportStatus(sessionId),
-		enabled: !!sessionId && enabled && !isTerminal, // Disable query when terminal
+		enabled: !!sessionId && !isTerminal,
 		refetchOnWindowFocus: false,
-		// Poll every 25 seconds
 		refetchInterval: 25000,
 		refetchIntervalInBackground: true,
-		staleTime: 20000,
 	});
 
-	// Stop polling when all exports are terminal
 	useEffect(() => {
-		if (exportStatusData?.all_terminal === true && !isTerminal) {
+		if (exportStatusData?.all_terminal === true) {
 			setIsTerminal(true);
 		}
-	}, [exportStatusData?.all_terminal, isTerminal]);
+	}, [exportStatusData?.all_terminal]);
 
-	// Create a map for easy lookup: queryId -> export info
-	const exportStatusMap = useMemo(() => {
-		if (!exportStatusData?.queries) return {};
-		const map = {};
-		exportStatusData.queries.forEach((query) => {
-			map[query.query_id] = {
-				status: query.export_status,
-				excelUrl: query.excel_url,
-				csvUrl: query.csv_url,
-			};
-		});
-		return map;
-	}, [exportStatusData]);
+	const exportStatusMap = Object.fromEntries(
+		(exportStatusData?.queries ?? []).map(
+			({ query_id, export_status, excel_url, csv_url }) => [
+				query_id,
+				{
+					status: export_status,
+					excelUrl: excel_url,
+					csvUrl: csv_url,
+				},
+			],
+		),
+	);
 
 	return {
 		exportStatusMap,

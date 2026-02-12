@@ -56,7 +56,6 @@ import {
 import { cn } from '@/lib/utils';
 import { getURLSearchParams } from '@/utils/url';
 import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
-import { EXPORT_FILE_FORMAT } from '@/config';
 
 const OptionsClarification = ({ question, onConfirm }) => {
 	const [customValue, setCustomValue] = useState('');
@@ -300,9 +299,11 @@ const ResponseCard = ({
 	const isExportInProgress = exportStatusValue === 'IN_PROGRESS';
 	const isExportNotCreated = exportStatusValue === 'NOT_CREATED';
 
-	const exportFileName = useMemo(() => {
-		return `consolidated_export_${answerResp?.query_id || 'export'}.${EXPORT_FILE_FORMAT}`;
-	}, [answerResp?.query_id]);
+	const datasourceName = datasourceData?.name || 'export';
+	const queryOrder = answerResp?.child_no || 1;
+	const exportFileBaseName = `${datasourceName}_${queryOrder}`;
+	const exportFileName = `${exportFileBaseName}.xlsx`;
+	const csvFileName = `${exportFileBaseName}.csv`;
 
 	const displayLogic = useMemo(() => {
 		const hasGraphData = !!graphDataItem;
@@ -643,10 +644,7 @@ const ResponseCard = ({
 													csvUrlFromExport ||
 													dataFrameItem[1]?.tool_data
 														?.csv_url;
-												downloadS3File(
-													csvUrl,
-													`query_${answerResp?.query_id || 'data'}.csv`,
-												);
+												downloadS3File(csvUrl, csvFileName);
 											}}
 										>
 											{isDownloading ? (
