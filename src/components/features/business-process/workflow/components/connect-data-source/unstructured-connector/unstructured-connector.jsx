@@ -659,6 +659,7 @@ function FileLimitReachedDialog({ onOpenChange, isOpen, description }) {
 }
 
 function UploadManager({
+	requiredFiles,
 	selectedRequiredFile,
 	setRequiredFilesError,
 	setRequiredFilesStatus,
@@ -827,59 +828,58 @@ function UploadManager({
 
 	// Calculate status for the selected required file based on current files
 	useEffect(() => {
-		if (!selectedRequiredFile?.required_file_id) return;
+		requiredFiles?.forEach((requiredFile) => {
+			let calculatedStatus = null;
 
-		let calculatedStatus = null;
-
-		// If no files uploaded yet, don't set any status
-		if (currentFiles.length === 0) {
-			calculatedStatus = null;
-		} else {
-			// Check for uploading/processing files
-			const hasUploadingOrProcessing = currentFiles.some((f) =>
-				[
-					FILE_STATUS.UPLOADING,
-					FILE_STATUS.UPLOADED,
-					FILE_STATUS.PROCESSING,
-					FILE_STATUS.AI_PROCESSING,
-				].includes(f.status),
+			const filesOfCurrentRequiredFile = files?.filter(
+				(f) => f.requiredFileId === requiredFile?.required_file_id,
 			);
 
-			// Check for failed files
-			const hasFailed = currentFiles.some(
-				(f) => f.status === FILE_STATUS.FAILED,
-			);
+			// If no files uploaded yet, don't set any status
+			if (filesOfCurrentRequiredFile.length === 0) {
+				calculatedStatus = null;
+			} else {
+				// Check for uploading/processing files
+				const hasUploadingOrProcessing = filesOfCurrentRequiredFile.some(
+					(f) =>
+						[
+							FILE_STATUS.UPLOADING,
+							FILE_STATUS.UPLOADED,
+							FILE_STATUS.PROCESSING,
+							FILE_STATUS.AI_PROCESSING,
+						].includes(f.status),
+				);
 
-			// Check if all files are successful
-			const allSuccess =
-				currentFiles.length > 0 &&
-				currentFiles.every((f) => f.status === FILE_STATUS.SUCCESS);
+				// Check for failed files
+				const hasFailed = filesOfCurrentRequiredFile.some(
+					(f) => f.status === FILE_STATUS.FAILED,
+				);
 
-			// Priority: Processing > Failed > Success
-			if (hasUploadingOrProcessing) {
-				calculatedStatus = FILE_STATUS.AI_PROCESSING;
-			} else if (hasFailed) {
-				calculatedStatus = FILE_STATUS.FAILED;
-			} else if (allSuccess) {
-				calculatedStatus = FILE_STATUS.SUCCESS;
+				// Check if all files are successful
+				const allSuccess =
+					filesOfCurrentRequiredFile.length > 0 &&
+					filesOfCurrentRequiredFile.every(
+						(f) => f.status === FILE_STATUS.SUCCESS,
+					);
+
+				// Priority: Processing > Failed > Success
+				if (hasUploadingOrProcessing) {
+					calculatedStatus = FILE_STATUS.AI_PROCESSING;
+				} else if (hasFailed) {
+					calculatedStatus = FILE_STATUS.FAILED;
+				} else if (allSuccess) {
+					calculatedStatus = FILE_STATUS.SUCCESS;
+				}
 			}
-		}
 
-		// Only notify parent if status has actually changed
-		if (previousStatusRef.current !== calculatedStatus) {
-			previousStatusRef.current = calculatedStatus;
 			if (onSelectedFileStatusChange) {
 				onSelectedFileStatusChange(
-					selectedRequiredFile.required_file_id,
+					requiredFile.required_file_id,
 					calculatedStatus,
 				);
 			}
-		}
-	}, [
-		currentFiles,
-		selectedRequiredFile?.required_file_id,
-		onSelectedFileStatusChange,
-	]);
+		});
+	}, [files, requiredFiles, onSelectedFileStatusChange]);
 
 	const uploadFilesOnS3 = (userSelectedFiles) => {
 		setRequiredFilesError((prev) => {
@@ -1310,6 +1310,7 @@ function UploadManager({
 }
 
 function MainContent({
+	requiredFiles,
 	selectedRequiredFile,
 	setRequiredFilesError,
 	setRequiredFilesStatus,
@@ -1341,6 +1342,7 @@ function MainContent({
 			</div>
 
 			<UploadManager
+				requiredFiles={requiredFiles}
 				selectedRequiredFile={selectedRequiredFile}
 				setRequiredFilesError={setRequiredFilesError}
 				setRequiredFilesStatus={setRequiredFilesStatus}
@@ -1600,6 +1602,7 @@ export default function UnstructuredDatasourceConnector({ workflow }) {
 					/>
 
 					<MainContent
+						requiredFiles={requiredFiles}
 						selectedRequiredFile={selectedRequiredFile}
 						setRequiredFilesError={setRequiredFilesError}
 						setRequiredFilesStatus={setRequiredFilesStatus}
