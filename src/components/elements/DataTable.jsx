@@ -35,6 +35,9 @@ import { DataTablePagination } from './data-table/components/data-table-paginati
  * @property {Object} [selectedRow]
  * @property {any} [defaultSort]
  * @property {boolean} [enableSorting]
+ * @property {boolean} [simplePagination]
+ * @property {boolean} [stickyHeader]
+ * @property {boolean} [stickyPagination]
  * @property {number} [defaultRowsPerPage]
  */
 
@@ -62,6 +65,9 @@ export function DataTable({
 	selectedRow,
 	onSortingChange,
 	enableSorting = false,
+	simplePagination = false,
+	stickyHeader = false,
+	stickyPagination = false,
 	defaultRowsPerPage = 10,
 }) {
 	const { table } = useDataTable({
@@ -83,16 +89,30 @@ export function DataTable({
 	});
 
 	return (
-		<div className="w-full space-y-2.5 overflow-auto h-full">
-			<div className="relative text-primary100  w-full overflow-auto h-[calc(100%-3rem)]">
+		<div
+			className={cn(
+				'w-full space-y-2.5',
+				stickyPagination
+					? 'h-full flex flex-col overflow-hidden'
+					: 'overflow-auto',
+			)}
+		>
+			<div
+				className={cn(
+					'text-primary100 w-full overflow-auto',
+					stickyPagination && 'flex-1',
+				)}
+			>
 				<Table>
-					<TableHeader className="sticky top-0 bg-white">
+					<TableHeader
+						className={cn(stickyHeader && 'sticky top-0 z-20 bg-white')}
+					>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => (
 									<TableHead
 										key={header.id}
-										className="p-2 text-sm font-semibold text-primary80 bg-purple-4"
+										className="px-4 py-3 text-sm font-semibold text-primary80 bg-purple-4"
 									>
 										{header.isPlaceholder
 											? null
@@ -138,11 +158,14 @@ export function DataTable({
 												selectedRow?._id ===
 													row.original?._id &&
 												'bg-slate-100',
-											'text-xs font-normal textprimary80',
+											'text-sm font-normal text-primary80',
 										)}
 									>
 										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id} className="p-2">
+											<TableCell
+												key={cell.id}
+												className="px-4 py-3"
+											>
 												{flexRender(
 													cell.column.columnDef.cell,
 													cell.getContext(),
@@ -166,9 +189,16 @@ export function DataTable({
 				</Table>
 			</div>
 			{!hidePagination && (
-				<div className="space-y-2.5">
+				<div
+					className={cn(
+						'space-y-2.5',
+						simplePagination && 'pb-5',
+						stickyPagination && 'sticky bottom-0 z-10 bg-white',
+					)}
+				>
 					<DataTablePagination
 						table={table}
+						simpleMode={simplePagination}
 						defaultRowsPerPage={defaultRowsPerPage}
 					/>
 				</div>

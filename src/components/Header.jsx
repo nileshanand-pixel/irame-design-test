@@ -8,18 +8,17 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { getInitials, cn } from '@/lib/utils';
+import { getInitials, cn, toTitleCase } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 import { logError } from '@/lib/logger';
 import { authUserDetails } from './features/login/service/auth.service';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
-import { LockClosedIcon } from '@radix-ui/react-icons';
-import { ReaderIcon } from '@radix-ui/react-icons';
-import { RocketIcon } from '@radix-ui/react-icons';
+import { ENABLE_RBAC } from '@/config';
 import {
 	Dialog,
 	DialogContent,
@@ -28,9 +27,9 @@ import {
 	DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronDownIcon } from '@radix-ui/react-icons';
 import {
 	ArrowUpDown,
 	Database,
@@ -47,25 +46,19 @@ import {
 } from './features/new-chat/service/new-chat.service';
 import { useNavigate } from 'react-router-dom';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
-import { getDataSourcesV2 } from './features/configuration/service/configuration.service';
+import { useDataSources } from '@/hooks/useDataSources';
 import { ShareChatModal } from './ShareChatModal';
 import bellIcon from '@/assets/icons/bell.svg';
 import NotificationDrawer from './features/notification/components/notification-drawer';
 import LiveTag from './elements/live-tag';
 import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 
-export function useDataSources() {
-	const { data, isLoading, error } = useQuery({
-		queryKey: ['data-sources'],
-		queryFn: async () => {
-			const response = await getDataSourcesV2();
-			return Array.isArray(response) ? response : [];
-		},
-		staleTime: 1000 * 60,
-	});
-
-	return { dataSources: data || [], isLoading, error };
-}
+import userProfileIcon from '@/assets/icons/user-profile.svg';
+import shieldIcon from '@/assets/icons/shield.svg';
+import questionIcon from '@/assets/icons/question.svg';
+import chevronRightIcon from '@/assets/icons/chevron-right.svg';
+import logoutIcon from '@/assets/icons/logout.svg';
+import redirect from '@/assets/icons/redirect.svg';
 
 export const DataSourceSwitcher = () => {
 	const { dataSources, isLoading } = useDataSources();
@@ -358,16 +351,82 @@ export function ConfirmationModal({ isOpen, onClose, onConfirm }) {
 	);
 }
 
+export function HelpCenterSubmenu({ isOpen, onClose, parentRef }) {
+	const submenuRef = useRef(null);
+
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (
+				submenuRef.current &&
+				!submenuRef.current.contains(event.target) &&
+				parentRef.current &&
+				!parentRef.current.contains(event.target)
+			) {
+				onClose();
+			}
+		};
+		if (isOpen) {
+			document.addEventListener('mousedown', handleClickOutside);
+		}
+		return () => document.removeEventListener('mousedown', handleClickOutside);
+	}, [isOpen, onClose, parentRef]);
+
+	const helpItems = [
+		{
+			title: 'Get Started',
+			link: 'https://irame.ai',
+		},
+		{
+			title: 'Term of Use',
+			link: 'https://www.irame.ai/terms-of-use',
+		},
+		{
+			title: 'Privacy Policy',
+			link: 'https://www.irame.ai/privacy-policy',
+		},
+	];
+
+	if (!isOpen) return null;
+
+	return (
+		<div
+			ref={submenuRef}
+			className="absolute w-[10rem] rounded-xl shadow-lg border border-gray-200 bg-white p-2 z-[100] right-[calc(100%+1.25rem)] top-[-1rem]"
+		>
+			<div className="flex flex-col gap-1">
+				{helpItems.map((item, index) => (
+					<div
+						key={index}
+						className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group"
+						onClick={() => {
+							window.open(item.link, '_blank');
+						}}
+					>
+						<span className="text-xs text-[#26064A] font-normal">
+							{item.title}
+						</span>
+						<img src={redirect} className="size-4 ml-auto" />
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
 const Header = () => {
 	const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 	const [value, setValue] = useLocalStorage('userDetails');
 	const { pathname, query } = useRouter();
 	const [open, setOpen] = useState(false);
 	const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+	const [isHelpSubmenuOpen, setIsHelpSubmenuOpen] = useState(false);
+	const helpCenterRef = useRef(null);
 	const [isPlanMode, setIsPlanMode] = useState(false);
 	const queryClient = useQueryClient();
 
-	// const dispatch = useDispatch();
+	const navigate = useNavigate();
+
+	const dispatch = useDispatch();
 	const renderAvatar = () => {
 		return (
 			<Avatar>
@@ -441,8 +500,25 @@ const Header = () => {
 			setValue({
 				...userDetails,
 			});
+
+			// Sync user_id to Redux store
+			const userId =
+				userDetails.user_id ||
+				userDetails.id ||
+				userDetails.sub ||
+				userDetails.userId;
+			if (userId) {
+				dispatch(
+					updateAuthStoreProp([
+						{
+							key: 'user_id',
+							value: userId,
+						},
+					]),
+				);
+			}
 		}
-	}, [userDetails]);
+	}, [userDetails, dispatch, setValue]);
 
 	useEffect(() => {
 		if (error) {
@@ -485,60 +561,21 @@ const Header = () => {
 
 	const menuItems = [
 		{
-			title: (
-				<>
-					<RocketIcon className="mr-2 size-4" />
-					Get Started
-				</>
-			),
-			link: 'https://irame.ai',
+			title: 'Access Management',
+			icon: <img src={shieldIcon} className="size-4 mr-3" />,
+			onClick: () => {
+				navigate('/app/access-management');
+			},
 		},
 		{
-			title: (
-				<>
-					<ReaderIcon className="mr-2 size-4" />
-					Terms of Use
-				</>
-			),
-			link: 'https://www.irame.ai/terms-of-use',
-		},
-		{
-			title: (
-				<>
-					<LockClosedIcon className="mr-2 size-4" />
-					Privacy Policy
-				</>
-			),
-			link: 'https://www.irame.ai/privacy-policy',
-		},
-		{
-			title: (
-				<>
-					<i className="bi-box-arrow-left mr-2 text-primary100"></i>
-					Logout
-				</>
-			),
-			onClick: async () => {
-				try {
-					trackEvent(
-						EVENTS_ENUM.LOGOUT_CLICKED,
-						EVENTS_REGISTRY.LOGOUT_CLICKED,
-					);
-					await fullLogout();
-					setValue({});
-					trackEvent(
-						EVENTS_ENUM.LOGOUT_SUCCESSFUL,
-						EVENTS_REGISTRY.LOGOUT_SUCCESSFUL,
-					);
-				} catch (error) {
-					trackEvent(
-						EVENTS_ENUM.LOGOUT_FAILED,
-						EVENTS_REGISTRY.LOGOUT_FAILED,
-						() => ({
-							...getErrorAnalyticsProps(error),
-						}),
-					);
-				}
+			title: 'Help Center',
+			icon: <img src={questionIcon} className="size-4 mr-3" />,
+			hasSubmenu: true,
+			subMenuComponent: HelpCenterSubmenu,
+			onClick: (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				setIsHelpSubmenuOpen(!isHelpSubmenuOpen);
 			},
 		},
 	];
@@ -554,7 +591,21 @@ const Header = () => {
 				{showDataSourceName ? (
 					<DataSourceSwitcher />
 				) : (
-					<span className="font-medium text-lg">{'Irame.ai'}</span>
+					<span className="font-medium text-lg">
+						{pathname.includes('access-management') ? (
+							<div className="space-y-[0.125rem]">
+								<div className="text-[#26064A] font-semibold">
+									Access Management
+								</div>
+								<div className="text-[#26064ACC] text-sm font-normal">
+									Manage users, roles, and permissions across your
+									organization
+								</div>
+							</div>
+						) : (
+							'Irame.ai'
+						)}
+					</span>
 				)}
 				{/* {renderGenerateSessionReport()} */}
 			</div>
@@ -615,23 +666,113 @@ const Header = () => {
 					<DropdownMenuTrigger asChild>
 						{renderAvatar()}
 					</DropdownMenuTrigger>
-					<DropdownMenuContent className="w-46 mr-5">
-						<DropdownMenuGroup>
+					<DropdownMenuContent className="w-64 mr-5 p-0 overflow-visible">
+						<div className="px-3 py-3 pb-2 border-b border-gray-200 mb-1">
+							<div className="flex items-center gap-3">
+								<img
+									src={userProfileIcon}
+									className="size-6 flex-shrink-0"
+								/>
+								<div className="flex flex-col min-w-0 flex-1">
+									<span className="text-sm font-medium text-[#26064A] truncate">
+										{value?.user_name}
+									</span>
+									<span className="text-xs text-[#26064ACC] truncate">
+										{value?.email}
+									</span>
+									{ENABLE_RBAC && value?.role_name && (
+										<span className="text-[10px] text-[#26064ACC]/80 truncate mt-0.5">
+											<span className="font-semibold">
+												Role:
+											</span>{' '}
+											{toTitleCase(value?.role_name)}
+										</span>
+									)}
+									{ENABLE_RBAC && value?.tenant_name && (
+										<span className="text-[10px] text-[#26064ACC]/80 truncate mt-0.5">
+											<span className="font-semibold">
+												Organisation:
+											</span>{' '}
+											{toTitleCase(value?.tenant_name)}
+										</span>
+									)}
+								</div>
+							</div>
+						</div>
+						<DropdownMenuGroup className="p-2 space-y-2">
 							{menuItems?.map((item, index) => (
 								<DropdownMenuItem
 									key={index}
-									className="text-primary100 text-sm"
-									onClick={() => {
+									ref={item.hasSubmenu ? helpCenterRef : null}
+									className="text-[#26064A] font-medium relative cursor-pointer"
+									onSelect={(e) => {
+										// Prevent dropdown from closing when clicking items with submenus
+										if (item.hasSubmenu) {
+											e.preventDefault();
+										}
+									}}
+									onClick={(e) => {
 										if (item.link) {
 											window.open(item.link, '_blank');
 										}
-										item?.onClick?.();
+										item?.onClick?.(e);
 									}}
 								>
+									{item.hasSubmenu && (
+										<div className="relative">
+											<item.subMenuComponent
+												isOpen={isHelpSubmenuOpen}
+												onClose={() =>
+													setIsHelpSubmenuOpen(false)
+												}
+												parentRef={helpCenterRef}
+											/>
+										</div>
+									)}
+									{item.icon}
 									{item.title}
+									{item.hasSubmenu && (
+										<img
+											src={chevronRightIcon}
+											className="size-3 ml-auto"
+										/>
+									)}
 								</DropdownMenuItem>
 							))}
 						</DropdownMenuGroup>
+
+						<div className="py-[0.375rem] px-[0.5rem] pb-[0.5rem] border-t border-gray-200">
+							<div
+								className="flex items-center hover:bg-gray-100 rounded-md p-1 px-2"
+								onClick={async () => {
+									try {
+										trackEvent(
+											EVENTS_ENUM.LOGOUT_CLICKED,
+											EVENTS_REGISTRY.LOGOUT_CLICKED,
+										);
+										await fullLogout();
+										setValue({});
+										trackEvent(
+											EVENTS_ENUM.LOGOUT_SUCCESSFUL,
+											EVENTS_REGISTRY.LOGOUT_SUCCESSFUL,
+										);
+									} catch (error) {
+										trackEvent(
+											EVENTS_ENUM.LOGOUT_FAILED,
+											EVENTS_REGISTRY.LOGOUT_FAILED,
+											() => ({
+												...getErrorAnalyticsProps(error),
+											}),
+										);
+									}
+								}}
+							>
+								<img src={logoutIcon} className="size-4 mr-3" />
+								<div className="text-[#26064A] font-medium relative cursor-pointer">
+									Logout
+								</div>
+							</div>
+						</div>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>

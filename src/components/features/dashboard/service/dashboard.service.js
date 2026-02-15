@@ -327,3 +327,74 @@ export const refreshDashboard = async (id) => {
 		throw error;
 	}
 };
+
+/**
+ * Share dashboard with users
+ * @param {string} id - Dashboard ID
+ * @param {Object} data - Share data { recipients: [{email, accessLevel}] }
+ */
+export const shareDashboard = async (id, data) => {
+	try {
+		await adapter.shareDashboard(id, data);
+		return true;
+	} catch (error) {
+		logError(error, {
+			feature: 'live-dashboard',
+			action: 'share-dashboard',
+			extra: {
+				errorMessage: error.message,
+				status: error.response?.status,
+				dashboardId: id,
+			},
+		});
+		throw error;
+	}
+};
+
+/**
+ * Revoke dashboard access for a user
+ * @param {string} id - Dashboard ID
+ * @param {string} userId - Target User ID
+ */
+export const revokeDashboardAccess = async (id, userId) => {
+	try {
+		await adapter.revokeDashboardAccess(id, userId);
+		return true;
+	} catch (error) {
+		logError(error, {
+			feature: 'live-dashboard',
+			action: 'revoke-dashboard-access',
+			extra: {
+				errorMessage: error.message,
+				status: error.response?.status,
+				dashboardId: id,
+				userId,
+			},
+		});
+		throw error;
+	}
+};
+
+/**
+ * Update dashboard visibility (General Access)
+ * @param {string} id - Dashboard ID
+ * @param {string} visibility - Visibility: team, tenant, restricted
+ */
+export const updateDashboardVisibility = async (id, visibility) => {
+	try {
+		await adapter.updateDashboardVisibility(id, visibility);
+		return true;
+	} catch (error) {
+		logError(error, {
+			feature: 'live-dashboard',
+			action: 'update-dashboard-visibility',
+			extra: {
+				errorMessage: error.message,
+				status: error.response?.status,
+				dashboardId: id,
+				visibility,
+			},
+		});
+		throw error;
+	}
+};

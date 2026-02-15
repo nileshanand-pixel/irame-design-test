@@ -4,6 +4,7 @@ const initialState = {
 	createReport: false,
 	shareReport: false,
 	revalidateQuery: null,
+	defaultVisibility: null,
 };
 
 const modalReducer = createSlice({
@@ -11,19 +12,19 @@ const modalReducer = createSlice({
 	initialState,
 	reducers: {
 		openModal: (state, action) => {
-			const { modalName, revalidateQuery } = action.payload;
+			const { modalName, revalidateQuery, defaultVisibility } = action.payload;
 			state[modalName] = true;
 			state.revalidateQuery = revalidateQuery;
+			state.defaultVisibility = defaultVisibility ?? null;
 		},
 		closeModal: (state, action) => {
 			const modalName = action.payload;
 			state[modalName] = false;
 			state.revalidateQuery = null;
+			state.defaultVisibility = null;
 		},
 		closeAllModals: (state) => {
-			Object.keys(state).forEach((key) => {
-				state[key] = false;
-			});
+			Object.assign(state, initialState);
 		},
 		resetModalStore: () => initialState,
 	},

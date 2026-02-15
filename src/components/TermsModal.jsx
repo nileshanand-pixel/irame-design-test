@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { Button } from './ui/button';
 import { trackEvent } from '@/lib/mixpanel';
@@ -6,13 +7,23 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 
 const TermsModal = () => {
 	const [isVisible, setIsVisible] = useState(false);
+	const location = useLocation();
 
 	useEffect(() => {
+		// Don't show T&C modal on invitation pages (they're public and don't require T&C acceptance)
+		const isInvitationPage =
+			location.pathname.startsWith('/accept-invitation') ||
+			location.pathname.startsWith('/decline-invitation');
+
+		if (isInvitationPage) {
+			return;
+		}
+
 		const termsAccepted = Cookies.get('termsAccepted');
 		if (!termsAccepted) {
 			setIsVisible(true);
 		}
-	}, []);
+	}, [location]);
 
 	const handleAgree = () => {
 		Cookies.set('termsAccepted', 'true', {

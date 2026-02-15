@@ -74,7 +74,10 @@ export const FILE_TYPE_CONFIG = {
 export const CONNECTOR_FILE_TYPES = {
 	STRUCTURED: ['csv', 'xlsx', 'xls'],
 	PDF_DEMO: ['csv', 'xlsx', 'xls', 'pdf'],
-	UNSTRUCTURED: ['pdf'],
+	UNSTRUCTURED:
+		import.meta.env.VITE_UNSTRUCTURED_IMAGES_ENABLED === 'true'
+			? ['pdf', 'jpg', 'png', 'gif']
+			: ['pdf'],
 	DATASOURCE: ['csv', 'xlsx', 'xls', 'pdf'],
 };
 
