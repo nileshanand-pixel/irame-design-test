@@ -1,10 +1,9 @@
 import axiosClientV1, { axiosClientV2, axiosClientV3 } from '@/lib/axios';
-import { logError } from '@/lib/logger';
-import { ENABLE_RBAC } from '@/config';
 
 /**
  * Retrieves unified reports (user-owned and shared) with RBAC, search, sorting, and pagination
  * @param {Object} params - Query parameters
+ * @param {string} params.team_id - Required: Team ID for RBAC context
  * @param {string} params.space - Required: 'personal' or 'shared'
  * @param {string} [params.search] - Search term for name, description, summary (partial match, case-insensitive)
  * @param {string} [params.sort_by='created_at'] - Sort field: 'name', 'created_at', 'updated_at'
@@ -15,6 +14,7 @@ import { ENABLE_RBAC } from '@/config';
  * @returns {Promise<{reports: Array, cursor: string|null}>} Unified reports list with pagination cursor
  */
 export const getUnifiedReports = async ({
+	team_id,
 	space = 'personal',
 	search = '',
 	sort_by = 'created_at',
@@ -26,6 +26,7 @@ export const getUnifiedReports = async ({
 	const params = {
 		space,
 		limit,
+		team_id,
 	};
 
 	if (owner_ids && owner_ids.length !== 0) {
@@ -67,213 +68,6 @@ export const shareReport = async (reportId, data) => {
 		headers: {},
 	});
 	return response.data;
-};
-
-/**
- * Share report with multiple users using V3 API (RBAC-enabled)
- * @param {string} id - Report ID
- * @param {Object} data - Share data { recipients: [{email, accessLevel}] }
- * @returns {Promise<boolean>} True on success
- */
-export const shareReportV3 = async (id, data) => {
-	try {
-		await axiosClientV3.post(`/reports/${id}/share`, data, {
-			headers: {},
-		});
-		return true;
-	} catch (error) {
-		logError(error, {
-			feature: 'report',
-			action: 'share-report-v3',
-			extra: {
-				errorMessage: error.message,
-				status: error.response?.status,
-				reportId: id,
-			},
-		});
-		throw error;
-	}
-};
-
-/**
- * Revoke report access for a user using V3 API
- * @param {string} id - Report ID
- * @param {string} userId - Target User ID
- * @returns {Promise<boolean>} True on success
- */
-export const revokeReportAccess = async (id, userId) => {
-	try {
-		await axiosClientV3.delete(`/reports/${id}/access/${userId}`, {
-			headers: {},
-		});
-		return true;
-	} catch (error) {
-		logError(error, {
-			feature: 'report',
-			action: 'revoke-report-access',
-			extra: {
-				errorMessage: error.message,
-				status: error.response?.status,
-				reportId: id,
-				userId,
-			},
-		});
-		throw error;
-	}
-};
-
-/**
- * Update report visibility (General Access) using V3 API
- * @param {string} id - Report ID
- * @param {string} visibility - Visibility: 'restricted', 'team', 'tenant'
- * @returns {Promise<boolean>} True on success
- */
-export const updateReportVisibility = async (id, visibility) => {
-	try {
-		await axiosClientV3.patch(
-			`/reports/${id}/visibility`,
-			{ visibility },
-			{
-				headers: {},
-			},
-		);
-		return true;
-	} catch (error) {
-		logError(error, {
-			feature: 'report',
-			action: 'update-report-visibility',
-			extra: {
-				errorMessage: error.message,
-				status: error.response?.status,
-				reportId: id,
-				visibility,
-			},
-		});
-		throw error;
-	}
-};
-
-/**
- * Get report access users with RBAC-aware API selection
- * Uses Gatekeeper API when ENABLE_RBAC is true, falls back to V1 legacy API otherwise
- * @param {string} reportId - Report ID
- * @returns {Promise<Object>} Report access details
- */
-export const getReportAccessWithRBAC = async (reportId) => {
-	try {
-		if (ENABLE_RBAC) {
-			const { getReportAccessUsers } = await import(
-				'@/api/gatekeeper/reportAccess.service'
-			);
-			return getReportAccessUsers(reportId);
-		}
-		// Fallback to legacy V1 API
-		return getReportAccessDetails(reportId);
-	} catch (error) {
-		logError(error, {
-			feature: 'report',
-			action: 'get-report-access-rbac',
-			extra: {
-				errorMessage: error.message,
-				status: error.response?.status,
-				reportId,
-				enableRbac: ENABLE_RBAC,
-			},
-		});
-		throw error;
-	}
-};
-
-/**
- * Share report with RBAC-aware API selection
- * Uses V3 API when ENABLE_RBAC is true, falls back to V1 legacy API otherwise
- * @param {string} id - Report ID
- * @param {Object} data - Share data { recipients: [{email, accessLevel}] }
- * @returns {Promise<boolean>} True on success
- */
-export const shareReportWithRBAC = async (id, data) => {
-	try {
-		if (ENABLE_RBAC) {
-			return shareReportV3(id, data);
-		}
-		return shareReport(id, data);
-	} catch (error) {
-		logError(error, {
-			feature: 'report',
-			action: 'share-report-rbac',
-			extra: {
-				errorMessage: error.message,
-				status: error.response?.status,
-				reportId: id,
-				enableRbac: ENABLE_RBAC,
-			},
-		});
-		throw error;
-	}
-};
-
-/**
- * Revoke report access with RBAC-aware API selection
- * Uses V3 API when ENABLE_RBAC is true, throws error for legacy mode (not supported)
- * @param {string} id - Report ID
- * @param {string} userId - Target User ID
- * @returns {Promise<boolean>} True on success
- */
-export const revokeReportAccessWithRBAC = async (id, userId) => {
-	try {
-		if (ENABLE_RBAC) {
-			return revokeReportAccess(id, userId);
-		}
-		// Legacy mode does not support revoke via this function
-		throw new Error(
-			'Revoke operation is not supported in legacy mode. Please use the V3 API with RBAC enabled.',
-		);
-	} catch (error) {
-		logError(error, {
-			feature: 'report',
-			action: 'revoke-report-access-rbac',
-			extra: {
-				errorMessage: error.message,
-				status: error.response?.status,
-				reportId: id,
-				userId,
-				enableRbac: ENABLE_RBAC,
-			},
-		});
-		throw error;
-	}
-};
-
-/**
- * Update report visibility with RBAC-aware API selection
- * Uses V3 API when ENABLE_RBAC is true, throws error for legacy mode (not supported)
- * @param {string} id - Report ID
- * @param {string} visibility - Visibility: 'restricted', 'team', 'tenant'
- * @returns {Promise<boolean>} True on success
- */
-export const updateReportVisibilityWithRBAC = async (id, visibility) => {
-	try {
-		if (ENABLE_RBAC) {
-			return updateReportVisibility(id, visibility);
-		}
-		// Legacy mode does not support visibility updates via this function
-		throw new Error(
-			'Visibility update is not supported in legacy mode. Please use the V3 API with RBAC enabled.',
-		);
-	} catch (error) {
-		logError(error, {
-			feature: 'report',
-			action: 'update-report-visibility-rbac',
-			extra: {
-				errorMessage: error.message,
-				status: error.response?.status,
-				reportId: id,
-				visibility,
-				enableRbac: ENABLE_RBAC,
-			},
-		});
-		throw error;
-	}
 };
 
 export const getReportAccessDetails = async (reportId) => {
@@ -326,14 +120,7 @@ export const getSharedReports = async () => {
 };
 
 export const createReport = async (reportData) => {
-	const payload = {
-		name: reportData.name,
-		description: reportData.description,
-	};
-	if (reportData.visibility) {
-		payload.visibility = reportData.visibility;
-	}
-	const response = await axiosClientV2.post('/reports', payload, {
+	const response = await axiosClientV2.post('/reports', reportData, {
 		headers: {},
 	});
 	return response.data;

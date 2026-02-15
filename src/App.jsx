@@ -1,10 +1,15 @@
 import { isMobileOnly } from 'react-device-detect';
+import AppProvider from './providers/AppProvider';
 import AppRoutes from './routes';
 import { ThemeProvider } from './providers/ThemeProvider';
 import { useMemo } from 'react';
 import { initAnalytics } from './lib/mixpanel';
+import useAuth from './hooks/useAuth';
+import UserSessionManager from './components/features/user-session-manager';
 
 export default function App() {
+	const { isAuthenticated, isLoading } = useAuth();
+
 	useMemo(() => {
 		initAnalytics();
 	}, []);
@@ -18,8 +23,11 @@ export default function App() {
 		);
 	}
 	return (
-		<ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-			<AppRoutes />
-		</ThemeProvider>
+		<AppProvider>
+			{!isLoading && isAuthenticated && <UserSessionManager />}
+			<ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+				<AppRoutes />
+			</ThemeProvider>
+		</AppProvider>
 	);
 }

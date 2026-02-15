@@ -8,8 +8,10 @@ import { useRouter } from '@/hooks/useRouter';
 import { createQuerySession } from './service/new-chat.service';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
+import { getDataSourcesV2 } from '../configuration/service/configuration.service';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
-import { useDataSources } from '@/hooks/useDataSources';
+import { useQuery } from '@tanstack/react-query';
+import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
 // import InputArea from './InputArea';
 import { trackEvent } from '@/lib/mixpanel';
 import { logError } from '@/lib/logger';
@@ -224,7 +226,14 @@ const NewChat = () => {
 		}
 	};
 
-	const { dataSources, isLoading, error } = useDataSources();
+	const {
+		data: dataSources,
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: ['data-sources'],
+		queryFn: () => getDataSourcesV2(),
+	});
 
 	const findDataSourceById = useMemo(() => {
 		return (dataSourceId) => {
@@ -310,6 +319,13 @@ const NewChat = () => {
 			setDoingScience(true);
 		}
 	}, [utilReducer?.dataSources, utilReducer?.resetChat]);
+
+	// Handle data sources query success
+	useEffect(() => {
+		if (dataSources) {
+			dispatch(updateUtilProp([{ key: 'dataSources', value: dataSources }]));
+		}
+	}, [dataSources, dispatch]);
 
 	// Handle data sources query errors
 	useEffect(() => {

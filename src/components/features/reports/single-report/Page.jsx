@@ -18,7 +18,6 @@ import ReportSidebar, { REPORT_SECTION_IDS } from './report-sidebar';
 import SingleReportBreadcrumb from './single-report-breadcrumb';
 import Kpis from './kpis';
 import { CASE_GENERATION_STATUS } from '../constants';
-import ShareReportDialog from '../components/ShareReportDialog';
 
 const SingleReportPage = () => {
 	const [cards, setCards] = useState([]);
@@ -132,8 +131,6 @@ const SingleReportPage = () => {
 					</div>
 				</div>
 			</div>
-
-			<ShareReportDialog />
 		</ReportPermissionProvider>
 	);
 };

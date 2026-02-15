@@ -2,7 +2,6 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
 	user_id: '',
-	selectedTeamId: '',
 };
 
 const AuthStoreSlice = createSlice({
@@ -13,28 +12,13 @@ const AuthStoreSlice = createSlice({
 			return (state = action.payload);
 		},
 		updateAuthStoreProp(state, action) {
-			const newState = {
+			return {
 				...state,
 				...action.payload.reduce((acc, prop) => {
 					acc[prop.key] = prop.value;
 					return acc;
 				}, {}),
 			};
-
-			// Handle selectedTeamId persistence
-			const userId = newState.user_id;
-			const teamId = newState.selectedTeamId;
-			if (userId && teamId) {
-				localStorage.setItem(`team_${userId}`, teamId);
-			}
-
-			return newState;
-		},
-		setSelectedTeam(state, action) {
-			state.selectedTeamId = action.payload;
-			if (state.user_id) {
-				localStorage.setItem(`team_${state.user_id}`, action.payload);
-			}
 		},
 		resetAuthStore(state, action) {
 			state = initialState;
@@ -43,6 +27,6 @@ const AuthStoreSlice = createSlice({
 	},
 });
 
-export const { setAuthStore, updateAuthStoreProp, resetAuthStore, setSelectedTeam } =
+export const { setAuthStore, updateAuthStoreProp, resetAuthStore } =
 	AuthStoreSlice.actions;
 export default AuthStoreSlice.reducer;

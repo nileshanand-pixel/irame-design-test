@@ -1,7 +1,11 @@
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { deleteDataSource } from '../../service/configuration.service';
+import { useQuery } from '@tanstack/react-query';
+import {
+	deleteDataSource,
+	getDataSourcesV2,
+} from '../../service/configuration.service';
 import {
 	Tooltip,
 	TooltipContent,
@@ -29,7 +33,6 @@ import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useSearchParams } from 'react-router-dom';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
 import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
-import { useDataSources } from '@/hooks/useDataSources';
 
 const TABS = [
 	{
@@ -52,6 +55,7 @@ const TABS = [
 export default function ExistingDataSources({ showForm }) {
 	const [isFocused, setIsFocused] = useState(false);
 	const [selectedDatasourceTab, setSelectedDatasourceTab] = useState(TABS[0]);
+	const [dataSources, setDataSources] = useState([]);
 	const [search, setSearch] = useState('');
 	const [setSearchParams] = useSearchParams();
 
@@ -61,19 +65,10 @@ export default function ExistingDataSources({ showForm }) {
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
-	// Use unified hook with team-based caching + refetchInterval for processing
-	const {
-		dataSources,
-		isLoading: isFetchingData,
-		refetch,
-	} = useDataSources({
-		refetchInterval: (query) => {
-			if (query?.state?.data?.some((ds) => ds.status === 'processing')) {
-				return 2000;
-			}
-			return false;
-		},
-	});
+	const fetchDataSources = async () => {
+		const data = await getDataSourcesV2();
+		return Array.isArray(data) ? data : [];
+	};
 
 	const startChatting = (data) => {
 		navigate(
@@ -85,6 +80,11 @@ export default function ExistingDataSources({ showForm }) {
 		e.stopPropagation();
 		const dataSourceId = source.datasource_id;
 		try {
+			const updatedList = utilReducer?.dataSources.filter((source) => {
+				if (source.datasource_id !== dataSourceId) {
+					return source;
+				}
+			});
 			const confirmed = await confirm({
 				header: 'Delete Datasource?',
 				description: `This will permanently delete "${source.name}" and all its data. This action cannot be undone.`,
@@ -100,8 +100,9 @@ export default function ExistingDataSources({ showForm }) {
 					dataset_name: source.name,
 				}),
 			);
-			// Refetch to update the list
-			refetch();
+			dispatch(updateUtilProp([{ key: 'dataSources', value: updatedList }]));
+			setDataSources(updatedList);
+			queryClient.invalidateQueries(['data-sources']);
 		} catch (error) {
 			logError(error, {
 				feature: 'configuration',
@@ -121,6 +122,17 @@ export default function ExistingDataSources({ showForm }) {
 		}
 	};
 
+	const { data, isLoading: isFetchingData } = useQuery({
+		queryKey: ['data-sources-v2'],
+		queryFn: fetchDataSources,
+		refetchInterval: (data) => {
+			if (data?.state?.data?.some((ds) => ds.status === 'processing')) {
+				return 2000;
+			}
+			return false;
+		},
+	});
+
 	const handleSearch = (e) => {
 		setSearch(e.target.value);
 		trackEvent(
@@ -132,8 +144,14 @@ export default function ExistingDataSources({ showForm }) {
 		);
 	};
 
-	// Filter datasources, ensure we always have an array (not undefined)
-	const currentDatasources = (dataSources || [])?.filter(
+	useEffect(() => {
+		if (data?.length > 0) {
+			setDataSources(data);
+			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
+		}
+	}, [data]);
+
+	const currentDatasources = dataSources?.filter(
 		(ds) =>
 			!ds?.is_duplicate &&
 			ds?.datasource_type === selectedDatasourceTab?.type &&

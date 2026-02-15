@@ -51,11 +51,6 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { getFileSize } from '@/utils/file';
-import {
-	CONNECTOR_FILE_TYPES,
-	getAcceptString,
-	validateFileType,
-} from '@/config/file-upload.config';
 
 function Sidebar({
 	requiredFiles,
@@ -97,7 +92,7 @@ function Sidebar({
 
 				<div className="flex flex-col gap-4">
 					{/* {[...requiredFiles, ...requiredFiles, ...requiredFiles, ...requiredFiles, ...requiredFiles, ...requiredFiles ,...requiredFiles, ...requiredFiles, ...requiredFiles].map((requiredFile) => { */}
-					{requiredFiles?.map((requiredFile) => {
+					{requiredFiles.map((requiredFile) => {
 						const isActive =
 							selectedRequiredFile?.required_file_id ===
 							requiredFile?.required_file_id;
@@ -235,7 +230,7 @@ function DropZone({ messages, onFileSelect }) {
 
 			<input
 				type="file"
-				accept={getAcceptString(CONNECTOR_FILE_TYPES.UNSTRUCTURED)}
+				accept=".pdf"
 				multiple
 				className="hidden"
 				id="file-upload"
@@ -319,9 +314,7 @@ function FileItem({
 					FILE_STATUS.AI_PROCESSING,
 				].includes(fileObj.status) ? (
 					<div className="w-10 h-10 flex items-center justify-center rounded-md border border-gray-300">
-						<span className="text-xs font-bold text-primary uppercase">
-							{fileObj.name?.split('.').pop()?.toUpperCase() || 'FILE'}
-						</span>
+						<span className="text-xs font-bold text-primary">PDF</span>
 					</div>
 				) : (
 					<CustomCheckbox
@@ -333,7 +326,7 @@ function FileItem({
 				<div className="flex flex-1 gap-2 items-center">
 					<div className="flex flex-col flex-1">
 						<span className="text-sm font-medium text-primary100 truncate max-w-[12.5rem]">
-							{fileObj.name || 'Unknown File'}
+							{fileObj.name}
 						</span>
 						{fileObj.size ? (
 							<span className="text-xs text-primary100 font-normal">
@@ -566,7 +559,7 @@ function FileListing({
 				<input
 					ref={inputRef}
 					type="file"
-					accept={getAcceptString(CONNECTOR_FILE_TYPES.UNSTRUCTURED)}
+					accept=".pdf"
 					multiple
 					className="hidden"
 					id="file-upload"
@@ -664,8 +657,6 @@ function UploadManager({
 	setRequiredFilesError,
 	setRequiredFilesStatus,
 	onSelectedFileStatusChange,
-	isSizeLimitEnabled,
-	maxTotalSizeMB,
 }) {
 	const [datasourceId, setDatasourceId] = useState('');
 	const [files, setFiles] = useState([]);
@@ -1209,30 +1200,23 @@ function UploadManager({
 	};
 
 	const handleFileSelect = (userSelectedFiles) => {
-		if (!userSelectedFiles || userSelectedFiles.length === 0) {
+		if (userSelectedFiles.length === 0) {
 			return;
 		}
 
-		const filteredFiles = Array.from(userSelectedFiles).filter(
-			(file) =>
-				validateFileType(file, CONNECTOR_FILE_TYPES.UNSTRUCTURED).valid,
+		const pdfFiles = Array.from(userSelectedFiles).filter(
+			(file) => file.type === 'application/pdf',
 		);
-		if (filteredFiles.length !== userSelectedFiles.length) {
+		if (pdfFiles.length !== userSelectedFiles.length) {
 			toast.error(
-				`Please upload only supported files (${getAcceptString(
-					CONNECTOR_FILE_TYPES.UNSTRUCTURED,
-				)}). Other file types are not supported.`,
+				'Please upload only PDF files. Other file types are not supported.',
 			);
-		}
-
-		if (filteredFiles.length === 0) {
-			return;
 		}
 
 		// check file limit
 		const previouslyUploadedFilesCount = currentFiles?.length;
 		if (
-			previouslyUploadedFilesCount + filteredFiles?.length >
+			previouslyUploadedFilesCount + pdfFiles?.length >
 			selectedRequiredFile?.limit
 		) {
 			setLimitReachedDescription(
@@ -1242,17 +1226,17 @@ function UploadManager({
 			return;
 		}
 
-		const MAX_TOTAL_SIZE_BYTES = maxTotalSizeMB * 1024 * 1024; // dynamic MB
-		let totalSize = Array.from(filteredFiles).reduce(
+		const MAX_TOTAL_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
+		let totalSize = Array.from(pdfFiles).reduce(
 			(acc, file) => acc + file.size,
 			0,
 		);
 
 		totalSize += currentFiles?.reduce((acc, file) => acc + (file.size ?? 0), 0);
 
-		if (isSizeLimitEnabled && totalSize > MAX_TOTAL_SIZE_BYTES) {
+		if (totalSize > MAX_TOTAL_SIZE_BYTES) {
 			setLimitReachedDescription(
-				`The total size of your selected files exceeds the ${maxTotalSizeMB}MB limit. Please adjust your selection and try again.`,
+				`The total size of your selected files exceeds the 100MB limit. Please adjust your selection and try again.`,
 			);
 			setIsFileLimitReachedModalVisible(true);
 			return;
@@ -1266,13 +1250,13 @@ function UploadManager({
 				{
 					onSuccess: (data) => {
 						setDatasourceId(data?.datasource_id);
-						uploadFilesOnS3(filteredFiles);
+						uploadFilesOnS3(pdfFiles);
 						setSearchParams({ datasource_id: data?.datasource_id });
 					},
 				},
 			);
 		} else {
-			uploadFilesOnS3(filteredFiles);
+			uploadFilesOnS3(pdfFiles);
 		}
 	};
 
@@ -1289,10 +1273,8 @@ function UploadManager({
 			{currentFiles.length === 0 ? (
 				<DropZone
 					messages={[
-						`Maximum ${selectedRequiredFile?.limit} files${isSizeLimitEnabled ? `, total size up to ${maxTotalSizeMB} MB` : ''}`,
-						`Supported file types: ${getAcceptString(
-							CONNECTOR_FILE_TYPES.UNSTRUCTURED,
-						)}`,
+						`Maximum ${selectedRequiredFile?.limit} files, total size up to 100 MB`,
+						`Supported file types: .pdf only`,
 					]}
 					onFileSelect={handleFileSelect}
 				/>
@@ -1315,8 +1297,6 @@ function MainContent({
 	setRequiredFilesError,
 	setRequiredFilesStatus,
 	onSelectedFileStatusChange,
-	isSizeLimitEnabled,
-	maxTotalSizeMB,
 }) {
 	return (
 		<div className="flex-1 p-4 bg-purple-2 flex flex-col gap-4 overflow-auto">
@@ -1327,7 +1307,7 @@ function MainContent({
 						<div className="text-primary100 text-base font-medium flex items-center gap-2">
 							{selectedRequiredFile?.file_name}
 							<span className="text-xs font-normal bg-gray-100 text-gray-700 px-2 py-0.5 rounded-xl">
-								Unstructured
+								PDF
 							</span>
 							<span className="text-xs font-normal bg-gray-100 text-gray-700 px-2 py-0.5 rounded-xl">
 								Limit: {selectedRequiredFile?.limit} files
@@ -1347,8 +1327,6 @@ function MainContent({
 				setRequiredFilesError={setRequiredFilesError}
 				setRequiredFilesStatus={setRequiredFilesStatus}
 				onSelectedFileStatusChange={onSelectedFileStatusChange}
-				isSizeLimitEnabled={isSizeLimitEnabled}
-				maxTotalSizeMB={maxTotalSizeMB}
 			/>
 		</div>
 	);
@@ -1366,11 +1344,6 @@ export default function UnstructuredDatasourceConnector({ workflow }) {
 	);
 	const [isInitiatingWorkflowChecks, setIsInitiatingWorkflowChecks] =
 		useState(false);
-
-	const isSizeLimitEnabled =
-		import.meta.env.VITE_PDF_SIZE_LIMIT_ENABLED !== 'false';
-	const maxTotalSizeMB =
-		parseInt(import.meta.env.VITE_PDF_MAX_TOTAL_SIZE_MB) || 100;
 
 	const requiredFiles = workflow?.data?.required_files?.pdf_files;
 
@@ -1607,8 +1580,6 @@ export default function UnstructuredDatasourceConnector({ workflow }) {
 						setRequiredFilesError={setRequiredFilesError}
 						setRequiredFilesStatus={setRequiredFilesStatus}
 						onSelectedFileStatusChange={handleSelectedFileStatusChange}
-						isSizeLimitEnabled={isSizeLimitEnabled}
-						maxTotalSizeMB={maxTotalSizeMB}
 					/>
 				</>
 			)}

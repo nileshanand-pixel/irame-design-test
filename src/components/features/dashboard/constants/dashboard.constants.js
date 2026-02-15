@@ -3,10 +3,10 @@ export const DASHBOARD_TABS = {
 		value: 'live-dashboard',
 		label: 'My Dashboard',
 	},
-	SHARED_DASHBOARD: {
-		value: 'shared-dashboard',
-		label: 'Shared Dashboard',
-	},
+	// SHARED_DASHBOARD: {
+	// 	value: "shared-dashboard",
+	// 	label: 'Shared Dashboard',
+	// },
 };
 
 export const TIME_FILTER_OPTIONS = [

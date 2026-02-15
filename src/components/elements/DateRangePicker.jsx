@@ -176,44 +176,17 @@ function CalendarView({
 }
 
 export default function DateRangePicker({
-	value,
 	onChange,
-	onClear,
 	predefinedOptions = [],
 	className,
 }) {
 	const [isOpen, setIsOpen] = useState(false);
-	const [selectedPredefinedOption, setSelectedPredefinedOption] = useState(null);
+	const [selectedPredefinedOption, setSelectedPredefinedOption] = useState(
+		predefinedOptions?.[0],
+	);
 	const [showCalendar, setShowCalendar] = useState(false);
 	const [currentMonth, setCurrentMonth] = useState(dayjs());
 	const [selectedRange, setSelectedRange] = useState({ start: null, end: null });
-
-	// Sync internal state with prop value
-	useEffect(() => {
-		if (!value?.startDate || !value?.endDate) {
-			setSelectedPredefinedOption(null);
-			setSelectedRange({ start: null, end: null });
-			return;
-		}
-
-		// Try to find a matching predefined option
-		const matchingOption = predefinedOptions.find(
-			(opt) =>
-				dayjs(opt.startDate).isSame(dayjs(value.startDate), 'day') &&
-				dayjs(opt.endDate).isSame(dayjs(value.endDate), 'day'),
-		);
-
-		if (matchingOption) {
-			setSelectedPredefinedOption(matchingOption);
-			setSelectedRange({ start: null, end: null });
-		} else {
-			setSelectedPredefinedOption(null);
-			setSelectedRange({
-				start: dayjs(value.startDate),
-				end: dayjs(value.endDate),
-			});
-		}
-	}, [value, predefinedOptions]);
 
 	const handlePredefinedOptionSelect = (option) => {
 		setSelectedPredefinedOption(option);
@@ -252,8 +225,8 @@ export default function DateRangePicker({
 			setSelectedPredefinedOption(null);
 			if (onChange) {
 				onChange({
-					startDate: selectedRange.start.startOf('day').toISOString(),
-					endDate: selectedRange.end.endOf('day').toISOString(),
+					startDate: selectedRange.start.toISOString(),
+					endDate: selectedRange.end.toISOString(),
 				});
 			}
 			setIsOpen(false);
@@ -265,24 +238,11 @@ export default function DateRangePicker({
 		setShowCalendar(true);
 	};
 
-	const handleClearClick = () => {
-		setSelectedPredefinedOption(null);
-		setSelectedRange({ start: null, end: null });
-		setShowCalendar(false);
-		setIsOpen(false);
-		if (onClear) {
-			onClear();
-		}
-	};
-
 	const selectedLabel = useMemo(() => {
 		if (selectedPredefinedOption) {
 			return selectedPredefinedOption?.label;
 		}
-		if (selectedRange.start && selectedRange.end) {
-			return `${selectedRange?.start?.format('MMM D')} - ${selectedRange?.end?.format('MMM D, YYYY')}`;
-		}
-		return 'Select Date Range';
+		return `${selectedRange?.start?.format('MMM D')} - ${selectedRange?.end?.format('MMM D, YYYY')}`;
 	}, [selectedPredefinedOption, selectedRange]);
 
 	return (
@@ -342,21 +302,6 @@ export default function DateRangePicker({
 							<span className="font-medium">Custom range</span>
 							<ChevronRight className="h-4 w-4" />
 						</button>
-
-						{onClear &&
-							(selectedPredefinedOption ||
-								(selectedRange.start && selectedRange.end)) && (
-								<button
-									onClick={handleClearClick}
-									className={cn(
-										'w-full px-4 py-3 text-left text-sm hover:bg-red-50 transition-colors',
-										'flex items-center justify-between border-t border-gray-100',
-										'text-red-600 font-medium',
-									)}
-								>
-									Clear Selection
-								</button>
-							)}
 					</div>
 
 					{showCalendar && isOpen && (

@@ -10,7 +10,6 @@ const DashboardList = ({
 	searchQuery,
 	onDashboardClick,
 	onCreateDashboard,
-	onShare,
 	isShared = false,
 }) => {
 	if (isLoading) {
@@ -51,7 +50,6 @@ const DashboardList = ({
 					key={dashboard.id}
 					dashboard={dashboard}
 					onClick={onDashboardClick}
-					onShare={onShare}
 					isShared={isShared}
 				/>
 			))}

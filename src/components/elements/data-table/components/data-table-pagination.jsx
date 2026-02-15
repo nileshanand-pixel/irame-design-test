@@ -18,7 +18,6 @@ import {
  * @typedef {Object} DataTablePaginationProps
  * @property {Object} table - The table instance from react-table.
  * @property {number[]} [pageSizeOptions] - The available options for page sizes.
- * @property {boolean} [simpleMode] - If true, shows only Previous/Next buttons without page size selector.
  */
 
 /**
@@ -28,45 +27,15 @@ import {
 export function DataTablePagination({
 	table,
 	pageSizeOptions = [10, 20, 30, 40, 50],
-	simpleMode = false,
 	defaultRowsPerPage,
 }) {
 	const newPageSizeOptions = useMemo(() => {
-		if (defaultRowsPerPage && !pageSizeOptions.includes(defaultRowsPerPage)) {
+		if (!pageSizeOptions.includes(defaultRowsPerPage)) {
 			return [defaultRowsPerPage, ...pageSizeOptions].sort((a, b) => a - b);
 		}
 		return pageSizeOptions;
 	}, [pageSizeOptions, defaultRowsPerPage]);
 
-	// Simple mode: only Previous and Next buttons
-	if (simpleMode) {
-		return (
-			<div className="flex w-full items-center justify-end overflow-auto px-2 py-1 flex-row gap-8">
-				<div className="flex items-center space-x-4">
-					<Button
-						aria-label="Go to previous page"
-						variant="outline"
-						className="h-9 px-4"
-						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
-					>
-						Previous
-					</Button>
-					<Button
-						aria-label="Go to next page"
-						variant="outline"
-						className="h-9 px-4"
-						onClick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
-					>
-						Next
-					</Button>
-				</div>
-			</div>
-		);
-	}
-
-	// Default mode: full pagination with page size selector
 	return (
 		<div className="flex w-full items-center justify-end overflow-auto px-2 py-1 flex-row gap-8">
 			{/* <div className="flex-1 whitespace-nowrap text-sm text-muted-foreground">

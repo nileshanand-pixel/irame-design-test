@@ -28,11 +28,13 @@ const ReportFiles = ({
 
 	const space = activeTab.space;
 
-	// Create a stable query function that uses the latest filters
-	// team_id is NOT passed here - it comes from X-TEAM-ID header set by axios
+	const teamId = userDetails?.team_id;
+
+	// Create a stable query function that uses the latest teamId and filters
 	const unifiedReportsQueryFn = useCallback(
 		(params) => {
 			const queryParams = {
+				team_id: teamId,
 				space,
 				search: search || '',
 				sort_by: sortValue?.field || 'created_at',
@@ -44,7 +46,7 @@ const ReportFiles = ({
 
 			return getUnifiedReports(queryParams);
 		},
-		[space, search, sortValue, ownerFilter],
+		[teamId, space, search, sortValue, ownerFilter],
 	);
 
 	// Infinite scroll pagination with React Query
@@ -57,7 +59,14 @@ const ReportFiles = ({
 		hasNextPage,
 		Sentinel,
 	} = useInfiniteScroll({
-		queryKey: ['unified-reports', space, search || '', sortValue, ownerFilter],
+		queryKey: [
+			'unified-reports',
+			space,
+			search || '',
+			sortValue,
+			ownerFilter,
+			teamId,
+		],
 		queryFn: unifiedReportsQueryFn,
 		paginationType: 'cursor',
 		options: {

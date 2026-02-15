@@ -48,8 +48,6 @@ export const MultiSelect = React.forwardRef(
 			modalPopover = false,
 			asChild = false,
 			className,
-			chipClassName,
-			closeIconClassName,
 			...props
 		},
 		ref,
@@ -145,10 +143,7 @@ export const MultiSelect = React.forwardRef(
 											return (
 												<div
 													key={value}
-													className={cn(
-														'h-2 pl-3 pr-1 py-4 my-1 mr-2 flex border rounded-[30px] font-semibold cursor-pointer bg-purple-8 text-[#26064ACC] items-center',
-														chipClassName,
-													)}
+													className="h-2 pl-3 pr-1 py-4 my-1 mr-2 flex border rounded-[30px] font-semibold cursor-pointer bg-purple-8 text-[#26064ACC] items-center"
 												>
 													{IconComponent && (
 														<IconComponent className="h-4 w-4 mr-2" />
@@ -157,10 +152,7 @@ export const MultiSelect = React.forwardRef(
 														option?.label || value,
 													)}
 													<i
-														className={cn(
-															'ml-2 cursor-pointer text-3xl text-[#26064A66] font-semibold bi-x',
-															closeIconClassName,
-														)}
+														className="ml-2 cursor-pointer text-3xl text-[#26064A66] font-semibold bi-x"
 														onClick={(event) => {
 															event.stopPropagation();
 															toggleOption(value);
@@ -170,18 +162,10 @@ export const MultiSelect = React.forwardRef(
 											);
 										})}
 									{selectedValues.length > maxCount && (
-										<div
-											className={cn(
-												'h-2 pl-3 pr-1 py-4 my-1 mr-2 flex border rounded-[30px] font-semibold cursor-pointer bg-purple-8 text-[#26064ACC] items-center',
-												chipClassName,
-											)}
-										>
+										<div className="h-2 pl-3 pr-1 py-4 my-1 mr-2 flex border rounded-[30px] font-semibold cursor-pointer bg-purple-8 text-[#26064ACC] items-center">
 											{`+ ${selectedValues.length - maxCount} more`}
 											<i
-												className={cn(
-													'ml-2 cursor-pointer text-3xl text-[#26064A66] font-semibold bi-x',
-													closeIconClassName,
-												)}
+												className="ml-2 cursor-pointer text-3xl text-[#26064A66] font-semibold bi-x"
 												onClick={(event) => {
 													event.stopPropagation();
 													clearExtraOptions();
