@@ -21,11 +21,11 @@ const USER_MAMANGEMENT_TABS = [
 		key: 'roles-permissions',
 		component: RolePermissionTabContent,
 	},
-	{
-		label: 'Approvals',
-		key: 'approvals',
-		component: ApprovalTabContent,
-	},
+	// {
+	// 	label: 'Approvals',
+	// 	key: 'approvals',
+	// 	component: ApprovalTabContent,
+	// },
 	{
 		label: 'Logs',
 		key: 'logs',
