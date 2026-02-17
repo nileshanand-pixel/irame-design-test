@@ -1,21 +1,21 @@
-import { useEffect, useRef } from 'react';
-
 // Selection scope options for the case management table.
-export const CASE_SELECTION_SCOPES = {
-	ALL: 'all',
-	PAGE: 'page',
-};
-
-export const DEFAULT_CASE_SELECTION_SCOPE_OPTIONS = [
+export const SELECTION_SCOPE_OPTIONS = [
 	// {
-	// 	value: CASE_SELECTION_SCOPES.ALL,
+	// 	value: 'all',
 	// 	label: 'All Cases',
 	// },
 	{
-		value: CASE_SELECTION_SCOPES.PAGE,
+		value: 'page',
 		label: 'This Page',
 	},
 ];
+
+// Select all states
+export const SELECT_ALL_STATES = {
+	NONE: false,
+	ALL: true,
+	INDETERMINATE: 'indeterminate',
+};
 
 // For single selection, toggles a single ID in the current selection array, returning a new array.
 export function toggleIdInArraySelection(prev, id) {
@@ -41,34 +41,4 @@ export function addIndexRangeToArraySelection(
 		if (idInRange != null) next.add(idInRange);
 	}
 	return Array.from(next);
-}
-
-// Tracks whether the Shift key is currently pressed using global listeners.
-export function useShiftKeyPressedRef() {
-	const shiftKeyPressedRef = useRef(false);
-
-	useEffect(() => {
-		if (typeof window === 'undefined') return undefined;
-
-		const handleKeyDown = (event) => {
-			if (event.key === 'Shift') shiftKeyPressedRef.current = true;
-		};
-		const handleKeyUp = (event) => {
-			if (event.key === 'Shift') shiftKeyPressedRef.current = false;
-		};
-		const handleBlur = () => {
-			shiftKeyPressedRef.current = false;
-		};
-
-		window.addEventListener('keydown', handleKeyDown);
-		window.addEventListener('keyup', handleKeyUp);
-		window.addEventListener('blur', handleBlur);
-		return () => {
-			window.removeEventListener('keydown', handleKeyDown);
-			window.removeEventListener('keyup', handleKeyUp);
-			window.removeEventListener('blur', handleBlur);
-		};
-	}, []);
-
-	return shiftKeyPressedRef;
 }

@@ -1,5 +1,17 @@
 export const COLUMN_WIDTH = '12.5rem';
 
+export const COLUMN_WIDTHS = {
+	CASE_ID: '4rem',
+	FLAGGING: '5rem',
+	SEVERITY: '9rem',
+	DUE_DATE: '7rem',
+	STATUS: '10rem',
+	ASSIGNED_TO: '5rem',
+	COMMENTS: '7rem',
+	FLAGGED_BY: COLUMN_WIDTH,
+	DYNAMIC: COLUMN_WIDTH,
+};
+
 export const PRE_DEFINED_COLUMN_KEYS = {
 	CASE_ID: 'case_id',
 	FLAGGING: 'flagging',
@@ -30,7 +42,7 @@ export const createColumnsConfig = (casesData, cellComponents) => {
 		key: PRE_DEFINED_COLUMN_KEYS.CASE_ID,
 		label: 'Case ID',
 		type: 'text',
-		width: '4rem',
+		width: COLUMN_WIDTHS.CASE_ID,
 		Component: TextCell,
 	});
 
@@ -39,49 +51,49 @@ export const createColumnsConfig = (casesData, cellComponents) => {
 		{
 			key: PRE_DEFINED_COLUMN_KEYS.FLAGGING,
 			label: 'Flagging',
-			width: '5rem',
+			width: COLUMN_WIDTHS.FLAGGING,
 			isDynamic: false,
 			Component: FlaggingCell,
 		},
 		{
 			key: PRE_DEFINED_COLUMN_KEYS.SEVERITY,
 			label: 'Severity',
-			width: '9rem',
+			width: COLUMN_WIDTHS.SEVERITY,
 			isDynamic: false,
 			Component: SeverityCell,
 		},
 		{
 			key: PRE_DEFINED_COLUMN_KEYS.DUE_DATE,
 			label: 'Due Date',
-			width: '7rem',
+			width: COLUMN_WIDTHS.DUE_DATE,
 			isDynamic: false,
 			Component: DateCell,
 		},
 		{
 			key: PRE_DEFINED_COLUMN_KEYS.STATUS,
 			label: 'Review Status',
-			width: '10rem',
+			width: COLUMN_WIDTHS.STATUS,
 			isDynamic: false,
 			Component: StatusCell,
 		},
 		{
 			key: PRE_DEFINED_COLUMN_KEYS.ASSIGNED_TO,
 			label: 'Assigned to',
-			width: '5rem',
+			width: COLUMN_WIDTHS.ASSIGNED_TO,
 			isDynamic: false,
 			Component: UsersCell,
 		},
 		{
 			key: PRE_DEFINED_COLUMN_KEYS.COMMENTS,
 			label: 'Resolution Trail',
-			width: '7rem',
+			width: COLUMN_WIDTHS.COMMENTS,
 			isDynamic: false,
 			Component: CommentsCell,
 		},
 		{
 			key: PRE_DEFINED_COLUMN_KEYS.FLAGGED_BY,
 			label: 'Flagged by',
-			width: COLUMN_WIDTH,
+			width: COLUMN_WIDTHS.FLAGGED_BY,
 			isDynamic: false,
 			Component: UserCell,
 		},
@@ -97,7 +109,7 @@ export const createColumnsConfig = (casesData, cellComponents) => {
 						.split('_')
 						.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 						.join(' '),
-					width: COLUMN_WIDTH,
+					width: COLUMN_WIDTHS.DYNAMIC,
 					isDynamic: true,
 					Component: TextCell,
 				});

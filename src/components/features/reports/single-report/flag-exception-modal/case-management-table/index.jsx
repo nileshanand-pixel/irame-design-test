@@ -33,12 +33,12 @@ import { useRouter } from '@/hooks/useRouter';
 import { cn } from '@/lib/utils';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
 import {
-	CASE_SELECTION_SCOPES,
-	DEFAULT_CASE_SELECTION_SCOPE_OPTIONS,
+	SELECTION_SCOPE_OPTIONS,
+	SELECT_ALL_STATES,
 	addIndexRangeToArraySelection,
 	toggleIdInArraySelection,
-	useShiftKeyPressedRef,
 } from './row-selection-helpers';
+import { useShiftKeyPressedRef } from './use-shift-key-pressed';
 
 export default function CaseManagementTable({
 	isFetchingCases,
@@ -48,17 +48,15 @@ export default function CaseManagementTable({
 	reportId,
 	cardId,
 	isSample = false,
-	selectionScopeOptions = DEFAULT_CASE_SELECTION_SCOPE_OPTIONS,
 }) {
 	const [resolutionTrailModalOpen, setResolutionTrailModalOpen] = useState(false);
-	const [selectionScope, setSelectionScope] = useState(CASE_SELECTION_SCOPES.PAGE);
 	const [updatingCell, setUpdatingCell] = useState(null); // { caseId, columnKey }
 	const queryClient = useQueryClient();
 	const { navigate, location } = useRouter();
 	const { isOwner } = useReportPermission();
 	// Tracks Shift globally
 	const shiftKeyPressedRef = useShiftKeyPressedRef();
-	// Anchor index for Shift+Click range selection (last interacted row on the current page).
+	// Last selected row index for Shift+Click range selection (last interacted row on the current page).
 	const lastSelectedIndexRef = useRef(null);
 
 	const handleCloseResolutionTrail = () => {
@@ -102,25 +100,20 @@ export default function CaseManagementTable({
 	}, [tableData]);
 
 	const handleSelectCase = useCallback(
-		(caseId, caseIndex) => {
+		(caseId, currentRowIndex) => {
 			if (!isOwner) return;
 
 			const isShiftPressed = shiftKeyPressedRef.current;
-			const anchorIndex = lastSelectedIndexRef.current;
+			const lastSelectedRowIndex = lastSelectedIndexRef.current;
 
 			setSelectedCaseIds((prev) => {
-				// Shift+Click selects the full range from anchor -> clicked row. Existing selections outside the range are preserved.
-				if (
-					isShiftPressed &&
-					anchorIndex !== null &&
-					Number.isInteger(anchorIndex) &&
-					Number.isInteger(caseIndex)
-				) {
+				// Shift+Click selects the full range from last selected row to current row. Existing selections outside the range are preserved.
+				if (isShiftPressed && lastSelectedRowIndex !== null) {
 					return addIndexRangeToArraySelection(
 						prev,
 						currentPageCaseIds,
-						anchorIndex,
-						caseIndex,
+						lastSelectedRowIndex,
+						currentRowIndex,
 					);
 				}
 
@@ -128,17 +121,17 @@ export default function CaseManagementTable({
 				return toggleIdInArraySelection(prev, caseId);
 			});
 
-			lastSelectedIndexRef.current = caseIndex;
+			lastSelectedIndexRef.current = currentRowIndex;
 		},
 		[currentPageCaseIds, isOwner, setSelectedCaseIds],
 	);
 
-	// Reset anchor when the visible rows change (pagination/filter/sort).
+	// Reset last selected row index when the visible rows change (pagination/filter/sort).
 	useEffect(() => {
 		lastSelectedIndexRef.current = null;
 	}, [currentPageCaseIds]);
 
-	// Reset anchor when selection is cleared via bulk deselect.
+	// Reset last selected row index when selection is cleared via bulk deselect.
 	useEffect(() => {
 		if (selectedCaseIds.length === 0) lastSelectedIndexRef.current = null;
 	}, [selectedCaseIds.length]);
@@ -149,15 +142,16 @@ export default function CaseManagementTable({
 
 	// Memoize selection state calculations for current page
 	const selectAllState = useMemo(() => {
-		if (currentPageCaseIds.length === 0) return false;
+		if (currentPageCaseIds.length === 0) return SELECT_ALL_STATES.NONE;
 		let selectedCount = 0;
 		for (const caseId of currentPageCaseIds) {
 			if (selectedCaseIdSet.has(caseId)) selectedCount += 1;
 		}
 
-		if (selectedCount === 0) return false;
-		if (selectedCount === currentPageCaseIds.length) return true;
-		return 'indeterminate';
+		if (selectedCount === 0) return SELECT_ALL_STATES.NONE;
+		if (selectedCount === currentPageCaseIds.length)
+			return SELECT_ALL_STATES.ALL;
+		return SELECT_ALL_STATES.INDETERMINATE;
 	}, [currentPageCaseIds, selectedCaseIdSet]);
 
 	const selectCurrentPageCases = useCallback(() => {
@@ -181,36 +175,31 @@ export default function CaseManagementTable({
 	}, [currentPageCaseIdSet, currentPageCaseIds.length, setSelectedCaseIds]);
 
 	const handleSelectionItem = useCallback(
-		(scopeValue, event) => {
-			if (
-				scopeValue !== CASE_SELECTION_SCOPES.PAGE ||
-				selectionScope !== CASE_SELECTION_SCOPES.PAGE
-			)
-				return;
-			if (
-				event?.type === 'keydown' &&
-				event.key !== 'Enter' &&
-				event.key !== ' '
-			)
-				return;
-			selectCurrentPageCases();
+		(scopeValue) => {
+			if (selectAllState === SELECT_ALL_STATES.ALL) {
+				deselectCurrentPageCases();
+			} else {
+				selectCurrentPageCases();
+			}
 		},
-		[selectCurrentPageCases, selectionScope],
+		[selectCurrentPageCases, deselectCurrentPageCases, selectAllState],
 	);
 
 	// Handle select all for current page only
 	const handleSelectAll = useCallback(
 		(checked) => {
-			if (selectionScope !== CASE_SELECTION_SCOPES.PAGE) return;
 			lastSelectedIndexRef.current = null;
 
-			if (checked === true || checked === 'indeterminate') {
+			if (
+				checked === SELECT_ALL_STATES.ALL ||
+				checked === SELECT_ALL_STATES.INDETERMINATE
+			) {
 				selectCurrentPageCases();
 			} else {
 				deselectCurrentPageCases();
 			}
 		},
-		[deselectCurrentPageCases, selectCurrentPageCases, selectionScope],
+		[deselectCurrentPageCases, selectCurrentPageCases],
 	);
 
 	// Mutation for updating case data
@@ -290,17 +279,18 @@ export default function CaseManagementTable({
 											</TooltipTrigger>
 											<TooltipContent className="bg-[#6D6D6D] text-white">
 												<p>
-													{selectAllState === true
+													{selectAllState ===
+													SELECT_ALL_STATES.ALL
 														? 'Deselect all'
 														: selectAllState ===
-															  'indeterminate'
+															  SELECT_ALL_STATES.INDETERMINATE
 															? 'Select remaining'
 															: 'Select all'}
 												</p>
 											</TooltipContent>
 										</Tooltip>
 
-										<Select value={selectionScope}>
+										<Select>
 											<SelectTrigger className="h-6 w-fit bg-transparent border-none px-2 py-0 [&>svg]:text-primary80 [&>svg]:opacity-100 [&>svg]:[stroke-width:2.5]" />
 											<SelectContent
 												className="py-2"
@@ -308,27 +298,29 @@ export default function CaseManagementTable({
 												side="bottom"
 												alignOffset={-15}
 											>
-												{selectionScopeOptions.map((opt) => (
-													<SelectItem
-														key={opt.value}
-														value={opt.value}
-														onPointerDown={(event) =>
-															handleSelectionItem(
-																opt.value,
-																event,
-															)
-														}
-														onKeyDown={(event) =>
-															handleSelectionItem(
-																opt.value,
-																event,
-															)
-														}
-														className="text-sm text-primary100 hover:bg-purple-4 cursor-pointer"
-													>
-														{opt.label}
-													</SelectItem>
-												))}
+												{SELECTION_SCOPE_OPTIONS.map(
+													(opt) => (
+														<SelectItem
+															key={opt.value}
+															value={opt.value}
+															onPointerDown={(event) =>
+																handleSelectionItem(
+																	opt.value,
+																	event,
+																)
+															}
+															onKeyDown={(event) =>
+																handleSelectionItem(
+																	opt.value,
+																	event,
+																)
+															}
+															className="text-sm text-primary100 hover:bg-purple-4 cursor-pointer"
+														>
+															{opt.label}
+														</SelectItem>
+													),
+												)}
 											</SelectContent>
 										</Select>
 									</div>
@@ -377,7 +369,7 @@ export default function CaseManagementTable({
 						</thead>
 
 						<tbody className="bg-white">
-							{tableData.map((caseData, caseIndex) => {
+							{tableData.map((caseData, rowIndex) => {
 								const isSelected = selectedCaseIdSet.has(
 									caseData?.case_id,
 								);
@@ -397,7 +389,7 @@ export default function CaseManagementTable({
 												onCheckedChange={() =>
 													handleSelectCase(
 														caseData?.case_id,
-														caseIndex,
+														rowIndex,
 													)
 												}
 												disabled={!isOwner}

@@ -36,7 +36,7 @@ import { useReportPermission } from '@/contexts/ReportPermissionContext';
 import { CASE_GENERATION_STATUS } from '../../constants';
 import { queryClient } from '@/lib/react-query';
 
-const PAGE_SIZE = 20;
+const ROWS_PER_PAGE_OPTIONS = [10, 20, 30, 40, 50];
 
 const KPI_KEY_AND_FILTER_MAP = {
 	[KPI_KEYS.TOTAL_EXCEPTIONS_FLAGGED_BY_IRA]: null,
@@ -64,7 +64,7 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 	const [selectedCaseIds, setSelectedCaseIds] = useState([]);
 
 	const [currentPage, setCurrentPage] = useState(1);
-	const [rowsPerPage, setRowsPerPage] = useState(PAGE_SIZE);
+	const [rowsPerPage, setRowsPerPage] = useState(ROWS_PER_PAGE_OPTIONS[1]);
 	const [generateSampleModalOpen, setGenerateSampleModalOpen] = useState(false);
 	const [exportPopoverOpen, setExportPopoverOpen] = useState(false);
 
@@ -227,11 +227,6 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 	};
 
 	const isBulkActionsVisible = selectedCaseIds.length !== 0;
-	const rowsPerPageOptions = useMemo(() => {
-		const base = [10, 20, 30, 40, 50];
-		if (!base.includes(rowsPerPage)) base.push(rowsPerPage);
-		return base.sort((a, b) => a - b);
-	}, [rowsPerPage]);
 
 	const hasSampleData = samplesData && samplesData?.samples?.length > 0;
 
@@ -451,11 +446,11 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 												Rows per page :
 											</p>
 											<Select
-												value={`${rowsPerPage}`}
+												value={rowsPerPage}
 												onValueChange={(value) => {
 													setCurrentPage(1);
 													setSelectedCaseIds([]);
-													setRowsPerPage(Number(value));
+													setRowsPerPage(value);
 												}}
 											>
 												<SelectTrigger className="h-9 w-16 text-xs font-normal text-primary100 [&>svg]:text-primary100 [&>svg]:opacity-100 px-2">
@@ -467,11 +462,11 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 													side="top"
 													className="text-xs font-normal textprimary80 py-2"
 												>
-													{rowsPerPageOptions.map(
+													{ROWS_PER_PAGE_OPTIONS.map(
 														(size) => (
 															<SelectItem
 																key={size}
-																value={`${size}`}
+																value={size}
 																className="text-xs font-normal textprimary80 hover:bg-purple-2 cursor-pointer data-[state=checked]:bg-purple-4 data-[state=checked]:font-medium"
 															>
 																<span>{size}</span>
