@@ -1,7 +1,7 @@
 import GraphComponent from '@/components/elements/GraphComponent';
 import React, { useEffect, useMemo, useState } from 'react';
 import CoderComponent from './CoderComponent';
-import { WorkspaceEnum } from './types/new-chat.enum';
+import { WorkspaceEnum, EXPORT_STATUS } from './types/new-chat.enum';
 import { Button } from '@/components/ui/button';
 import FollowUpQuestions from './FollowUpQuestions';
 import DOMPurify from 'dompurify';
@@ -281,29 +281,37 @@ const ResponseCard = ({
 		([key, value]) => value?.tool_type === WorkspaceEnum.DataFrame,
 	);
 
-	// Get consolidated_export from answer as fallback
-	const consolidatedExportItem = Object.entries(answerResp?.answer || {}).find(
-		([key, value]) => value?.tool_type === 'consolidated_export',
-	);
-	const consolidatedExportData = consolidatedExportItem?.[1]?.tool_data;
+	const exportState = useMemo(() => {
+		const consolidatedExportItem = Object.entries(answerResp?.answer || {}).find(
+			([key, value]) => value?.tool_type === WorkspaceEnum.ConsolidatedExport,
+		);
+		const consolidatedExportData = consolidatedExportItem?.[1]?.tool_data;
 
-	// Export status - prefer polling hook data, fallback to consolidated_export
-	const exportStatusValue =
-		exportStatus?.status || consolidatedExportData?.status || 'NOT_CREATED';
-	const excelUrl = exportStatus?.excel_url || consolidatedExportData?.excel_url;
-	const csvUrlFromExport = exportStatus?.csv_url;
+		const status =
+			exportStatus?.status ||
+			consolidatedExportData?.status ||
+			EXPORT_STATUS.NOT_CREATED;
+		const excelUrl =
+			exportStatus?.excel_url || consolidatedExportData?.excel_url;
 
-	// Determine export button states based on status
-	const isExportCompleted = exportStatusValue === 'COMPLETED' && !!excelUrl;
-	const isExportFailed = exportStatusValue === 'FAILED';
-	const isExportInProgress = exportStatusValue === 'IN_PROGRESS';
-	const isExportNotCreated = exportStatusValue === 'NOT_CREATED';
+		const baseName = `${datasourceData?.name || 'export'}_${answerResp?.child_no || 1}`;
 
-	const datasourceName = datasourceData?.name || 'export';
-	const queryOrder = answerResp?.child_no || 1;
-	const exportFileBaseName = `${datasourceName}_${queryOrder}`;
-	const exportFileName = `${exportFileBaseName}.xlsx`;
-	const csvFileName = `${exportFileBaseName}.csv`;
+		return {
+			status,
+			excelUrl,
+			isCompleted: status === EXPORT_STATUS.COMPLETED && !!excelUrl,
+			isFailed: status === EXPORT_STATUS.FAILED,
+			isInProgress: status === EXPORT_STATUS.IN_PROGRESS,
+			isNotCreated: status === EXPORT_STATUS.NOT_CREATED,
+			excelFileName: `${baseName}.xlsx`,
+			csvFileName: `${baseName}.csv`,
+		};
+	}, [
+		exportStatus,
+		answerResp?.answer,
+		answerResp?.child_no,
+		datasourceData?.name,
+	]);
 
 	const displayLogic = useMemo(() => {
 		const hasGraphData = !!graphDataItem;
@@ -334,13 +342,11 @@ const ResponseCard = ({
 			showResponseContent: hasText || (mainItems && mainItems.length > 0),
 
 			// Feature availability
-			canExportExcel: isExportCompleted,
-			exportInProgress: isExportInProgress,
-			exportFailed: isExportFailed,
-			exportNotCreated: isExportNotCreated,
-			canDownloadCsv:
-				hasTableData &&
-				(!!csvUrlFromExport || !!dataFrameItem[1]?.tool_data?.csv_url),
+			canExportExcel: exportState.isCompleted,
+			exportInProgress: exportState.isInProgress,
+			exportFailed: exportState.isFailed,
+			exportNotCreated: exportState.isNotCreated,
+			canDownloadCsv: hasTableData && !!dataFrameItem[1]?.tool_data?.csv_url,
 			canAddToReport: hasText && isQueryDone,
 			canAddToDashboard: hasGraphData,
 
@@ -365,13 +371,7 @@ const ResponseCard = ({
 		isLastQuery,
 		mainItems,
 		clarificationItem,
-		exportStatusValue,
-		excelUrl,
-		csvUrlFromExport,
-		isExportCompleted,
-		isExportFailed,
-		isExportInProgress,
-		isExportNotCreated,
+		exportState,
 	]);
 
 	const handleAddQueryToReport = () => {
@@ -641,10 +641,12 @@ const ResponseCard = ({
 												);
 
 												const csvUrl =
-													csvUrlFromExport ||
-													dataFrameItem[1]?.tool_data
-														?.csv_url;
-												downloadS3File(csvUrl, csvFileName);
+													dataFrameItem[1].tool_data
+														.csv_url;
+												downloadS3File(
+													csvUrl,
+													exportState.csvFileName,
+												);
 											}}
 										>
 											{isDownloading ? (
@@ -702,8 +704,8 @@ const ResponseCard = ({
 															);
 
 															downloadS3File(
-																excelUrl,
-																exportFileName,
+																exportState.excelUrl,
+																exportState.excelFileName,
 															);
 														}}
 													>
