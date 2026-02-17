@@ -621,10 +621,9 @@ const ResponseCard = ({
 									displayLogic.canDownloadCsv ? (
 										<Button
 											variant="outline"
-											className="ext-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer"
+											disabled={isDownloading}
+											className="text-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
 											onClick={() => {
-												if (isDownloading) return;
-
 												trackEvent(
 													EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
 													EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
@@ -673,21 +672,11 @@ const ResponseCard = ({
 														variant="outline"
 														disabled={
 															isDownloading ||
-															displayLogic.exportInProgress
+															displayLogic.exportInProgress ||
+															!displayLogic.canExportExcel
 														}
-														className="ext-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+														className="text-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
 														onClick={() => {
-															if (isDownloading)
-																return;
-															if (
-																displayLogic.exportInProgress
-															)
-																return;
-															if (
-																!displayLogic.canExportExcel
-															)
-																return;
-
 															trackEvent(
 																EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
 																EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
