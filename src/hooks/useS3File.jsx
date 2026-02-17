@@ -11,6 +11,7 @@ export default function useS3File() {
 	const downloadS3File = async (s3Url, fileName) => {
 		try {
 			setIsDownloading(true);
+
 			const signedUrl = await createSignedUrlFromS3Url(s3Url);
 			downloadFile(signedUrl, fileName);
 		} catch (error) {
