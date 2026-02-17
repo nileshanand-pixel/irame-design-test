@@ -344,9 +344,8 @@ const ResponseCard = ({
 			// Feature availability
 			canExportExcel: exportState.isCompleted,
 			exportInProgress: exportState.isInProgress,
-			exportFailed: exportState.isFailed,
-			exportNotCreated: exportState.isNotCreated,
-			canDownloadCsv: hasTableData && !!dataFrameItem[1]?.tool_data?.csv_url,
+			showCsvFallback:
+				(exportState.isFailed || exportState.isNotCreated) && hasTableData,
 			canAddToReport: hasText && isQueryDone,
 			canAddToDashboard: hasGraphData,
 
@@ -616,53 +615,48 @@ const ResponseCard = ({
 
 						{displayLogic.hasVisualData && (
 							<div className="my-4 flex justify-between">
-								{displayLogic.exportFailed ||
-								displayLogic.exportNotCreated ? (
-									displayLogic.canDownloadCsv ? (
-										<Button
-											variant="outline"
-											disabled={isDownloading}
-											className="text-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
-											onClick={() => {
-												trackEvent(
-													EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
-													EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
-													() => ({
-														chat_session_id:
-															query?.sessionId,
-														dataset_id:
-															datasourceData?.datasource_id,
-														dataset_name:
-															datasourceData?.name,
-														query_id:
-															answerResp?.query_id,
-													}),
-												);
+								{displayLogic.showCsvFallback ? (
+									<Button
+										variant="outline"
+										disabled={isDownloading}
+										className="text-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+										onClick={() => {
+											trackEvent(
+												EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
+												EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
+												() => ({
+													chat_session_id:
+														query?.sessionId,
+													dataset_id:
+														datasourceData?.datasource_id,
+													dataset_name:
+														datasourceData?.name,
+													query_id: answerResp?.query_id,
+												}),
+											);
 
-												const csvUrl =
-													dataFrameItem[1].tool_data
-														.csv_url;
-												downloadS3File(
-													csvUrl,
-													exportState.csvFileName,
-												);
-											}}
-										>
-											{isDownloading ? (
-												<>
-													<span className="mr-2">
-														<CircularLoader size="md" />
-													</span>
-													Downloading...
-												</>
-											) : (
-												<>
-													<ArrowDownToLine className="mr-2 font-medium h-4 w-4" />
-													Download CSV
-												</>
-											)}
-										</Button>
-									) : null
+											const csvUrl =
+												dataFrameItem[1]?.tool_data?.csv_url;
+											downloadS3File(
+												csvUrl,
+												exportState.csvFileName,
+											);
+										}}
+									>
+										{isDownloading ? (
+											<>
+												<span className="mr-2">
+													<CircularLoader size="md" />
+												</span>
+												Downloading...
+											</>
+										) : (
+											<>
+												<ArrowDownToLine className="mr-2 font-medium h-4 w-4" />
+												Download CSV
+											</>
+										)}
+									</Button>
 								) : (
 									<TooltipProvider>
 										<Tooltip>
