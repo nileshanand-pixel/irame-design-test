@@ -1,7 +1,7 @@
 import GraphComponent from '@/components/elements/GraphComponent';
 import React, { useEffect, useMemo, useState } from 'react';
 import CoderComponent from './CoderComponent';
-import { WorkspaceEnum } from './types/new-chat.enum';
+import { WorkspaceEnum, EXPORT_STATUS } from './types/new-chat.enum';
 import { Button } from '@/components/ui/button';
 import FollowUpQuestions from './FollowUpQuestions';
 import DOMPurify from 'dompurify';
@@ -16,7 +16,6 @@ import {
 	Check,
 	ChevronDown,
 	Copy,
-	Download,
 	LayoutDashboard,
 	// MoreHorizontal,
 	Plus,
@@ -42,6 +41,12 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from '@/components/ui/tooltip';
 import WorkflowModal from './WorkflowModal';
 import { FeedbackModal } from '@/components/FeedbackModal';
 import {
@@ -201,6 +206,7 @@ const ResponseCard = ({
 	updatedAt,
 	currentSessionData,
 	sessionQueriesData,
+	exportStatus,
 }) => {
 	const dispatch = useDispatch();
 	const chatStoreReducer = useSelector((state) => state.chatStoreReducer);
@@ -275,6 +281,38 @@ const ResponseCard = ({
 		([key, value]) => value?.tool_type === WorkspaceEnum.DataFrame,
 	);
 
+	const exportState = useMemo(() => {
+		const consolidatedExportItem = Object.entries(answerResp?.answer || {}).find(
+			([key, value]) => value?.tool_type === WorkspaceEnum.ConsolidatedExport,
+		);
+		const consolidatedExportData = consolidatedExportItem?.[1]?.tool_data;
+
+		const status =
+			exportStatus?.status ||
+			consolidatedExportData?.status ||
+			EXPORT_STATUS.NOT_CREATED;
+		const excelUrl =
+			exportStatus?.excel_url || consolidatedExportData?.excel_url;
+
+		const baseName = `${datasourceData?.name || 'export'}_${answerResp?.child_no || 1}`;
+
+		return {
+			status,
+			excelUrl,
+			isCompleted: status === EXPORT_STATUS.COMPLETED && !!excelUrl,
+			isFailed: status === EXPORT_STATUS.FAILED,
+			isInProgress: status === EXPORT_STATUS.IN_PROGRESS,
+			isNotCreated: status === EXPORT_STATUS.NOT_CREATED,
+			excelFileName: `${baseName}.xlsx`,
+			csvFileName: `${baseName}.csv`,
+		};
+	}, [
+		exportStatus,
+		answerResp?.answer,
+		answerResp?.child_no,
+		datasourceData?.name,
+	]);
+
 	const displayLogic = useMemo(() => {
 		const hasGraphData = !!graphDataItem;
 		const hasTableData = !!dataFrameItem;
@@ -304,7 +342,10 @@ const ResponseCard = ({
 			showResponseContent: hasText || (mainItems && mainItems.length > 0),
 
 			// Feature availability
-			canDownloadCsv: hasTableData && !!dataFrameItem[1]?.tool_data?.csv_url,
+			canExportExcel: exportState.isCompleted,
+			exportInProgress: exportState.isInProgress,
+			showCsvFallback:
+				(exportState.isFailed || exportState.isNotCreated) && hasTableData,
 			canAddToReport: hasText && isQueryDone,
 			canAddToDashboard: hasGraphData,
 
@@ -329,6 +370,7 @@ const ResponseCard = ({
 		isLastQuery,
 		mainItems,
 		clarificationItem,
+		exportState,
 	]);
 
 	const handleAddQueryToReport = () => {
@@ -573,13 +615,12 @@ const ResponseCard = ({
 
 						{displayLogic.hasVisualData && (
 							<div className="my-4 flex justify-between">
-								{displayLogic.canDownloadCsv && (
+								{displayLogic.showCsvFallback ? (
 									<Button
 										variant="outline"
-										className="ext-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer"
+										disabled={isDownloading}
+										className="text-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
 										onClick={() => {
-											if (isDownloading) return;
-
 											trackEvent(
 												EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
 												EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
@@ -594,8 +635,11 @@ const ResponseCard = ({
 												}),
 											);
 
+											const csvUrl =
+												dataFrameItem[1]?.tool_data?.csv_url;
 											downloadS3File(
-												dataFrameItem[1]?.tool_data?.csv_url,
+												csvUrl,
+												exportState.csvFileName,
 											);
 										}}
 									>
@@ -608,11 +652,69 @@ const ResponseCard = ({
 											</>
 										) : (
 											<>
-												<Download className="mr-2 font-medium h-4 w-4" />
+												<ArrowDownToLine className="mr-2 font-medium h-4 w-4" />
 												Download CSV
 											</>
 										)}
 									</Button>
+								) : (
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<span>
+													<Button
+														variant="outline"
+														disabled={
+															isDownloading ||
+															displayLogic.exportInProgress ||
+															!displayLogic.canExportExcel
+														}
+														className="text-sm group transition-all duration-300 ease-in-out font-medium !text-primary80 hover:!bg-primary hover:!text-white flex items-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+														onClick={() => {
+															trackEvent(
+																EVENTS_ENUM.DOWNLOAD_CSV_CLICKED,
+																EVENTS_REGISTRY.DOWNLOAD_CSV_CLICKED,
+																() => ({
+																	chat_session_id:
+																		query?.sessionId,
+																	dataset_id:
+																		datasourceData?.datasource_id,
+																	dataset_name:
+																		datasourceData?.name,
+																	query_id:
+																		answerResp?.query_id,
+																}),
+															);
+
+															downloadS3File(
+																exportState.excelUrl,
+																exportState.excelFileName,
+															);
+														}}
+													>
+														{isDownloading ? (
+															<>
+																<span className="mr-2">
+																	<CircularLoader size="md" />
+																</span>
+																Exporting...
+															</>
+														) : (
+															<>
+																<ArrowDownToLine className="mr-2 font-medium h-4 w-4" />
+																Export
+															</>
+														)}
+													</Button>
+												</span>
+											</TooltipTrigger>
+											{displayLogic.exportInProgress && (
+												<TooltipContent>
+													Export URL is being generated.
+												</TooltipContent>
+											)}
+										</Tooltip>
+									</TooltipProvider>
 								)}
 								<div className="flex gap-2">
 									<AddToDropdown

@@ -11,6 +11,7 @@ import {
 	getSession,
 } from '../service/new-chat.service';
 import { useQuery } from '@tanstack/react-query';
+import { useSessionExportStatus } from '../hooks/useSessionExportStatus';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import ResponseCard from '../ResponseCard';
@@ -132,6 +133,8 @@ const Workzone = () => {
 		refetchInterval: () => (selectedPathLeafPending ? 5000 : false),
 		refetchIntervalInBackground: true,
 	});
+
+	const { exportStatusMap } = useSessionExportStatus(currentSessionId);
 
 	useEffect(() => {
 		if (!currentSessionId || !currentSessionData) {
@@ -1264,6 +1267,11 @@ const Workzone = () => {
 													}
 													sessionQueriesData={
 														sessionQueriesData
+													}
+													exportStatus={
+														exportStatusMap?.[
+															answerElem.query_id
+														]
 													}
 												/>
 											</div>
