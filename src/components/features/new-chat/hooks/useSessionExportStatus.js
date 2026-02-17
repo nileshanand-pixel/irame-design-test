@@ -8,7 +8,7 @@ import { getSessionExportStatus } from '../service/new-chat.service';
  *
  * @param {string} sessionId - The session ID to poll export status for
  * @param {boolean} enabled - Whether polling is enabled (default: true)
- * @returns {Object} - { exportStatusMap, allTerminal, isLoading, error, refetch }
+ * @returns {Object} - { exportStatusMap }
  */
 export const useSessionExportStatus = (sessionId) => {
 	const [isTerminal, setIsTerminal] = useState(false);
@@ -46,11 +46,5 @@ export const useSessionExportStatus = (sessionId) => {
 		),
 	);
 
-	return {
-		exportStatusMap,
-		allTerminal: exportStatusData?.all_terminal ?? false,
-		isLoading,
-		error,
-		refetch,
-	};
+	return { exportStatusMap };
 };
