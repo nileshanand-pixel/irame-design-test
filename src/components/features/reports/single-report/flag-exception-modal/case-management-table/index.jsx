@@ -1,6 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+} from '@/components/ui/select';
 import {
 	Tooltip,
 	TooltipContent,
@@ -27,6 +32,13 @@ import ResolutionTrailModal from '../../../ResolutionTrailModal';
 import { useRouter } from '@/hooks/useRouter';
 import { cn } from '@/lib/utils';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
+import {
+	SELECTION_SCOPE_OPTIONS,
+	SELECT_ALL_STATES,
+	addIndexRangeToArraySelection,
+	toggleIdInArraySelection,
+} from './row-selection-helpers';
+import { useShiftKeyPressedRef } from './use-shift-key-pressed';
 
 export default function CaseManagementTable({
 	isFetchingCases,
@@ -42,6 +54,10 @@ export default function CaseManagementTable({
 	const queryClient = useQueryClient();
 	const { navigate, location } = useRouter();
 	const { isOwner } = useReportPermission();
+	// Tracks Shift globally
+	const shiftKeyPressedRef = useShiftKeyPressedRef();
+	// Last selected row index for Shift+Click range selection (last interacted row on the current page).
+	const lastSelectedIndexRef = useRef(null);
 
 	const handleCloseResolutionTrail = () => {
 		setResolutionTrailModalOpen(false);
@@ -55,18 +71,6 @@ export default function CaseManagementTable({
 		const params = new URLSearchParams(location.search);
 		params.set('case_id', tableRowData.case_id);
 		navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-	};
-
-	const handleSelectCase = (caseId) => {
-		if (!isOwner) return;
-
-		setSelectedCaseIds((prev) => {
-			if (prev.includes(caseId)) {
-				return prev.filter((id) => id !== caseId);
-			} else {
-				return [...prev, caseId];
-			}
-		});
 	};
 
 	const columnsConfig = useMemo(() => {
@@ -85,6 +89,118 @@ export default function CaseManagementTable({
 	const tableData = useMemo(() => {
 		return transformCasesDataToTableRows(casesData?.cases);
 	}, [casesData?.cases]);
+
+	const selectedCaseIdSet = useMemo(() => {
+		return new Set(selectedCaseIds);
+	}, [selectedCaseIds]);
+
+	// Memoize current page case IDs to avoid recalculating on every render
+	const currentPageCaseIds = useMemo(() => {
+		return tableData.map((caseData) => caseData.case_id);
+	}, [tableData]);
+
+	const handleSelectCase = useCallback(
+		(caseId, currentRowIndex) => {
+			if (!isOwner) return;
+
+			const isShiftPressed = shiftKeyPressedRef.current;
+			const lastSelectedRowIndex = lastSelectedIndexRef.current;
+
+			setSelectedCaseIds((prev) => {
+				// Shift+Click selects the full range from last selected row to current row. Existing selections outside the range are preserved.
+				if (isShiftPressed && lastSelectedRowIndex !== null) {
+					return addIndexRangeToArraySelection(
+						prev,
+						currentPageCaseIds,
+						lastSelectedRowIndex,
+						currentRowIndex,
+					);
+				}
+
+				// Normal click toggles the clicked row only.
+				return toggleIdInArraySelection(prev, caseId);
+			});
+
+			lastSelectedIndexRef.current = currentRowIndex;
+		},
+		[currentPageCaseIds, isOwner, setSelectedCaseIds],
+	);
+
+	// Reset last selected row index when the visible rows change (pagination/filter/sort).
+	useEffect(() => {
+		lastSelectedIndexRef.current = null;
+	}, [currentPageCaseIds]);
+
+	// Reset last selected row index when selection is cleared via bulk deselect.
+	useEffect(() => {
+		if (selectedCaseIds.length === 0) lastSelectedIndexRef.current = null;
+	}, [selectedCaseIds.length]);
+
+	const currentPageCaseIdSet = useMemo(() => {
+		return new Set(currentPageCaseIds);
+	}, [currentPageCaseIds]);
+
+	// Memoize selection state calculations for current page
+	const selectAllState = useMemo(() => {
+		if (currentPageCaseIds.length === 0) return SELECT_ALL_STATES.NONE;
+		let selectedCount = 0;
+		for (const caseId of currentPageCaseIds) {
+			if (selectedCaseIdSet.has(caseId)) selectedCount += 1;
+		}
+
+		if (selectedCount === 0) return SELECT_ALL_STATES.NONE;
+		if (selectedCount === currentPageCaseIds.length)
+			return SELECT_ALL_STATES.ALL;
+		return SELECT_ALL_STATES.INDETERMINATE;
+	}, [currentPageCaseIds, selectedCaseIdSet]);
+
+	const selectCurrentPageCases = useCallback(() => {
+		setSelectedCaseIds((prev) => {
+			if (currentPageCaseIds.length === 0) return prev;
+			const next = new Set(prev);
+			const beforeSize = next.size;
+			for (const caseId of currentPageCaseIds) next.add(caseId);
+			if (next.size === beforeSize) return prev;
+			return Array.from(next);
+		});
+	}, [currentPageCaseIds, setSelectedCaseIds]);
+
+	const deselectCurrentPageCases = useCallback(() => {
+		setSelectedCaseIds((prev) => {
+			if (currentPageCaseIds.length === 0 || prev.length === 0) return prev;
+			const next = prev.filter((id) => !currentPageCaseIdSet.has(id));
+			if (next.length === prev.length) return prev;
+			return next;
+		});
+	}, [currentPageCaseIdSet, currentPageCaseIds.length, setSelectedCaseIds]);
+
+	const handleSelectionItem = useCallback(
+		(scopeValue) => {
+			if (selectAllState === SELECT_ALL_STATES.ALL) {
+				deselectCurrentPageCases();
+			} else {
+				selectCurrentPageCases();
+			}
+		},
+		[selectCurrentPageCases, deselectCurrentPageCases, selectAllState],
+	);
+
+	// Handle select all for current page only
+	const handleSelectAll = useCallback(
+		(checked) => {
+			lastSelectedIndexRef.current = null;
+
+			if (
+				checked === SELECT_ALL_STATES.ALL ||
+				checked === SELECT_ALL_STATES.INDETERMINATE
+			) {
+				selectCurrentPageCases();
+			} else {
+				deselectCurrentPageCases();
+			}
+		},
+		[deselectCurrentPageCases, selectCurrentPageCases],
+	);
 
 	// Mutation for updating case data
 	const updateCaseMutation = useMutation({
@@ -113,10 +229,13 @@ export default function CaseManagementTable({
 			setUpdatingCell(null);
 		},
 	});
-	const handleCellValueChange = (caseId, columnKey, newValue) => {
-		setUpdatingCell({ caseId, columnKey });
-		updateCaseMutation.mutate({ caseId, columnKey, newValue });
-	};
+	const handleCellValueChange = useCallback(
+		(caseId, columnKey, newValue) => {
+			setUpdatingCell({ caseId, columnKey });
+			updateCaseMutation.mutate({ caseId, columnKey, newValue });
+		},
+		[updateCaseMutation],
+	);
 
 	return (
 		<TooltipProvider delayDuration={0}>
@@ -143,7 +262,69 @@ export default function CaseManagementTable({
 					<table className="w-full">
 						<thead className="bg-[#F9FAFB] border-b border-[#E5E7EB] sticky top-0 z-20">
 							<tr>
-								<th className="px-4 py-3 text-left w-12 bg-[#F9FAFB] sticky left-0 z-20"></th>
+								<th className="px-4 py-3 text-left w-12 bg-[#F9FAFB] sticky left-0 z-20">
+									<div className="flex items-center">
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<div>
+													<Checkbox
+														checked={selectAllState}
+														onCheckedChange={
+															handleSelectAll
+														}
+														aria-label="Select all on this page"
+														className="focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 ring-offset-0 outline-none data-[state=unchecked]:border-primary80 border-2"
+													/>
+												</div>
+											</TooltipTrigger>
+											<TooltipContent className="bg-[#6D6D6D] text-white">
+												<p>
+													{selectAllState ===
+													SELECT_ALL_STATES.ALL
+														? 'Deselect all'
+														: selectAllState ===
+															  SELECT_ALL_STATES.INDETERMINATE
+															? 'Select remaining'
+															: 'Select all'}
+												</p>
+											</TooltipContent>
+										</Tooltip>
+
+										<Select>
+											<SelectTrigger className="h-6 w-fit bg-transparent border-none px-2 py-0 [&>svg]:text-primary80 [&>svg]:opacity-100 [&>svg]:[stroke-width:2.5]" />
+											<SelectContent
+												className="py-2"
+												align="start"
+												side="bottom"
+												alignOffset={-15}
+											>
+												{SELECTION_SCOPE_OPTIONS.map(
+													(opt) => (
+														<SelectItem
+															key={opt.value}
+															value={opt.value}
+															onPointerDown={(event) =>
+																handleSelectionItem(
+																	opt.value,
+																	event,
+																)
+															}
+															onKeyDown={(event) =>
+																handleSelectionItem(
+																	opt.value,
+																	event,
+																)
+															}
+															className="text-sm text-primary100 hover:bg-purple-4 cursor-pointer"
+														>
+															{opt.label}
+														</SelectItem>
+													),
+												)}
+											</SelectContent>
+										</Select>
+									</div>
+								</th>
 								{columnsConfig.map((column) => (
 									<th
 										key={column.key}
@@ -157,7 +338,7 @@ export default function CaseManagementTable({
 											left:
 												column.key ===
 												PRE_DEFINED_COLUMN_KEYS.CASE_ID
-													? '2.9rem'
+													? '4rem'
 													: 'auto',
 											zIndex:
 												column.key ===
@@ -188,8 +369,8 @@ export default function CaseManagementTable({
 						</thead>
 
 						<tbody className="bg-white">
-							{tableData.map((caseData) => {
-								const isSelected = selectedCaseIds.includes(
+							{tableData.map((caseData, rowIndex) => {
+								const isSelected = selectedCaseIdSet.has(
 									caseData?.case_id,
 								);
 
@@ -208,9 +389,11 @@ export default function CaseManagementTable({
 												onCheckedChange={() =>
 													handleSelectCase(
 														caseData?.case_id,
+														rowIndex,
 													)
 												}
 												disabled={!isOwner}
+												className="focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 ring-offset-0 outline-none data-[state=unchecked]:border-primary80 border-2"
 											/>
 										</td>
 										{columnsConfig.map((columnConfig) => {
@@ -236,7 +419,7 @@ export default function CaseManagementTable({
 														left:
 															columnConfig.key ===
 															PRE_DEFINED_COLUMN_KEYS.CASE_ID
-																? '2.9rem'
+																? '4rem'
 																: 'auto',
 														zIndex:
 															columnConfig.key ===
