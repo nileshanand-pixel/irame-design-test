@@ -81,8 +81,10 @@ export const getDataSources = async (options) => {
 	return response.data?.datasource_list;
 };
 
-export const getDataSourcesV2 = async (options) => {
-	const response = await axiosClientV2.get(`/datasources`, {
+export const getDataSourcesV2 = async (options = {}) => {
+	const { limit } = options;
+	const queryParams = limit ? `?limit=${limit}` : '';
+	const response = await axiosClientV2.get(`/datasources${queryParams}`, {
 		headers: {},
 	});
 

@@ -67,6 +67,7 @@ export default function ExistingDataSources({ showForm }) {
 		isLoading: isFetchingData,
 		refetch,
 	} = useDataSources({
+		limit: 100, // You can adjust this limit as needed, backend defaults to 20
 		refetchInterval: (query) => {
 			if (query?.state?.data?.some((ds) => ds.status === 'processing')) {
 				return 2000;

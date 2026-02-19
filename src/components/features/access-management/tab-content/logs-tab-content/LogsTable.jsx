@@ -5,6 +5,7 @@ import {
 	generateDescription,
 } from '@/constants/activityLogActionTypes';
 import { formatTimestamp } from '@/utils/dateRangeUtils';
+import { capitalizeFirstLetterFullText } from '@/lib/utils';
 
 /**
  * Column definitions for the logs table
@@ -60,7 +61,7 @@ const getColumns = (onViewDetails) => [
 
 			return (
 				<span className="text-[#00000099] text-sm font-medium">
-					{displayName}
+					{capitalizeFirstLetterFullText(displayName)}
 				</span>
 			);
 		},

@@ -8,7 +8,12 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { getInitials, cn, toTitleCase } from '@/lib/utils';
+import {
+	getInitials,
+	cn,
+	toTitleCase,
+	capitalizeFirstLetterFullText,
+} from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -675,7 +680,9 @@ const Header = () => {
 								/>
 								<div className="flex flex-col min-w-0 flex-1">
 									<span className="text-sm font-medium text-[#26064A] truncate">
-										{value?.user_name}
+										{capitalizeFirstLetterFullText(
+											value?.user_name,
+										)}
 									</span>
 									<span className="text-xs text-[#26064ACC] truncate">
 										{value?.email}

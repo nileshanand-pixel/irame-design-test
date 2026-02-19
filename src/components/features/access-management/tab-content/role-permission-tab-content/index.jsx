@@ -13,6 +13,7 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'react-toastify';
 import { Copy } from 'lucide-react';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
+import { capitalizeFirstLetterFullText } from '@/lib/utils';
 
 export default function RolePermissionTabContent() {
 	const [search, setSearch] = useState('');
@@ -99,7 +100,9 @@ export default function RolePermissionTabContent() {
 				header: 'Created By',
 				cell: ({ row }) => (
 					<span className="text-[#26064A] text-sm">
-						{row.original.createdBy?.name || 'System'}
+						{capitalizeFirstLetterFullText(
+							row.original.createdBy?.name,
+						) || 'System'}
 					</span>
 				),
 			},
