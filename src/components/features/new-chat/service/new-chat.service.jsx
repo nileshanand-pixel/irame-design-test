@@ -252,3 +252,21 @@ export const updateSessionMetadata = async (sessionId, metadata) => {
 		throw error;
 	}
 };
+
+export const getSessionExportStatus = async (sessionId) => {
+	try {
+		const response = await axiosClientV1.get(
+			`/queries/session/${sessionId}/export-status`,
+			{
+				headers: {},
+			},
+		);
+		return response.data;
+	} catch (error) {
+		logError(error, {
+			feature: 'chat',
+			action: 'get-session-export-status',
+		});
+		throw error;
+	}
+};

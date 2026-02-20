@@ -46,7 +46,7 @@ export default function SeverityCell({ value, onOpenTrail, caseData }) {
 		<div className="relative">
 			<div
 				className={cn(
-					`cursor-pointer flex items-center justify-between px-4 py-2 rounded-full ${severityStyle?.bgColor}`,
+					`cursor-pointer flex w-full max-w-[8rem] items-center justify-between px-4 py-2 rounded-full ${severityStyle?.bgColor}`,
 					{ 'opacity-80 cursor-not-allowed': !isOwner },
 				)}
 				onClick={() => isOwner && onOpenTrail(caseData)}

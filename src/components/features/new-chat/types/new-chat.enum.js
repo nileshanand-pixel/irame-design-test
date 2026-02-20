@@ -8,6 +8,14 @@ export const WorkspaceEnum = {
 	Reference: 'reference',
 	DataFrame: 'response_dataframe',
 	Clarification: 'clarification',
+	ConsolidatedExport: 'consolidated_export',
+};
+
+export const EXPORT_STATUS = {
+	COMPLETED: 'COMPLETED',
+	FAILED: 'FAILED',
+	IN_PROGRESS: 'IN_PROGRESS',
+	NOT_CREATED: 'NOT_CREATED',
 };
 
 export const workSpaceMap = {
