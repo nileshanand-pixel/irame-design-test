@@ -81,18 +81,25 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	// Use useMemo to avoid new array reference on every render
 	const teams = useMemo(() => teamsData?.data || [], [teamsData]);
 
-	// Handle team selection and persistence
+	// Handle team selection, persistence and validation
 	useEffect(() => {
-		if (ENABLE_RBAC && user_id && teams.length > 0 && !selectedTeamId) {
-			const savedTeamId = localStorage.getItem(`team_${user_id}`);
-			if (
-				savedTeamId &&
-				teams.some((t) => (t.externalId || t.id) === savedTeamId)
-			) {
-				dispatch(setSelectedTeam(savedTeamId));
-			} else {
-				const firstTeamId = teams[0].externalId || teams[0].id;
-				dispatch(setSelectedTeam(firstTeamId));
+		if (ENABLE_RBAC && user_id && teams.length > 0) {
+			const isCurrentTeamValid = teams.some(
+				(t) => (t.externalId || t.id) === selectedTeamId,
+			);
+
+			if (!selectedTeamId || !isCurrentTeamValid) {
+				const savedTeamId = localStorage.getItem(`team_${user_id}`);
+				const isSavedTeamValid =
+					savedTeamId &&
+					teams.some((t) => (t.externalId || t.id) === savedTeamId);
+
+				if (isSavedTeamValid) {
+					dispatch(setSelectedTeam(savedTeamId));
+				} else {
+					const firstTeamId = teams[0].externalId || teams[0].id;
+					dispatch(setSelectedTeam(firstTeamId));
+				}
 			}
 		}
 	}, [user_id, teams, selectedTeamId, dispatch]);

@@ -36,6 +36,32 @@ const AuthStoreSlice = createSlice({
 				localStorage.setItem(`team_${state.user_id}`, action.payload);
 			}
 		},
+		syncAuthIdentity(state, action) {
+			const userDetails = action.payload;
+			const userId =
+				userDetails.user_id ||
+				userDetails.id ||
+				userDetails.sub ||
+				userDetails.userId;
+
+			if (userId) {
+				state.user_id = userId;
+			}
+
+			// Initialize team if not already set
+			if (!state.selectedTeamId && userId) {
+				const savedTeamId = localStorage.getItem(`team_${userId}`);
+				const apiTeamId =
+					userDetails.team_id || userDetails.selected_team_id;
+
+				if (savedTeamId) {
+					state.selectedTeamId = savedTeamId;
+				} else if (apiTeamId) {
+					state.selectedTeamId = apiTeamId;
+					localStorage.setItem(`team_${userId}`, apiTeamId);
+				}
+			}
+		},
 		resetAuthStore(state, action) {
 			state = initialState;
 			return state;
@@ -43,6 +69,11 @@ const AuthStoreSlice = createSlice({
 	},
 });
 
-export const { setAuthStore, updateAuthStoreProp, resetAuthStore, setSelectedTeam } =
-	AuthStoreSlice.actions;
+export const {
+	setAuthStore,
+	updateAuthStoreProp,
+	resetAuthStore,
+	setSelectedTeam,
+	syncAuthIdentity,
+} = AuthStoreSlice.actions;
 export default AuthStoreSlice.reducer;

@@ -4,7 +4,7 @@ import { authUserDetails } from '@/components/features/login/service/auth.servic
 import { toast } from '@/lib/toast';
 import { logError } from '@/lib/logger';
 import { useDispatch } from 'react-redux';
-import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
+import { syncAuthIdentity } from '@/redux/reducer/authReducer';
 
 const useAuth = ({ skip = false } = {}) => {
 	const location = useLocation();
@@ -28,22 +28,8 @@ const useAuth = ({ skip = false } = {}) => {
 				setIsAuthenticated(true);
 				setUserDetails(response);
 
-				// Set user_id in Redux store from user details
-				const userId =
-					response.user_id ||
-					response.id ||
-					response.sub ||
-					response.userId;
-				if (userId) {
-					dispatch(
-						updateAuthStoreProp([
-							{
-								key: 'user_id',
-								value: userId,
-							},
-						]),
-					);
-				}
+				// Sync identity to Redux store
+				dispatch(syncAuthIdentity(response));
 			} catch (error) {
 				if (error.response?.status === 401) {
 					setIsAuthenticated(false);

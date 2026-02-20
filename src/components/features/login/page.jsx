@@ -7,7 +7,7 @@ import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { updateAuthStoreProp } from '@/redux/reducer/authReducer';
+import { syncAuthIdentity } from '@/redux/reducer/authReducer';
 import { logError } from '@/lib/logger';
 import { toast } from '@/lib/toast';
 import useAuth from '@/hooks/useAuth';
@@ -43,22 +43,8 @@ const SignInSignUp = () => {
 						JSON.stringify(authUserData),
 					);
 
-					// Set user_id in Redux store
-					const userId =
-						authUserData.user_id ||
-						authUserData.id ||
-						authUserData.sub ||
-						authUserData.userId;
-					if (userId) {
-						dispatch(
-							updateAuthStoreProp([
-								{
-									key: 'user_id',
-									value: userId,
-								},
-							]),
-						);
-					}
+					// Sync identity to Redux store
+					dispatch(syncAuthIdentity(authUserData));
 
 					trackEvent(
 						EVENTS_ENUM.LOGIN_SUCCESSFUL,
