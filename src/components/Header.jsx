@@ -24,6 +24,7 @@ import { authUserDetails } from './features/login/service/auth.service';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { ENABLE_RBAC } from '@/config';
+import { useRbac } from '@/hooks/useRbac';
 import {
 	Dialog,
 	DialogContent,
@@ -432,6 +433,7 @@ const Header = () => {
 	const navigate = useNavigate();
 
 	const dispatch = useDispatch();
+	const { isRbacActive } = useRbac();
 	const renderAvatar = () => {
 		return (
 			<Avatar>
@@ -551,13 +553,17 @@ const Header = () => {
 	// };
 
 	const menuItems = [
-		{
-			title: 'Access Management',
-			icon: <img src={shieldIcon} className="size-4 mr-3" />,
-			onClick: () => {
-				navigate('/app/access-management');
-			},
-		},
+		...(isRbacActive
+			? [
+					{
+						title: 'Access Management',
+						icon: <img src={shieldIcon} className="size-4 mr-3" />,
+						onClick: () => {
+							navigate('/app/access-management');
+						},
+					},
+				]
+			: []),
 		{
 			title: 'Help Center',
 			icon: <img src={questionIcon} className="size-4 mr-3" />,
@@ -673,7 +679,7 @@ const Header = () => {
 									<span className="text-xs text-[#26064ACC] truncate">
 										{value?.email}
 									</span>
-									{ENABLE_RBAC && value?.role_name && (
+									{isRbacActive && value?.role_name && (
 										<span className="text-[10px] text-[#26064ACC]/80 truncate mt-0.5">
 											<span className="font-semibold">
 												Role:
@@ -681,7 +687,7 @@ const Header = () => {
 											{toTitleCase(value?.role_name)}
 										</span>
 									)}
-									{ENABLE_RBAC && value?.tenant_name && (
+									{isRbacActive && value?.tenant_name && (
 										<span className="text-[10px] text-[#26064ACC]/80 truncate mt-0.5">
 											<span className="font-semibold">
 												Organisation:

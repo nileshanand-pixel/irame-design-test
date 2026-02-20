@@ -32,6 +32,7 @@ import {
 } from './features/business-process/service/workflow.service';
 import { getUserTeams } from '@/api/gatekeeper/team.service';
 import { ENABLE_RBAC } from '@/config';
+import { useRbac } from '@/hooks/useRbac';
 import upperFirst from 'lodash.upperfirst';
 import { resetAllStores } from '@/redux/GlobalStore';
 import { Hint } from './Hint';
@@ -67,6 +68,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const { user_id, selectedTeamId } = useSelector(
 		(state) => state.authStoreReducer || {},
 	);
+	const { isRbacActive } = useRbac();
 	const dispatch = useDispatch();
 
 	// Fetch teams from Gatekeeper
@@ -74,7 +76,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const { data: teamsData, isLoading: isTeamsLoading } = useQuery({
 		queryKey: teamsQueryKey,
 		queryFn: getUserTeams,
-		enabled: ENABLE_RBAC && !!user_id,
+		enabled: isRbacActive && !!user_id,
 		staleTime: 60000, // 1 minute
 	});
 
@@ -83,7 +85,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 
 	// Handle team selection, persistence and validation
 	useEffect(() => {
-		if (ENABLE_RBAC && user_id && teams.length > 0) {
+		if (isRbacActive && user_id && teams.length > 0) {
 			const isCurrentTeamValid = teams.some(
 				(t) => (t.externalId || t.id) === selectedTeamId,
 			);
@@ -662,7 +664,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						/>
 					</div>
 
-					{isSideNavOpen && ENABLE_RBAC && teams.length > 0 && (
+					{isSideNavOpen && isRbacActive && teams.length > 0 && (
 						<div className="w-[calc(100%-1.75rem)]">
 							<DropdownMenu
 								onOpenChange={(open) => {

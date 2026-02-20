@@ -3,6 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
 	user_id: '',
 	selectedTeamId: '',
+	is_rbac_enabled: false,
 };
 
 const AuthStoreSlice = createSlice({
@@ -47,6 +48,9 @@ const AuthStoreSlice = createSlice({
 			if (userId) {
 				state.user_id = userId;
 			}
+
+			// Capture RBAC enabled flag
+			state.is_rbac_enabled = userDetails.is_rbac_enabled || false;
 
 			// Initialize team if not already set
 			if (!state.selectedTeamId && userId) {
