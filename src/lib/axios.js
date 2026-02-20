@@ -120,12 +120,14 @@ const setupInterceptors = (axiosClient) => {
 				// ignore toast errors
 			}
 
-			// Only log out on 401 if NOT an invitation route
+			// Only log out on 401 if NOT an invitation route and NOT a gatekeeper request
 			if (
 				error.response &&
 				error.response.status === 401 &&
 				!isLoggingOut &&
-				!isInvitationRoute
+				!isInvitationRoute &&
+				// skip logout for gatekeeper service calls
+				error.config?.baseURL !== serviceUrlMap.GATEKEEPER_SERVICE_V1
 			) {
 				isLoggingOut = true;
 				await ensureCleanup();
