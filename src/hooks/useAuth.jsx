@@ -14,7 +14,6 @@ const useAuth = ({ skip = false } = {}) => {
 	const dispatch = useDispatch();
 
 	useEffect(() => {
-		// Skip auth check for public routes
 		if (skip) {
 			setIsAuthenticated(false);
 			setIsLoading(false);

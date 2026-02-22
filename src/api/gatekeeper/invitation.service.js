@@ -15,12 +15,38 @@ export const invitationService = {
 	},
 
 	/**
+	 * Get tenant auth config for invitation token
+	 * @param {string} token - Invitation token
+	 * @returns {Promise<Object>} Auth config
+	 */
+	getAuthConfig: async (token) => {
+		const response = await axiosGatekeeper.get(
+			`/invitations/${token}/auth-config`,
+		);
+		return response.data.data;
+	},
+
+	/**
 	 * Accept invitation
 	 * @param {string} token - Invitation token
 	 * @returns {Promise<Object>} Result
 	 */
 	acceptInvitation: async (token) => {
 		const response = await axiosGatekeeper.post(`/invitations/${token}/accept`);
+		return response.data;
+	},
+
+	/**
+	 * Signup and accept invitation
+	 * @param {string} token - Invitation token
+	 * @param {Object} data - User data (password, name)
+	 * @returns {Promise<Object>} Result
+	 */
+	signupInvitation: async (token, data) => {
+		const response = await axiosGatekeeper.post(
+			`/invitations/${token}/signup`,
+			data,
+		);
 		return response.data;
 	},
 

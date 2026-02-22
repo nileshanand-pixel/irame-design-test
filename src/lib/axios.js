@@ -48,10 +48,11 @@ const setupInterceptors = (axiosClient) => {
 	axiosClient.interceptors.request.use(
 		(config) => {
 			try {
-				// Skip auth headers for public invitation routes
+				// Skip auth headers for public invitation routes (validate and auth-config)
+				// accept and decline are now protected and require auth headers
 				const isInvitationRoute =
 					config.url?.includes('/invitations/') &&
-					config.url?.match(/\/(validate|accept|decline)$/);
+					config.url?.match(/\/(validate|auth-config)$/);
 
 				if (ENABLE_RBAC && config && !isInvitationRoute) {
 					const raw = localStorage.getItem('userDetails');
@@ -105,7 +106,14 @@ const setupInterceptors = (axiosClient) => {
 			// Check if this is an invitation endpoint
 			const isInvitationRoute =
 				error.config?.url?.includes('/invitations/') &&
-				error.config?.url?.match(/\/(validate|accept|decline)$/);
+				error.config?.url?.match(
+					/\/(validate|accept|decline|auth-config|signup)$/,
+				);
+
+			// Check if we are currently on an invitation page
+			const isInvitationPage =
+				window.location.pathname.includes('/accept-invitation') ||
+				window.location.pathname.includes('/decline-invitation');
 
 			// Show a user-visible toast for non-401 errors (avoid double toasts for auth flow)
 			try {
@@ -120,12 +128,13 @@ const setupInterceptors = (axiosClient) => {
 				// ignore toast errors
 			}
 
-			// Only log out on 401 if NOT an invitation route and NOT a gatekeeper request
+			// Only log out on 401 if NOT an invitation route, NOT on invitation page, and NOT a gatekeeper request
 			if (
 				error.response &&
 				error.response.status === 401 &&
 				!isLoggingOut &&
 				!isInvitationRoute &&
+				!isInvitationPage &&
 				// skip logout for gatekeeper service calls
 				error.config?.baseURL !== serviceUrlMap.GATEKEEPER_SERVICE_V1
 			) {

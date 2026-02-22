@@ -3,7 +3,11 @@ import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const alertVariants = cva(
-	'relative w-full rounded-lg border p-4 [&>svg~div]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground',
+	`relative w-full rounded-lg border p-4 \
+		/* make room for the icon on any sibling element (title or description) */\
+		[&>svg~*]:pl-7 \
+		/* nudge the first text element down slightly so it vertically aligns */\
+		[&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground`,
 	{
 		variants: {
 			variant: {

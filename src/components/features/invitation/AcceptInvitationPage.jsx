@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { invitationService } from '@/api/gatekeeper/invitation.service';
+import useAuth from '@/hooks/useAuth';
+import { fullLogout } from '@/components/features/login/service/auth.service';
+import InvitationAuthForm from './InvitationAuthForm';
 import { Button } from '@/components/ui/button';
 import {
 	Card,
@@ -17,11 +20,15 @@ const AcceptInvitationPage = () => {
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
 	const token = searchParams.get('token');
-	const autoAccept = searchParams.get('action') === 'accept'; // Check if coming from email accept link
+	const authCode = searchParams.get('code');
+	const { isAuthenticated, isLoading: isAuthLoading, userDetails } = useAuth();
 
 	const [loading, setLoading] = useState(true);
 	const [processing, setProcessing] = useState(false);
 	const [invitation, setInvitation] = useState(null);
+	const [tenant, setTenant] = useState(null);
+	const [authConfig, setAuthConfig] = useState(null);
+	const [userExists, setUserExists] = useState(false);
 	const [error, setError] = useState(null);
 	const [accepted, setAccepted] = useState(false);
 
@@ -33,26 +40,22 @@ const AcceptInvitationPage = () => {
 			return;
 		}
 
-		validateInvitation();
+		loadInvitationContext();
 	}, [token]);
 
-	// Auto-accept if coming from email accept link
-	useEffect(() => {
-		if (autoAccept && invitation && !error && !accepted && !processing) {
-			handleAccept();
-		}
-	}, [autoAccept, invitation, error, accepted, processing]);
-
-	const validateInvitation = async () => {
+	const loadInvitationContext = async () => {
 		try {
 			setLoading(true);
 			setError(null);
-			const data = await invitationService.validateToken(token);
-			setInvitation(data);
+			const result = await invitationService.validateToken(token);
+			setInvitation(result.invitation);
+			setTenant(result.tenant);
+			setAuthConfig(result.auth_config);
+			setUserExists(result.user_exists);
 		} catch (err) {
 			setError(
 				err.response?.data?.message ||
-					'Failed to validate invitation. The link may be invalid or expired.',
+					'Failed to validate invitation. The link may be invalid or expired. Please contact your administrator.',
 			);
 		} finally {
 			setLoading(false);
@@ -66,7 +69,7 @@ const AcceptInvitationPage = () => {
 			await invitationService.acceptInvitation(token);
 			setAccepted(true);
 
-			// Redirect to dashboard after 2 seconds
+			// Redirect to access-management after 2 seconds
 			setTimeout(() => {
 				navigate('/app/access-management');
 			}, 2000);
@@ -104,16 +107,50 @@ const AcceptInvitationPage = () => {
 		}
 	};
 
-	if (loading) {
+	const handleAuthenticated = async () => {
+		await handleAccept();
+	};
+
+	const handleMismatchLogout = async () => {
+		await fullLogout(window.location.pathname + window.location.search);
+	};
+
+	const invitedEmail = invitation?.email?.toLowerCase();
+	const authenticatedEmail = userDetails?.email?.toLowerCase();
+
+	const viewState = (() => {
+		if (loading || isAuthLoading || processing) {
+			return 'LOADING';
+		}
+
+		if (accepted) {
+			return 'ACCEPTED';
+		}
+
+		if (error && !invitation) {
+			return 'INVALID';
+		}
+
+		if (isAuthenticated) {
+			if (invitedEmail && authenticatedEmail === invitedEmail) {
+				return 'AUTHENTICATED_MATCH';
+			}
+			return 'AUTHENTICATED_MISMATCH';
+		}
+
+		return 'NEEDS_AUTH';
+	})();
+
+	if (viewState === 'LOADING') {
 		return (
 			<div className="flex items-center justify-center min-h-screen bg-gray-50">
 				<Card className="w-full max-w-md">
 					<CardContent className="flex flex-col items-center justify-center py-12">
 						<Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
 						<p className="text-gray-600">
-							{autoAccept
-								? 'Accepting invitation...'
-								: 'Validating invitation...'}
+							{authCode
+								? 'Completing authentication...'
+								: 'Loading invitation...'}
 						</p>
 					</CardContent>
 				</Card>
@@ -121,7 +158,7 @@ const AcceptInvitationPage = () => {
 		);
 	}
 
-	if (error && !invitation) {
+	if (viewState === 'INVALID') {
 		return (
 			<div className="flex items-center justify-center min-h-screen bg-gray-50">
 				<Card className="w-full max-w-md">
@@ -135,7 +172,10 @@ const AcceptInvitationPage = () => {
 						<Alert variant="destructive">
 							<AlertCircle className="h-4 w-4" />
 							<AlertTitle>Error</AlertTitle>
-							<AlertDescription>{error}</AlertDescription>
+							<AlertDescription>
+								{error} Please contact your administrator for a new
+								invitation.
+							</AlertDescription>
 						</Alert>
 					</CardContent>
 					<CardFooter>
@@ -152,7 +192,7 @@ const AcceptInvitationPage = () => {
 		);
 	}
 
-	if (accepted) {
+	if (viewState === 'ACCEPTED') {
 		return (
 			<div className="flex items-center justify-center min-h-screen bg-gray-50">
 				<Card className="w-full max-w-md">
@@ -165,7 +205,7 @@ const AcceptInvitationPage = () => {
 					<CardContent>
 						<p className="text-gray-700">
 							You have successfully joined the team(s). Redirecting to
-							your dashboard...
+							access management...
 						</p>
 					</CardContent>
 				</Card>
@@ -179,8 +219,13 @@ const AcceptInvitationPage = () => {
 				<CardHeader>
 					<CardTitle className="text-2xl">Team Invitation</CardTitle>
 					<CardDescription>
+						{tenant?.name && (
+							<span className="block text-gray-900 font-semibold mb-1">
+								{tenant.name}
+							</span>
+						)}
 						You've been invited by{' '}
-						<strong>{invitation?.invitedBy?.name || 'Unknown'}</strong>
+						<strong>{invitation?.invited_by?.name || 'Unknown'}</strong>
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
@@ -200,13 +245,13 @@ const AcceptInvitationPage = () => {
 							<p className="text-gray-900">{invitation?.email}</p>
 						</div>
 
-						{invitation?.fullName && (
+						{invitation?.full_name && (
 							<div>
 								<label className="text-sm font-medium text-gray-700">
 									Name
 								</label>
 								<p className="text-gray-900">
-									{invitation?.fullName}
+									{invitation?.full_name}
 								</p>
 							</div>
 						)}
@@ -243,42 +288,90 @@ const AcceptInvitationPage = () => {
 							<p className="text-xs text-gray-500">
 								Expires:{' '}
 								{new Date(
-									invitation?.expiresAt,
+									invitation?.expires_at,
 								).toLocaleDateString()}
 							</p>
 						</div>
+
+						{viewState === 'AUTHENTICATED_MISMATCH' && (
+							<Alert>
+								<AlertCircle className="h-4 w-4" />
+								<AlertTitle>Different logged-in account</AlertTitle>
+								<AlertDescription>
+									This invitation is for{' '}
+									<strong>{invitation?.email}</strong>, but you are
+									logged in as{' '}
+									<strong>
+										{userDetails?.email || 'unknown user'}
+									</strong>
+									. Logout and sign in with the invited account.
+								</AlertDescription>
+							</Alert>
+						)}
+
+						{viewState === 'NEEDS_AUTH' && (
+							<InvitationAuthForm
+								authConfig={authConfig}
+								email={invitation?.email}
+								invitationToken={token}
+								authCode={authCode}
+								userExists={userExists}
+								onAuthenticated={handleAuthenticated}
+							/>
+						)}
 					</div>
 				</CardContent>
 				<CardFooter className="flex gap-3">
-					<Button
-						onClick={handleDecline}
-						variant="outline"
-						disabled={processing}
-						className="flex-1"
-					>
-						{processing ? (
-							<>
-								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								Processing...
-							</>
-						) : (
-							'Decline'
-						)}
-					</Button>
-					<Button
-						onClick={handleAccept}
-						disabled={processing}
-						className="flex-1"
-					>
-						{processing ? (
-							<>
-								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								Accepting...
-							</>
-						) : (
-							'Accept Invitation'
-						)}
-					</Button>
+					{viewState === 'AUTHENTICATED_MATCH' && (
+						<>
+							<Button
+								onClick={handleDecline}
+								variant="outline"
+								disabled={processing}
+								className="flex-1"
+							>
+								Decline
+							</Button>
+							<Button
+								onClick={handleAccept}
+								disabled={processing}
+								className="flex-1"
+							>
+								Accept Invitation
+							</Button>
+						</>
+					)}
+
+					{viewState === 'AUTHENTICATED_MISMATCH' && (
+						<>
+							<Button
+								onClick={handleDecline}
+								variant="outline"
+								disabled={processing}
+								className="flex-1"
+							>
+								Decline
+							</Button>
+							<Button
+								onClick={handleMismatchLogout}
+								disabled={processing}
+								className="flex-1"
+							>
+								Logout
+							</Button>
+						</>
+					)}
+
+					{viewState === 'NEEDS_AUTH' && (
+						<Button
+							onClick={handleDecline}
+							variant="outline"
+							disabled={processing}
+							className="w-full"
+						>
+							Decline Invitation
+						</Button>
+					)}
 				</CardFooter>
 			</Card>
 		</div>
