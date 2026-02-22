@@ -4,24 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import {
-	authUserDetails,
 	getOAuthProviders,
-	login,
 	ssoLogin,
 } from '@/components/features/login/service/auth.service';
 import { invitationService } from '@/api/gatekeeper/invitation.service';
-import { useDispatch } from 'react-redux';
-import { syncAuthIdentity } from '@/redux/reducer/authReducer';
 
 const InvitationAuthForm = ({
 	authConfig,
 	email,
 	invitationToken,
 	authCode,
-	userExists,
-	onAuthenticated,
+	onAccountCreated,
 }) => {
-	const dispatch = useDispatch();
 	const [password, setPassword] = useState('');
 	const [processing, setProcessing] = useState(false);
 	const [error, setError] = useState('');
@@ -51,11 +45,10 @@ const InvitationAuthForm = ({
 		loadProviders();
 	}, [publicSsoEnabled]);
 
-	const finalizeAuth = async () => {
-		const user = await authUserDetails();
-		localStorage.setItem('userDetails', JSON.stringify(user));
-		dispatch(syncAuthIdentity(user));
-		await onAuthenticated();
+	const markAccountCreated = async () => {
+		if (typeof onAccountCreated === 'function') {
+			onAccountCreated();
+		}
 	};
 
 	useEffect(() => {
@@ -69,7 +62,7 @@ const InvitationAuthForm = ({
 
 		ssoLogin({ code: authCode })
 			.then(async () => {
-				await finalizeAuth();
+				await markAccountCreated();
 			})
 			.catch(() => {
 				setError('Unable to complete SSO authentication. Please try again.');
@@ -90,9 +83,8 @@ const InvitationAuthForm = ({
 		setError('');
 
 		try {
-			let captchaToken = '';
 			if (isRecaptchaEnabled) {
-				captchaToken = await recaptchaRef.current.executeAsync();
+				const captchaToken = await recaptchaRef.current.executeAsync();
 				if (!captchaToken) {
 					setError('Recaptcha verification failed. Please try again.');
 					setProcessing(false);
@@ -100,25 +92,14 @@ const InvitationAuthForm = ({
 				}
 			}
 
-			if (!userExists) {
-				// Create account first
-				await invitationService.signupInvitation(invitationToken, {
-					password,
-				});
-			}
-
-			await login({
-				email,
+			await invitationService.signupInvitation(invitationToken, {
 				password,
-				captchaToken,
 			});
-			await finalizeAuth();
+			await markAccountCreated();
 		} catch (authError) {
 			setError(
 				authError?.response?.data?.message ||
-					(userExists
-						? 'Authentication failed. Please verify your credentials and try again.'
-						: 'Failed to create account. Please try again.'),
+					'Failed to create account. Please try again.',
 			);
 		} finally {
 			setProcessing(false);
@@ -172,11 +153,7 @@ const InvitationAuthForm = ({
 							type="password"
 							value={password}
 							onChange={(event) => setPassword(event.target.value)}
-							placeholder={
-								userExists
-									? 'Enter your password'
-									: 'Create a password'
-							}
+							placeholder={'Create a password'}
 							className="mt-1 block w-full px-3 py-2 bg-transparent border border-[#0000001A] rounded-md text-sm"
 						/>
 					</div>
@@ -193,14 +170,10 @@ const InvitationAuthForm = ({
 						{processing ? (
 							<>
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								{userExists
-									? 'Authenticating...'
-									: 'Creating Account...'}
+								Creating Account...
 							</>
-						) : userExists ? (
-							'Login and Accept Invitation'
 						) : (
-							'Create Account and Accept'
+							'Create Account'
 						)}
 					</Button>
 				</form>

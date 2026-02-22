@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { invitationService } from '@/api/gatekeeper/invitation.service';
-import useAuth from '@/hooks/useAuth';
-import { fullLogout } from '@/components/features/login/service/auth.service';
 import InvitationAuthForm from './InvitationAuthForm';
 import { Button } from '@/components/ui/button';
 import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
+	CardFooter,
 } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, CheckCircle2, XCircle, AlertCircle, Users } from 'lucide-react';
@@ -21,7 +19,6 @@ const AcceptInvitationPage = () => {
 	const navigate = useNavigate();
 	const token = searchParams.get('token');
 	const authCode = searchParams.get('code');
-	const { isAuthenticated, isLoading: isAuthLoading, userDetails } = useAuth();
 
 	const [loading, setLoading] = useState(true);
 	const [processing, setProcessing] = useState(false);
@@ -30,6 +27,7 @@ const AcceptInvitationPage = () => {
 	const [authConfig, setAuthConfig] = useState(null);
 	const [userExists, setUserExists] = useState(false);
 	const [error, setError] = useState(null);
+	const [accountCreated, setAccountCreated] = useState(false);
 	const [accepted, setAccepted] = useState(false);
 
 	// Validate token on mount
@@ -68,11 +66,6 @@ const AcceptInvitationPage = () => {
 			setError(null);
 			await invitationService.acceptInvitation(token);
 			setAccepted(true);
-
-			// Redirect to access-management after 2 seconds
-			setTimeout(() => {
-				navigate('/app/access-management');
-			}, 2000);
 		} catch (err) {
 			setError(
 				err.response?.data?.message ||
@@ -107,19 +100,12 @@ const AcceptInvitationPage = () => {
 		}
 	};
 
-	const handleAuthenticated = async () => {
-		await handleAccept();
+	const handleAccountCreated = () => {
+		setAccountCreated(true);
 	};
-
-	const handleMismatchLogout = async () => {
-		await fullLogout(window.location.pathname + window.location.search);
-	};
-
-	const invitedEmail = invitation?.email?.toLowerCase();
-	const authenticatedEmail = userDetails?.email?.toLowerCase();
 
 	const viewState = (() => {
-		if (loading || isAuthLoading || processing) {
+		if (loading || processing) {
 			return 'LOADING';
 		}
 
@@ -131,14 +117,11 @@ const AcceptInvitationPage = () => {
 			return 'INVALID';
 		}
 
-		if (isAuthenticated) {
-			if (invitedEmail && authenticatedEmail === invitedEmail) {
-				return 'AUTHENTICATED_MATCH';
-			}
-			return 'AUTHENTICATED_MISMATCH';
+		if (userExists || accountCreated) {
+			return 'READY_TO_ACCEPT';
 		}
 
-		return 'NEEDS_AUTH';
+		return 'ACCOUNT_CREATION';
 	})();
 
 	if (viewState === 'LOADING') {
@@ -199,14 +182,22 @@ const AcceptInvitationPage = () => {
 					<CardHeader>
 						<div className="flex items-center space-x-2">
 							<CheckCircle2 className="h-6 w-6 text-green-600" />
-							<CardTitle>Invitation Accepted!</CardTitle>
+							<CardTitle>
+								You've joined{' '}
+								{tenant?.name ||
+									authConfig?.tenant_name ||
+									'the team'}
+							</CardTitle>
 						</div>
 					</CardHeader>
 					<CardContent>
-						<p className="text-gray-700">
-							You have successfully joined the team(s). Redirecting to
-							access management...
-						</p>
+						<p className="text-gray-700">Your team access is ready.</p>
+						<Button
+							className="w-full mt-4"
+							onClick={() => navigate('/')}
+						>
+							Go to Login
+						</Button>
 					</CardContent>
 				</Card>
 			</div>
@@ -215,29 +206,23 @@ const AcceptInvitationPage = () => {
 
 	return (
 		<div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
-			<Card className="w-full max-w-md">
-				<CardHeader>
-					<CardTitle className="text-2xl">Team Invitation</CardTitle>
-					<CardDescription>
-						{tenant?.name && (
+			<div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4">
+				<Card>
+					<CardHeader>
+						<CardTitle className="text-2xl">Team Invitation</CardTitle>
+						<CardDescription>
 							<span className="block text-gray-900 font-semibold mb-1">
-								{tenant.name}
+								{tenant?.name ||
+									authConfig?.tenant_name ||
+									'Organisation'}
 							</span>
-						)}
-						You've been invited by{' '}
-						<strong>{invitation?.invited_by?.name || 'Unknown'}</strong>
-					</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-4">
-					{error && (
-						<Alert variant="destructive">
-							<AlertCircle className="h-4 w-4" />
-							<AlertTitle>Error</AlertTitle>
-							<AlertDescription>{error}</AlertDescription>
-						</Alert>
-					)}
-
-					<div className="space-y-3">
+							You were invited by{' '}
+							<strong>
+								{invitation?.invited_by?.name || 'Unknown'}
+							</strong>
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-3">
 						<div>
 							<label className="text-sm font-medium text-gray-700">
 								Email
@@ -292,88 +277,66 @@ const AcceptInvitationPage = () => {
 								).toLocaleDateString()}
 							</p>
 						</div>
+					</CardContent>
+				</Card>
 
-						{viewState === 'AUTHENTICATED_MISMATCH' && (
-							<Alert>
+				<Card>
+					<CardHeader>
+						<CardTitle>
+							{viewState === 'READY_TO_ACCEPT'
+								? userExists
+									? 'Step 2 of 2 · Accept Invitation'
+									: 'Step 2 of 2 · Accept Invitation'
+								: 'Step 1 of 2 · Create Account'}
+						</CardTitle>
+						<CardDescription>
+							{viewState === 'READY_TO_ACCEPT'
+								? `Accept this invitation to join ${tenant?.name || authConfig?.tenant_name || 'the organisation'}.`
+								: 'Create your account first. You will accept the invitation in the next step.'}
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						{error && (
+							<Alert variant="destructive">
 								<AlertCircle className="h-4 w-4" />
-								<AlertTitle>Different logged-in account</AlertTitle>
-								<AlertDescription>
-									This invitation is for{' '}
-									<strong>{invitation?.email}</strong>, but you are
-									logged in as{' '}
-									<strong>
-										{userDetails?.email || 'unknown user'}
-									</strong>
-									. Logout and sign in with the invited account.
-								</AlertDescription>
+								<AlertTitle>Error</AlertTitle>
+								<AlertDescription>{error}</AlertDescription>
 							</Alert>
 						)}
 
-						{viewState === 'NEEDS_AUTH' && (
+						{viewState === 'ACCOUNT_CREATION' && (
 							<InvitationAuthForm
 								authConfig={authConfig}
 								email={invitation?.email}
 								invitationToken={token}
 								authCode={authCode}
-								userExists={userExists}
-								onAuthenticated={handleAuthenticated}
+								userExists={false}
+								onAccountCreated={handleAccountCreated}
 							/>
 						)}
-					</div>
-				</CardContent>
-				<CardFooter className="flex gap-3">
-					{viewState === 'AUTHENTICATED_MATCH' && (
-						<>
-							<Button
-								onClick={handleDecline}
-								variant="outline"
-								disabled={processing}
-								className="flex-1"
-							>
-								Decline
-							</Button>
-							<Button
-								onClick={handleAccept}
-								disabled={processing}
-								className="flex-1"
-							>
-								Accept Invitation
-							</Button>
-						</>
-					)}
 
-					{viewState === 'AUTHENTICATED_MISMATCH' && (
-						<>
-							<Button
-								onClick={handleDecline}
-								variant="outline"
-								disabled={processing}
-								className="flex-1"
-							>
-								Decline
-							</Button>
-							<Button
-								onClick={handleMismatchLogout}
-								disabled={processing}
-								className="flex-1"
-							>
-								Logout
-							</Button>
-						</>
-					)}
-
-					{viewState === 'NEEDS_AUTH' && (
-						<Button
-							onClick={handleDecline}
-							variant="outline"
-							disabled={processing}
-							className="w-full"
-						>
-							Decline Invitation
-						</Button>
-					)}
-				</CardFooter>
-			</Card>
+						{viewState === 'READY_TO_ACCEPT' && (
+							<div className="space-y-3">
+								<Button
+									onClick={handleAccept}
+									disabled={processing}
+									className="w-full"
+								>
+									Accept Team Invitation
+								</Button>
+								<Button
+									onClick={handleDecline}
+									variant="outline"
+									disabled={processing}
+									className="w-full"
+								>
+									Decline Invitation
+								</Button>
+							</div>
+						)}
+					</CardContent>
+				</Card>
+			</div>
 		</div>
 	);
 };
