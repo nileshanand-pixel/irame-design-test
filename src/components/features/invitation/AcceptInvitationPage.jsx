@@ -12,7 +12,39 @@ import {
 	CardFooter,
 } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, CheckCircle2, XCircle, AlertCircle, Users } from 'lucide-react';
+import {
+	Loader2,
+	CheckCircle2,
+	XCircle,
+	AlertCircle,
+	Users,
+	Mail,
+	Shield,
+	Calendar,
+} from 'lucide-react';
+import { capitalizeFirstLetterFullText } from '@/lib/utils';
+
+const formatExpiry = (isoString) => {
+	if (!isoString) return '';
+	const date = new Date(isoString);
+	const day = date.getDate();
+	const suffix =
+		day % 10 === 1 && day !== 11
+			? 'st'
+			: day % 10 === 2 && day !== 12
+				? 'nd'
+				: day % 10 === 3 && day !== 13
+					? 'rd'
+					: 'th';
+	const month = date.toLocaleString(undefined, { month: 'long' });
+	const year = date.getFullYear();
+	const timeWithZone = date.toLocaleTimeString(undefined, {
+		hour: '2-digit',
+		minute: '2-digit',
+		timeZoneName: 'short',
+	});
+	return `${day}${suffix} ${month} ${year}, ${timeWithZone}`;
+};
 
 const AcceptInvitationPage = () => {
 	const [searchParams] = useSearchParams();
@@ -205,138 +237,194 @@ const AcceptInvitationPage = () => {
 	}
 
 	return (
-		<div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
-			<div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-4">
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-2xl">Team Invitation</CardTitle>
-						<CardDescription>
-							<span className="block text-gray-900 font-semibold mb-1">
+		<div className="flex items-center justify-center min-h-screen bg-gray-50 p-4 lg:p-8">
+			<Card className="w-full max-w-5xl overflow-hidden shadow-sm border border-gray-100 bg-white">
+				<div className="grid grid-cols-1 md:grid-cols-2 min-h-[580px]">
+					{/* Left Section: Context & Info */}
+					<div className="bg-[hsl(268,40%,97%)] border-r border-[hsl(268,30%,92%)] p-8 lg:p-10 flex flex-col justify-between">
+						<div>
+							<div className="mb-8">
+								<span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary80 bg-primary/8 px-3 py-1 rounded-full mb-4 border border-primary/10">
+									Invitation
+								</span>
+								<h1 className="text-3xl lg:text-4xl font-bold text-primary100 leading-tight">
+									{tenant?.name ||
+										authConfig?.tenant_name ||
+										'Join the Organisation'}
+								</h1>
+							</div>
+
+							<p className="text-gray-500 text-sm mb-8">
+								<span className="font-semibold text-gray-800">
+									{capitalizeFirstLetterFullText(
+										invitation?.invited_by?.name,
+									) || 'An administrator'}
+								</span>{' '}
+								invited you to join{' '}
 								{tenant?.name ||
 									authConfig?.tenant_name ||
-									'Organisation'}
-							</span>
-							You were invited by{' '}
-							<strong>
-								{invitation?.invited_by?.name || 'Unknown'}
-							</strong>
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-3">
-						<div>
-							<label className="text-sm font-medium text-gray-700">
-								Email
-							</label>
-							<p className="text-gray-900">{invitation?.email}</p>
+									'the organization'}
+								.
+							</p>
+
+							<div className="space-y-4">
+								<div className="flex items-center gap-3">
+									<div className="p-2 bg-white rounded-lg border border-[hsl(268,30%,90%)] shadow-sm">
+										<Mail className="h-4 w-4 text-primary" />
+									</div>
+									<div>
+										<p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+											Email
+										</p>
+										<p className="text-sm text-gray-800 font-medium">
+											{invitation?.email}
+										</p>
+									</div>
+								</div>
+
+								<div className="flex items-center gap-3">
+									<div className="p-2 bg-white rounded-lg border border-[hsl(268,30%,90%)] shadow-sm">
+										<Shield className="h-4 w-4 text-primary" />
+									</div>
+									<div>
+										<p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+											Role
+										</p>
+										<p className="text-sm text-gray-800 font-medium">
+											{invitation?.role?.name || 'Member'}
+										</p>
+									</div>
+								</div>
+
+								{invitation?.teams &&
+									invitation.teams.length > 0 && (
+										<div className="flex items-start gap-3">
+											<div className="p-2 bg-white rounded-lg border border-[hsl(268,30%,90%)] shadow-sm">
+												<Users className="h-4 w-4 text-primary" />
+											</div>
+											<div>
+												<p className="text-xs text-gray-400 font-medium uppercase tracking-wider">
+													Teams ({invitation.teams.length})
+												</p>
+												<ul className="mt-1 space-y-0.5">
+													{invitation.teams.map((team) => (
+														<li
+															key={team.id}
+															className="text-sm text-gray-800 font-medium"
+														>
+															• {team.name}
+														</li>
+													))}
+												</ul>
+											</div>
+										</div>
+									)}
+							</div>
 						</div>
 
-						{invitation?.full_name && (
+						<div className="mt-8 pt-6 border-t border-[hsl(268,30%,90%)] text-gray-400 text-xs flex items-center gap-2">
+							<Calendar className="h-3 w-3" />
+							<span>
+								Expires: {formatExpiry(invitation?.expires_at)}
+							</span>
+						</div>
+					</div>
+
+					{/* Right Section: Actions/Form */}
+					<div className="p-8 lg:p-10 flex flex-col justify-center">
+						{/* Progress Stepper */}
+						<div className="mb-8">
+							<div className="flex justify-between items-center mb-2">
+								<span className="text-xs font-bold uppercase tracking-widest text-primary">
+									Step{' '}
+									{viewState === 'READY_TO_ACCEPT' ? '2' : '1'} of
+									2
+								</span>
+								<span className="text-xs text-gray-400">
+									{viewState === 'READY_TO_ACCEPT'
+										? '100%'
+										: '50%'}{' '}
+									complete
+								</span>
+							</div>
+							<div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+								<div
+									className="h-full bg-primary transition-all duration-500 ease-out rounded-full"
+									style={{
+										width:
+											viewState === 'READY_TO_ACCEPT'
+												? '100%'
+												: '50%',
+									}}
+								></div>
+							</div>
+						</div>
+
+						<div className="space-y-6">
 							<div>
-								<label className="text-sm font-medium text-gray-700">
-									Name
-								</label>
-								<p className="text-gray-900">
-									{invitation?.full_name}
+								<h3 className="text-2xl font-bold text-gray-900 mb-1">
+									{viewState === 'READY_TO_ACCEPT'
+										? 'Accept Invitation'
+										: 'Create Account'}
+								</h3>
+								<p className="text-gray-400 text-sm">
+									{viewState === 'READY_TO_ACCEPT'
+										? `You're one click away from joining ${tenant?.name || authConfig?.tenant_name || 'the organisation'}.`
+										: 'Set up your login to continue with the invitation.'}
 								</p>
 							</div>
-						)}
 
-						<div>
-							<label className="text-sm font-medium text-gray-700">
-								Role
-							</label>
-							<p className="text-gray-900">
-								{invitation?.role?.name || 'Member'}
-							</p>
-						</div>
+							{error && (
+								<Alert
+									variant="destructive"
+									className="bg-red-50 border-red-100 text-red-800"
+								>
+									<AlertCircle className="h-4 w-4" />
+									<AlertTitle>Error</AlertTitle>
+									<AlertDescription>{error}</AlertDescription>
+								</Alert>
+							)}
 
-						{invitation?.teams && invitation.teams.length > 0 && (
 							<div>
-								<label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-									<Users className="h-4 w-4" />
-									Teams ({invitation.teams.length})
-								</label>
-								<ul className="mt-2 space-y-1">
-									{invitation.teams.map((team) => (
-										<li
-											key={team.id}
-											className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded"
+								{viewState === 'ACCOUNT_CREATION' && (
+									<InvitationAuthForm
+										authConfig={authConfig}
+										email={invitation?.email}
+										invitationToken={token}
+										authCode={authCode}
+										userExists={false}
+										onAccountCreated={handleAccountCreated}
+									/>
+								)}
+
+								{viewState === 'READY_TO_ACCEPT' && (
+									<div className="space-y-3">
+										<Button
+											onClick={handleAccept}
+											disabled={processing}
+											className="w-full h-11 text-sm font-semibold"
 										>
-											• {team.name}
-										</li>
-									))}
-								</ul>
+											{processing ? (
+												<Loader2 className="animate-spin" />
+											) : (
+												'Join Workspace'
+											)}
+										</Button>
+										<Button
+											onClick={handleDecline}
+											variant="ghost"
+											disabled={processing}
+											className="w-full text-sm text-gray-400 hover:text-red-500 hover:bg-red-50"
+										>
+											Decline Invitation
+										</Button>
+									</div>
+								)}
 							</div>
-						)}
-
-						<div className="pt-2 border-t">
-							<p className="text-xs text-gray-500">
-								Expires:{' '}
-								{new Date(
-									invitation?.expires_at,
-								).toLocaleDateString()}
-							</p>
 						</div>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardHeader>
-						<CardTitle>
-							{viewState === 'READY_TO_ACCEPT'
-								? userExists
-									? 'Step 2 of 2 · Accept Invitation'
-									: 'Step 2 of 2 · Accept Invitation'
-								: 'Step 1 of 2 · Create Account'}
-						</CardTitle>
-						<CardDescription>
-							{viewState === 'READY_TO_ACCEPT'
-								? `Accept this invitation to join ${tenant?.name || authConfig?.tenant_name || 'the organisation'}.`
-								: 'Create your account first. You will accept the invitation in the next step.'}
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						{error && (
-							<Alert variant="destructive">
-								<AlertCircle className="h-4 w-4" />
-								<AlertTitle>Error</AlertTitle>
-								<AlertDescription>{error}</AlertDescription>
-							</Alert>
-						)}
-
-						{viewState === 'ACCOUNT_CREATION' && (
-							<InvitationAuthForm
-								authConfig={authConfig}
-								email={invitation?.email}
-								invitationToken={token}
-								authCode={authCode}
-								userExists={false}
-								onAccountCreated={handleAccountCreated}
-							/>
-						)}
-
-						{viewState === 'READY_TO_ACCEPT' && (
-							<div className="space-y-3">
-								<Button
-									onClick={handleAccept}
-									disabled={processing}
-									className="w-full"
-								>
-									Accept Team Invitation
-								</Button>
-								<Button
-									onClick={handleDecline}
-									variant="outline"
-									disabled={processing}
-									className="w-full"
-								>
-									Decline Invitation
-								</Button>
-							</div>
-						)}
-					</CardContent>
-				</Card>
-			</div>
+					</div>
+				</div>
+			</Card>
 		</div>
 	);
 };

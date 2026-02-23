@@ -9,7 +9,12 @@ import { roleService } from '@/api/gatekeeper/role.service';
 import { Loader2 } from 'lucide-react';
 import PermissionsAccordion from './permissions-accordion';
 
-export default function EditPermissionsDrawer({ open, setOpen, role }) {
+export default function EditPermissionsDrawer({
+	open,
+	setOpen,
+	role,
+	isReadOnly = false,
+}) {
 	const [roleName, setRoleName] = useState(role?.name || '');
 	const [description, setDescription] = useState(role?.description || '');
 	const [permissions, setPermissions] = useState({});
@@ -88,7 +93,7 @@ export default function EditPermissionsDrawer({ open, setOpen, role }) {
 				<div className="h-full w-full relative">
 					<SheetHeader className="p-6 pb-4">
 						<SheetTitle className="text-base text-[#26064A] font-semibold">
-							Edit Role Permissions
+							{isReadOnly ? 'View' : 'Edit'} Role Permissions
 						</SheetTitle>
 					</SheetHeader>
 
@@ -100,6 +105,7 @@ export default function EditPermissionsDrawer({ open, setOpen, role }) {
 							value={roleName}
 							setValue={(e) => setRoleName(e)}
 							required={true}
+							disabled={isReadOnly}
 						/>
 
 						<div className="space-y-2">
@@ -111,6 +117,7 @@ export default function EditPermissionsDrawer({ open, setOpen, role }) {
 								className="w-full min-h-[6rem] text-sm border-gray-300 resize-none"
 								value={description}
 								onChange={(e) => setDescription(e.target.value)}
+								disabled={isReadOnly}
 							/>
 						</div>
 					</div>
@@ -121,23 +128,27 @@ export default function EditPermissionsDrawer({ open, setOpen, role }) {
 						permissionsByResource={permissionsByResource?.data}
 						defaultOpenCategory={firstCategoryKey}
 						isLoading={isLoadingPermissions || isLoadingRolePermissions}
+						readOnly={isReadOnly}
 					/>
 
-					<div className="absolute bottom-0 left-0 w-full">
-						<div className="py-4 px-6 flex justify-end border-t border-[#6A12CD1A] bg-white">
-							<Button
-								onClick={handleUpdateRole}
-								disabled={
-									updateRoleMutation.isLoading || !roleName.trim()
-								}
-							>
-								{updateRoleMutation.isLoading ? (
-									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-								) : null}
-								Update Role
-							</Button>
+					{!isReadOnly && (
+						<div className="absolute bottom-0 left-0 w-full">
+							<div className="py-4 px-6 flex justify-end border-t border-[#6A12CD1A] bg-white">
+								<Button
+									onClick={handleUpdateRole}
+									disabled={
+										updateRoleMutation.isLoading ||
+										!roleName.trim()
+									}
+								>
+									{updateRoleMutation.isLoading ? (
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									) : null}
+									Update Role
+								</Button>
+							</div>
 						</div>
-					</div>
+					)}
 				</div>
 			</SheetContent>
 		</Sheet>

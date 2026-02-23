@@ -15,8 +15,10 @@ export default function PermissionsAccordion({
 	defaultOpenCategory,
 	title = 'Review role permissions',
 	isLoading = false,
+	readOnly = false,
 }) {
 	const handlePermissionToggle = (permissionId) => {
+		if (readOnly) return;
 		setPermissions((prev) => ({
 			...prev,
 			[permissionId]: !prev[permissionId],
@@ -105,6 +107,9 @@ export default function PermissionsAccordion({
 																</div>
 																<div className="flex items-center justify-end">
 																	<Switch
+																		disabled={
+																			readOnly
+																		}
 																		checked={
 																			permissions[
 																				permission

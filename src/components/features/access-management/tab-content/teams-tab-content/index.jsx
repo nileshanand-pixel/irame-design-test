@@ -4,6 +4,7 @@ import { DataTable } from '@/components/elements/DataTable';
 import DotsDropdown from '@/components/elements/DotsDropdown';
 import editIcon from '@/assets/icons/edit.svg';
 import userPlusIcon from '@/assets/icons/user-plus.svg';
+import { Eye, Users } from 'lucide-react';
 import EmptyState from '../empty-state';
 import teamsEmpty from '@/assets/icons/teams-empty.svg';
 import CreateTeamCta from './create-team-cta';
@@ -32,7 +33,9 @@ export default function TeamsTabContent() {
 	});
 	const [selectedTeam, setSelectedTeam] = useState(null);
 	const [isEditingTeam, setIsEditingTeam] = useState(false);
+	const [isViewReadOnly, setIsViewReadOnly] = useState(false);
 	const [isManageUsersDrawerOpen, setIsManageUsersDrawerOpen] = useState(false);
+	const [isViewMembersReadOnly, setIsViewMembersReadOnly] = useState(false);
 
 	const queryParams = useMemo(() => {
 		const params = {
@@ -67,13 +70,15 @@ export default function TeamsTabContent() {
 
 	const totalCount = data?.pagination?.total || 0;
 
-	const handleEditTeam = (team) => {
+	const handleEditTeam = (team, readOnly = false) => {
 		setSelectedTeam(team);
+		setIsViewReadOnly(readOnly);
 		setIsEditingTeam(true);
 	};
 
-	const handleManageUsers = (team) => {
+	const handleManageUsers = (team, readOnly = false) => {
 		setSelectedTeam(team);
+		setIsViewMembersReadOnly(readOnly);
 		setIsManageUsersDrawerOpen(true);
 	};
 
@@ -106,15 +111,29 @@ export default function TeamsTabContent() {
 				const actionOptions = [
 					{
 						type: 'item',
+						label: 'View Team',
+						onClick: () => handleEditTeam(team, true),
+						show: true,
+						icon: <Eye className="size-4 text-[#26064A]" />,
+					},
+					{
+						type: 'item',
+						label: 'View Members',
+						onClick: () => handleManageUsers(team, true),
+						show: true,
+						icon: <Users className="size-4 text-[#26064A]" />,
+					},
+					{
+						type: 'item',
 						label: 'Edit Team',
-						onClick: () => handleEditTeam(team),
+						onClick: () => handleEditTeam(team, false),
 						show: true,
 						icon: <img src={editIcon} className="size-4" />,
 					},
 					{
 						type: 'item',
 						label: 'Manage Users',
-						onClick: () => handleManageUsers(team),
+						onClick: () => handleManageUsers(team, false),
 						show: true,
 						icon: <img src={userPlusIcon} className="size-4" />,
 					},
@@ -168,6 +187,7 @@ export default function TeamsTabContent() {
 					open={!!isEditingTeam}
 					setOpen={setIsEditingTeam}
 					team={selectedTeam}
+					isReadOnly={isViewReadOnly}
 				/>
 			)}
 
@@ -176,6 +196,7 @@ export default function TeamsTabContent() {
 					open={!!isManageUsersDrawerOpen}
 					setOpen={setIsManageUsersDrawerOpen}
 					team={selectedTeam}
+					isReadOnly={isViewMembersReadOnly}
 				/>
 			)}
 		</div>

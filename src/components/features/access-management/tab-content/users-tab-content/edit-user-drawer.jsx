@@ -9,7 +9,13 @@ import { getTeams } from '@/api/gatekeeper/team.service';
 import { userService } from '@/api/gatekeeper/user.service';
 import { toast } from 'react-toastify';
 
-export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
+export default function EditUserDrawer({
+	open,
+	setOpen,
+	user,
+	onUpdate,
+	isReadOnly = false,
+}) {
 	const [teams, setTeams] = useState([]);
 	const [selectedTeams, setSelectedTeams] = useState([]);
 	const [roles, setRoles] = useState([]);
@@ -127,7 +133,7 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 				<div className="h-full w-full relative">
 					<SheetHeader className="p-6 pb-4">
 						<SheetTitle className="text-base text-[#26064A] font-semibold">
-							Edit user Information
+							{isReadOnly ? 'View' : 'Edit'} user Information
 						</SheetTitle>
 					</SheetHeader>
 
@@ -138,7 +144,7 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 									Name
 								</div>
 								<div className="text-xs text-[#26064A] font-medium">
-									{user.name}
+									{user?.name}
 								</div>
 							</div>
 							<div>
@@ -146,7 +152,7 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 									Email
 								</div>
 								<div className="text-xs text-[#26064A] font-medium">
-									{user.email}
+									{user?.email}
 								</div>
 							</div>
 						</div>
@@ -165,6 +171,7 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 								maxCount={1}
 								chipClassName="text-xs"
 								closeIconClassName="text-2xl text-[#26064A]"
+								disabled={isReadOnly}
 							/>
 						</div>
 					</div>
@@ -190,8 +197,13 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 									}`}
 								>
 									<div
-										className="flex items-center justify-between px-4 py-3 cursor-pointer"
-										onClick={() => setSelectedRole(role.id)}
+										className={cn(
+											'flex items-center justify-between px-4 py-3 cursor-pointer',
+											isReadOnly && 'cursor-default',
+										)}
+										onClick={() =>
+											!isReadOnly && setSelectedRole(role.id)
+										}
 									>
 										<div className="flex items-center gap-3 flex-1">
 											<div
@@ -291,36 +303,38 @@ export default function EditUserDrawer({ open, setOpen, user, onUpdate }) {
 						</div>
 					</div>
 
-					<div className="absolute bottom-0 left-0 w-full py-4 px-6 flex justify-between border-t border-[#6A12CD1A] bg-white">
-						{/* TODO: Implement disable user later after discuss */}
+					{!isReadOnly && (
+						<div className="absolute bottom-0 left-0 w-full py-4 px-6 flex justify-between border-t border-[#6A12CD1A] bg-white">
+							{/* TODO: Implement disable user later after discuss */}
 
-						{/* <Button
-							variant="outline"
-							className="border-[#26064A] !text-[#26064A]"
-							onClick={() => {
-								if (
-									window.confirm(
-										'Are you sure you want to disable this user?',
-									)
-								) {
-									userService.disableUser(user.userId).then(() => {
-										toast.success('User disabled');
-										setOpen(false);
-										if (onUpdate) onUpdate();
-									});
-								}
-							}}
-						>
-							Disable User
-						</Button> */}
-						<Button
-							onClick={handleUpdate}
-							disabled={loading}
-							className="ml-auto"
-						>
-							{loading ? 'Updating...' : 'Update'}
-						</Button>
-					</div>
+							{/* <Button
+								variant="outline"
+								className="border-[#26064A] !text-[#26064A]"
+								onClick={() => {
+									if (
+										window.confirm(
+											'Are you sure you want to disable this user?',
+										)
+									) {
+										userService.disableUser(user.userId).then(() => {
+											toast.success('User disabled');
+											setOpen(false);
+											if (onUpdate) onUpdate();
+										});
+									}
+								}}
+							>
+								Disable User
+							</Button> */}
+							<Button
+								onClick={handleUpdate}
+								disabled={loading}
+								className="ml-auto"
+							>
+								{loading ? 'Updating...' : 'Update'}
+							</Button>
+						</div>
+					)}
 				</div>
 			</SheetContent>
 		</Sheet>

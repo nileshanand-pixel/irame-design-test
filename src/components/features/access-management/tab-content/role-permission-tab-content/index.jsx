@@ -11,7 +11,7 @@ import { useRoles } from '@/hooks/use-roles';
 import { useRoleDelete } from '@/hooks/use-role-delete';
 import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'react-toastify';
-import { Copy } from 'lucide-react';
+import { Copy, Eye } from 'lucide-react';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
 import { capitalizeFirstLetterFullText } from '@/lib/utils';
 
@@ -36,13 +36,15 @@ export default function RolePermissionTabContent() {
 	const [isCloneRoleDrawerOpen, setIsCloneRoleDrawerOpen] = useState(false);
 	const [isEditPermissionsDrawerOpen, setIsEditPermissionsDrawerOpen] =
 		useState(false);
+	const [isViewReadOnly, setIsViewReadOnly] = useState(false);
 
 	// Hooks
 	const { mutate: deleteRole, isPending: isDeleting } = useRoleDelete();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
-	const handleEditPermissions = (role) => {
+	const handleEditPermissions = (role, readOnly = false) => {
 		setSelectedRole(role);
+		setIsViewReadOnly(readOnly);
 		setIsEditPermissionsDrawerOpen(true);
 	};
 
@@ -114,11 +116,19 @@ export default function RolePermissionTabContent() {
 					const actionOptions = [
 						{
 							type: 'item',
+							label: 'View Role',
+							onClick: () => handleEditPermissions(role, true),
+							show: true,
+							icon: <Eye className="size-4 text-[#26064A]" />,
+						},
+						{
+							type: 'item',
 							label: 'Edit Permissions',
-							onClick: () => handleEditPermissions(role),
+							onClick: () => handleEditPermissions(role, false),
 							show: !role.isSystem, // Only show for non-system roles
 							icon: <img src={editIcon} className="size-4" />,
 						},
+
 						{
 							type: 'item',
 							label: 'Duplicate Role',
@@ -200,6 +210,7 @@ export default function RolePermissionTabContent() {
 					open={!!isEditPermissionsDrawerOpen}
 					setOpen={setIsEditPermissionsDrawerOpen}
 					role={selectedRole}
+					isReadOnly={isViewReadOnly}
 				/>
 			)}
 

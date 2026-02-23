@@ -15,7 +15,7 @@ import { toast } from 'react-toastify';
 import { useUsers } from '@/hooks/use-users';
 import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
-import { Copy } from 'lucide-react';
+import { Copy, Eye } from 'lucide-react';
 import {
 	Select,
 	SelectContent,
@@ -118,6 +118,7 @@ export default function UsersTabContent() {
 		pageSize: 10,
 	});
 	const [isEditUserDrawerOpen, setIsEditUserDrawerOpen] = useState(false);
+	const [isViewReadOnly, setIsViewReadOnly] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
 
 	const queryParams = useMemo(() => {
@@ -166,7 +167,7 @@ export default function UsersTabContent() {
 
 	const totalCount = data?.pagination?.total || 0;
 
-	const handleEditUser = async (user) => {
+	const handleEditUser = async (user, readOnly = false) => {
 		try {
 			// Fetch fresh user data from the API
 			const userResponse = await userService.getUserById(user.id);
@@ -175,6 +176,7 @@ export default function UsersTabContent() {
 				...userResponse.data,
 				userId: userResponse.data.userId || user.id,
 			});
+			setIsViewReadOnly(readOnly);
 			setIsEditUserDrawerOpen(true);
 		} catch (error) {
 			toast.error('Failed to load user details');
@@ -281,8 +283,15 @@ export default function UsersTabContent() {
 					const actionOptions = [
 						{
 							type: 'item',
+							label: 'View User',
+							onClick: () => handleEditUser(user, true),
+							show: !isInvitation,
+							icon: <Eye className="size-4 text-[#26064A]" />,
+						},
+						{
+							type: 'item',
 							label: 'Edit User',
-							onClick: () => handleEditUser(user),
+							onClick: () => handleEditUser(user, false),
 							show: !isInvitation, // Only show for actual users
 							icon: <img src={editIcon} className="size-4" />,
 						},
@@ -449,6 +458,7 @@ export default function UsersTabContent() {
 					setOpen={setIsEditUserDrawerOpen}
 					user={selectedUser}
 					onUpdate={refetch}
+					isReadOnly={isViewReadOnly}
 				/>
 			)}
 		</div>
