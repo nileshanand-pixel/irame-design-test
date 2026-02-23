@@ -11,6 +11,7 @@ import userCrossIcon from '@/assets/icons/user-cross.svg';
 import resendIcon from '@/assets/icons/resend.svg';
 import EditUserDrawer from './edit-user-drawer';
 import { userService } from '@/api/gatekeeper/user.service';
+import { invitationService } from '@/api/gatekeeper/invitation.service';
 import { toast } from 'react-toastify';
 import { useUsers } from '@/hooks/use-users';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -318,9 +319,48 @@ export default function UsersTabContent() {
 						{
 							type: 'item',
 							label: 'Resend Invite',
-							onClick: () => console.log('Resend invite', user),
+							onClick: async () => {
+								try {
+									await invitationService.resendInvitation(
+										user.id,
+									);
+									toast.success('Invitation resent successfully');
+									refetch();
+								} catch (err) {
+									toast.error(
+										err?.response?.data?.message ||
+											'Failed to resend invitation',
+									);
+								}
+							},
 							show: isInvitation && isPending, // Only for pending invitations
 							icon: <img src={resendIcon} className="size-4" />,
+						},
+						{
+							type: 'item',
+							label: 'Revoke Invite',
+							onClick: async () => {
+								if (
+									!window.confirm(
+										'Are you sure you want to revoke this invitation?',
+									)
+								)
+									return;
+								try {
+									await invitationService.revokeInvitation(
+										user.id,
+									);
+									toast.success('Invitation revoked');
+									refetch();
+								} catch (err) {
+									toast.error(
+										err?.response?.data?.message ||
+											'Failed to revoke invitation',
+									);
+								}
+							},
+							show: isInvitation && isPending, // Only for pending invitations
+							icon: <img src={userCrossIcon} className="size-4" />,
 						},
 						{
 							type: 'item',
