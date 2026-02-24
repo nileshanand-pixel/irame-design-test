@@ -15,6 +15,7 @@ import { invitationService } from '@/api/gatekeeper/invitation.service';
 import { toast } from 'react-toastify';
 import { useUsers } from '@/hooks/use-users';
 import { useDebounce } from '@/hooks/use-debounce';
+import useConfirmDialog from '@/hooks/use-confirm-dialog';
 import { cn } from '@/lib/utils';
 import { Copy, Eye } from 'lucide-react';
 import {
@@ -112,6 +113,7 @@ const getStatusConfig = (status) => {
 export default function UsersTabContent() {
 	const [search, setSearch] = useState('');
 	const debouncedSearch = useDebounce(search, 500);
+	const [ConfirmationDialog, confirm] = useConfirmDialog();
 	const [filterType, setFilterType] = useState('active'); // 'active', 'invitations', 'all'
 	const [statusFilter, setStatusFilter] = useState('');
 	const [pagination, setPagination] = useState({
@@ -340,12 +342,15 @@ export default function UsersTabContent() {
 							type: 'item',
 							label: 'Revoke Invite',
 							onClick: async () => {
-								if (
-									!window.confirm(
+								const confirmed = await confirm({
+									header: 'Revoke Invitation?',
+									description:
 										'Are you sure you want to revoke this invitation?',
-									)
-								)
-									return;
+									secondaryCtaText: 'Cancel',
+									primaryCtaText: 'Revoke',
+									primaryCtaVariant: 'destructive',
+								});
+								if (!confirmed) return;
 								try {
 									await invitationService.revokeInvitation(
 										user.id,
@@ -501,6 +506,7 @@ export default function UsersTabContent() {
 					isReadOnly={isViewReadOnly}
 				/>
 			)}
+			<ConfirmationDialog />
 		</div>
 	);
 }
