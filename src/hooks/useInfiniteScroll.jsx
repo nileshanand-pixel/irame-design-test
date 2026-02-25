@@ -53,42 +53,21 @@ const useInfiniteScroll = ({
 
 		getNextPageParam: (lastPage, allPages) => {
 			if (paginationType === 'cursor') {
-				let cursor = null;
-
-				cursor =
+				const cursor =
 					lastPage?.cursor ||
 					lastPage?.next_cursor ||
 					lastPage?.nextCursor ||
 					lastPage?.pagination?.cursor ||
 					lastPage?.pagination?.next_cursor;
 
-				if (!cursor && allPages.length > 0) {
-					const dataArray =
-						lastPage?.session_list ||
-						lastPage?.sessions ||
-						lastPage?.reports ||
-						lastPage?.data ||
-						lastPage;
-
-					const limit = options.limit || 20;
-
-					if (Array.isArray(dataArray)) {
-						if (dataArray.length >= limit) {
-							const totalItems = allPages.reduce((total, page) => {
-								const pageData =
-									page?.session_list ||
-									page?.sessions ||
-									page?.reports ||
-									page?.data ||
-									page;
-								return (
-									total +
-									(Array.isArray(pageData) ? pageData.length : 0)
-								);
-							}, 0);
-							return totalItems;
-						}
-					}
+				// For cursor-based pagination, the cursor from the API is the
+				// single source of truth. If there's no cursor (or it's "0", the
+				// sentinel value used by this service), there are no more pages.
+				// Do NOT fall back to a count-based approach — that causes the
+				// service to receive an unexpected `offset` param, ignore it, and
+				// return the first page again, producing an infinite loop.
+				if (!cursor || cursor === '0') {
+					return undefined;
 				}
 
 				return cursor;
