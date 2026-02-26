@@ -3,6 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useDataSources } from '@/hooks/useDataSources';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export function ChooseExistingModal({
 	open,

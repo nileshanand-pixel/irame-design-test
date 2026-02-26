@@ -99,6 +99,10 @@ const BulkActions = ({
 	};
 
 	const getAllowedFiles = (allFiles, filesInfo) => {
+		// TEMPORARY: Accept all file types - TODO: Revert this change
+		return [allFiles, false];
+
+		/* ORIGINAL CODE - Uncomment to restore file type restrictions
 		const allowedFiles = [];
 		const allowedFileTypes = ['pdf', 'jpg', 'png', 'gif'];
 		let hasNotAllowedFiles = false;
@@ -114,6 +118,7 @@ const BulkActions = ({
 		});
 
 		return [allowedFiles, hasNotAllowedFiles];
+		*/
 	};
 
 	const getFilesInfo = async (files) => {
