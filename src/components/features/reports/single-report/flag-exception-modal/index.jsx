@@ -12,6 +12,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
 	getReportCardCases,
@@ -29,7 +36,7 @@ import { useReportPermission } from '@/contexts/ReportPermissionContext';
 import { CASE_GENERATION_STATUS } from '../../constants';
 import { queryClient } from '@/lib/react-query';
 
-const PAGE_SIZE = 15;
+const ROWS_PER_PAGE_OPTIONS = [10, 20, 30, 40, 50];
 
 const KPI_KEY_AND_FILTER_MAP = {
 	[KPI_KEYS.TOTAL_EXCEPTIONS_FLAGGED_BY_IRA]: null,
@@ -57,6 +64,7 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 	const [selectedCaseIds, setSelectedCaseIds] = useState([]);
 
 	const [currentPage, setCurrentPage] = useState(1);
+	const [rowsPerPage, setRowsPerPage] = useState(ROWS_PER_PAGE_OPTIONS[1]);
 	const [generateSampleModalOpen, setGenerateSampleModalOpen] = useState(false);
 	const [exportPopoverOpen, setExportPopoverOpen] = useState(false);
 
@@ -111,7 +119,7 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 			cardId,
 			apiFilters,
 			currentPage,
-			PAGE_SIZE,
+			rowsPerPage,
 			selectedSampleId ?? 'all',
 		],
 		queryFn: () =>
@@ -121,7 +129,7 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 				filters: apiFilters,
 				pagination: {
 					page: currentPage,
-					page_size: PAGE_SIZE,
+					page_size: rowsPerPage,
 				},
 				sampleId: selectedSampleId,
 			}),
@@ -137,9 +145,14 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 	useEffect(() => {
 		if (casesData) {
 			setKpisData(casesData?.kpis);
-			setTotalPages(casesData?.pagination?.pages);
+			const apiTotalPages = casesData?.pagination?.pages || 1;
+			setTotalPages(apiTotalPages);
+
+			if (currentPage > apiTotalPages) {
+				setCurrentPage(apiTotalPages);
+			}
 		}
-	}, [casesData]);
+	}, [casesData, currentPage]);
 
 	// Reset pagination when metric changes
 	useEffect(() => {
@@ -253,10 +266,10 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 						</div>
 
 						<div>
-							<div className="text-[#26064ACC] font-semibold">
+							<div className="text-[#26064ACC] font-semibold text-xl">
 								Flag as Exceptions
 							</div>
-							<div className="text-[#26064A99] text-xs">
+							<div className="text-[#26064A99] text-sm">
 								Review and manage exceptions for this query. Update
 								status and add comments to track progress.
 							</div>
@@ -374,9 +387,10 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 
 								{/* Pagination and Actions */}
 								<div className="flex items-center justify-between">
-									<div className="flex items-center gap-3">
+									<div className="flex items-center gap-3 min-w-0 flex-1">
 										<div
 											className={cn(
+												'flex-shrink-0',
 												!isOwner && 'cursor-not-allowed',
 											)}
 										>
@@ -404,29 +418,69 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 
 										{/* Data View Tabs - Only show if sample data exists */}
 										{hasSampleData && (
-											<Tabs
-												value={selectedSampleId}
-												onValueChange={setSelectedSampleId}
-												className="w-auto"
-											>
-												<TabsList className="h-9 bg-transparent p-1">
-													{viewTabs.map((tab) => (
-														<TabsTrigger
-															key={tab.value}
-															value={tab.value}
-															className="text-sm px-4 data-[state=active]:bg-[#6A12CD0A] data-[state=active]:text-[#26064ACC] data-[state=active]:shadow-sm truncate"
-														>
-															{tab.label.length > 15
-																? `${tab.label.slice(0, 15)}...`
-																: tab.label}
-														</TabsTrigger>
-													))}
-												</TabsList>
-											</Tabs>
+											<div className="min-w-0 flex-1 overflow-hidden">
+												<Tabs
+													value={selectedSampleId}
+													onValueChange={
+														setSelectedSampleId
+													}
+													className="max-w-3xl"
+												>
+													<TabsList className="h-9 bg-transparent p-1 overflow-x-auto flex-nowrap w-full justify-start [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
+														{viewTabs.map((tab) => (
+															<TabsTrigger
+																key={tab.value}
+																value={tab.value}
+																className="text-sm px-4 data-[state=active]:bg-[#6A12CD0A] data-[state=active]:text-[#26064ACC] data-[state=active]:shadow-sm whitespace-nowrap flex-shrink-0"
+															>
+																{tab.label.length >
+																15
+																	? `${tab.label.slice(0, 15)}...`
+																	: tab.label}
+															</TabsTrigger>
+														))}
+													</TabsList>
+												</Tabs>
+											</div>
 										)}
 									</div>
 
-									<div className="flex items-center gap-4">
+									<div className="flex items-center gap-4 flex-shrink-0 ml-10">
+										<div className="flex items-center space-x-2 text-sm font-normal text-primary80">
+											<p className="whitespace-nowrap">
+												Rows per page :
+											</p>
+											<Select
+												value={rowsPerPage}
+												onValueChange={(value) => {
+													setCurrentPage(1);
+													setSelectedCaseIds([]);
+													setRowsPerPage(value);
+												}}
+											>
+												<SelectTrigger className="h-9 w-16 text-xs font-normal text-primary100 [&>svg]:text-primary100 [&>svg]:opacity-100 px-2">
+													<SelectValue
+														placeholder={rowsPerPage}
+													/>
+												</SelectTrigger>
+												<SelectContent
+													side="top"
+													className="text-xs font-normal textprimary80 py-2"
+												>
+													{ROWS_PER_PAGE_OPTIONS.map(
+														(size) => (
+															<SelectItem
+																key={size}
+																value={size}
+																className="text-xs font-normal textprimary80 hover:bg-purple-2 cursor-pointer data-[state=checked]:bg-purple-4 data-[state=checked]:font-medium"
+															>
+																<span>{size}</span>
+															</SelectItem>
+														),
+													)}
+												</SelectContent>
+											</Select>
+										</div>
 										<Popover
 											open={exportPopoverOpen}
 											onOpenChange={setExportPopoverOpen}
@@ -566,6 +620,7 @@ const FlagExceptionsModal = ({ open, onClose, reportId, cardId }) => {
 							<BulkActions
 								isBulkActionsVisible={isBulkActionsVisible}
 								selectedCaseIds={selectedCaseIds}
+								onCancel={() => setSelectedCaseIds([])}
 								reportId={reportId}
 								cardId={cardId}
 								isSample={selectedCaseIds !== null}

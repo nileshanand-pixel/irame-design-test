@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { useReportId } from '../hooks/useReportId';
 import { queryClient } from '@/lib/react-query';
+import { GRAPH_SOURCES } from '@/constants/page.constant';
 
 const arraysEqual = (a, b) => {
 	if (a.length !== b.length) return false;
@@ -79,7 +80,7 @@ export const AddGraphModal = ({ open, reportCardId, graphs = [], onClose }) => {
 
 	return (
 		<Dialog open={open} onOpenChange={handleClose}>
-			<DialogContent className="max-w-3xl p-0 text-primary80 overflow-hidden max-h-[90vh] flex flex-col">
+			<DialogContent className="max-w-7xl p-0 text-primary80 overflow-hidden max-h-[90vh] flex flex-col">
 				<div className="flex items-center justify-between px-6 py-3 border-b">
 					<div className="flex items-center gap-4">
 						{/* TODO: Add modal svg */}
@@ -130,13 +131,27 @@ export const AddGraphModal = ({ open, reportCardId, graphs = [], onClose }) => {
 										{graph.title || 'Untitled'}
 									</Label>
 								</div>
-								<GraphRenderer
-									graph={{
-										...graph,
-									}}
-									aspect="aspect-[4/3]"
-									identifierKey={reportCardId}
-								/>
+								<div
+									onClick={() =>
+										handleSelectGraph(
+											graph.id,
+											!isSelected(graph.id),
+										)
+									}
+									className={`p-3 bg-white border overflow-hidden shadow-graph hover:shadow-md transition-all duration-200 ease-in-out rounded-lg cursor-pointer ${
+										isSelected(graph.id)
+											? 'border-primary'
+											: 'border-[#E5E7EB]'
+									}`}
+								>
+									<GraphRenderer
+										graph={{
+											...graph,
+										}}
+										identifierKey={reportCardId}
+										source={GRAPH_SOURCES.ADD_TO_REPORTS}
+									/>
+								</div>
 							</div>
 						))}
 					</div>

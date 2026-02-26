@@ -105,7 +105,7 @@ const DashboardTableCard = ({
 			</div>
 
 			{isLoading ? (
-				<div className="rounded-[0.875rem] border w-full border-primary4 p-4 flex items-center justify-center">
+				<div className="rounded-2xl border-2 w-full border-primary4 p-4 flex items-center justify-center">
 					<div className="flex items-center gap-2 text-primary60 text-sm">
 						<CircularLoader size="sm" />
 						Loading table data...
@@ -113,7 +113,7 @@ const DashboardTableCard = ({
 				</div>
 			) : (
 				<div
-					className="rounded-[0.875rem] border w-full custom-scrollbar-graph border-primary4"
+					className="w-full custom-scrollbar-graph"
 					onClick={(e) => {
 						// Stop propagation only for interactive elements to allow table scrolling
 						if (e.target.closest('button, input, select, a')) {

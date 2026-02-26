@@ -5,6 +5,7 @@ import TableComponent from '@/components/elements/TableComponent';
 import { useTableData } from '@/hooks/useTableData';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { GRAPH_SOURCES } from '@/constants/page.constant';
 
 const WidgetCard = ({ widget, isSelected, onToggleSelect, type = 'graph' }) => {
 	// Transform widget data to match useTableData expected format
@@ -44,11 +45,9 @@ const WidgetCard = ({ widget, isSelected, onToggleSelect, type = 'graph' }) => {
 		<div
 			onClick={handleClick}
 			className={cn(
-				'relative rounded-lg border-[0.09375rem] cursor-pointer transition-all duration-200',
+				'relative overflow-hidden shadow-graph hover:shadow-md transition-all duration-200 ease-in-out rounded-lg border-[0.09375rem] cursor-pointer',
 				'bg-white p-[0.625rem]',
-				isSelected
-					? 'border-[#6A12CD] shadow-md'
-					: 'border-[#E5E7EB] hover:shadow-md',
+				isSelected ? 'border-primary' : 'border-[#E5E7EB]',
 			)}
 		>
 			<div className="flex gap-2 mb-2">
@@ -78,12 +77,11 @@ const WidgetCard = ({ widget, isSelected, onToggleSelect, type = 'graph' }) => {
 			</div>
 
 			{type === 'graph' && widget.graphData && (
-				<div className="rounded-2xl border w-full border-primary4 bg-purple-4 p-2 min-w-0">
-					<GraphRenderer
-						graph={widget.graphData}
-						identifierKey={`widget-${widget.id}`}
-					/>
-				</div>
+				<GraphRenderer
+					graph={widget.graphData}
+					identifierKey={`widget-${widget.id}`}
+					source={GRAPH_SOURCES.ADD_TO_DASHBOARD}
+				/>
 			)}
 
 			{type === 'table' && (
@@ -110,6 +108,7 @@ const WidgetCard = ({ widget, isSelected, onToggleSelect, type = 'graph' }) => {
 								data={tableData}
 								columns={tableColumns}
 								onSortingChange={() => {}}
+								tablePreview={true}
 							/>
 						</div>
 					) : (

@@ -41,5 +41,5 @@ export const QUERY_KEYS = {
 export const DIALOG_CLASSES = {
 	SELECT_DASHBOARD: 'max-w-3xl overflow-hidden rounded-xl flex flex-col p-0',
 	SELECT_WIDGETS:
-		'max-w-5xl max-h-[90vh] rounded-xl overflow-hidden flex flex-col p-0 gap-0',
+		'max-w-7xl max-h-[90vh] rounded-xl overflow-hidden flex flex-col p-0 gap-0',
 };

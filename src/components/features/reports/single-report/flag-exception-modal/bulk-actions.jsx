@@ -30,6 +30,7 @@ import { fileTypeFromBlob } from 'file-type';
 const BulkActions = ({
 	isBulkActionsVisible,
 	selectedCaseIds,
+	onCancel,
 	reportId,
 	cardId,
 	isSample = false,
@@ -193,11 +194,17 @@ const BulkActions = ({
 				operations,
 				isSample: isSample,
 			}),
-		onSuccess: () => {
+		onSuccess: (_data, operations) => {
 			// Invalidate and refetch cases data
 			queryClient.invalidateQueries(['report-card-cases', reportId, cardId]);
-			toast.success('Bulk actions applied successfully');
+			const appliedCount = operations?.[0]?.case_ids?.length ?? 0;
+			const rowLabel = appliedCount === 1 ? 'row' : 'rows';
+			toast.success(
+				`Applied bulk action on ${appliedCount} ${rowLabel} successfully.`,
+			);
 			resetBulkActions();
+			// Clear selection so the bulk actions panel closes.
+			onCancel?.();
 		},
 		onError: (error) => {
 			console.error('Error applying bulk actions:', error);
@@ -252,6 +259,7 @@ const BulkActions = ({
 
 	const handleBulkActionsCancel = () => {
 		resetBulkActions();
+		onCancel?.();
 	};
 
 	return (

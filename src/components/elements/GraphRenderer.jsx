@@ -11,8 +11,92 @@ import { cn, getChartType } from '@/lib/utils';
 import useS3File from '@/hooks/useS3File';
 import { logError } from '@/lib/logger';
 import { toChartJsType } from '@/utils/chart-compatibility';
+import { GRAPH_SOURCES, PAGE_TYPES } from '@/constants/page.constant';
+import GraphDetailModal from '@/components/features/dashboard/components/GraphDetailModal/GraphDetailModal';
+import { LucideBarChart3 } from 'lucide-react';
 
 Chart.register(zoomPlugin);
+
+// Returns axis limits to show in UI on basis of where graph is rendered.
+const X_AXIS_LIMITS = {
+	[GRAPH_SOURCES.ADD_TO_DASHBOARD]: 5,
+	[GRAPH_SOURCES.ADD_TO_REPORTS]: 5,
+	DEFAULT: 15,
+};
+
+const getXAxisMax = (source, previewMode) => {
+	if (!previewMode) return undefined;
+	return X_AXIS_LIMITS[source] || X_AXIS_LIMITS.DEFAULT;
+};
+
+// ChartControls - Reusable controls for the graph.
+const ChartControls = ({
+	isZoomEnabled,
+	isSelectionToolActive,
+	handleToggleSelectionTool,
+	isZoomed,
+	handleResetZoom,
+	onFullscreenToggle,
+	isFullscreen = false,
+	className = '',
+}) => {
+	return (
+		<div
+			className={cn('flex items-center gap-2', className)}
+			onClick={(e) => e.stopPropagation()}
+		>
+			{isZoomEnabled && (
+				<Button
+					size="icon"
+					variant="ghost"
+					onClick={handleToggleSelectionTool}
+					className={cn(
+						'font-extrabold transition-all duration-200',
+						isSelectionToolActive
+							? 'text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100'
+							: 'text-primary hover:text-[#6A12CD]',
+					)}
+					title={
+						isSelectionToolActive
+							? 'Cancel selection tool'
+							: 'Enable selection tool'
+					}
+				>
+					{isSelectionToolActive ? (
+						<i className="bi-x-lg text-lg font-extrabold"></i>
+					) : (
+						<i className="bi-cursor text-lg font-extrabold"></i>
+					)}
+				</Button>
+			)}
+			{isZoomed && isZoomEnabled && (
+				<Button
+					size="icon"
+					variant="ghost"
+					onClick={handleResetZoom}
+					className="font-extrabold text-primary hover:text-[#6A12CD] transition-all duration-200"
+					title="Reset zoom"
+				>
+					<i className="bi-arrow-counterclockwise text-lg font-extrabold"></i>
+				</Button>
+			)}
+			<Button
+				size="icon"
+				variant="ghost"
+				className="font-extrabold text-primary animate-pulse hover:animate-none duration-1000 transition-all"
+				onClick={onFullscreenToggle}
+				title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+			>
+				<i
+					className={cn(
+						'text-lg font-extrabold',
+						isFullscreen ? 'bi-fullscreen-exit' : 'bi bi-fullscreen',
+					)}
+				></i>
+			</Button>
+		</div>
+	);
+};
 
 /**
  * GraphRenderer - Renders charts using Chart.js
@@ -21,6 +105,10 @@ Chart.register(zoomPlugin);
  * @param {string} aspect - Aspect ratio class for the container
  * @param {string} chartTypeOverride - Optional chart type override (line, bar, area, pie, etc.)
  * @param {Function} onZoomRangeChange - Callback when zoom range changes (receives { selectedLabels: string[], xAxisColumn: string } or null)
+ * @param {boolean} previewMode - by default all graphs in ui are in preview mode until user clicks on them.
+ * @param {string} source - Source of the graph (add-to-dashboard modal, etc)
+ * @param {Object} contentItem - to pass in graph detail modal. (optional)
+ * @param {string} page - The current page type (optional)
  */
 const GraphRenderer = ({
 	graph,
@@ -28,6 +116,10 @@ const GraphRenderer = ({
 	aspect = 'aspect-[2]',
 	chartTypeOverride,
 	onZoomRangeChange,
+	previewMode = true,
+	source = GRAPH_SOURCES.CHAT,
+	contentItem = null,
+	page = PAGE_TYPES.DASHBOARD,
 }) => {
 	const chartRef = useRef(null);
 	const containerRef = useRef(null);
@@ -39,6 +131,7 @@ const GraphRenderer = ({
 	const [fontSize, setFontSize] = useState(0);
 	const [isZoomed, setIsZoomed] = useState(false);
 	const [isSelectionToolActive, setIsSelectionToolActive] = useState(false);
+	const [isGraphModalOpen, setIsGraphModalOpen] = useState(false);
 	const [categoryData, setCategoryData] = useState({
 		options: [],
 		label: '',
@@ -89,7 +182,7 @@ const GraphRenderer = ({
 		return label?.length > maxLength ? `${label.slice(0, maxLength)}...` : label;
 	};
 
-	const getCircularChartDatasets = (data) => {
+	const getCircularChartDatasets = (data, chartType) => {
 		const fullLabels = data?.map(
 			(item) => `${graph.x_axis}(${item[graph.x_axis]})`,
 		);
@@ -110,7 +203,20 @@ const GraphRenderer = ({
 			},
 		];
 
-		return { data: dataList, labels: truncatedLabels, fullLabels, scales: null };
+		// Removing grid lines for polar charts.
+		const isPolarArea = chartType?.toLowerCase() === 'polararea';
+
+		const scales = isPolarArea
+			? {
+					r: {
+						grid: { display: false },
+						ticks: { display: false },
+						angleLines: { display: false },
+					},
+				}
+			: undefined;
+
+		return { data: dataList, labels: truncatedLabels, fullLabels, scales };
 	};
 
 	const getAxialChartDatasets = (data, yAxisArray) => {
@@ -295,7 +401,7 @@ const GraphRenderer = ({
 
 			// Determine which dataset function to use
 			const finalDataObj = isCircularChart
-				? getCircularChartDatasets(loadedData)
+				? getCircularChartDatasets(loadedData, effectiveChartType)
 				: getAxialChartDatasets(loadedData, graph.y_axis, isAreaChart);
 
 			// Store full labels for zoom range tracking (use ref for closure access)
@@ -337,32 +443,24 @@ const GraphRenderer = ({
 					},
 					plugins: {
 						title: {
-							align: handle.active ? 'end' : 'center',
-							display: !isPdfMode,
-							text: graph.title || 'Data plot',
-							font: {
-								size: handle.active
-									? 1.5 * fontSize
-									: 1.25 * fontSize,
-								lineHeight: 1,
-								weight: 'bold',
-							},
-							position: 'top',
-							padding: {
-								top: 0.625 * fontSize,
-								bottom: 0,
-							},
+							display: false,
 						},
 						legend: {
-							align: handle.active || isPieChart ? 'end' : 'center',
+							align: handle.active ? 'end' : 'center',
 							labels: {
 								boxWidth: 0.75 * fontSize,
 								font: {
 									size: 0.625 * fontSize,
 								},
+								filter: (legendItem, data) => {
+									if (!isCircularChart || !previewMode)
+										return true;
+									return legendItem.index < 5;
+								},
 							},
 						},
 						tooltip: {
+							enabled: !previewMode,
 							bodyFont: {
 								size: fontSize,
 							},
@@ -397,31 +495,34 @@ const GraphRenderer = ({
 							},
 						},
 					},
-					animation: handle.active
+					animation: !previewMode
 						? {
 								duration: 400,
 								easing: 'easeOutQuart',
 							}
 						: false,
-					scales: {
-						...finalDataObj.scales,
-						y: {
-							beginAtZero: true,
-							ticks: {
-								font: {
-									size: 0.625 * fontSize,
+					scales: isCircularChart
+						? finalDataObj.scales
+						: {
+								...finalDataObj.scales,
+								y: {
+									beginAtZero: true,
+									ticks: {
+										font: {
+											size: 0.75 * fontSize,
+										},
+									},
+								},
+								x: {
+									...finalDataObj.scales?.x,
+									max: getXAxisMax(source, previewMode),
+									ticks: {
+										font: {
+											size: 0.75 * fontSize,
+										},
+									},
 								},
 							},
-						},
-						x: {
-							...finalDataObj.scales?.x,
-							ticks: {
-								font: {
-									size: 0.625 * fontSize,
-								},
-							},
-						},
-					},
 					maintainAspectRatio: false,
 				},
 			});
@@ -499,10 +600,12 @@ const GraphRenderer = ({
 		loadedData,
 		graph,
 		identifierKey,
+		previewMode,
 		handle.active,
 		fontSize,
 		chartTypeOverride,
 		onZoomRangeChange,
+		source,
 	]);
 
 	// Handle brush selection completion - zoom to selected range
@@ -612,218 +715,137 @@ const GraphRenderer = ({
 		!isGraphLoading &&
 		chartRef.current;
 
+	const canOpenModal =
+		source !== GRAPH_SOURCES.ADD_TO_DASHBOARD &&
+		source !== GRAPH_SOURCES.ADD_TO_REPORTS;
+
+	const commonControlProps = {
+		isZoomEnabled,
+		isSelectionToolActive,
+		handleToggleSelectionTool,
+		isZoomed,
+		handleResetZoom,
+		onFullscreenToggle: handle.enter,
+	};
+
 	return (
-		<div className="bg-white rounded-xl p-2 w-full h-full">
-			{isGraphLoading ? (
-				<div className="darkSoul-glowing-button2 mb-10">
-					<button className="darkSoul-button2" type="button">
-						<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
-						Generating Graph...
-					</button>
-				</div>
-			) : (
-				<div className="relative h-full" ref={containerRef}>
-					{/* Top Bar with Category Filter, Reset Zoom, Selection Tool, and Fullscreen Button */}
-					{!isPdfMode && showCategoryFilter ? (
-						<div className="w-full flex justify-between items-center mb-2 ">
-							<div>
-								<GraphCategoryFilter
-									filterData={categoryData}
-									onChange={handleCategoryChange}
-								/>
-							</div>
-							<div className="flex items-center gap-2">
-								{/* Selection Tool Toggle Button */}
-								{isZoomEnabled && (
-									<Button
-										size="icon"
-										variant="ghost"
-										onClick={handleToggleSelectionTool}
-										className={`font-extrabold transition-all duration-200 ${
-											isSelectionToolActive
-												? 'text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100'
-												: 'text-primary hover:text-[#6A12CD]'
-										}`}
-										title={
-											isSelectionToolActive
-												? 'Cancel selection tool'
-												: 'Enable selection tool'
-										}
-									>
-										{isSelectionToolActive ? (
-											<i className="bi-x-lg text-lg font-extrabold"></i>
-										) : (
-											<i className="bi-cursor text-lg font-extrabold"></i>
-										)}
-									</Button>
-								)}
-								{/* Reset Zoom Button  */}
-								{isZoomed && isZoomEnabled && (
-									<Button
-										size="icon"
-										variant="ghost"
-										onClick={handleResetZoom}
-										className="font-extrabold text-primary hover:text-[#6A12CD] transition-all duration-200"
-										title="Reset zoom"
-									>
-										<i className="bi-arrow-counterclockwise text-lg font-extrabold"></i>
-									</Button>
-								)}
-								<Button
-									size="icon"
-									variant="ghost"
-									className="font-extrabold text-primary animate-pulse hover:animate-none duration-1000"
-									onClick={handle.enter}
-								>
-									<i className="bi bi-fullscreen text-lg font-extrabold"></i>
-								</Button>
-							</div>
+		<>
+			<div
+				className={cn(
+					'bg-white rounded-xl w-full h-full',
+					canOpenModal && !isSelectionToolActive && 'cursor-pointer',
+				)}
+				onClick={() => {
+					if (canOpenModal && !isSelectionToolActive) {
+						setIsGraphModalOpen(true);
+					}
+				}}
+			>
+				{isGraphLoading ? (
+					<div className="darkSoul-glowing-button2 mb-10">
+						<button className="darkSoul-button2" type="button">
+							<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+							Generating Graph...
+						</button>
+					</div>
+				) : !loadedData || !loadedData.length ? (
+					<div className="flex flex-col items-center justify-center p-12 text-center gap-2 bg-muted/30 rounded-xl border border-border">
+						<LucideBarChart3 className="w-6 h-6 text-primary mb-2" />
+
+						<div className="flex flex-col gap-1">
+							<p className="text-sm font-semibold text-primary80">
+								Visualization data unavailable
+							</p>
+							<p className="text-xs text-primary60 max-w-80 mx-auto">
+								The chart cannot be rendered because the data source
+								is missing or invalid.
+							</p>
 						</div>
-					) : null}
-
-					{!showCategoryFilter && !isPdfMode ? (
-						<div className="absolute top-2 right-2 z-20 flex items-center gap-2">
-							{isZoomEnabled && (
-								<Button
-									size="icon"
-									variant="ghost"
-									onClick={handleToggleSelectionTool}
-									className={`font-extrabold transition-all duration-200 ${
-										isSelectionToolActive
-											? 'text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100'
-											: 'text-primary hover:text-[#6A12CD]'
-									}`}
-									title={
-										isSelectionToolActive
-											? 'Cancel selection tool'
-											: 'Enable selection tool'
-									}
+					</div>
+				) : (
+					<div className="relative h-full" ref={containerRef}>
+						{/* Top Bar with Category Filter and Controls */}
+						{!isPdfMode &&
+							(showCategoryFilter ? (
+								<div
+									className="w-full flex justify-between items-center mb-2"
+									onClick={(e) => e.stopPropagation()}
 								>
-									{isSelectionToolActive ? (
-										<i className="bi-x-lg text-lg font-extrabold"></i>
-									) : (
-										<i className="bi-cursor text-lg font-extrabold"></i>
-									)}
-								</Button>
-							)}
+									<div>
+										<GraphCategoryFilter
+											filterData={categoryData}
+											onChange={handleCategoryChange}
+										/>
+									</div>
+									<ChartControls {...commonControlProps} />
+								</div>
+							) : (
+								!previewMode && (
+									<ChartControls
+										{...commonControlProps}
+										className="absolute top-2 right-2 z-20"
+									/>
+								)
+							))}
 
-							{isZoomed && isZoomEnabled && (
-								<Button
-									size="icon"
-									variant="ghost"
-									onClick={handleResetZoom}
-									className="font-extrabold text-primary hover:text-[#6A12CD] transition-all duration-200"
-									title="Reset zoom"
-								>
-									<i className="bi-arrow-counterclockwise text-lg font-extrabold"></i>
-								</Button>
-							)}
-							<Button
-								size="icon"
-								variant="ghost"
-								className="font-extrabold text-primary animate-pulse hover:animate-none duration-1000"
-								onClick={handle.enter}
+						<FullScreen handle={handle} className="h-full w-full">
+							<div
+								className={cn(
+									'relative transition-all duration-300 ease-out',
+									!previewMode
+										? 'h-full w-full min-h-[40rem]'
+										: `w-full min-w-[18.75rem] ${aspect} min-h-96`,
+								)}
 							>
-								<i className="bi bi-fullscreen text-lg font-extrabold"></i>
-							</Button>
-						</div>
-					) : null}
+								<canvas
+									id={`canvas_${identifierKey}_${graph.id}`}
+									style={{
+										backgroundColor: 'white',
+										padding: !previewMode ? '2rem' : '0',
+										borderRadius: '1rem',
+										transition: 'all 0.05s ease-out',
+									}}
+								></canvas>
 
-					<FullScreen handle={handle} className="h-full w-full">
-						<div
-							className={cn(
-								'relative h-full w-full min-w-[18.75rem] transition-all duration-300 ease-out',
-								!handle.active && aspect,
-							)}
-						>
-							<canvas
-								id={`canvas_${identifierKey}_${graph.id}`}
-								style={{
-									backgroundColor: 'white',
-									padding: handle.active ? '2rem' : '0',
-									borderRadius: '1rem',
-									transition: 'all 0.05s ease-out',
-								}}
-							></canvas>
+								{isZoomEnabled &&
+									chartRef.current &&
+									isSelectionToolActive && (
+										<ChartBrushOverlay
+											chart={chartRef.current}
+											onSelectionComplete={
+												handleSelectionComplete
+											}
+											enabled={
+												!isGraphLoading &&
+												isSelectionToolActive
+											}
+										/>
+									)}
 
-							{isZoomEnabled &&
-								chartRef.current &&
-								isSelectionToolActive && (
-									<ChartBrushOverlay
-										chart={chartRef.current}
-										onSelectionComplete={handleSelectionComplete}
-										enabled={
-											!isGraphLoading && isSelectionToolActive
-										}
+								{/* Selection Tool, Reset Zoom, and Exit Fullscreen Buttons */}
+								{handle.active && !isPdfMode && (
+									<ChartControls
+										{...commonControlProps}
+										className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30"
+										isFullscreen={true}
+										onFullscreenToggle={handle.exit}
 									/>
 								)}
-
-							{/* Selection Tool, Reset Zoom, and Exit Fullscreen Buttons */}
-							{handle.active && !isPdfMode && (
-								<div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-30 flex items-center gap-2">
-									{isZoomEnabled && (
-										<Button
-											size="icon"
-											variant="ghost"
-											onClick={handleToggleSelectionTool}
-											className={`font-extrabold transition-all duration-200 ${
-												isSelectionToolActive
-													? 'text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100'
-													: 'text-primary hover:text-[#6A12CD]'
-											}`}
-											title={
-												isSelectionToolActive
-													? 'Cancel selection tool'
-													: 'Enable selection tool'
-											}
-										>
-											{isSelectionToolActive ? (
-												<i className="bi-x-lg text-lg font-extrabold"></i>
-											) : (
-												<i className="bi-cursor text-lg font-extrabold"></i>
-											)}
-										</Button>
-									)}
-									{/* Reset Zoom Button */}
-									{isZoomed && isZoomEnabled && (
-										<Button
-											size="icon"
-											variant="ghost"
-											onClick={handleResetZoom}
-											className="font-extrabold text-primary hover:text-[#6A12CD] transition-all duration-200"
-											title="Reset zoom"
-										>
-											<i className="bi-arrow-counterclockwise text-lg font-extrabold"></i>
-										</Button>
-									)}
-
-									<Button
-										size="icon"
-										variant="ghost"
-										onClick={handle.exit}
-										className="font-extrabold text-primary animate-pulse hover:animate-none duration-1000 transition-all"
-										title="Exit fullscreen"
-									>
-										<i className="bi-fullscreen-exit text-lg font-extrabold"></i>
-									</Button>
-								</div>
-							)}
-						</div>
-					</FullScreen>
-
-					{!showCategoryFilter && !isPdfMode ? (
-						<Button
-							size="icon"
-							variant="ghost"
-							className="absolute top-0 font-extrabold right-0 text-primary animate-pulse hover:animate-none duration-1000"
-							onClick={handle.enter}
-						>
-							{/* <i className="bi bi-fullscreen text-lg font-extrabold"></i> */}
-						</Button>
-					) : null}
-				</div>
+							</div>
+						</FullScreen>
+					</div>
+				)}
+			</div>
+			{canOpenModal && (
+				<GraphDetailModal
+					open={isGraphModalOpen}
+					onOpenChange={setIsGraphModalOpen}
+					selectedGraph={graph}
+					page={page}
+					contentItem={contentItem}
+				/>
 			)}
-		</div>
+		</>
 	);
 };
 

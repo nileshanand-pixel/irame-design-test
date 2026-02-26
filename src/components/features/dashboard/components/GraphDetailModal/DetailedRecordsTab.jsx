@@ -109,10 +109,10 @@ const DetailedRecordsTab = ({
 			<div className="px-6 py-3  border-b border-[#F3F4F6]">
 				<div className="flex items-start justify-between">
 					<div>
-						<h2 className="text-xl font-medium text-[#26064A]">
+						<h2 className="text-xl font-medium text-primary100">
 							Comprehensive Data Table
 						</h2>
-						<p className="text-sm font-normal text-[#26064ACC]">
+						<p className="text-sm font-normal text-primary80">
 							{recordCount} records with complete details
 						</p>
 					</div>
@@ -154,8 +154,8 @@ const DetailedRecordsTab = ({
 			</div> */}
 
 			{/* Table */}
-			<div className="flex-1 px-6 pb-6 pt-4 h-[calc(100%-4.25rem)] overflow-auto">
-				<div className="h-full rounded-2xl border w-full custom-scrollbar-graph border-primary4 pb-2">
+			<div className="flex-1 px-6 pb-6 pt-4 h-[calc(100%-4.25rem)]">
+				<div className="h-full">
 					<TableComponent
 						data={displayRows}
 						columns={tableColumns}

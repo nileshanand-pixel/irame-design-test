@@ -402,6 +402,7 @@ export const QueryCard = ({
 								graphs={card.data.graphs}
 								reportCardId={card.external_id}
 								pdfMode={pdfMode}
+								tables={card.data.tables}
 							/>
 						)}
 					</>
@@ -412,6 +413,7 @@ export const QueryCard = ({
 								graphs={card.data.graphs}
 								reportCardId={card.external_id}
 								pdfMode={pdfMode}
+								tables={card.data.tables}
 							/>
 						)}
 						<div>{answerContent}</div>

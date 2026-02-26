@@ -21,6 +21,7 @@ import {
 	getIncompatibleConversionMessage,
 } from '@/utils/chart-compatibility';
 import { cn } from '@/lib/utils';
+import { PAGE_TYPES } from '@/constants/page.constant';
 
 /**
  * GraphDetailModal - Modal that displays graph details with 3 tabs and 2 tabs for tables)
@@ -28,8 +29,15 @@ import { cn } from '@/lib/utils';
  * @param {Function} onOpenChange - Callback when modal state changes
  * @param {Object} selectedGraph - The clicked graph object (null for tables)
  * @param {Object} contentItem - The dashboard content item containing the graph/table
+ * @param {string} page - The current page type (qna, dashboard, reports)
  */
-const GraphDetailModal = ({ open, onOpenChange, selectedGraph, contentItem }) => {
+const GraphDetailModal = ({
+	open,
+	onOpenChange,
+	selectedGraph,
+	contentItem,
+	page = PAGE_TYPES.DASHBOARD,
+}) => {
 	const isTable = !selectedGraph && contentItem?.content?.table;
 	const [activeTab, setActiveTab] = useState(
 		isTable ? 'detailed-records' : 'visualization',
@@ -71,10 +79,10 @@ const GraphDetailModal = ({ open, onOpenChange, selectedGraph, contentItem }) =>
 				label: 'Summary',
 				icon: HiOutlineClipboardDocumentList,
 				ref: summaryTabRef,
-				show: true, // Show for both graphs and tables
+				show: page !== PAGE_TYPES.QNA && page !== PAGE_TYPES.REPORTS,
 			},
 		],
-		[isTable],
+		[isTable, page],
 	);
 
 	const originalChartType = useMemo(() => {
@@ -86,6 +94,19 @@ const GraphDetailModal = ({ open, onOpenChange, selectedGraph, contentItem }) =>
 	}, [selectedGraph, contentItem]);
 
 	const [chartType, setChartType] = useState(originalChartType);
+	const [isGraphReady, setIsGraphReady] = useState(false);
+	const MODAL_ANIMATION_DELAY = 300; // Matches CSS transition time
+
+	useEffect(() => {
+		if (open) {
+			const timer = setTimeout(() => {
+				setIsGraphReady(true);
+			}, MODAL_ANIMATION_DELAY);
+			return () => clearTimeout(timer);
+		} else {
+			setIsGraphReady(false);
+		}
+	}, [open]);
 
 	useEffect(() => {
 		if (open && originalChartType) {
@@ -208,7 +229,7 @@ const GraphDetailModal = ({ open, onOpenChange, selectedGraph, contentItem }) =>
 						<div className="flex items-center justify-between">
 							<TabsList
 								ref={tabsListRef}
-								className="bg-transparent flex justify-start gap-8 border-none h-auto relative pb-0"
+								className="bg-transparent flex justify-start gap-8 border-none h-auto relative p-0"
 							>
 								{tabs
 									.filter((tab) => tab.show)
@@ -220,22 +241,22 @@ const GraphDetailModal = ({ open, onOpenChange, selectedGraph, contentItem }) =>
 												ref={tab.ref}
 												value={tab.id}
 												className={cn(
-													'relative flex items-center gap-2 px-0 py-2',
+													'relative flex items-center gap-2 px-0 py-2 text-sm',
 													activeTab === tab.id
-														? 'text-[#26064A] font-semibold'
-														: 'text-[#26064ACC] font-medium',
+														? 'text-primary font-semibold'
+														: 'text-primary80 font-medium',
 												)}
 											>
 												<Icon
 													className={`size-[1.125rem] transition-colors duration-300 ${
 														activeTab === tab.id
-															? 'text-[#6A12CD]'
-															: 'text-[#26064ACC]'
+															? 'text-primary'
+															: 'text-primary80'
 													}`}
 												/>
 												<span>{tab.label}</span>
 												{activeTab === tab.id ? (
-													<div className="absolute bottom-0 left-0 translate-y-[50%] w-full h-1 rounded-[0.125rem] bg-[#6A12CD]"></div>
+													<div className="absolute bottom-0 left-0 translate-y-[50%] w-full h-1 rounded-[0.125rem] bg-primary"></div>
 												) : null}
 											</TabsTrigger>
 										);
@@ -266,7 +287,7 @@ const GraphDetailModal = ({ open, onOpenChange, selectedGraph, contentItem }) =>
 					{!isTable && activeTab === 'visualization' && (
 						<div className="px-6 py-3 border-b border-[#0000001A]">
 							<div className="flex items-center justify-between">
-								<h2 className="text-xl font-medium text-[#26064A]">
+								<h2 className="text-xl font-medium text-primary100">
 									{modalTitle}
 								</h2>
 
@@ -327,6 +348,7 @@ const GraphDetailModal = ({ open, onOpenChange, selectedGraph, contentItem }) =>
 									graph={selectedGraph}
 									identifierKey={identifierKey}
 									chartType={chartType}
+									isReady={isGraphReady}
 								/>
 							</TabsContent>
 						)}

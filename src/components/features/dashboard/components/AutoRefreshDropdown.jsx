@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { MdRefresh } from 'react-icons/md';
 import {
 	Select,
 	SelectContent,
@@ -13,6 +12,7 @@ import { updateDashboardRefreshSettings } from '../service/dashboard.service';
 import { toast } from '@/lib/toast';
 import { logError } from '@/lib/logger';
 import { queryClient } from '@/lib/react-query';
+import { RefreshCw, Check } from 'lucide-react';
 
 const REFRESH_OPTIONS = [
 	{ label: 'Off', value: 'off' },
@@ -117,14 +117,14 @@ const AutoRefreshDropdown = ({ dashboardMetadata, dashboardId }) => {
 		>
 			<SelectTrigger
 				className={cn(
-					'px-1 py-[0.375rem] rounded-lg bg-white border border-[#26064A1A] shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]',
+					'p-2 rounded-lg bg-white border border-primary10',
 					'hover:bg-white focus:ring-0 focus:ring-offset-0',
-					'[&>svg]:text-transparent flex justify-center w-[16.25rem]',
+					'[&>svg]:hidden flex justify-center w-fit',
 				)}
 			>
 				<SelectValue placeholder="Off">
-					<div className="flex items-center gap-2">
-						<MdRefresh className="w-4 h-4" />
+					<div className="flex items-center gap-1.5">
+						<RefreshCw className="w-5 h-5" />
 						<span className="text-primary80 mr-2 text-sm font-medium">
 							<span className="mr-1">Auto refresh:</span>
 							{updateRefreshMutation?.isPending
@@ -151,23 +151,23 @@ const AutoRefreshDropdown = ({ dashboardMetadata, dashboardId }) => {
 							value={option.value}
 							className={cn(
 								'cursor-pointer text-sm',
-								'px-4 py-3',
-								'hover:bg-[rgba(106,18,205,0.08)]',
-								'focus:bg-[rgba(106,18,205,0.08)]',
-								'data-[highlighted]:bg-[rgba(106,18,205,0.08)]',
-								'outline-none',
-								'[&>span:first-child>svg]:text-[#6A12CD]',
-								isSelected && 'text-[#6A12CD] bg-transparent',
+								'px-4 py-3 bg-transparent',
+								'outline-none relative',
+								'[&>span:first-child>svg]:text-primary',
+								isSelected && 'text-primary',
 							)}
 						>
 							<span
 								className={cn(
-									'text-sm text-center',
-									isSelected ? 'text-[#7C3AED]' : 'text-[#374151]',
+									'text-sm pr-2',
+									isSelected ? 'text-primary' : 'text-primary80',
 								)}
 							>
 								{option.label}
 							</span>
+							{isSelected && (
+								<Check className="w-4 h-4 text-primary absolute right-3 top-1/2 -translate-y-1/2" />
+							)}
 						</SelectItem>
 					);
 				})}

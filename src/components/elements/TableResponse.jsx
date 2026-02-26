@@ -18,6 +18,7 @@ const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) =>
 	const [loadedData, setLoadedData] = useState([]);
 	const [columns, setColumns] = useState([]);
 	const [activeTab, setActiveTab] = useState('Tabular View');
+	const [isCsvLoaded, setIsCsvLoaded] = useState(false);
 
 	// const memoizedChartState = useMemo(() => {
 	// 	if (data && data.csv_curl) {
@@ -71,6 +72,7 @@ const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) =>
 					});
 				} finally {
 					setIsGraphLoading(false);
+					setIsCsvLoaded(true);
 				}
 			}
 		};
@@ -82,7 +84,7 @@ const TableResponse = ({ data, isGraphLoading, noStyles, setIsGraphLoading }) =>
 
 	return (
 		<div className="">
-			{isGraphLoading ? (
+			{isGraphLoading || !isCsvLoaded ? (
 				<div className="darkSoul-glowing-button2 mb-10">
 					<button className="darkSoul-button2" type="button">
 						<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>

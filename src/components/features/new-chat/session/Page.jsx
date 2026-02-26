@@ -11,6 +11,7 @@ import {
 	getSession,
 } from '../service/new-chat.service';
 import { useQuery } from '@tanstack/react-query';
+import { useSessionExportStatus } from '../hooks/useSessionExportStatus';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import ResponseCard from '../ResponseCard';
@@ -31,7 +32,7 @@ import CHAT_CONSTANTS, {
 } from '@/constants/chat.constant';
 import QueryDisplay from './components/QueryDisplay';
 import Clarification, { CLARIFICATION_TYPE } from '../clarification';
-import { WorkspaceEnum } from '../types/new-chat.enum';
+import { WorkspaceEnum, EXPORT_STATUS } from '../types/new-chat.enum';
 // import InputArea from '../InputArea';
 import ReportGenerationDialog from './components/ReportGenerationDialog';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
@@ -131,6 +132,12 @@ const Workzone = () => {
 		refetchInterval: () => (selectedPathLeafPending ? 5000 : false),
 		refetchIntervalInBackground: true,
 	});
+
+	const {
+		exportStatusMap,
+		refetch: refetchExportStatus,
+		resetTerminal: resetExportTerminal,
+	} = useSessionExportStatus(currentSessionId);
 
 	useEffect(() => {
 		if (!currentSessionId || !currentSessionData) {
@@ -1261,6 +1268,11 @@ const Workzone = () => {
 													currentSessionData={
 														currentSessionData
 													}
+													exportStatus={
+														exportStatusMap?.[
+															answerElem.query_id
+														]
+													}
 												/>
 											</div>
 										</div>
@@ -1304,6 +1316,17 @@ const Workzone = () => {
 			// Invalidate queries to refresh session list with updated status
 			queryClient.invalidateQueries(['chat-history']);
 			queryClient.invalidateQueries(['session', currentSessionId]);
+			// Restart export status polling only if any query has an in-progress consolidated export
+			const hasInProgressExport = answers.some((ans) => {
+				const exportEntry = Object.values(ans?.answer || {}).find(
+					(v) => v?.tool_type === WorkspaceEnum.ConsolidatedExport,
+				);
+				return exportEntry?.tool_data?.status === EXPORT_STATUS.IN_PROGRESS;
+			});
+			if (hasInProgressExport) {
+				resetExportTerminal();
+				refetchExportStatus();
+			}
 			// inputDisabled is now controlled by session status, not doingScience
 			// Do not reset userHasNavigated; preserve path selection on completion
 			return;

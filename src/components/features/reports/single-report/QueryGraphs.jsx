@@ -1,8 +1,9 @@
 import GraphRenderer from '@/components/elements/GraphRenderer';
 import { Label } from '@/components/ui/label';
+import { PAGE_TYPES } from '@/constants/page.constant';
 import { cn } from '@/lib/utils';
 
-export const QueryGraphs = ({ graphs = [], reportCardId, pdfMode }) => {
+export const QueryGraphs = ({ graphs = [], reportCardId, pdfMode, tables = [] }) => {
 	if (graphs.length === 0) return null;
 	const visibleGraphs = graphs.filter((graph) => graph.visible);
 	if (visibleGraphs.length === 0) return null;
@@ -33,6 +34,13 @@ export const QueryGraphs = ({ graphs = [], reportCardId, pdfMode }) => {
 								...graph,
 							}}
 							identifierKey={graph.id + reportCardId}
+							page={PAGE_TYPES.REPORTS}
+							contentItem={{
+								query_id: reportCardId,
+								content: {
+									table: tables?.[0],
+								},
+							}}
 						/>
 					</div>
 				</div>

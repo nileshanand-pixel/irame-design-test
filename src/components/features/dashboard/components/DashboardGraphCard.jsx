@@ -29,12 +29,6 @@ const DashboardGraphCard = ({
 		item?.content?.query ||
 		DEFAULT_GRAPH_TITLE;
 
-	const handleCardClick = () => {
-		if (onGraphClick) {
-			onGraphClick(graph, item);
-		}
-	};
-
 	const handleDelete = (e) => {
 		e.stopPropagation();
 		if (onDeleteClick) {
@@ -45,8 +39,7 @@ const DashboardGraphCard = ({
 	return (
 		<div
 			key={`${item.dashboard_content_id}-${graph.id}`}
-			onClick={handleCardClick}
-			className={`bg-white rounded-[0.875rem] p-4 shadow-sm border border-[#E2E8F0] cursor-pointer hover:shadow-md transition-shadow relative group w-full min-w-0 ${
+			className={`bg-white shadow-graph hover:shadow-md transition-shadow duration-200 ease-in-out rounded-[0.875rem] border border-[#E5E7EB] cursor-pointer relative group w-full min-w-0 ${
 				isDeleting ? 'opacity-60 pointer-events-none' : ''
 			}`}
 		>
@@ -69,24 +62,25 @@ const DashboardGraphCard = ({
 				</Button>
 			)}
 
-			<div className="flex items-center gap-3 mb-3">
-				<div className="w-9 h-9 bg-white rounded-xl border-2 border-[#E5E7EB] flex items-center justify-center flex-shrink-0">
-					<InsightsIcon className="w-4 h-4 text-[#6A12CD]" />
+			<div className="flex items-center gap-2 p-4 hover:bg-gray-50 transition-colors ease-in-out duration-200">
+				<div className="w-9 h-9 p-2 bg-white rounded-xl border-2 border-[#E5E7EB] flex items-center justify-center flex-shrink-0">
+					<InsightsIcon className="w-4 h-4 text-primary" />
 				</div>
 				<div className="flex-1 min-w-0">
-					<h3 className="text-sm font-medium text-[#26064A] truncate w-full">
+					<h3 className="text-sm font-medium text-primary80 truncate w-full">
 						{graphTitle}
 					</h3>
-					{/* <p className="text-xs text-[#26064ACC]">
+					<p className="text-xs text-primary80">
 						Real-time analytics and insights
-					</p> */}
+					</p>
 				</div>
 			</div>
 
-			<div className="rounded-3xl border w-full overflow-x-auto border-primary4 bg-purple-4 p-3 min-w-0">
+			<div className="px-4 pb-4">
 				<GraphRenderer
 					graph={graph}
 					identifierKey={`${item.dashboard_content_id}-${graph.id}`}
+					contentItem={item}
 				/>
 			</div>
 		</div>

@@ -10,7 +10,7 @@ import ScrollList from './ScrollList';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { logError } from '@/lib/logger';
-import { getSupportedGraphs } from '@/lib/utils';
+import { getSupportedGraphs, cn } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import { RESPONSE_CARD_VIEWS } from '@/constants/chat.constant';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
@@ -22,10 +22,13 @@ const GraphComponent = ({
 	showTable,
 	queryId,
 	tab = RESPONSE_CARD_VIEWS.TABULAR_VIEW,
+	page = null,
+	contentItem = null,
 }) => {
 	const [loadedData, setLoadedData] = useState([]);
 	const [columns, setColumns] = useState([]);
 	const [activeTab, setActiveTab] = useState(tab);
+	const [isCsvLoaded, setIsCsvLoaded] = useState(false);
 	const graphList = data?.graph?.tool_data?.graphs || [];
 	const tableData = data?.table?.tool_data;
 	const dispatch = useDispatch();
@@ -78,6 +81,7 @@ const GraphComponent = ({
 					});
 				} finally {
 					setIsGraphLoading(false);
+					setIsCsvLoaded(true);
 				}
 			};
 
@@ -188,7 +192,7 @@ const GraphComponent = ({
 								))}
 							</ScrollList>
 
-							<div className="rounded-3xl border w-full overflow-x-scroll  border-primary4">
+							<div className="rounded-3xl w-full overflow-x-scroll">
 								{supportedGraphsData?.map(
 									(graph) =>
 										activeGraphTab === graph.id && (
@@ -197,6 +201,8 @@ const GraphComponent = ({
 													key={`${queryId}_${graph.id}`}
 													graph={graph}
 													identifierKey={queryId}
+													page={page}
+													contentItem={contentItem}
 												/>
 											</div>
 										),
@@ -206,11 +212,23 @@ const GraphComponent = ({
 					)}
 					{activeTab === RESPONSE_CARD_VIEWS.TABULAR_VIEW && (
 						<div className="rounded-2xl border w-full custom-scrollbar-graph border-primary4">
-							<TableComponent
-								data={loadedData}
-								columns={columns}
-								onSortingChange={onSortingChange}
-							/>
+							{!isCsvLoaded ? (
+								<div className="darkSoul-glowing-button2 mb-10">
+									<button
+										className="darkSoul-button2"
+										type="button"
+									>
+										<i className="bi-arrow-clockwise animate-spin text-purple-100 text-lg me-2"></i>
+										Generating Table...
+									</button>
+								</div>
+							) : (
+								<TableComponent
+									data={loadedData}
+									columns={columns}
+									onSortingChange={onSortingChange}
+								/>
+							)}
 						</div>
 					)}
 				</>

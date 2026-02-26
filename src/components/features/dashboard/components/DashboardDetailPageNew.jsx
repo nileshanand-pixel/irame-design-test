@@ -201,22 +201,6 @@ const DashboardDetailPageNew = () => {
 		setDashboardWidgets(processedDashboard);
 	}, [processedDashboard, dashboardWidgets.length]);
 
-	const handleGraphClick = useCallback(
-		(graph, contentItem) => {
-			// Check if this item is being deleted
-			const itemKey = `${contentItem.dashboard_content_id}-${graph.id}`;
-			if (deletingItems.has(itemKey)) {
-				return; // Don't open modal if item is being deleted
-			}
-
-			const normalizedGraph = normalizeGraphData(graph);
-			setSelectedGraph(normalizedGraph);
-			setSelectedContentItem(contentItem);
-			setIsDetailModalOpen(true);
-		},
-		[deletingItems],
-	);
-
 	const handleTableClick = useCallback(
 		(contentItem) => {
 			// For tables, we need to extract the table URL to create the key
@@ -317,7 +301,6 @@ const DashboardDetailPageNew = () => {
 						graph={graph}
 						item={item}
 						isEditModeActive={isEditModeActive}
-						onGraphClick={handleGraphClick}
 						onDeleteClick={handleDeleteClick}
 						isDeleting={isDeleting}
 					/>,
@@ -351,7 +334,6 @@ const DashboardDetailPageNew = () => {
 	}, [
 		dashboardWidgets,
 		isEditModeActive,
-		handleGraphClick,
 		handleTableClick,
 		handleDeleteClick,
 		deletingItems,

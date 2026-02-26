@@ -12,8 +12,9 @@ import CircularLoader from '@/components/elements/loading/CircularLoader';
  * @param {Object} graph - Graph data object
  * @param {string} identifierKey - Unique identifier for the graph
  * @param {string} chartType - Chart type override (line, bar, area)
+ * @param {boolean} isReady - Whether the graph is ready to be rendered
  */
-const VisualizationTab = ({ graph, identifierKey, chartType }) => {
+const VisualizationTab = ({ graph, identifierKey, chartType, isReady }) => {
 	const [zoomRange, setZoomRange] = useState(null);
 
 	const normalizedGraph = useMemo(() => {
@@ -91,21 +92,29 @@ const VisualizationTab = ({ graph, identifierKey, chartType }) => {
 	const hasTableData = filteredTableData.length > 0 && columns.length > 0;
 
 	return (
-		<div className="w-full h-full flex flex-col p-6 pt-4 overflow-y-auto">
+		<div className="w-full h-full flex flex-col px-6 pb-4 pt-0 overflow-y-auto">
 			{/* Graph Section */}
-			<div className="rounded-[0.875rem] border w-full min-h-[calc(90vh-10rem)] max-h-[calc(90vh-10rem)] border-primary4 bg-purple-4 p-4 mb-6">
-				<GraphRenderer
-					graph={normalizedGraph}
-					identifierKey={identifierKey}
-					chartTypeOverride={chartType}
-					onZoomRangeChange={handleZoomRangeChange}
-				/>
+			<div className="min-h-[40rem] flex items-center justify-center">
+				{isReady ? (
+					<GraphRenderer
+						graph={normalizedGraph}
+						identifierKey={identifierKey}
+						chartTypeOverride={chartType}
+						onZoomRangeChange={handleZoomRangeChange}
+						previewMode={false}
+					/>
+				) : (
+					<div className="flex flex-col items-center gap-2 text-primary60 text-sm py-20">
+						<CircularLoader size="md" />
+						Preparing visualization...
+					</div>
+				)}
 			</div>
 
 			{/* Table Section */}
 			{csvUrl && (
 				<div
-					className={`bg-white rounded-[0.875rem] p-4 shadow-sm border hover:shadow-md transition-shadow border-[#E2E8F0] group w-full min-w-0 cursor-pointer`}
+					className={`bg-white rounded-[0.875rem] p-4 border transition-shadow border-[#E2E8F0] group w-full min-w-0 cursor-pointer`}
 				>
 					<div className="mb-3">
 						<h3 className="font-medium text-[#26064A]">

@@ -42,7 +42,7 @@ export function DataTablePagination({
 				{table.getFilteredSelectedRowModel().rows.length} of{' '}
 				{table.getFilteredRowModel().rows.length} row(s) selected.
 			</div> */}
-			<div className="flex items-center flex-row w-full justify-between text-xs font-normal textprimary80">
+			<div className="flex items-center flex-row w-full justify-between text-xs font-normal text-primary80">
 				<div className="flex items-center space-x-2">
 					<p className="whitespace-nowrap">Rows per page :</p>
 					<Select
@@ -72,7 +72,10 @@ export function DataTablePagination({
 						</SelectContent>
 					</Select>
 				</div>
-				<div className="flex items-center space-x-2">
+				<div
+					onClick={(e) => e.stopPropagation()}
+					className="flex items-center space-x-2"
+				>
 					<div className="flex items-center justify-center">
 						Page {table.getState().pagination.pageIndex + 1} of{' '}
 						{table.getPageCount()}

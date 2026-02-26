@@ -7,7 +7,6 @@ import DashboardTableCard from './DashboardTableCard';
  * @param {Object} props
  * @param {Object} props.item - The dashboard content item
  * @param {boolean} props.isEditModeActive - Whether edit mode is currently active
- * @param {Function} props.onGraphClick - Callback when a graph is clicked
  * @param {Function} props.onTableClick - Callback when a table is clicked
  * @param {Function} props.onDeleteClick - Callback when delete button is clicked
  * @param {Set} props.deletingItems - Set of items being deleted (format: "contentId-itemId")
@@ -15,7 +14,6 @@ import DashboardTableCard from './DashboardTableCard';
 const DashboardWidgets = ({
 	item,
 	isEditModeActive,
-	onGraphClick,
 	onTableClick,
 	onDeleteClick,
 	deletingItems = new Set(),
@@ -37,7 +35,6 @@ const DashboardWidgets = ({
 					graph={graph}
 					item={item}
 					isEditModeActive={isEditModeActive}
-					onGraphClick={onGraphClick}
 					onDeleteClick={onDeleteClick}
 					isDeleting={isDeleting}
 				/>,
@@ -66,14 +63,7 @@ const DashboardWidgets = ({
 		}
 
 		return widgetList;
-	}, [
-		item,
-		isEditModeActive,
-		onGraphClick,
-		onTableClick,
-		onDeleteClick,
-		deletingItems,
-	]);
+	}, [item, isEditModeActive, onTableClick, onDeleteClick, deletingItems]);
 
 	return <>{widgets}</>;
 };

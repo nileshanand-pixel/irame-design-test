@@ -71,7 +71,7 @@ const ChartTypeDropdown = ({ value = 'line', originalChartType, onChange }) => {
 				<Button
 					variant="outline"
 					className={cn(
-						'border-gray-200 text-[#26064A] bg-white hover:bg-gray-50',
+						'border-gray-200 !text-primary80 bg-white hover:bg-gray-50',
 						'px-3 py-2 h-auto font-medium flex items-center gap-2',
 					)}
 				>
@@ -82,7 +82,7 @@ const ChartTypeDropdown = ({ value = 'line', originalChartType, onChange }) => {
 			</PopoverTrigger>
 			<PopoverContent className="w-auto p-0" sideOffset={4} align="end">
 				<div className="min-w-[11.25rem] py-2">
-					<div className="px-2 flex flex-col gap-1">
+					<div className="flex flex-col">
 						{visibleOptions.map((option) => {
 							const OptionIcon = option.icon;
 							const isSelected = selectedOption.key === option.key;
@@ -92,9 +92,11 @@ const ChartTypeDropdown = ({ value = 'line', originalChartType, onChange }) => {
 									key={option.key}
 									onClick={() => handleSelect(option.key)}
 									className={cn(
-										'w-full px-4 py-2.5 text-left text-sm flex items-center justify-between rounded-md transition-colors',
-										'hover:bg-gray-100 cursor-pointer',
-										isSelected && 'bg-[#FAF5FF] text-[#6A12CD]',
+										'w-full p-2.5 text-left text-sm flex items-center justify-between transition-colors',
+										'cursor-pointer hover:bg-purple-4',
+										isSelected
+											? 'text-primary'
+											: 'text-primary80',
 									)}
 								>
 									<span className="font-medium flex items-center gap-2">
@@ -102,7 +104,7 @@ const ChartTypeDropdown = ({ value = 'line', originalChartType, onChange }) => {
 										{option.label}
 									</span>
 									{isSelected && (
-										<Check className="w-4 h-4 text-[#6A12CD]" />
+										<Check className="w-4 h-4 text-primary" />
 									)}
 								</button>
 							);

@@ -83,10 +83,10 @@ export function DataTable({
 	});
 
 	return (
-		<div className="w-full space-y-2.5 overflow-auto h-full">
-			<div className="relative text-primary100  w-full overflow-auto h-[calc(100%-3rem)]">
-				<Table>
-					<TableHeader className="sticky top-0 bg-white">
+		<div className="flex flex-col w-full h-full min-h-0">
+			<div className="relative flex-1 text-primary100 w-full overflow-auto min-h-0">
+				<Table className="border-collapse">
+					<TableHeader className="sticky top-0 bg-white z-20">
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => (
@@ -166,7 +166,7 @@ export function DataTable({
 				</Table>
 			</div>
 			{!hidePagination && (
-				<div className="space-y-2.5">
+				<div className="pt-2 flex-none border-t border-[#E5E7EB]">
 					<DataTablePagination
 						table={table}
 						defaultRowsPerPage={defaultRowsPerPage}

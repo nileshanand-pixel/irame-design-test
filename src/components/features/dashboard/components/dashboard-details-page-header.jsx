@@ -24,6 +24,7 @@ import DashListIcon from '@/assets/svg/DashListIcon';
 import EditModeButton from './EditModeButton';
 import { formatRelativeTime } from '@/utils/date-utils';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
+import { RefreshCw, CheckCircle2 } from 'lucide-react';
 
 const DashboardDetailsPageHeader = memo(
 	({
@@ -40,6 +41,7 @@ const DashboardDetailsPageHeader = memo(
 		const [ConfirmationDialog, confirm] = useConfirmDialog();
 		const previousRefreshTimeRef = useRef(null);
 		const [relativeRefreshTime, setRelativeRefreshTime] = useState('');
+		const [isRefreshSuccess, setIsRefreshSuccess] = useState(false);
 
 		const handleEditModeToggle = useCallback((checked) => {
 			setIsEditMode(checked);
@@ -82,6 +84,8 @@ const DashboardDetailsPageHeader = memo(
 			mutationFn: () => refreshDashboard(dashboardId),
 			onSuccess: (data) => {
 				toast.success(data?.message || 'Refresh Request Submitted');
+				setIsRefreshSuccess(true);
+				setTimeout(() => setIsRefreshSuccess(false), 2000);
 				// Optionally invalidate queries to refetch dashboard data
 				queryClient.invalidateQueries(['dashboard-metadata', dashboardId]);
 				queryClient.invalidateQueries(['dashboard-content', dashboardId]);
@@ -209,16 +213,26 @@ const DashboardDetailsPageHeader = memo(
 										<button
 											onClick={handleRefresh}
 											disabled={refreshMutation.isPending}
-											className="flex items-center gap-2 text-sm text-[#26064A] font-normal hover:text-[#6A12CD] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+											className={`p-2 rounded-md flex items-center gap-1.5 text-sm font-normal transition-colors cursor-pointer ${
+												isRefreshSuccess
+													? 'text-[#027A48] hover:bg-transparent'
+													: 'text-primary100 hover:bg-primary4'
+											} disabled:opacity-50 disabled:cursor-not-allowed`}
 										>
-											<MdRefresh
-												className={`w-4 h-4 ${refreshMutation.isPending ? 'animate-spin' : ''}`}
-											/>
+											{refreshMutation.isPending ? (
+												<RefreshCw className="w-5 h-5 animate-spin" />
+											) : isRefreshSuccess ? (
+												<CheckCircle2 className="w-5 h-5" />
+											) : (
+												<RefreshCw className="w-5 h-5" />
+											)}
 											{refreshMutation.isPending
 												? 'Refreshing...'
-												: relativeRefreshTime
-													? `Refreshed ${relativeRefreshTime}`
-													: 'Refresh'}
+												: isRefreshSuccess
+													? 'Success!'
+													: relativeRefreshTime
+														? `Refreshed ${relativeRefreshTime}`
+														: 'Refresh'}
 										</button>
 										<AutoRefreshDropdown
 											dashboardMetadata={dashboardMetadata}

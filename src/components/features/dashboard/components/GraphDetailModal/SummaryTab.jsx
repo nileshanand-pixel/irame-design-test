@@ -217,7 +217,7 @@ const SummaryTab = ({ summary, query, title, sessionId, datasourceId }) => {
 			<div className="px-6 py-3 border-b border-[#F3F4F6]">
 				<div className="flex  items-center justify-between">
 					<div>
-						<h2 className="text-xl font-semibold text-[#26064A]">
+						<h2 className="text-xl font-medium text-primary100">
 							{title || 'Summary'}
 						</h2>
 					</div>
