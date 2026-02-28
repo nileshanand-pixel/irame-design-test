@@ -116,10 +116,14 @@ const setupInterceptors = (axiosClient) => {
 				window.location.pathname.includes('/decline-invitation');
 
 			// Show a user-visible toast for non-401 errors (avoid double toasts for auth flow)
+			// Skip if error has _skipAxiosToast flag (used when components handle custom error messaging)
 			try {
-				if (error.response && error.response.status !== 401) {
-					const msg =
-						error.response?.data?.message ||
+				if (
+					error.response &&
+					error.response.status !== 401 &&
+					!error._skipAxiosToast
+				) {
+					error.response?.data?.message ||
 						error.message ||
 						'API request failed';
 					toast.error(msg);

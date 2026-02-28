@@ -42,7 +42,7 @@ const StructuredConnectorContent = ({ workflow }) => {
 	const runId = useWorkflowRunId();
 	const workflowId = useWorkflowId();
 	const baseStepper = useStepper();
-	const { isCreating, hasRunId } = useStructuredDatasourceId();
+	const { isCreating, hasRunId, initError } = useStructuredDatasourceId();
 
 	// Poll for run details directly in the component
 	const { data: runDetails, isLoading: isRunLoading } = useQuery({
@@ -67,6 +67,18 @@ const StructuredConnectorContent = ({ workflow }) => {
 		runDetails?.status === 'COLUMN_MAPPING_DONE';
 
 	if (!stepper) return null;
+
+	if (initError && !hasRunId) {
+		return (
+			<div className="space-y-6 h-full flex flex-col min-h-0">
+				<div className="px-8 pt-5">
+					<div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+						{initError}
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	// Show loading when creating datasource (only for new workflows, not runs)
 	if (isCreating && !hasRunId) {
