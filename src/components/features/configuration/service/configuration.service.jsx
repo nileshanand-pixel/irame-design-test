@@ -175,6 +175,10 @@ export const createEmptyDatasource = async (data) => {
 		return response.data;
 	} catch (error) {
 		console.error('Error creating temp datasource', error);
+		// Mark error to suppress axios interceptor toast (components show custom ones)
+		if (error?.response?.status === 403) {
+			error._skipAxiosToast = true;
+		}
 		throw error;
 	}
 };

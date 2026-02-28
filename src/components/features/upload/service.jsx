@@ -1,9 +1,16 @@
 import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
 
 export const uploadInit = async (data) => {
-	const response = await axiosClientV1.post(`/datasources/upload-init`, data);
-
-	return response.data;
+	try {
+		const response = await axiosClientV1.post(`/datasources/upload-init`, data);
+		return response.data;
+	} catch (error) {
+		// Mark error to suppress axios interceptor toast (components show custom ones)
+		if (error?.response?.status === 403) {
+			error._skipAxiosToast = true;
+		}
+		throw error;
+	}
 };
 
 export const getPresignedUrl = async ({ fileName, datasourceId }) => {

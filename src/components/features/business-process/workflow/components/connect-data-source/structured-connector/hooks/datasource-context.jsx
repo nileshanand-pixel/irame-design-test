@@ -20,12 +20,15 @@ export const DatasourceProvider = ({ children }) => {
 	const [datasourceId, setDatasourceId] = useState(urlDatasourceId);
 	const [isCreating, setIsCreating] = useState(false);
 	const [isReady, setIsReady] = useState(false);
+	const [initError, setInitError] = useState('');
+	const [hasInitAttempted, setHasInitAttempted] = useState(false);
 
 	// Initialize datasource on mount if not present
 	useEffect(() => {
 		const initializeDatasource = async () => {
 			// If we have a run_id, don't create a new datasource
 			if (runId) {
+				setInitError('');
 				setIsReady(true);
 				return;
 			}
@@ -33,14 +36,21 @@ export const DatasourceProvider = ({ children }) => {
 			// If we already have a datasource ID from URL, use it
 			if (urlDatasourceId) {
 				setDatasourceId(urlDatasourceId);
+				setInitError('');
 				setIsReady(true);
 				return;
 			}
 
+			if (hasInitAttempted || isCreating) {
+				return;
+			}
+
 			// Create new datasource if none exists
-			if (!datasourceId && !isCreating) {
+			if (!datasourceId) {
 				try {
+					setHasInitAttempted(true);
 					setIsCreating(true);
+					setInitError('');
 					const res = await createEmptyDatasource({
 						datasource_type: 'system_generated',
 					});
@@ -48,11 +58,22 @@ export const DatasourceProvider = ({ children }) => {
 					if (res?.datasource_id) {
 						setDatasourceId(res.datasource_id);
 						setUrlParam('datasource_id', res.datasource_id);
+						setInitError('');
 						setIsReady(true);
 					}
 				} catch (error) {
 					console.error('Failed to create datasource:', error);
-					toast.error('Failed to initialize upload session', {
+					const isPermissionError = error?.response?.status === 403;
+					const errorMessage = isPermissionError
+						? 'Your role does not have permission to connect data source.'
+						: error?.response?.data?.message ||
+							'Failed to initialize upload session';
+					setInitError(errorMessage);
+					// Mark error to suppress axios interceptor toast (we show custom one here)
+					if (isPermissionError) {
+						error._skipAxiosToast = true;
+					}
+					toast.error(errorMessage, {
 						position: 'bottom-center',
 					});
 				} finally {
@@ -62,12 +83,13 @@ export const DatasourceProvider = ({ children }) => {
 		};
 
 		initializeDatasource();
-	}, [urlDatasourceId, runId, datasourceId, isCreating]);
+	}, [urlDatasourceId, runId, datasourceId, isCreating, hasInitAttempted]);
 
 	// Sync with URL changes
 	useEffect(() => {
 		if (urlDatasourceId && urlDatasourceId !== datasourceId) {
 			setDatasourceId(urlDatasourceId);
+			setInitError('');
 			setIsReady(true);
 		}
 	}, [urlDatasourceId, datasourceId]);
@@ -89,6 +111,7 @@ export const DatasourceProvider = ({ children }) => {
 		isCreating,
 		isReady: isReady && !!datasourceId,
 		hasRunId: !!runId,
+		initError,
 	};
 
 	return (
