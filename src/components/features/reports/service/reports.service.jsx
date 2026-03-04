@@ -2,6 +2,16 @@ import axiosClientV1, { axiosClientV2, axiosClientV3 } from '@/lib/axios';
 import { logError } from '@/lib/logger';
 import { ENABLE_RBAC } from '@/config';
 
+const isRbacActive = () => {
+	try {
+		const raw = localStorage.getItem('userDetails');
+		const userDetails = raw ? JSON.parse(raw) : null;
+		return ENABLE_RBAC && userDetails?.is_rbac_enabled;
+	} catch (e) {
+		return false;
+	}
+};
+
 /**
  * Retrieves unified reports (user-owned and shared) with RBAC, search, sorting, and pagination
  * @param {Object} params - Query parameters
@@ -161,7 +171,7 @@ export const updateReportVisibility = async (id, visibility) => {
  */
 export const getReportAccessWithRBAC = async (reportId) => {
 	try {
-		if (ENABLE_RBAC) {
+		if (isRbacActive()) {
 			const { getReportAccessUsers } = await import(
 				'@/api/gatekeeper/reportAccess.service'
 			);
@@ -177,7 +187,7 @@ export const getReportAccessWithRBAC = async (reportId) => {
 				errorMessage: error.message,
 				status: error.response?.status,
 				reportId,
-				enableRbac: ENABLE_RBAC,
+				enableRbac: isRbacActive(),
 			},
 		});
 		throw error;
@@ -193,7 +203,7 @@ export const getReportAccessWithRBAC = async (reportId) => {
  */
 export const shareReportWithRBAC = async (id, data) => {
 	try {
-		if (ENABLE_RBAC) {
+		if (isRbacActive()) {
 			return shareReportV3(id, data);
 		}
 		return shareReport(id, data);
@@ -205,7 +215,7 @@ export const shareReportWithRBAC = async (id, data) => {
 				errorMessage: error.message,
 				status: error.response?.status,
 				reportId: id,
-				enableRbac: ENABLE_RBAC,
+				enableRbac: isRbacActive(),
 			},
 		});
 		throw error;
@@ -221,7 +231,7 @@ export const shareReportWithRBAC = async (id, data) => {
  */
 export const revokeReportAccessWithRBAC = async (id, userId) => {
 	try {
-		if (ENABLE_RBAC) {
+		if (isRbacActive()) {
 			return revokeReportAccess(id, userId);
 		}
 		// Legacy mode does not support revoke via this function
@@ -237,7 +247,7 @@ export const revokeReportAccessWithRBAC = async (id, userId) => {
 				status: error.response?.status,
 				reportId: id,
 				userId,
-				enableRbac: ENABLE_RBAC,
+				enableRbac: isRbacActive(),
 			},
 		});
 		throw error;
@@ -253,7 +263,7 @@ export const revokeReportAccessWithRBAC = async (id, userId) => {
  */
 export const updateReportVisibilityWithRBAC = async (id, visibility) => {
 	try {
-		if (ENABLE_RBAC) {
+		if (isRbacActive()) {
 			return updateReportVisibility(id, visibility);
 		}
 		// Legacy mode does not support visibility updates via this function
@@ -269,7 +279,7 @@ export const updateReportVisibilityWithRBAC = async (id, visibility) => {
 				status: error.response?.status,
 				reportId: id,
 				visibility,
-				enableRbac: ENABLE_RBAC,
+				enableRbac: isRbacActive(),
 			},
 		});
 		throw error;

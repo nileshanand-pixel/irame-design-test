@@ -18,9 +18,11 @@ import { createReport } from '../service/reports.service';
 import { queryClient } from '@/lib/react-query';
 import { useSelector } from 'react-redux';
 import { RequiredLabel } from '@/components/elements/required-label';
+import { useRbac } from '@/hooks/useRbac';
 
 const CreateReportModal = () => {
 	const dispatch = useDispatch();
+	const { isRbacActive } = useRbac();
 	const [title, setTitle] = useState('');
 	const [description, setDescription] = useState('');
 	const [visibility, setVisibility] = useState('private');
@@ -107,6 +109,7 @@ const CreateReportModal = () => {
 						/>
 					</div>
 
+					{isRbacActive && (
 					<div className="space-y-3 pt-2">
 						<Label className="text-sm font-medium text-[#26064A]">
 							Visibility
@@ -136,6 +139,7 @@ const CreateReportModal = () => {
 							</label>
 						</div>
 					</div>
+					)}
 
 					<div className="flex flex-col sm:flex-row gap-4 pt-4">
 						<Button
