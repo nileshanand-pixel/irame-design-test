@@ -25,7 +25,6 @@ import DashListIcon from '@/assets/svg/DashListIcon';
 import EditModeButton from './EditModeButton';
 import { formatRelativeTime } from '@/utils/date-utils';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
-import { useRbac } from '@/hooks/useRbac';
 
 const DashboardDetailsPageHeader = memo(
 	({
@@ -39,7 +38,6 @@ const DashboardDetailsPageHeader = memo(
 		dashboardMetadata,
 	}) => {
 		const { navigate } = useRouter();
-		const { isRbacActive } = useRbac();
 		const [ConfirmationDialog, confirm] = useConfirmDialog();
 		const previousRefreshTimeRef = useRef(null);
 		const [relativeRefreshTime, setRelativeRefreshTime] = useState('');
@@ -194,15 +192,13 @@ const DashboardDetailsPageHeader = memo(
 								)}
 							</div>
 
-							{isRbacActive && (
-								<div
-									className="flex justify-center items-center group hover:shadow-sm border border-[#E5E7EB] cursor-pointer rounded-md h-10 w-10"
-									onClick={() => setIsShareDialogOpen(true)}
-									title="Share Dashboard"
-								>
-									<Share2 className="w-[1.125rem] h-[1.125rem] text-primary80 group-hover:text-[#6A12CD]" />
-								</div>
-							)}
+							<div
+								className="flex justify-center items-center group hover:shadow-sm border border-[#E5E7EB] cursor-pointer rounded-md h-10 w-10"
+								onClick={() => setIsShareDialogOpen(true)}
+								title="Share Dashboard"
+							>
+								<Share2 className="w-[1.125rem] h-[1.125rem] text-primary80 group-hover:text-[#6A12CD]" />
+							</div>
 						</div>
 					</div>
 
@@ -267,13 +263,11 @@ const DashboardDetailsPageHeader = memo(
 
 				<ConfirmationDialog />
 
-				{isRbacActive && (
-					<ShareDashboardDialog
-						open={isShareDialogOpen}
-						onClose={() => setIsShareDialogOpen(false)}
-						dashboardId={dashboardId}
-					/>
-				)}
+				<ShareDashboardDialog
+					open={isShareDialogOpen}
+					onClose={() => setIsShareDialogOpen(false)}
+					dashboardId={dashboardId}
+				/>
 
 				{isEditMode && !isEditModeModalOpen && (
 					<EditModeButton onClick={handleEditModeButtonClick} />

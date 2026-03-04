@@ -13,10 +13,8 @@ import {
 	DEFAULT_TIME_FILTER,
 	DASHBOARD_TABS,
 } from './constants/dashboard.constants';
-import { useRbac } from '@/hooks/useRbac';
 
 const DashboardPage = () => {
-	const { isRbacActive } = useRbac();
 	const [searchParams, setSearchParams] = useSearchParams();
 
 	const [timeFilter, setTimeFilter] = useState(DEFAULT_TIME_FILTER);
@@ -109,23 +107,21 @@ const DashboardPage = () => {
 							timeFilter={timeFilter}
 							onDashboardClick={handleDashboardClick}
 							onCreateDashboard={handleCreateDashboardClick}
-							onShare={isRbacActive ? handleShare : undefined}
+							onShare={handleShare}
 						/>
 					</TabsContent>
 
-					{isRbacActive && (
-						<TabsContent
-							value={DASHBOARD_TABS.SHARED_DASHBOARD.value}
-							className="mt-0"
-						>
-							<SharedDashboardsTab
-								searchQuery={debouncedSearchValue}
-								timeFilter={timeFilter}
-								onDashboardClick={handleDashboardClick}
-								onCreateDashboard={handleCreateDashboardClick}
-							/>
-						</TabsContent>
-					)}
+					<TabsContent
+						value={DASHBOARD_TABS.SHARED_DASHBOARD.value}
+						className="mt-0"
+					>
+						<SharedDashboardsTab
+							searchQuery={debouncedSearchValue}
+							timeFilter={timeFilter}
+							onDashboardClick={handleDashboardClick}
+							onCreateDashboard={handleCreateDashboardClick}
+						/>
+					</TabsContent>
 				</div>
 			</Tabs>
 			{/* Create Dashboard Modal */}
@@ -134,15 +130,11 @@ const DashboardPage = () => {
 				onOpenChange={setIsCreateModalOpen}
 				onSuccess={handleDashboardCreateSuccess}
 			/>
-			{isRbacActive && (
-				<ShareDashboardDialog
-					open={!!sharingDashboard}
-					onClose={() => setSharingDashboard(null)}
-					dashboardId={
-						sharingDashboard?.id || sharingDashboard?.dashboard_id
-					}
-				/>
-			)}
+			<ShareDashboardDialog
+				open={!!sharingDashboard}
+				onClose={() => setSharingDashboard(null)}
+				dashboardId={sharingDashboard?.id || sharingDashboard?.dashboard_id}
+			/>{' '}
 		</div>
 	);
 };

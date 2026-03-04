@@ -14,10 +14,8 @@ import { createDashboard } from '../service/dashboard.service';
 import { logError } from '@/lib/logger';
 import { toast } from '@/lib/toast';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
-import { useRbac } from '@/hooks/useRbac';
 
 const CreateDashboardModal = ({ open, onOpenChange, onSuccess }) => {
-	const { isRbacActive } = useRbac();
 	const [dashboardName, setDashboardName] = useState('');
 	const [description, setDescription] = useState('');
 	const [visibility, setVisibility] = useState('private');
@@ -155,53 +153,47 @@ const CreateDashboardModal = ({ open, onOpenChange, onSuccess }) => {
 						/>
 					</div>
 
-					{/* Visibility Field - only shown when RBAC is active */}
-					{isRbacActive && (
-						<div className="space-y-3 pt-2">
-							<Label className="text-sm font-medium text-[#26064A]">
-								Visibility
-							</Label>
-							<div className="flex gap-4">
-								<label className="flex items-center gap-2 cursor-pointer group">
-									<input
-										type="radio"
-										name="visibility"
-										value="private"
-										checked={visibility === 'private'}
-										onChange={(e) =>
-											setVisibility(e.target.value)
-										}
-										className="w-4 h-4 text-[#26064A] border-gray-300 focus:ring-[#26064A]"
-										disabled={isLoading}
-									/>
-									<span className="text-sm text-gray-700 group-hover:text-[#26064A] transition-colors">
-										Private
-									</span>
-								</label>
-								<label className="flex items-center gap-2 cursor-pointer group">
-									<input
-										type="radio"
-										name="visibility"
-										value="team"
-										checked={visibility === 'team'}
-										onChange={(e) =>
-											setVisibility(e.target.value)
-										}
-										className="w-4 h-4 text-[#26064A] border-gray-300 focus:ring-[#26064A]"
-										disabled={isLoading}
-									/>
-									<span className="text-sm text-gray-700 group-hover:text-[#26064A] transition-colors">
-										Team
-									</span>
-								</label>
-							</div>
-							<p className="text-xs text-gray-500">
-								{visibility === 'private'
-									? 'Only you can view and edit this dashboard.'
-									: 'Everyone in your current team can view this dashboard.'}
-							</p>
+					{/* Visibility Field */}
+					<div className="space-y-3 pt-2">
+						<Label className="text-sm font-medium text-[#26064A]">
+							Visibility
+						</Label>
+						<div className="flex gap-4">
+							<label className="flex items-center gap-2 cursor-pointer group">
+								<input
+									type="radio"
+									name="visibility"
+									value="private"
+									checked={visibility === 'private'}
+									onChange={(e) => setVisibility(e.target.value)}
+									className="w-4 h-4 text-[#26064A] border-gray-300 focus:ring-[#26064A]"
+									disabled={isLoading}
+								/>
+								<span className="text-sm text-gray-700 group-hover:text-[#26064A] transition-colors">
+									Private
+								</span>
+							</label>
+							<label className="flex items-center gap-2 cursor-pointer group">
+								<input
+									type="radio"
+									name="visibility"
+									value="team"
+									checked={visibility === 'team'}
+									onChange={(e) => setVisibility(e.target.value)}
+									className="w-4 h-4 text-[#26064A] border-gray-300 focus:ring-[#26064A]"
+									disabled={isLoading}
+								/>
+								<span className="text-sm text-gray-700 group-hover:text-[#26064A] transition-colors">
+									Team
+								</span>
+							</label>
 						</div>
-					)}
+						<p className="text-xs text-gray-500">
+							{visibility === 'private'
+								? 'Only you can view and edit this dashboard.'
+								: 'Everyone in your current team can view this dashboard.'}
+						</p>
+					</div>
 				</div>
 
 				<div className="px-6 pb-6 flex justify-end">
