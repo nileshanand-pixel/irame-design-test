@@ -4,11 +4,11 @@
 import { getDashboardAdapter } from './dashboard.adapter';
 import { logError } from '@/lib/logger';
 
-const adapter = getDashboardAdapter();
+const getAdapter = () => getDashboardAdapter();
 
 export const getMyDashboards = async (params = {}) => {
 	try {
-		const response = await adapter.getMyDashboards(params);
+		const response = await getAdapter().getMyDashboards(params);
 		const dashboards = response.data || [];
 		if (response.dashboardsContainingQuery !== undefined) {
 			dashboards.dashboardsContainingQuery =
@@ -33,7 +33,7 @@ export const getMyDashboards = async (params = {}) => {
  */
 export const getSharedDashboards = async () => {
 	try {
-		const response = await adapter.getSharedDashboards();
+		const response = await getAdapter().getSharedDashboards();
 		return response.data || [];
 	} catch (error) {
 		logError(error, {
@@ -53,7 +53,7 @@ export const getSharedDashboards = async () => {
  */
 export const createDashboard = async (dashboardData) => {
 	try {
-		const response = await adapter.createDashboard(dashboardData);
+		const response = await getAdapter().createDashboard(dashboardData);
 		return response.data;
 	} catch (error) {
 		logError(error, {
@@ -74,7 +74,7 @@ export const createDashboard = async (dashboardData) => {
  */
 export const updateDashboard = async (id, dashboardData) => {
 	try {
-		const response = await adapter.updateDashboard(id, dashboardData);
+		const response = await getAdapter().updateDashboard(id, dashboardData);
 		return response.data;
 	} catch (error) {
 		logError(error, {
@@ -96,7 +96,7 @@ export const updateDashboard = async (id, dashboardData) => {
  */
 export const getDashboardById = async (id) => {
 	try {
-		const response = await adapter.getDashboardById(id);
+		const response = await getAdapter().getDashboardById(id);
 		return response.data;
 	} catch (error) {
 		logError(error, {
@@ -120,7 +120,7 @@ export const getDashboardById = async (id) => {
  */
 export const createDashboardContent = async (dashboardId, contentData) => {
 	try {
-		const response = await adapter.createDashboardContent(
+		const response = await getAdapter().createDashboardContent(
 			dashboardId,
 			contentData,
 		);
@@ -149,7 +149,7 @@ export const createDashboardContent = async (dashboardId, contentData) => {
  */
 export const deleteDashboardContentItems = async (dashboardId, contentId, data) => {
 	try {
-		const response = await adapter.deleteDashboardContentItems(
+		const response = await getAdapter().deleteDashboardContentItems(
 			dashboardId,
 			contentId,
 			data,
@@ -206,7 +206,7 @@ export const deleteDashboardContentItem = async (
  */
 export const getUserDashboardsForDashboard = async (params = {}) => {
 	try {
-		const response = await adapter.getUserDashboardsForDashboard(params);
+		const response = await getAdapter().getUserDashboardsForDashboard(params);
 		return response;
 	} catch (error) {
 		logError(error, {
@@ -229,7 +229,7 @@ export const getUserDashboardsForDashboard = async (params = {}) => {
  */
 export const getDashboardContent = async (id) => {
 	try {
-		const response = await adapter.getDashboardContent(id);
+		const response = await getAdapter().getDashboardContent(id);
 		return Array.isArray(response) ? response : [];
 	} catch (error) {
 		logError(error, {
@@ -252,7 +252,7 @@ export const getDashboardContent = async (id) => {
  */
 export const deleteUserDashboard = async (id) => {
 	try {
-		await adapter.deleteUserDashboard(id);
+		await getAdapter().deleteUserDashboard(id);
 		return { success: true };
 	} catch (error) {
 		logError(error, {
@@ -286,7 +286,7 @@ export const updateDashboardName = async (id, name) => {
  */
 export const updateDashboardRefreshSettings = async (id, autoRefreshInterval) => {
 	try {
-		const response = await adapter.updateDashboardRefreshSettings(id, {
+		const response = await getAdapter().updateDashboardRefreshSettings(id, {
 			autoRefreshInterval,
 		});
 		return response.data;
@@ -312,7 +312,7 @@ export const updateDashboardRefreshSettings = async (id, autoRefreshInterval) =>
  */
 export const refreshDashboard = async (id) => {
 	try {
-		const response = await adapter.refreshDashboard(id);
+		const response = await getAdapter().refreshDashboard(id);
 		return response.data;
 	} catch (error) {
 		logError(error, {
@@ -335,7 +335,7 @@ export const refreshDashboard = async (id) => {
  */
 export const shareDashboard = async (id, data) => {
 	try {
-		await adapter.shareDashboard(id, data);
+		await getAdapter().shareDashboard(id, data);
 		return true;
 	} catch (error) {
 		logError(error, {
@@ -358,7 +358,7 @@ export const shareDashboard = async (id, data) => {
  */
 export const revokeDashboardAccess = async (id, userId) => {
 	try {
-		await adapter.revokeDashboardAccess(id, userId);
+		await getAdapter().revokeDashboardAccess(id, userId);
 		return true;
 	} catch (error) {
 		logError(error, {
@@ -382,7 +382,7 @@ export const revokeDashboardAccess = async (id, userId) => {
  */
 export const updateDashboardVisibility = async (id, visibility) => {
 	try {
-		await adapter.updateDashboardVisibility(id, visibility);
+		await getAdapter().updateDashboardVisibility(id, visibility);
 		return true;
 	} catch (error) {
 		logError(error, {
