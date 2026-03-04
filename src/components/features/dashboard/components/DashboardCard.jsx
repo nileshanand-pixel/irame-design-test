@@ -63,16 +63,20 @@ const DashboardCard = ({ dashboard, onClick, isShared = false, onShare }) => {
 	};
 
 	const dashboardActions = [
-		{
-			type: 'item',
-			label: 'Share',
-			show: true,
-			onClick: (e) => {
-				e.stopPropagation();
-				if (onShare) onShare(dashboard);
-			},
-			icon: <Share2 className="size-4 text-primary60" />,
-		},
+		...(onShare
+			? [
+					{
+						type: 'item',
+						label: 'Share',
+						show: true,
+						onClick: (e) => {
+							e.stopPropagation();
+							onShare(dashboard);
+						},
+						icon: <Share2 className="size-4 text-primary60" />,
+					},
+				]
+			: []),
 		{
 			type: 'item',
 			label: 'Delete',

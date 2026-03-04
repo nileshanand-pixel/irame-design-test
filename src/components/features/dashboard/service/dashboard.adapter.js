@@ -122,17 +122,19 @@ const transformDashboard = (apiDashboard, isShared = false) => {
  * API adapter implementation
  */
 export class APIDashboardAdapter extends DashboardAdapter {
-	constructor(apiClient) {
+	constructor(apiClient, options = {}) {
 		super();
 		this.api = apiClient;
+		this.useSpaceParam = options.useSpaceParam ?? true;
 	}
 
 	async getMyDashboards(params = {}) {
 		try {
 			// Build query parameters
-			const queryParams = {
-				space: 'personal',
-			};
+			const queryParams = {};
+			if (this.useSpaceParam) {
+				queryParams.space = 'personal';
+			}
 			if (params.limit) queryParams.limit = params.limit;
 			if (params.cursor) queryParams.cursor = params.cursor;
 			if (params.start_date) queryParams.start_date = params.start_date;
@@ -425,8 +427,17 @@ export class APIDashboardAdapter extends DashboardAdapter {
  * Factory function to get the appropriate adapter
  */
 export const getDashboardAdapter = () => {
-	if (ENABLE_RBAC) {
-		return new APIDashboardAdapter(axiosClientV2);
+	let isRbacActive = false;
+	try {
+		const raw = localStorage.getItem('userDetails');
+		const userDetails = raw ? JSON.parse(raw) : null;
+		isRbacActive = ENABLE_RBAC && userDetails?.is_rbac_enabled;
+	} catch (e) {
+		// fallback to non-RBAC
 	}
-	return new APIDashboardAdapter(axiosClientV1);
+
+	if (isRbacActive) {
+		return new APIDashboardAdapter(axiosClientV2, { useSpaceParam: true });
+	}
+	return new APIDashboardAdapter(axiosClientV1, { useSpaceParam: false });
 };
