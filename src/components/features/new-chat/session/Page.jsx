@@ -59,6 +59,7 @@ import QueryActions from './components/QueryActions';
 import { REDIRECTION_URL_AFTER_LOGIN } from '@/constants/login-constants';
 import UnderstandingStats from './components/understanding-stats';
 import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
+import { RiErrorWarningLine } from 'react-icons/ri';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -98,19 +99,25 @@ const Workzone = () => {
 	}, [answers, selectedPathLeafId]);
 
 	// Fetch current session details to check if it's shared and track background processing
-	const { data: currentSessionData, refetch: refetchSession } = useQuery({
+	const {
+		data: currentSessionData,
+		refetch: refetchSession,
+		isError: isSessionError,
+		error: sessionError,
+	} = useQuery({
 		queryKey: ['session', currentSessionId],
 		queryFn: () => getSession(currentSessionId),
 		enabled: !!currentSessionId,
 		staleTime: 60000, // Cache for 1 minute
 		refetchOnWindowFocus: false, // Prevent unnecessary refetches when user returns to tab
-		// Poll session status when active path has no pending queries but session might have background queries
-		refetchInterval: () => {
-			// Poll at 30-second intervals when active path is not pending (to catch background queries)
-			return !selectedPathLeafPending ? 30000 : false;
+		retry: (failureCount, error) => {
+			// Do not retry on 403
+			if (error?.response?.status === 403) return false;
+			return failureCount < 3;
 		},
-		refetchIntervalInBackground: true,
 	});
+
+	const isForbidden = isSessionError && sessionError?.response?.status === 403;
 
 	// React Query for fetching session data
 	const {
@@ -127,14 +134,17 @@ const Workzone = () => {
 			selectedPathLeafId,
 		],
 		queryFn: () => getQueriesOfSession(currentSessionId),
-		enabled: !!currentSessionId,
+		enabled: !!currentSessionId && !isForbidden,
 		refetchOnWindowFocus: false, // Prevent unnecessary refetches when user returns to tab
 		// Only poll when user is actively waiting on current path
 		refetchInterval: () => (selectedPathLeafPending ? 5000 : false),
 		refetchIntervalInBackground: true,
 	});
 
-	const { exportStatusMap } = useSessionExportStatus(currentSessionId);
+	const { exportStatusMap } = useSessionExportStatus(
+		currentSessionId,
+		!isForbidden,
+	);
 
 	useEffect(() => {
 		if (!currentSessionId || !currentSessionData) {
@@ -163,11 +173,20 @@ const Workzone = () => {
 
 	// When user navigates to a path with no pending queries, check session status
 	useEffect(() => {
-		if (!selectedPathLeafPending && currentSessionId) {
+		if (!selectedPathLeafPending && currentSessionId && !isForbidden) {
 			// Refetch session to check if there are background queries processing
 			refetchSession();
 		}
-	}, [selectedPathLeafPending, currentSessionId, refetchSession]);
+	}, [selectedPathLeafPending, currentSessionId, refetchSession, isForbidden]);
+
+	// manual polling for session status when not forbidden
+	useEffect(() => {
+		if (isForbidden || selectedPathLeafPending || !currentSessionId) return;
+		const interval = setInterval(() => {
+			refetchSession();
+		}, 30000);
+		return () => clearInterval(interval);
+	}, [isForbidden, selectedPathLeafPending, currentSessionId, refetchSession]);
 
 	// Use workspace manager hook
 	const {
@@ -351,6 +370,8 @@ const Workzone = () => {
 	// Handle session query errors
 	useEffect(() => {
 		if (sessionQueryError) {
+			if (sessionQueryError?.response?.status === 403) return;
+
 			logError(sessionQueryError, {
 				feature: 'chat',
 				action: 'fetch-session-queries',
@@ -415,7 +436,7 @@ const Workzone = () => {
 
 	// Fetch datasource details (needed by handlers)
 	const { data: datasourceData } = useDatasourceDetailsV2({
-		queryOptions: { refetchOnWindowFocus: false },
+		queryOptions: { refetchOnWindowFocus: false, enabled: !isForbidden },
 	});
 
 	// Edit handler
@@ -1304,6 +1325,8 @@ const Workzone = () => {
 	};
 
 	useEffect(() => {
+		// if we have forbidden access, don't perform any polling/invalidations
+		if (isForbidden) return;
 		const allDone =
 			doingScience.length && doingScience.every((item) => !item.status);
 		if (allDone) {
@@ -1328,6 +1351,7 @@ const Workzone = () => {
 		queryClient,
 		userHasNavigated,
 		disableAutoScroll,
+		isForbidden,
 	]);
 
 	// useEffect(() => {
@@ -1504,6 +1528,35 @@ const Workzone = () => {
 			setShowSharedSessionModal(false);
 		}
 	};
+
+	if (isForbidden) {
+		return (
+			<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+				<div className="bg-white/90 rounded-2xl shadow-xl border border-primary8 p-10 flex flex-col items-center gap-4 w-[28rem] text-center">
+					<div className="flex items-center justify-center w-16 h-16 rounded-full bg-purple-10">
+						<RiErrorWarningLine className="text-purple-100 w-8 h-8" />
+					</div>
+					<div className="space-y-1.5">
+						<h2 className="text-lg font-semibold text-primary100">
+							Access Denied
+						</h2>
+						<p className="text-sm text-primary60">
+							You don't have permission to view this session.
+						</p>
+						<p className="text-sm text-primary60">
+							Please contact your Administrators
+						</p>
+					</div>
+					<Button
+						className="mt-2 bg-primary text-white font-medium px-6"
+						onClick={() => navigate('/app/home')}
+					>
+						Go Home
+					</Button>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex gap-4 px-4 w-full overflow-hidden pb-4 transition-all duration-500 ease-in-out">
