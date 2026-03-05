@@ -101,14 +101,6 @@ const EVENTS_ENUM = {
 	SIDE_BAR_CHAT_THREAD_CLICKED: 'SIDE_BAR_CHAT_THREAD_CLICKED',
 	SIDE_BAR_CHAT_DELETED: 'SIDE_BAR_CHAT_DELETED',
 
-	// EDA BUILDER FUNNEL
-	SIDE_BAR_EDA_BUILDER_CLICKED: 'SIDE_BAR_EDA_BUILDER_CLICKED',
-	EDA_ANALYSIS_STARTED: 'EDA_ANALYSIS_STARTED',
-	EDA_ANALYSIS_COMPLETED: 'EDA_ANALYSIS_COMPLETED',
-	EDA_ANALYSIS_FAILED: 'EDA_ANALYSIS_FAILED',
-	EDA_REPORT_VIEWED: 'EDA_REPORT_VIEWED',
-	EDA_JOB_DELETED: 'EDA_JOB_DELETED',
-
 	// LOGOUT FUNNEL
 	LOGOUT_CLICKED: 'LOGOUT_CLICKED',
 	LOGOUT_SUCCESSFUL: 'LOGOUT_SUCCESSFUL',
@@ -674,32 +666,6 @@ const EVENTS_REGISTRY = {
 	SIDE_BAR_CHAT_DELETED: {
 		trigger: 'when user deletes a chat thread from side bar',
 		parameters: ['type', 'chat_session_id', 'workflow_id'],
-	},
-
-	// EDA BUILDER FUNNEL
-	SIDE_BAR_EDA_BUILDER_CLICKED: {
-		trigger: 'when user clicks on EDA Builder in side bar',
-		parameters: [],
-	},
-	EDA_ANALYSIS_STARTED: {
-		trigger: 'when user starts a new EDA analysis',
-		parameters: ['file_count', 'file_names'],
-	},
-	EDA_ANALYSIS_COMPLETED: {
-		trigger: 'when EDA analysis completes successfully',
-		parameters: ['job_id', 'file_count', 'duration_seconds'],
-	},
-	EDA_ANALYSIS_FAILED: {
-		trigger: 'when EDA analysis fails',
-		parameters: ['job_id', 'error_message'],
-	},
-	EDA_REPORT_VIEWED: {
-		trigger: 'when user views an EDA report',
-		parameters: ['job_id', 'report_type'],
-	},
-	EDA_JOB_DELETED: {
-		trigger: 'when user deletes an EDA job',
-		parameters: ['job_id'],
 	},
 
 	// LOGOUT FUNNEL
