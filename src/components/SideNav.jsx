@@ -151,6 +151,18 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 							EVENTS_REGISTRY.SIDE_BAR_CONFIGURATION_CLICKED,
 						),
 				},
+				{
+					link: '/app/eda-builder',
+					text: 'EDA Builder',
+					icon: TbTableOptions,
+					showHint: true,
+					beta: true,
+					trackingCall: () =>
+						trackEvent(
+							EVENTS_ENUM.SIDE_BAR_EDA_BUILDER_CLICKED,
+							EVENTS_REGISTRY.SIDE_BAR_EDA_BUILDER_CLICKED,
+						),
+				},
 			],
 		},
 	];
@@ -593,6 +605,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			if (pathname.includes('business-process'))
 				setActiveTab('/app/business-process');
 			if (pathname.includes('dashboard')) setActiveTab('/app/dashboard');
+			if (pathname.includes('eda-builder')) setActiveTab('/app/eda-builder');
 		}
 	}, [pathname]);
 

@@ -1,0 +1,231 @@
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { toast } from 'react-toastify';
+import UploadSection from './UploadSection';
+import ProgressSection from './ProgressSection';
+import ResultsSection from './ResultsSection';
+import {
+	createEdaJob,
+	getEdaJobResult,
+	deleteEdaJob,
+} from '../../service/eda.service';
+import { useEdaJobPolling } from '../../hooks/useEdaJobPolling';
+import { uploadFile } from '@/components/features/upload/service';
+
+const isLocalEnv = import.meta.env.VITE_ENV === 'local';
+
+const STATES = {
+	IDLE: 'idle',
+	UPLOADING: 'uploading',
+	PROCESSING: 'processing',
+	COMPLETED: 'completed',
+	ERROR: 'error',
+};
+
+const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
+	const [state, setState] = useState(STATES.IDLE);
+	const [jobId, setJobId] = useState(null);
+	const [result, setResult] = useState(null);
+	const [fileNames, setFileNames] = useState([]);
+	const [errorMessage, setErrorMessage] = useState('');
+	const [uploadProgress, setUploadProgress] = useState(0);
+	const internalJobIdRef = useRef(null);
+
+	const { data: statusData } = useEdaJobPolling(
+		jobId,
+		state === STATES.PROCESSING,
+	);
+
+	// Handle selectedJobId from History tab
+	useEffect(() => {
+		if (selectedJobId && selectedJobId !== internalJobIdRef.current) {
+			setJobId(selectedJobId);
+			setResult(null);
+			setState(STATES.IDLE);
+			loadResult(selectedJobId);
+		}
+	}, [selectedJobId]);
+
+	// Handle polling status updates
+	useEffect(() => {
+		if (!statusData) return;
+
+		if (statusData.status === 'COMPLETED') {
+			loadResult(jobId);
+		} else if (statusData.status === 'FAILED') {
+			setState(STATES.ERROR);
+			setErrorMessage(statusData.message || 'EDA analysis failed');
+		} else if (statusData.status === 'CANCELLED') {
+			setState(STATES.ERROR);
+			setErrorMessage(statusData.message || 'EDA analysis was cancelled');
+		}
+	}, [statusData?.status, jobId]);
+
+	const loadResult = async (id) => {
+		try {
+			const data = await getEdaJobResult(id);
+			setResult(data);
+			setFileNames(data.fileNames || fileNames);
+			setState(STATES.COMPLETED);
+		} catch {
+			setState(STATES.ERROR);
+			setErrorMessage('Failed to load results');
+		}
+	};
+
+	const handleGenerate = useCallback(
+		async (files) => {
+			try {
+				setState(STATES.UPLOADING);
+				setUploadProgress(0);
+				setFileNames(files.map((f) => f.name));
+				setErrorMessage('');
+
+				// Upload all files to S3 and collect URLs
+				const fileUrls = [];
+				const names = [];
+
+				for (let i = 0; i < files.length; i++) {
+					const file = files[i];
+					setUploadProgress(Math.round((i / files.length) * 100));
+
+					if (isLocalEnv) {
+						// In local env, we'll need a different approach
+						// For now, use the same upload service
+						const { url } = await uploadFile({
+							file,
+							updateProgress: () => {},
+						});
+						fileUrls.push(url);
+					} else {
+						const { url } = await uploadFile({
+							file,
+							updateProgress: () => {},
+						});
+						fileUrls.push(url);
+					}
+					names.push(file.name);
+				}
+
+				setUploadProgress(100);
+
+				// Create the EDA job with all file URLs
+				const response = await createEdaJob(fileUrls, names);
+				const newJobId = response.jobId;
+
+				setJobId(newJobId);
+				internalJobIdRef.current = newJobId;
+				onJobIdChange?.(newJobId);
+				setState(STATES.PROCESSING);
+				toast.info('EDA analysis started');
+			} catch (error) {
+				setState(STATES.ERROR);
+				setErrorMessage(
+					error?.response?.data?.message || 'Failed to start EDA analysis',
+				);
+				toast.error('Failed to start EDA analysis');
+			}
+		},
+		[onJobIdChange],
+	);
+
+	const handleNewAnalysis = () => {
+		setState(STATES.IDLE);
+		setJobId(null);
+		internalJobIdRef.current = null;
+		setResult(null);
+		setFileNames([]);
+		setErrorMessage('');
+		onJobIdChange?.(null);
+	};
+
+	const handleCancel = async () => {
+		const confirmed = window.confirm(
+			'Are you sure? This will stop the analysis and delete the job.',
+		);
+		if (!confirmed) return;
+		try {
+			await deleteEdaJob(jobId);
+			toast.info('Job cancelled');
+		} catch {
+			// Job may already be completed or deleted
+		}
+		handleNewAnalysis();
+	};
+
+	const handleRetry = () => {
+		setState(STATES.IDLE);
+		setErrorMessage('');
+	};
+
+	return (
+		<div className="w-full max-w-7xl mx-auto">
+			{state === STATES.IDLE && (
+				<UploadSection onGenerate={handleGenerate} isDisabled={false} />
+			)}
+
+			{state === STATES.UPLOADING && (
+				<div className="text-center py-12 space-y-3">
+					<div className="animate-spin w-8 h-8 border-2 border-purple-100 border-t-transparent rounded-full mx-auto" />
+					<p className="text-sm text-primary60 font-medium">
+						Uploading files...
+						{uploadProgress > 0 ? ` ${uploadProgress}%` : ''}
+					</p>
+					<div className="w-64 mx-auto bg-gray-200 rounded-full h-1.5">
+						<div
+							className="bg-purple-100 h-1.5 rounded-full transition-all duration-300"
+							style={{ width: `${uploadProgress}%` }}
+						/>
+					</div>
+					<p className="text-xs text-primary40">{fileNames.join(', ')}</p>
+				</div>
+			)}
+
+			{state === STATES.PROCESSING && (
+				<ProgressSection
+					statusData={statusData}
+					fileNames={fileNames}
+					onCancel={handleCancel}
+				/>
+			)}
+
+			{state === STATES.COMPLETED && result && (
+				<ResultsSection
+					result={result}
+					fileNames={fileNames}
+					onNewAnalysis={handleNewAnalysis}
+				/>
+			)}
+
+			{state === STATES.ERROR && (
+				<div className="text-center py-12 space-y-4">
+					<div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto">
+						<svg
+							className="w-6 h-6 text-red-500"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+					</div>
+					<p className="text-sm text-red-600 font-medium">
+						{errorMessage}
+					</p>
+					<button
+						onClick={handleRetry}
+						className="px-6 py-2 bg-purple-100 text-white font-medium rounded-lg hover:bg-purple-80 transition-colors"
+					>
+						Try again
+					</button>
+				</div>
+			)}
+		</div>
+	);
+};
+
+export default GeneratorTab;
