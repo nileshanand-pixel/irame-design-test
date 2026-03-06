@@ -10,7 +10,7 @@ import { getSessionExportStatus } from '../service/new-chat.service';
  * @param {boolean} enabled - Whether polling is enabled (default: true)
  * @returns {Object} - { exportStatusMap }
  */
-export const useSessionExportStatus = (sessionId) => {
+export const useSessionExportStatus = (sessionId, enabled = true) => {
 	const [isTerminal, setIsTerminal] = useState(false);
 
 	const {
@@ -21,7 +21,7 @@ export const useSessionExportStatus = (sessionId) => {
 	} = useQuery({
 		queryKey: ['session-export-status', sessionId],
 		queryFn: () => getSessionExportStatus(sessionId),
-		enabled: !!sessionId && !isTerminal,
+		enabled: !!sessionId && !isTerminal && enabled,
 		refetchOnWindowFocus: false,
 		refetchInterval: 25000,
 		refetchIntervalInBackground: true,
