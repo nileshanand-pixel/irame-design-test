@@ -101,6 +101,15 @@ const EVENTS_ENUM = {
 	SIDE_BAR_CHAT_THREAD_CLICKED: 'SIDE_BAR_CHAT_THREAD_CLICKED',
 	SIDE_BAR_CHAT_DELETED: 'SIDE_BAR_CHAT_DELETED',
 
+	// RACM GENERATOR FUNNEL
+	SIDE_BAR_RACM_GENERATOR_CLICKED: 'SIDE_BAR_RACM_GENERATOR_CLICKED',
+	RACM_GENERATION_STARTED: 'RACM_GENERATION_STARTED',
+	RACM_GENERATION_COMPLETED: 'RACM_GENERATION_COMPLETED',
+	RACM_GENERATION_FAILED: 'RACM_GENERATION_FAILED',
+	RACM_EXPORT_CLICKED: 'RACM_EXPORT_CLICKED',
+	RACM_ENTRY_VIEWED: 'RACM_ENTRY_VIEWED',
+	RACM_JOB_DELETED: 'RACM_JOB_DELETED',
+
 	// LOGOUT FUNNEL
 	LOGOUT_CLICKED: 'LOGOUT_CLICKED',
 	LOGOUT_SUCCESSFUL: 'LOGOUT_SUCCESSFUL',
@@ -666,6 +675,36 @@ const EVENTS_REGISTRY = {
 	SIDE_BAR_CHAT_DELETED: {
 		trigger: 'when user deletes a chat thread from side bar',
 		parameters: ['type', 'chat_session_id', 'workflow_id'],
+	},
+
+	// RACM GENERATOR FUNNEL
+	SIDE_BAR_RACM_GENERATOR_CLICKED: {
+		trigger: 'when user clicks on RACM Generator in side bar',
+		parameters: [],
+	},
+	RACM_GENERATION_STARTED: {
+		trigger: 'when user starts a new RACM generation',
+		parameters: ['file_name', 'file_type', 'has_custom_prompt'],
+	},
+	RACM_GENERATION_COMPLETED: {
+		trigger: 'when RACM generation completes successfully',
+		parameters: ['job_id', 'entry_count', 'duration_seconds'],
+	},
+	RACM_GENERATION_FAILED: {
+		trigger: 'when RACM generation fails',
+		parameters: ['job_id', 'error_message'],
+	},
+	RACM_EXPORT_CLICKED: {
+		trigger: 'when user exports RACM results',
+		parameters: ['job_id', 'format', 'entry_count'],
+	},
+	RACM_ENTRY_VIEWED: {
+		trigger: 'when user views a RACM entry detail',
+		parameters: ['job_id', 'risk_id', 'control_id'],
+	},
+	RACM_JOB_DELETED: {
+		trigger: 'when user deletes a RACM job',
+		parameters: ['job_id'],
 	},
 
 	// LOGOUT FUNNEL

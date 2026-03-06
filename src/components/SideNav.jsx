@@ -37,6 +37,7 @@ import { Hint } from './Hint';
 import Tag from './elements/Tag';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
+import { TbTableOptions } from 'react-icons/tb';
 import { useSessionId } from '@/hooks/use-session-id';
 import { queryClient } from '@/lib/react-query';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
@@ -149,6 +150,18 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						trackEvent(
 							EVENTS_ENUM.SIDE_BAR_CONFIGURATION_CLICKED,
 							EVENTS_REGISTRY.SIDE_BAR_CONFIGURATION_CLICKED,
+						),
+				},
+				{
+					link: '/app/racm-generator',
+					text: 'RACM Generator',
+					icon: TbTableOptions,
+					showHint: true,
+					beta: true,
+					trackingCall: () =>
+						trackEvent(
+							EVENTS_ENUM.SIDE_BAR_RACM_GENERATOR_CLICKED,
+							EVENTS_REGISTRY.SIDE_BAR_RACM_GENERATOR_CLICKED,
 						),
 				},
 			],
@@ -593,6 +606,8 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			if (pathname.includes('business-process'))
 				setActiveTab('/app/business-process');
 			if (pathname.includes('dashboard')) setActiveTab('/app/dashboard');
+			if (pathname.includes('racm-generator'))
+				setActiveTab('/app/racm-generator');
 		}
 	}, [pathname]);
 
@@ -671,19 +686,26 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 												: ' border-transparent'
 										}`}
 									>
-										<img
-											src={option.icon}
-											className={`${isActive ? 'text-purple-100' : ''} size-[1.375rem]`}
-											style={{ strokeWidth: '2' }}
-										/>
+										{typeof option.icon === 'string' ? (
+											<img
+												src={option.icon}
+												className={`${isActive ? 'text-purple-100' : ''} size-[1.375rem]`}
+												style={{ strokeWidth: '2' }}
+											/>
+										) : (
+											<option.icon
+												className={`${isActive ? 'text-purple-100' : 'text-primary80'} size-[1.375rem]`}
+												strokeWidth={1.5}
+											/>
+										)}
 										{isSideNavOpen && (
 											<p className="truncate">{option.text}</p>
 										)}
 										{isSideNavOpen && option.beta && (
 											<Tag
-												className="shrink-0 drop-shadow-md"
-												textClassName="text-xs"
 												text="Beta"
+												className="shrink-0 !px-1.5 !py-0.5 !gap-1 !shadow-none"
+												textClassName="!text-[10px] !font-semibold"
 											/>
 										)}
 									</Link>

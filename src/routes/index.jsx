@@ -23,6 +23,7 @@ import ReportContentPage from '@/components/features/reports/export/Page';
 import HelpMenu from '@/components/elements/HelpMenu';
 import WorkflowPageV2 from '@/components/features/business-process/workflow/page-v2';
 import Home from '@/components/features/home';
+import RACMGeneratorPage from '@/components/features/racm-generator/page';
 
 const AppRoutes = () => {
 	return (
@@ -148,6 +149,14 @@ const AppRoutes = () => {
 									element={
 										<ProtectedRoute
 											element={<WorkflowPageV2 />}
+										/>
+									}
+								/>
+								<Route
+									path="racm-generator"
+									element={
+										<ProtectedRoute
+											element={<RACMGeneratorPage />}
 										/>
 									}
 								/>
