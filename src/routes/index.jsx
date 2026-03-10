@@ -24,7 +24,6 @@ import HelpMenu from '@/components/elements/HelpMenu';
 import WorkflowPageV2 from '@/components/features/business-process/workflow/page-v2';
 import Home from '@/components/features/home';
 import RACMGeneratorPage from '@/components/features/racm-generator/page';
-import EDABuilderPage from '@/components/features/eda-builder/page';
 
 const AppRoutes = () => {
 	return (
@@ -158,14 +157,6 @@ const AppRoutes = () => {
 									element={
 										<ProtectedRoute
 											element={<RACMGeneratorPage />}
-										/>
-									}
-								/>
-								<Route
-									path="eda-builder"
-									element={
-										<ProtectedRoute
-											element={<EDABuilderPage />}
 										/>
 									}
 								/>

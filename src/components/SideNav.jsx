@@ -37,7 +37,7 @@ import { Hint } from './Hint';
 import Tag from './elements/Tag';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
-import { TbTableOptions, TbChartHistogram } from 'react-icons/tb';
+import { TbTableOptions } from 'react-icons/tb';
 import { useSessionId } from '@/hooks/use-session-id';
 import { queryClient } from '@/lib/react-query';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
@@ -162,18 +162,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						trackEvent(
 							EVENTS_ENUM.SIDE_BAR_RACM_GENERATOR_CLICKED,
 							EVENTS_REGISTRY.SIDE_BAR_RACM_GENERATOR_CLICKED,
-						),
-				},
-				{
-					link: '/app/eda-builder',
-					text: 'EDA Builder',
-					icon: TbChartHistogram,
-					showHint: true,
-					beta: true,
-					trackingCall: () =>
-						trackEvent(
-							EVENTS_ENUM.SIDE_BAR_EDA_BUILDER_CLICKED,
-							EVENTS_REGISTRY.SIDE_BAR_EDA_BUILDER_CLICKED,
 						),
 				},
 			],
@@ -620,7 +608,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			if (pathname.includes('dashboard')) setActiveTab('/app/dashboard');
 			if (pathname.includes('racm-generator'))
 				setActiveTab('/app/racm-generator');
-			if (pathname.includes('eda-builder')) setActiveTab('/app/eda-builder');
 		}
 	}, [pathname]);
 
