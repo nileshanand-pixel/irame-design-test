@@ -7,6 +7,7 @@ import redInfoIcon from '@/assets/icons/red-info.svg';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useRoleCreate } from '@/hooks/use-role-create';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import PermissionsAccordion from './permissions-accordion';
 
 export default function CreateRoleDrawer({ open, setOpen }) {
@@ -20,6 +21,11 @@ export default function CreateRoleDrawer({ open, setOpen }) {
 
 	const handleCreateRole = async () => {
 		if (!roleName.trim()) {
+			return;
+		}
+
+		if (!description.trim()) {
+			toast.error('Description is required');
 			return;
 		}
 
@@ -68,7 +74,7 @@ export default function CreateRoleDrawer({ open, setOpen }) {
 
 						<div className="space-y-2">
 							<label className="text-sm font-medium text-[#26064A]">
-								Description
+								Description <span className="text-red-500">*</span>
 							</label>
 							<Textarea
 								placeholder="Enter a description..."
@@ -100,7 +106,9 @@ export default function CreateRoleDrawer({ open, setOpen }) {
 							<Button
 								onClick={handleCreateRole}
 								disabled={
-									createRoleMutation.isLoading || !roleName.trim()
+									createRoleMutation.isLoading ||
+									!roleName.trim() ||
+									!description.trim()
 								}
 							>
 								{createRoleMutation.isLoading ? (

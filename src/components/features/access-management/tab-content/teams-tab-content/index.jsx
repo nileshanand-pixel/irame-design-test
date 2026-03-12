@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import SearchBar from '../../search-bar';
 import { DataTable } from '@/components/elements/DataTable';
 import DotsDropdown from '@/components/elements/DotsDropdown';
@@ -37,13 +37,22 @@ export default function TeamsTabContent() {
 	const [isManageUsersDrawerOpen, setIsManageUsersDrawerOpen] = useState(false);
 	const [isViewMembersReadOnly, setIsViewMembersReadOnly] = useState(false);
 
+	// Reset to page 1 when search changes
+	useEffect(() => {
+		setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+	}, [debouncedSearch]);
+
+	const resetToFirstPage = () => {
+		setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+	};
+
 	const queryParams = useMemo(() => {
 		const params = {
 			page: pagination.pageIndex + 1,
 			limit: pagination.pageSize,
 		};
 		if (debouncedSearch.trim()) {
-			params.name = debouncedSearch.trim();
+			params.search = debouncedSearch.trim();
 		}
 		return params;
 	}, [debouncedSearch, pagination.pageIndex, pagination.pageSize]);
@@ -56,8 +65,14 @@ export default function TeamsTabContent() {
 			id: team.id,
 			teamName: team.name,
 			noOfUsers: team.memberCount || 0,
-			createdBy: team.createdBy || 'Unknown',
-			updatedBy: team.updatedBy || 'Unknown',
+			createdBy:
+				typeof team.createdBy === 'object'
+					? team.createdBy?.name
+					: team.createdBy || 'Unknown',
+			updatedBy:
+				typeof team.updatedBy === 'object'
+					? team.updatedBy?.name
+					: team.updatedBy || 'Unknown',
 			updatedAt: team.updatedAt
 				? new Date(team.updatedAt).toLocaleDateString('en-GB', {
 						day: '2-digit',
@@ -151,7 +166,7 @@ export default function TeamsTabContent() {
 
 	return (
 		<div className="w-full h-full">
-			{!isLoading && teams?.length === 0 && !search ? (
+			{!isLoading && !isFetching && teams?.length === 0 && !search ? (
 				<EmptyState config={EMPTY_STATE_CONFIG} />
 			) : (
 				<div className="space-y-5 flex flex-col h-full">
@@ -163,7 +178,7 @@ export default function TeamsTabContent() {
 							/>
 						</div>
 						<div>
-							<CreateTeamCta />
+							<CreateTeamCta onSuccess={resetToFirstPage} />
 						</div>
 					</div>
 

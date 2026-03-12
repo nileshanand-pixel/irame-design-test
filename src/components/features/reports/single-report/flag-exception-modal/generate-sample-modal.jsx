@@ -41,12 +41,12 @@ const GenerateSampleModal = ({
 			}),
 		onSuccess: (data) => {
 			// Invalidate queries to refetch data
-			queryClient.invalidateQueries(['report-card-cases', reportId, cardId]);
-			queryClient.invalidateQueries([
-				'report-card-sample-check',
-				reportId,
-				cardId,
-			]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-card-cases', reportId, cardId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['report-card-sample-check', reportId, cardId],
+			});
 			toast.success('Sample data generation initiated successfully');
 			setSelectedSampleId(data?.sample_id);
 			onClose();

@@ -595,7 +595,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 			await saveDatasource(data);
 
-			queryClient.invalidateQueries(['data-sources-v2']);
+			queryClient.invalidateQueries({ queryKey: ['data-sources-v2'] });
 			toast.success('Data source created successfully');
 			if (files.some((f) => f.status !== FILE_STATUS.SUCCESS)) {
 				handleUploadCardClossClick();

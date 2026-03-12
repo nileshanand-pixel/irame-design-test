@@ -237,7 +237,7 @@ export default function UsersTabContent() {
 							{row.original.name}
 						</div>
 						<div className="text-gray-500 text-xs mt-0.5">
-							@{row.original.email}
+							{row.original.email}
 						</div>
 					</div>
 				),

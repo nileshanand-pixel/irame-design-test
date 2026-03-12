@@ -39,8 +39,8 @@ export const useAddMembers = (teamId) => {
 	return useMutation({
 		mutationFn: (memberIds) => addTeamMembers(teamId, memberIds),
 		onSuccess: () => {
-			queryClient.invalidateQueries(['team-members', teamId]);
-			queryClient.invalidateQueries(['available-users', teamId]);
+			queryClient.invalidateQueries({ queryKey: ['team-members', teamId] });
+			queryClient.invalidateQueries({ queryKey: ['available-users', teamId] });
 			toast.success('Members added successfully');
 		},
 		onError: (error) => {
@@ -55,8 +55,8 @@ export const useRemoveMember = (teamId) => {
 	return useMutation({
 		mutationFn: (userId) => removeTeamMember(teamId, userId),
 		onSuccess: () => {
-			queryClient.invalidateQueries(['team-members', teamId]);
-			queryClient.invalidateQueries(['available-users', teamId]);
+			queryClient.invalidateQueries({ queryKey: ['team-members', teamId] });
+			queryClient.invalidateQueries({ queryKey: ['available-users', teamId] });
 			toast.success('Member removed successfully');
 		},
 		onError: (error) => {
@@ -71,7 +71,7 @@ export const usePromoteToAdmin = (teamId) => {
 	return useMutation({
 		mutationFn: (userId) => promoteToAdmin(teamId, userId),
 		onSuccess: () => {
-			queryClient.invalidateQueries(['team-members', teamId]);
+			queryClient.invalidateQueries({ queryKey: ['team-members', teamId] });
 			toast.success('User promoted to admin');
 		},
 		onError: (error) => {
@@ -86,7 +86,7 @@ export const useDemoteFromAdmin = (teamId) => {
 	return useMutation({
 		mutationFn: (userId) => demoteFromAdmin(teamId, userId),
 		onSuccess: () => {
-			queryClient.invalidateQueries(['team-members', teamId]);
+			queryClient.invalidateQueries({ queryKey: ['team-members', teamId] });
 			toast.success('Admin privileges removed');
 		},
 		onError: (error) => {

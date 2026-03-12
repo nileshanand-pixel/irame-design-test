@@ -33,8 +33,10 @@ export const useRolePermissionsUpdate = () => {
 			return await Promise.all(updates);
 		},
 		onSuccess: (data, variables) => {
-			queryClient.invalidateQueries(['roles']);
-			queryClient.invalidateQueries(['role-permissions', variables.roleId]);
+			queryClient.invalidateQueries({ queryKey: ['roles'] });
+			queryClient.invalidateQueries({
+				queryKey: ['role-permissions', variables.roleId],
+			});
 			toast.success('Role updated successfully');
 		},
 		onError: (error) => {

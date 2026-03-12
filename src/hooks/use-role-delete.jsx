@@ -14,7 +14,7 @@ export const useRoleDelete = () => {
 			return response;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries(['roles']);
+			queryClient.invalidateQueries({ queryKey: ['roles'] });
 			toast.success('Role deleted successfully');
 		},
 		onError: (error) => {

@@ -26,11 +26,11 @@ const USER_MAMANGEMENT_TABS = [
 	// 	key: 'approvals',
 	// 	component: ApprovalTabContent,
 	// },
-	{
-		label: 'Logs',
-		key: 'logs',
-		component: LogsTabContent,
-	},
+	// {
+	// 	label: 'Logs',
+	// 	key: 'logs',
+	// 	component: LogsTabContent,
+	// },
 ];
 
 const AccessManagementPage = () => {

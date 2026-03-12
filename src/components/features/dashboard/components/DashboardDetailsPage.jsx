@@ -124,10 +124,7 @@ const DashboardDetailsPage = () => {
 			}
 		}
 		return () => {
-			queryClient.invalidateQueries(['dashboard-details'], {
-				refetchActive: true,
-				refetchInactive: true,
-			});
+			queryClient.invalidateQueries({ queryKey: ['dashboard-details'] });
 		};
 	}, [query, dashboardDetailsQuery.data]);
 

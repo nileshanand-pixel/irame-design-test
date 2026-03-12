@@ -119,8 +119,10 @@ const ShareReportDialogRBAC = React.memo(() => {
 		onSuccess: () => {
 			toast.success('Report shared successfully');
 			// Invalidate and refetch access users
-			queryClient.invalidateQueries(['report-access-users', reportId]);
-			queryClient.invalidateQueries(['unified-reports']);
+			queryClient.invalidateQueries({
+				queryKey: ['report-access-users', reportId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['unified-reports'] });
 			setSelectedUsers([]);
 		},
 		onError: (err) => {
@@ -139,8 +141,10 @@ const ShareReportDialogRBAC = React.memo(() => {
 		onSuccess: () => {
 			toast.success('Access removed successfully');
 			// Invalidate and refetch access users
-			queryClient.invalidateQueries(['report-access-users', reportId]);
-			queryClient.invalidateQueries(['unified-reports']);
+			queryClient.invalidateQueries({
+				queryKey: ['report-access-users', reportId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['unified-reports'] });
 		},
 		onError: (err) => {
 			logError(err, {
@@ -158,8 +162,10 @@ const ShareReportDialogRBAC = React.memo(() => {
 		onSuccess: () => {
 			toast.success('Visibility updated successfully');
 			// Invalidate and refetch access users
-			queryClient.invalidateQueries(['report-access-users', reportId]);
-			queryClient.invalidateQueries(['unified-reports']);
+			queryClient.invalidateQueries({
+				queryKey: ['report-access-users', reportId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['unified-reports'] });
 		},
 		onError: (err) => {
 			logError(err, {
@@ -371,10 +377,14 @@ const ShareReportDialogRBAC = React.memo(() => {
 				isLoading,
 				generalAccess: generalAccessConfig,
 				footer: {
-					onCopy: () => {
-						const link = `${window.location.origin}/app/reports/content?id=${reportId}`;
-						navigator.clipboard.writeText(link);
-						toast.success('Link copied');
+					onCopy: async () => {
+						const link = `${window.location.origin}/app/reports/${reportId}`;
+						try {
+							await navigator.clipboard.writeText(link);
+							toast.success('Link copied');
+						} catch (err) {
+							toast.error('Failed to copy link');
+						}
 					},
 				},
 			}}

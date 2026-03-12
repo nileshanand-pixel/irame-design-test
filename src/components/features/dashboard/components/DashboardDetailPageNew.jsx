@@ -27,10 +27,12 @@ const QUERY_KEYS = {
 };
 
 export const invalidateDashboardQueries = (queryClient, dashboardId) => {
-	queryClient.invalidateQueries(QUERY_KEYS.DASHBOARD_DETAILS(dashboardId));
-	queryClient.invalidateQueries(QUERY_KEYS.MY_DASHBOARDS);
-	queryClient.invalidateQueries(QUERY_KEYS.SHARED_DASHBOARDS);
-	queryClient.invalidateQueries(QUERY_KEYS.USER_DASHBOARD);
+	queryClient.invalidateQueries({
+		queryKey: QUERY_KEYS.DASHBOARD_DETAILS(dashboardId),
+	});
+	queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_DASHBOARDS });
+	queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SHARED_DASHBOARDS });
+	queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER_DASHBOARD });
 };
 
 const DashboardDetailPageNew = () => {
@@ -71,7 +73,9 @@ const DashboardDetailPageNew = () => {
 			);
 
 			// Invalidate and refetch dashboard content
-			queryClient.invalidateQueries(QUERY_KEYS.DASHBOARD_DETAILS(dashboardId));
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.DASHBOARD_DETAILS(dashboardId),
+			});
 		},
 		onError: (error, variables) => {
 			const { contentId, itemId, itemType } = variables;

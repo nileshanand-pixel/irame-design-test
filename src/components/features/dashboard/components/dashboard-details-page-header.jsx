@@ -87,8 +87,12 @@ const DashboardDetailsPageHeader = memo(
 			onSuccess: (data) => {
 				toast.success(data?.message || 'Refresh Request Submitted');
 				// Optionally invalidate queries to refetch dashboard data
-				queryClient.invalidateQueries(['dashboard-metadata', dashboardId]);
-				queryClient.invalidateQueries(['dashboard-content', dashboardId]);
+				queryClient.invalidateQueries({
+					queryKey: ['dashboard-metadata', dashboardId],
+				});
+				queryClient.invalidateQueries({
+					queryKey: ['dashboard-content', dashboardId],
+				});
 			},
 			onError: (error) => {
 				logError(error, {

@@ -201,7 +201,9 @@ const BulkActions = ({
 			}),
 		onSuccess: (_data, operations) => {
 			// Invalidate and refetch cases data
-			queryClient.invalidateQueries(['report-card-cases', reportId, cardId]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-card-cases', reportId, cardId],
+			});
 			const appliedCount = operations?.[0]?.case_ids?.length ?? 0;
 			const rowLabel = appliedCount === 1 ? 'row' : 'rows';
 			toast.success(

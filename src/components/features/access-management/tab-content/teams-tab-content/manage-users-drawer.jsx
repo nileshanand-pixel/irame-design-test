@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useState } from 'react';
-import { Check, MoreVertical, Loader2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Check, MoreVertical, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -28,6 +28,7 @@ export default function ManageUsersDrawer({
 }) {
 	const teamId = team?.id || team?.externalId;
 	const [selectedUsers, setSelectedUsers] = useState([]);
+	const [searchQuery, setSearchQuery] = useState('');
 	const [ConfirmDialog, confirm] = useConfirmDialog();
 
 	const { data: membersData, isLoading: isLoadingMembers } =
@@ -42,6 +43,14 @@ export default function ManageUsersDrawer({
 
 	const members = membersData?.members || [];
 	const availableUsers = availableUsersData?.users || [];
+
+	const filteredUsers = useMemo(() => {
+		return availableUsers.filter(
+			(user) =>
+				user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				user.email?.toLowerCase().includes(searchQuery.toLowerCase()),
+		);
+	}, [availableUsers, searchQuery]);
 
 	const toggleUserSelection = (userId) => {
 		setSelectedUsers((prev) =>
@@ -252,18 +261,31 @@ export default function ManageUsersDrawer({
 										Add New Members ({availableUsers.length})
 									</div>
 
+									<div className="relative mb-3">
+										<Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 size-4" />
+										<input
+											type="text"
+											placeholder="Search Users by name & email"
+											value={searchQuery}
+											onChange={(e) =>
+												setSearchQuery(e.target.value)
+											}
+											className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg text-sm placeholder:text-gray-400"
+										/>
+									</div>
+
 									<div className="flex-1 overflow-auto border border-gray-200 rounded-lg">
 										{isLoadingAvailable ? (
 											<div className="flex items-center justify-center p-8">
 												<Loader2 className="size-6 animate-spin text-[#6A12CD]" />
 											</div>
-										) : availableUsers.length > 0 ? (
-											availableUsers.map((user, index) => (
+										) : filteredUsers.length > 0 ? (
+											filteredUsers.map((user, index) => (
 												<div
 													key={user.id}
 													className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
 														index !==
-														availableUsers.length - 1
+														filteredUsers.length - 1
 															? 'border-b border-gray-200'
 															: ''
 													}`}

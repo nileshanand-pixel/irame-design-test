@@ -3,7 +3,7 @@ import plusIcon from '@/assets/icons/plus.svg';
 import { useState } from 'react';
 import CreateTeamDrawer from './create-team-drawer';
 
-export default function CreateTeamCta({ text = 'Create Team' }) {
+export default function CreateTeamCta({ text = 'Create Team', onSuccess }) {
 	const [open, setOpen] = useState(false);
 
 	return (
@@ -13,7 +13,7 @@ export default function CreateTeamCta({ text = 'Create Team' }) {
 				{text}
 			</Button>
 
-			<CreateTeamDrawer open={open} setOpen={setOpen} />
+			<CreateTeamDrawer open={open} setOpen={setOpen} onSuccess={onSuccess} />
 		</div>
 	);
 }

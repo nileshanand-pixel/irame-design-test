@@ -472,7 +472,9 @@ const Header = () => {
 			// Update state only after successful API call
 			setIsPlanMode(variables.metadata.plan_mode);
 			// Invalidate session query to refetch the updated data
-			queryClient.invalidateQueries(['session', query.sessionId]);
+			queryClient.invalidateQueries({
+				queryKey: ['session', query.sessionId],
+			});
 		},
 	});
 

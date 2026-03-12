@@ -15,7 +15,9 @@ export const RiskLevelDropdown = ({ value, riskTypes, reportId, reportCardId }) 
 	const updateMetadataMutation = useMutation({
 		mutationFn: updateReportMetadata,
 		onSuccess: () => {
-			queryClient.invalidateQueries(['report-details', reportId]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-details', reportId],
+			});
 			toast.success('Query risks updated');
 		},
 		onError: (error) => {

@@ -211,7 +211,7 @@ const NewChat = () => {
 							first_message_in_chat: true,
 						}),
 					);
-					queryClient.invalidateQueries(['chat-history']);
+					queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 				})
 				.catch((error) => {
 					logError(error, { feature: 'chat', action: 'create-session' });

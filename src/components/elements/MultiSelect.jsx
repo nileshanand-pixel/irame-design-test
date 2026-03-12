@@ -50,6 +50,7 @@ export const MultiSelect = React.forwardRef(
 			className,
 			chipClassName,
 			closeIconClassName,
+			readOnly = false,
 			...props
 		},
 		ref,
@@ -156,16 +157,18 @@ export const MultiSelect = React.forwardRef(
 													{upperFirst(
 														option?.label || value,
 													)}
-													<i
-														className={cn(
-															'ml-2 cursor-pointer text-3xl text-[#26064A66] font-semibold bi-x',
-															closeIconClassName,
-														)}
-														onClick={(event) => {
-															event.stopPropagation();
-															toggleOption(value);
-														}}
-													/>
+													{!readOnly && (
+														<i
+															className={cn(
+																'ml-2 cursor-pointer text-3xl text-[#26064A66] font-semibold bi-x',
+																closeIconClassName,
+															)}
+															onClick={(event) => {
+																event.stopPropagation();
+																toggleOption(value);
+															}}
+														/>
+													)}
 												</div>
 											);
 										})}
@@ -177,16 +180,18 @@ export const MultiSelect = React.forwardRef(
 											)}
 										>
 											{`+ ${selectedValues.length - maxCount} more`}
-											<i
-												className={cn(
-													'ml-2 cursor-pointer text-3xl text-[#26064A66] font-semibold bi-x',
-													closeIconClassName,
-												)}
-												onClick={(event) => {
-													event.stopPropagation();
-													clearExtraOptions();
-												}}
-											/>
+											{!readOnly && (
+												<i
+													className={cn(
+														'ml-2 cursor-pointer text-3xl text-[#26064A66] font-semibold bi-x',
+														closeIconClassName,
+													)}
+													onClick={(event) => {
+														event.stopPropagation();
+														clearExtraOptions();
+													}}
+												/>
+											)}
 										</div>
 									)}
 								</div>
@@ -226,9 +231,14 @@ export const MultiSelect = React.forwardRef(
 										<CommandItem
 											key={option.value}
 											onSelect={() =>
+												!readOnly &&
 												toggleOption(option.value)
 											}
-											className="cursor-pointer"
+											className={
+												readOnly
+													? 'cursor-default'
+													: 'cursor-pointer'
+											}
 											disabled={false}
 										>
 											<div

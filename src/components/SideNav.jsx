@@ -268,9 +268,11 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			);
 			// Invalidate queries to trigger re-fetch with updated data
 			if (threadType === 'workflow') {
-				queryClient.invalidateQueries(['get-business-processes-home-page']);
+				queryClient.invalidateQueries({
+					queryKey: ['get-business-processes-home-page'],
+				});
 			} else {
-				queryClient.invalidateQueries(['chat-history']);
+				queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 			}
 		} catch (error) {
 			logError(error, {
@@ -313,7 +315,9 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 					workflow_id: workflowId,
 				}),
 			);
-			queryClient.invalidateQueries(['get-business-processes-home-page']);
+			queryClient.invalidateQueries({
+				queryKey: ['get-business-processes-home-page'],
+			});
 		} catch (error) {
 			logError(error, {
 				feature: 'sidenav',

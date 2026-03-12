@@ -35,7 +35,7 @@ export default function EditTeamDrawer({ open, setOpen, team, isReadOnly = false
 				name: teamName.trim(),
 			});
 			toast.success('Team updated successfully');
-			queryClient.invalidateQueries(['teams']);
+			queryClient.invalidateQueries({ queryKey: ['teams'] });
 			setOpen(false);
 		} catch (error) {
 			console.error('Error updating team:', error);

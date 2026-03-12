@@ -216,7 +216,9 @@ export default function CaseManagementTable({
 			}),
 		onSuccess: () => {
 			// Invalidate and refetch cases data
-			queryClient.invalidateQueries(['report-card-cases', reportId, cardId]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-card-cases', reportId, cardId],
+			});
 			toast.success('Case updated successfully');
 			setUpdatingCell(null);
 		},

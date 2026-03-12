@@ -534,7 +534,9 @@ const Workzone = () => {
 							chat_session_type: 'old',
 						});
 
-						queryClient.invalidateQueries(['chat-history']);
+						queryClient.invalidateQueries({
+							queryKey: ['chat-history'],
+						});
 					})
 					.catch((error) => {
 						console.error('Edit query failed', error);
@@ -750,7 +752,7 @@ const Workzone = () => {
 					chat_session_id: res?.session_id,
 					chat_session_type: 'old',
 				});
-				queryClient.invalidateQueries(['chat-history']);
+				queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 			});
 
 			setResponseTimeElapsed(0);
@@ -836,7 +838,7 @@ const Workzone = () => {
 					chat_session_type: 'old',
 				});
 
-				queryClient.invalidateQueries(['chat-history']);
+				queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 			});
 
 			setResponseTimeElapsed(0);
@@ -870,10 +872,7 @@ const Workzone = () => {
 				if (pathname.includes('/app/dashboard')) {
 					navigate(REDIRECTION_URL_AFTER_LOGIN);
 				} else if (pathname.includes('/app/new-chat/')) {
-					queryClient.invalidateQueries(['user-dashboard'], {
-						refetchActive: true,
-						refetchInactive: true,
-					});
+					queryClient.invalidateQueries({ queryKey: ['user-dashboard'] });
 				}
 			}
 		} catch (error) {
@@ -984,7 +983,7 @@ const Workzone = () => {
 				chat_session_type: 'old',
 			});
 
-			queryClient.invalidateQueries(['chat-history']);
+			queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 			queryClient.invalidateQueries({
 				queryKey: ['chat', 'session', currentSessionId, 'queries'],
 			});
@@ -1123,13 +1122,15 @@ const Workzone = () => {
 									}
 									onDeleteSuccess={() => {
 										// Refetch queries to update the UI after save/delete
-										queryClient.invalidateQueries([
-											'chat',
-											'session',
-											currentSessionId,
-											'queries',
-											selectedPathLeafId,
-										]);
+										queryClient.invalidateQueries({
+											queryKey: [
+												'chat',
+												'session',
+												currentSessionId,
+												'queries',
+												selectedPathLeafId,
+											],
+										});
 									}}
 									setUserHasNavigated={setUserHasNavigated}
 									setDisableAutoScroll={setDisableAutoScroll}
@@ -1337,8 +1338,10 @@ const Workzone = () => {
 			}
 			setActivateGraphOnLast(true);
 			// Invalidate queries to refresh session list with updated status
-			queryClient.invalidateQueries(['chat-history']);
-			queryClient.invalidateQueries(['session', currentSessionId]);
+			queryClient.invalidateQueries({ queryKey: ['chat-history'] });
+			queryClient.invalidateQueries({
+				queryKey: ['session', currentSessionId],
+			});
 			// inputDisabled is now controlled by session status, not doingScience
 			// Do not reset userHasNavigated; preserve path selection on completion
 			return;

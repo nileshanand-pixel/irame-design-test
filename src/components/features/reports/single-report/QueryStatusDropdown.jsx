@@ -18,7 +18,9 @@ export const QueryStatusDropdown = ({ value, onChange, reportCardId }) => {
 		},
 		onSuccess: () => {
 			toast.success('Status updated!');
-			queryClient.invalidateQueries(['report-details', reportId]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-details', reportId],
+			});
 		},
 		onError: (error) => {
 			logError(error, {

@@ -1435,8 +1435,10 @@ export default function ResolutionTrailModal({ open, onClose }) {
 		mutationFn: updateCaseData,
 		onSuccess: (data) => {
 			toast.success('Case updated successfully');
-			queryClient.invalidateQueries(['resolutionTrail']);
-			queryClient.invalidateQueries(['report-card-cases', reportId, cardId]);
+			queryClient.invalidateQueries({ queryKey: ['resolutionTrail'] });
+			queryClient.invalidateQueries({
+				queryKey: ['report-card-cases', reportId, cardId],
+			});
 			resetUploads();
 			setComment('');
 		},

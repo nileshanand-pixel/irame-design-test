@@ -75,7 +75,7 @@ const ReportFiles = ({
 	const deleteReportMutation = useMutation({
 		mutationFn: ({ reportId }) => deleteReport({ reportId }),
 		onSuccess: () => {
-			queryClient.invalidateQueries(['unified-reports']);
+			queryClient.invalidateQueries({ queryKey: ['unified-reports'] });
 			toast.success('Report deleted successfully');
 		},
 		onError: (err) => {

@@ -61,7 +61,9 @@ const DataSource = () => {
 		mutationFn: (id) => deleteDataSource(id),
 		onSuccess: () => {
 			toast.success('Data source deleted successfully');
-			queryClient.invalidateQueries(['get-datasource-by-id', 'data-sources']);
+			queryClient.invalidateQueries({
+				queryKey: ['get-datasource-by-id', 'data-sources'],
+			});
 			trackEvent(
 				EVENTS_ENUM.DATASET_DELETION_SUCCESSFUL,
 				EVENTS_REGISTRY.DATASET_DELETION_SUCCESSFUL,

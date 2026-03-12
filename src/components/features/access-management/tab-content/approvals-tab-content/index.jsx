@@ -291,7 +291,7 @@ export default function ApprovalTabContent() {
 														</span>
 													</div>
 													<div className="text-xs text-[#26064A99]">
-														@{approval.email}
+														{approval.email}
 													</div>
 												</div>
 											</div>

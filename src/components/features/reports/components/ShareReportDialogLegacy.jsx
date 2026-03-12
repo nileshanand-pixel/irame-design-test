@@ -52,10 +52,7 @@ const ShareReportDialogLegacy = React.memo(() => {
 		onSuccess: () => {
 			toast.success('Report Shared Successfully');
 			setInvitedEmails([]);
-			queryClient.invalidateQueries(['get-report-user-access'], {
-				refetchActive: true,
-				refetchInactive: true,
-			});
+			queryClient.invalidateQueries({ queryKey: ['get-report-user-access'] });
 			handleClose();
 		},
 		onError: (err) => {

@@ -24,6 +24,22 @@ export default function EditUserDrawer({
 	const [rolePermissions, setRolePermissions] = useState({});
 	const [loadingPermissions, setLoadingPermissions] = useState({});
 	const [loading, setLoading] = useState(false);
+	const currentUserId = (() => {
+		try {
+			const raw = localStorage.getItem('userDetails');
+			const authUser = raw ? JSON.parse(raw) : null;
+			return (
+				authUser?.user_id ||
+				authUser?.id ||
+				authUser?.sub ||
+				authUser?.userId ||
+				null
+			);
+		} catch (error) {
+			return null;
+		}
+	})();
+	const isSelfEdit = !!user?.userId && currentUserId === user.userId;
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -104,9 +120,12 @@ export default function EditUserDrawer({
 		try {
 			setLoading(true);
 			const updateData = {
-				roleId: selectedRole,
 				teamIds: selectedTeams,
 			};
+
+			if (!isSelfEdit) {
+				updateData.roleId = selectedRole;
+			}
 
 			const response = await userService.updateUser(user.userId, updateData);
 
@@ -161,6 +180,11 @@ export default function EditUserDrawer({
 							<label className="text-sm font-medium text-[#26064A]">
 								Team <span className="text-red-400">*</span>
 							</label>
+							{!isReadOnly && isSelfEdit && (
+								<div className="text-[#26064ACC] text-xs">
+									You cannot change your own team memberships.
+								</div>
+							)}
 							<MultiSelect
 								options={teams}
 								onValueChange={setSelectedTeams}
@@ -171,7 +195,7 @@ export default function EditUserDrawer({
 								maxCount={1}
 								chipClassName="text-xs"
 								closeIconClassName="text-2xl text-[#26064A]"
-								disabled={isReadOnly}
+								readOnly={isReadOnly || isSelfEdit}
 							/>
 						</div>
 					</div>
@@ -180,9 +204,13 @@ export default function EditUserDrawer({
 						<div className="text-[#26064A] text-base font-medium">
 							Current Role
 						</div>
-						<div className="text-[#26064ACC] text-xs">
-							You can assign only one role to a user.
-						</div>
+						{!isReadOnly && (
+							<div className="text-[#26064ACC] text-xs">
+								{isSelfEdit
+									? 'You cannot change your own role.'
+									: 'You can assign only one role to a user.'}
+							</div>
+						)}
 					</div>
 
 					<div className="px-6 h-[calc(100%-24.8rem)] overflow-auto pb-3">
@@ -198,11 +226,14 @@ export default function EditUserDrawer({
 								>
 									<div
 										className={cn(
-											'flex items-center justify-between px-4 py-3 cursor-pointer',
-											isReadOnly && 'cursor-default',
+											'flex items-center justify-between px-4 py-3',
+											isReadOnly || isSelfEdit
+												? 'cursor-default select-none'
+												: 'cursor-pointer',
 										)}
 										onClick={() =>
-											!isReadOnly && setSelectedRole(role.id)
+											!(isReadOnly || isSelfEdit) &&
+											setSelectedRole(role.id)
 										}
 									>
 										<div className="flex items-center gap-3 flex-1">
@@ -211,6 +242,9 @@ export default function EditUserDrawer({
 													`flex-shrink-0 size-5 rounded-full border-1 flex items-center justify-center transition-colors border-[#26064A66] bg-white`,
 													selectedRole === role.id &&
 														'bg-[#6A12CD]',
+													(isReadOnly || isSelfEdit) &&
+														selectedRole !== role.id &&
+														'opacity-30',
 												)}
 											>
 												{selectedRole === role.id && (

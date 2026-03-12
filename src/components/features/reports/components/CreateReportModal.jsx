@@ -52,7 +52,7 @@ const CreateReportModal = () => {
 		onSuccess: () => {
 			toast.success('Report created successfully');
 			handleClose();
-			// queryClient.invalidateQueries(['user-reports']);
+			// queryClient.invalidateQueries({ queryKey: ['user-reports'] });
 			queryClient.invalidateQueries(revalidateQuery);
 			// TODO: navigate to report page
 		},
@@ -110,35 +110,37 @@ const CreateReportModal = () => {
 					</div>
 
 					{isRbacActive && (
-					<div className="space-y-3 pt-2">
-						<Label className="text-sm font-medium text-[#26064A]">
-							Visibility
-						</Label>
-						<div className="flex gap-4">
-							<label className="flex items-center gap-2">
-								<input
-									type="radio"
-									name="visibility"
-									value="private"
-									checked={visibility === 'private'}
-									onChange={() => setVisibility('private')}
-								/>
-								<span className="text-sm text-black/70">
-									Private
-								</span>
-							</label>
-							<label className="flex items-center gap-2">
-								<input
-									type="radio"
-									name="visibility"
-									value="team"
-									checked={visibility === 'team'}
-									onChange={() => setVisibility('team')}
-								/>
-								<span className="text-sm text-black/70">Team</span>
-							</label>
+						<div className="space-y-3 pt-2">
+							<Label className="text-sm font-medium text-[#26064A]">
+								Visibility
+							</Label>
+							<div className="flex gap-4">
+								<label className="flex items-center gap-2">
+									<input
+										type="radio"
+										name="visibility"
+										value="private"
+										checked={visibility === 'private'}
+										onChange={() => setVisibility('private')}
+									/>
+									<span className="text-sm text-black/70">
+										Private
+									</span>
+								</label>
+								<label className="flex items-center gap-2">
+									<input
+										type="radio"
+										name="visibility"
+										value="team"
+										checked={visibility === 'team'}
+										onChange={() => setVisibility('team')}
+									/>
+									<span className="text-sm text-black/70">
+										Team
+									</span>
+								</label>
+							</div>
 						</div>
-					</div>
 					)}
 
 					<div className="flex flex-col sm:flex-row gap-4 pt-4">

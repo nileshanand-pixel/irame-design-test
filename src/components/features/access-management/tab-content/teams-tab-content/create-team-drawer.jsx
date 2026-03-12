@@ -10,7 +10,7 @@ import { createTeam } from '@/api/gatekeeper/team.service';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 
-export default function CreateTeamDrawer({ open, setOpen }) {
+export default function CreateTeamDrawer({ open, setOpen, onSuccess }) {
 	const queryClient = useQueryClient();
 	const { userDetails } = useAuth();
 	const [teamName, setTeamName] = useState('');
@@ -75,11 +75,13 @@ export default function CreateTeamDrawer({ open, setOpen }) {
 				memberIds: selectedUsers,
 			});
 			toast.success('Team created successfully');
-			queryClient.invalidateQueries(['teams']);
+			queryClient.invalidateQueries({ queryKey: ['teams'] });
 			setOpen(false);
 			// Reset form
 			setTeamName('');
 			setSelectedUsers([]);
+			// Navigate to page 1 so the newly created team is visible
+			if (onSuccess) onSuccess();
 		} catch (error) {
 			console.error('Error creating team:', error);
 			toast.error(error?.response?.data?.message || 'Failed to create team');
@@ -200,7 +202,7 @@ export default function CreateTeamDrawer({ open, setOpen }) {
 											</div>
 										)}
 										<div className="text-gray-500 text-xs truncate">
-											@{user.email}
+											{user.email}
 										</div>
 									</div>
 								</div>

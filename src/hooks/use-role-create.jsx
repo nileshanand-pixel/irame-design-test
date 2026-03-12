@@ -25,7 +25,7 @@ export const useRoleCreate = () => {
 			return roleResult;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries(['roles']);
+			queryClient.invalidateQueries({ queryKey: ['roles'] });
 			toast.success('Role created successfully');
 		},
 		onError: (error) => {

@@ -111,9 +111,11 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 		onSuccess: () => {
 			toast.success('Dashboard shared successfully');
 			// Invalidate and refetch access users
-			queryClient.invalidateQueries(['dashboard-access-users', dashboardId]);
-			queryClient.invalidateQueries(['dashboard', dashboardId]);
-			queryClient.invalidateQueries(['my-dashboards']);
+			queryClient.invalidateQueries({
+				queryKey: ['dashboard-access-users', dashboardId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['dashboard', dashboardId] });
+			queryClient.invalidateQueries({ queryKey: ['my-dashboards'] });
 		},
 		onError: (err) => {
 			logError(err, {
@@ -132,9 +134,11 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 		onSuccess: () => {
 			toast.success('Access removed successfully');
 			// Invalidate and refetch access users
-			queryClient.invalidateQueries(['dashboard-access-users', dashboardId]);
-			queryClient.invalidateQueries(['dashboard', dashboardId]);
-			queryClient.invalidateQueries(['my-dashboards']);
+			queryClient.invalidateQueries({
+				queryKey: ['dashboard-access-users', dashboardId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['dashboard', dashboardId] });
+			queryClient.invalidateQueries({ queryKey: ['my-dashboards'] });
 		},
 		onError: (err) => {
 			logError(err, {
@@ -153,10 +157,12 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 		onSuccess: () => {
 			toast.success('Visibility updated successfully');
 			// Invalidate and refetch access users and dashboard
-			queryClient.invalidateQueries(['dashboard-access-users', dashboardId]);
-			queryClient.invalidateQueries(['dashboard', dashboardId]);
-			queryClient.invalidateQueries(['my-dashboards']);
-			queryClient.invalidateQueries(['shared-dashboards']);
+			queryClient.invalidateQueries({
+				queryKey: ['dashboard-access-users', dashboardId],
+			});
+			queryClient.invalidateQueries({ queryKey: ['dashboard', dashboardId] });
+			queryClient.invalidateQueries({ queryKey: ['my-dashboards'] });
+			queryClient.invalidateQueries({ queryKey: ['shared-dashboards'] });
 		},
 		onError: (err) => {
 			logError(err, {
@@ -370,10 +376,14 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 				isLoading,
 				generalAccess: generalAccessConfig,
 				footer: {
-					onCopy: () => {
+					onCopy: async () => {
 						const link = `${window.location.origin}/app/dashboard/content?id=${dashboardId}`;
-						navigator.clipboard.writeText(link);
-						toast.success('Link copied');
+						try {
+							await navigator.clipboard.writeText(link);
+							toast.success('Link copied');
+						} catch (err) {
+							toast.error('Failed to copy link');
+						}
 					},
 				},
 			}}

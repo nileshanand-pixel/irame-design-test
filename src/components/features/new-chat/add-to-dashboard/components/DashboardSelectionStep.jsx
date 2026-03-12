@@ -101,7 +101,9 @@ const DashboardSelectionStep = ({
 				setSelectedDashboardIdFromDropdown(dashboardId);
 				setSelectedQueryDashboardId(null);
 				setShowCreateModal(false);
-				queryClient.invalidateQueries(QUERY_KEYS.MY_DASHBOARDS);
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.MY_DASHBOARDS,
+				});
 			}
 		}
 	}, []);

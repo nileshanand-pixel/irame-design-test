@@ -130,10 +130,7 @@ const SelectPrompt = ({ setPrompt, dataSources }) => {
 						},
 					]),
 				),
-					queryClient.invalidateQueries(['chat-history'], {
-						refetchActive: true,
-						refetchInactive: true,
-					}));
+					queryClient.invalidateQueries({ queryKey: ['chat-history'] }));
 				trackEvent(
 					EVENTS_ENUM.CHAT_SESSION_STARTED,
 					EVENTS_REGISTRY.CHAT_SESSION_STARTED,

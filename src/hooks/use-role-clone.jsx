@@ -13,7 +13,7 @@ export const useRoleClone = () => {
 			return await roleService.cloneRole(roleId, { name, description });
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries(['roles']);
+			queryClient.invalidateQueries({ queryKey: ['roles'] });
 			toast.success('Role cloned successfully');
 		},
 		onError: (error) => {
