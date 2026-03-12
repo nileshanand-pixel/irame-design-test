@@ -11,6 +11,9 @@ import { LuTable } from 'react-icons/lu';
  * @param {number} [props.defaultRowsPerPage=10] - Default number of rows per page
  * @param {boolean} [props.fitToContainer=false] - If true, table takes full height of parent container
  * @param {boolean} [props.tablePreview=false] - If true, shows only a preview of the table
+ * @param {boolean} [props.enableColumnFilters=false] - If true, enables column filters
+ * @param {Object} [props.columnFilters] - Column filters state
+ * @param {Function} [props.setColumnFilters] - Column filters setter
  */
 const TableComponent = ({
 	data,
@@ -19,8 +22,13 @@ const TableComponent = ({
 	defaultRowsPerPage = 10,
 	fitToContainer = false,
 	tablePreview = false,
+	enableColumnFilters = false,
+	columnFilters = {},
+	setColumnFilters,
 }) => {
-	if (!data || !data.length) {
+	// Only show error message if no data AND filters are not enabled
+	// If filters are enabled, we want to show the table with headers even if data is empty
+	if ((!data || !data.length) && !enableColumnFilters) {
 		return (
 			<div className="rounded-2xl w-full border-2 border-primary4 bg-muted/30 p-6 flex flex-col items-center justify-center text-center gap-2 min-h-[10rem]">
 				<LuTable className="w-6 h-6 text-primary mb-2" />
@@ -35,8 +43,8 @@ const TableComponent = ({
 		);
 	}
 
-	const displayData = tablePreview ? data.slice(0, 5) : data;
-	const hidePagination = tablePreview || data.length <= defaultRowsPerPage;
+	const displayData = tablePreview && data?.length ? data.slice(0, 5) : data || [];
+	const hidePagination = tablePreview || (data?.length || 0) <= defaultRowsPerPage;
 
 	return (
 		<div
@@ -48,6 +56,9 @@ const TableComponent = ({
 				onSortingChange={onSortingChange}
 				defaultRowsPerPage={defaultRowsPerPage}
 				hidePagination={hidePagination}
+				enableColumnFilters={enableColumnFilters}
+				columnFilters={columnFilters}
+				setColumnFilters={setColumnFilters}
 			/>
 		</div>
 	);

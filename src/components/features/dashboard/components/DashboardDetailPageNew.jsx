@@ -48,6 +48,8 @@ const DashboardDetailPageNew = () => {
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [itemToDelete, setItemToDelete] = useState(null);
 	const [deletingItems, setDeletingItems] = useState(new Set()); // Track items being deleted
+	const [tableFilters, setTableFilters] = useState({}); // Store filters per table: { contentId: [...filters] }
+	const [tableColumnVisibility, setTableColumnVisibility] = useState({}); // Store column visibility per table: { contentId: {...visibility} }
 
 	const dashboardId = query.id;
 
@@ -221,6 +223,24 @@ const DashboardDetailPageNew = () => {
 		[deletingItems],
 	);
 
+	// Filter management handlers
+	const handleTableFiltersChange = useCallback((contentId, filters) => {
+		setTableFilters((prev) => ({
+			...prev,
+			[contentId]: filters,
+		}));
+	}, []);
+
+	const handleTableColumnVisibilityChange = useCallback(
+		(contentId, columnVisibility) => {
+			setTableColumnVisibility((prev) => ({
+				...prev,
+				[contentId]: columnVisibility,
+			}));
+		},
+		[],
+	);
+
 	const handleDeleteClick = useCallback(
 		(contentId, itemId, itemType) => {
 			// For tables, itemId is always a valid URL - remove query parameters to match DB format
@@ -315,15 +335,24 @@ const DashboardDetailPageNew = () => {
 				const isDeleting = deletingItems.has(
 					`${item.dashboard_content_id}-${normalizedUrl}`,
 				);
+				const contentId = item.dashboard_content_id;
 
 				allTableCards.push(
 					<DashboardTableCard
-						key={`${item.dashboard_content_id}-table`}
+						key={`${contentId}-table`}
 						item={item}
 						isEditModeActive={isEditModeActive}
 						onTableClick={handleTableClick}
 						onDeleteClick={handleDeleteClick}
 						isDeleting={isDeleting}
+						filters={tableFilters[contentId] || []}
+						onFiltersChange={(filters) =>
+							handleTableFiltersChange(contentId, filters)
+						}
+						columnVisibility={tableColumnVisibility[contentId] || {}}
+						onColumnVisibilityChange={(visibility) =>
+							handleTableColumnVisibilityChange(contentId, visibility)
+						}
 					/>,
 				);
 			}
@@ -337,6 +366,10 @@ const DashboardDetailPageNew = () => {
 		handleTableClick,
 		handleDeleteClick,
 		deletingItems,
+		tableFilters,
+		tableColumnVisibility,
+		handleTableFiltersChange,
+		handleTableColumnVisibilityChange,
 	]);
 
 	const commonHeaderProps = useMemo(
@@ -422,6 +455,37 @@ const DashboardDetailPageNew = () => {
 				onOpenChange={setIsDetailModalOpen}
 				selectedGraph={selectedGraph}
 				contentItem={selectedContentItem}
+				filters={
+					selectedContentItem
+						? tableFilters[selectedContentItem.dashboard_content_id] ||
+							[]
+						: []
+				}
+				onFiltersChange={
+					selectedContentItem
+						? (filters) =>
+								handleTableFiltersChange(
+									selectedContentItem.dashboard_content_id,
+									filters,
+								)
+						: undefined
+				}
+				columnVisibility={
+					selectedContentItem
+						? tableColumnVisibility[
+								selectedContentItem.dashboard_content_id
+							] || {}
+						: {}
+				}
+				onColumnVisibilityChange={
+					selectedContentItem
+						? (visibility) =>
+								handleTableColumnVisibilityChange(
+									selectedContentItem.dashboard_content_id,
+									visibility,
+								)
+						: undefined
+				}
 			/>
 
 			<DeleteConfirmationModal

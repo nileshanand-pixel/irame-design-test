@@ -19,10 +19,16 @@ export const normalizeGraphData = (graph) => {
  *
  * @param {Object} data - Data object (graph or table)
  * @param {string} type - Type of data: 'graph' | 'table' (default: 'graph')
+ * @param {string|null} priorityKey - Optional key to check first with highest priority
  * @returns {string|null} CSV URL or null if not found
  */
-export const extractCsvUrl = (data, type = 'graph') => {
+export const extractCsvUrl = (data, type = 'graph', priorityKey = null) => {
 	if (!data) return null;
+
+	// If priority key is specified and exists, use it first
+	if (priorityKey && data[priorityKey]) {
+		return data[priorityKey];
+	}
 
 	if (type === 'graph') {
 		return data.csv_url || null;

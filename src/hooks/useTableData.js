@@ -18,19 +18,23 @@ import { extractCsvUrl } from '@/utils/graph.utils';
  * @param {string} options.feature - Feature name for logging
  * @param {string} options.action - Action name for logging
  * @param {Object} options.extra - Extra data for logging
+ * @param {string|null} options.csvUrlKey - Optional priority key for CSV URL extraction
+ * @param {boolean} options.enabled - Whether data fetching is enabled (default: true)
+ * @param {number|null} options.fileSizeLimit - Optional file size limit in bytes
  * @returns {Object} Hook return object
  * @returns {Object[]} returns.data - Processed row data (always objects)
  * @returns {Object[]} returns.columns - Column definitions for TableComponent
  * @returns {boolean} returns.isLoading - Loading state
  * @returns {Error|null} returns.error - Error object if fetch failed
- *
+ * @returns {boolean} returns.isPartialData - Whether the data was truncated due to file size limit
  */
 export const useTableData = (tableData, options = {}) => {
+	const { csvUrlKey = null, enabled = true, ...restOptions } = options;
 	const [directData, setDirectData] = useState({ rows: [], columns: [] });
 	const [isProcessingDirect, setIsProcessingDirect] = useState(false);
 
-	// Try to get CSV URL
-	const csvUrl = extractCsvUrl(tableData, 'table');
+	// Try to get CSV URL with optional priority key
+	const csvUrl = extractCsvUrl(tableData, 'table', csvUrlKey);
 
 	// Fetch CSV data if URL exists
 	const {
@@ -38,9 +42,12 @@ export const useTableData = (tableData, options = {}) => {
 		columns: csvColumns,
 		isLoading: isCsvLoading,
 		error: csvError,
+		isPartialData,
 	} = useCsvData(csvUrl, {
-		...options,
+		...restOptions,
 		autoFetch: !!csvUrl,
+		enabled: enabled,
+		fileSizeLimit: restOptions.fileSizeLimit,
 	});
 
 	// Process direct data if no CSV URL
@@ -60,6 +67,7 @@ export const useTableData = (tableData, options = {}) => {
 			columns: csvColumns,
 			isLoading: isCsvLoading,
 			error: csvError,
+			isPartialData,
 		};
 	}
 
@@ -68,5 +76,6 @@ export const useTableData = (tableData, options = {}) => {
 		columns: directData.columns,
 		isLoading: isProcessingDirect,
 		error: null,
+		isPartialData: false,
 	};
 };

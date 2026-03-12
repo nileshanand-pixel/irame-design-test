@@ -30,6 +30,10 @@ import { PAGE_TYPES } from '@/constants/page.constant';
  * @param {Object} selectedGraph - The clicked graph object (null for tables)
  * @param {Object} contentItem - The dashboard content item containing the graph/table
  * @param {string} page - The current page type (qna, dashboard, reports)
+ * @param {Array} filters - Synced filters from parent
+ * @param {Function} onFiltersChange - Callback when filters change
+ * @param {Object} columnVisibility - Synced column visibility from parent
+ * @param {Function} onColumnVisibilityChange - Callback when column visibility changes
  */
 const GraphDetailModal = ({
 	open,
@@ -37,6 +41,10 @@ const GraphDetailModal = ({
 	selectedGraph,
 	contentItem,
 	page = PAGE_TYPES.DASHBOARD,
+	filters = [],
+	onFiltersChange,
+	columnVisibility = {},
+	onColumnVisibilityChange,
 }) => {
 	const isTable = !selectedGraph && contentItem?.content?.table;
 	const [activeTab, setActiveTab] = useState(
@@ -366,6 +374,10 @@ const GraphDetailModal = ({
 								}
 								queryId={contentItem?.query_id}
 								queryText={contentItem?.content?.query}
+								filters={filters}
+								onFiltersChange={onFiltersChange}
+								columnVisibility={columnVisibility}
+								onColumnVisibilityChange={onColumnVisibilityChange}
 							/>
 						</TabsContent>
 
