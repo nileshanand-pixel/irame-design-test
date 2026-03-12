@@ -193,6 +193,8 @@ export default function RolePermissionTabContent() {
 						isServerSide={true}
 						isLoading={isLoading}
 						simplePagination={true}
+						stickyPagination={true}
+						stickyHeader={true}
 					/>
 				</div>
 			</div>

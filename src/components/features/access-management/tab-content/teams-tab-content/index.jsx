@@ -192,6 +192,8 @@ export default function TeamsTabContent() {
 							isServerSide={true}
 							isLoading={isLoading || isFetching}
 							simplePagination={true}
+							stickyPagination={true}
+							stickyHeader={true}
 						/>
 					</div>
 				</div>
