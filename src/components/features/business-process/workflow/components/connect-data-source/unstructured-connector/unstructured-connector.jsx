@@ -230,7 +230,7 @@ function DropZone({ messages, onFileSelect }) {
 
 			<input
 				type="file"
-				accept=".pdf"
+				accept=".pdf,.jpg,.jpeg,.png,.hevc"
 				multiple
 				className="hidden"
 				id="file-upload"
@@ -559,7 +559,7 @@ function FileListing({
 				<input
 					ref={inputRef}
 					type="file"
-					accept=".pdf"
+					accept=".pdf,.jpg,.jpeg,.png,.hevc"
 					multiple
 					className="hidden"
 					id="file-upload"
@@ -1204,19 +1204,31 @@ function UploadManager({
 			return;
 		}
 
-		const pdfFiles = Array.from(userSelectedFiles).filter(
-			(file) => file.type === 'application/pdf',
-		);
-		if (pdfFiles.length !== userSelectedFiles.length) {
+		// Accept PDF and all image files
+		const allowedTypes = [
+			'application/pdf',
+			'image/jpeg',
+			'image/jpg',
+			'image/png',
+			'image/hevc',
+		];
+
+		const validFiles = Array.from(userSelectedFiles).filter((file) => {
+			// Check both MIME type and file extension for better compatibility
+			const isValidMimeType = allowedTypes.includes(file.type);
+			return isValidMimeType;
+		});
+
+		if (validFiles.length !== userSelectedFiles.length) {
 			toast.error(
-				'Please upload only PDF files. Other file types are not supported.',
+				'Please upload only PDF and image files (PDF, JPG, JPEG, PNG, HEVC). Other file types are not supported.',
 			);
 		}
 
 		// check file limit
 		const previouslyUploadedFilesCount = currentFiles?.length;
 		if (
-			previouslyUploadedFilesCount + pdfFiles?.length >
+			previouslyUploadedFilesCount + validFiles?.length >
 			selectedRequiredFile?.limit
 		) {
 			setLimitReachedDescription(
@@ -1227,7 +1239,7 @@ function UploadManager({
 		}
 
 		const MAX_TOTAL_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
-		let totalSize = Array.from(pdfFiles).reduce(
+		let totalSize = Array.from(validFiles).reduce(
 			(acc, file) => acc + file.size,
 			0,
 		);
@@ -1250,13 +1262,13 @@ function UploadManager({
 				{
 					onSuccess: (data) => {
 						setDatasourceId(data?.datasource_id);
-						uploadFilesOnS3(pdfFiles);
+						uploadFilesOnS3(validFiles);
 						setSearchParams({ datasource_id: data?.datasource_id });
 					},
 				},
 			);
 		} else {
-			uploadFilesOnS3(pdfFiles);
+			uploadFilesOnS3(validFiles);
 		}
 	};
 
@@ -1274,7 +1286,7 @@ function UploadManager({
 				<DropZone
 					messages={[
 						`Maximum ${selectedRequiredFile?.limit} files, total size up to 100 MB`,
-						`Supported file types: .pdf only`,
+						`Supported file types: .pdf, .jpg, .jpeg, .png, .hevc only`,
 					]}
 					onFileSelect={handleFileSelect}
 				/>

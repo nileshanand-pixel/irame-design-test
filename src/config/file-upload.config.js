@@ -62,28 +62,30 @@ export const FILE_TYPE_CONFIG = {
 		displayName: 'PNG Image',
 		shortName: '.png',
 	},
-	gif: {
-		mimeTypes: ['image/gif'],
-		extensions: ['.gif'],
-		displayName: 'GIF Image',
-		shortName: '.gif',
+	hevc: {
+		mimeTypes: ['image/hevc'],
+		extensions: ['.hevc'],
+		displayName: 'HEVC Image',
+		shortName: '.hevc',
 	},
 };
+
+export const ALLOWED_IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'hevc'];
 
 // Data source connector + Workflow configurations
 export const CONNECTOR_FILE_TYPES = {
 	STRUCTURED: ['csv', 'xlsx', 'xls'],
 	PDF_DEMO: ['csv', 'xlsx', 'xls', 'pdf'],
 	UNSTRUCTURED: ['pdf'],
-	DATASOURCE: ['csv', 'xlsx', 'xls', 'pdf'],
+	DATASOURCE: ['csv', 'xlsx', 'xls', 'pdf', ...ALLOWED_IMAGE_TYPES],
 };
 
 // Upload context configurations (Report Comment, Workflow Modification + )
 export const UPLOAD_CONTEXTS = {
-	COMMENTS: ['pdf', 'jpg', 'png', 'gif'],
+	COMMENTS: ['pdf', ...ALLOWED_IMAGE_TYPES],
 	REPORT_EVIDENCE: ['csv', 'pdf'],
-	WORKFLOW_TICKETS: ['csv', 'xlsx', 'xls', 'pdf', 'jpg', 'png', 'gif'],
-	IMAGES: ['jpg', 'png', 'gif'],
+	WORKFLOW_TICKETS: ['csv', 'xlsx', 'xls', 'pdf', ...ALLOWED_IMAGE_TYPES],
+	IMAGES: ALLOWED_IMAGE_TYPES,
 };
 
 // Get MIME types object for react-dropzone
@@ -249,6 +251,11 @@ export const getFileTypeLegacy = (file) => {
 			return 'excel';
 		case 'csv':
 			return 'csv';
+		case 'jpg':
+		case 'jpeg':
+		case 'png':
+		case 'hevc':
+			return 'image';
 		default:
 			return '';
 	}

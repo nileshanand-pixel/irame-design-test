@@ -242,10 +242,26 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				}
 			}
 
-			// Datasource: allow multiple files, but don't allow mixing PDF with CSV/Excel
-			if (uniqueTypes.length > 1 && uniqueTypes.includes('pdf')) {
+			// Datasource: allow multiple files, but don't allow mixing structured (CSV/Excel) with unstructured (PDF/images)
+			const structuredTypes = ['csv', 'excel'];
+			const unstructuredTypes = ['pdf', 'image'];
+
+			const hasStructured = uniqueTypes.some((type) =>
+				structuredTypes.includes(type),
+			);
+			const hasUnstructured = uniqueTypes.some((type) =>
+				unstructuredTypes.includes(type),
+			);
+
+			console.log(
+				hasStructured,
+				hasUnstructured,
+				uniqueTypes,
+				'hasStructured, hasUnstructured',
+			);
+			if (hasStructured && hasUnstructured) {
 				toast.error(
-					'Please upload files of the same type. Mixing PDF and CSV/Excel files is not allowed.',
+					'Please upload files of the same category. Mixing structured data (CSV/Excel) with unstructured data (PDF/images) is not allowed.',
 				);
 				return;
 			}
@@ -984,7 +1000,8 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 									<span className="font-semibold text-primary60">
 										one type of file
 									</span>{' '}
-									(.xlsx/.csv or .pdf) at a time.
+									(.xlsx/.csv or .pdf/.png/.jpg/.jpeg/.hevc) at a
+									time.
 								</span>
 							</p>
 						</div>
