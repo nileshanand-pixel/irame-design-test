@@ -6,10 +6,11 @@ import useS3File from '@/hooks/useS3File';
 import { toast } from '@/lib/toast';
 import CircularLoader from '@/components/elements/loading/CircularLoader';
 import { DownloadSimple } from '@phosphor-icons/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import PreviewPdf from './PreviewPdf';
 import PreviewTable from './PreviewTable';
+import PreviewImage from './PreviewImage';
 
 const formatFileSize = (sizeInBytes) => {
 	if (sizeInBytes < 1024) return `${sizeInBytes} B`;
@@ -55,6 +56,30 @@ export default function FileDisplay({
 		}
 	};
 
+	const ctaText = useMemo(() => {
+		if (isCollapsed) {
+			if (file.type === 'pdf') {
+				if (file.url.includes('.pdf')) {
+					return 'View Pages';
+				} else {
+					return 'View Image';
+				}
+			} else {
+				return 'View Sample Rows';
+			}
+		} else {
+			if (file.type === 'pdf') {
+				if (file.url.includes('.pdf')) {
+					return 'Hide Pages';
+				} else {
+					return 'Hide Image';
+				}
+			} else {
+				return 'Hide Sample Rows';
+			}
+		}
+	}, [isCollapsed, file]);
+
 	return (
 		<div className="px-4 py-3 border border-[#EAECF0] rounded-xl">
 			<div className="flex justify-between">
@@ -90,15 +115,7 @@ export default function FileDisplay({
 						onClick={() => setIsCollapsed(!isCollapsed)}
 						className="hover:border hover:border-[#6A12CD] hover:text-[#6A12CD] !bg-transparent flex gap-2"
 					>
-						<span className="text-sm font-medium">
-							{!isCollapsed
-								? file.type === 'pdf'
-									? 'Hide Pages'
-									: 'Hide Sample Rows'
-								: file.type === 'pdf'
-									? 'View Pages'
-									: 'View Sample Rows'}
-						</span>
+						<span className="text-sm font-medium">{ctaText}</span>
 						<ChevronDown
 							className={cn(
 								!isCollapsed ? 'rotate-180' : '',
@@ -116,9 +133,13 @@ export default function FileDisplay({
 				}}
 			>
 				{file.type === 'pdf' ? (
-					isCollapsed ? null : (
+					isCollapsed ? null : file.url.includes('.pdf') ? (
 						<div className="mt-3">
 							<PreviewPdf url={calculateFileUrl(file)} />
+						</div>
+					) : (
+						<div className="mt-3">
+							<PreviewImage url={calculateFileUrl(file)} />
 						</div>
 					)
 				) : (
