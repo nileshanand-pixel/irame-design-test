@@ -101,6 +101,10 @@ const EVENTS_ENUM = {
 	SIDE_BAR_CHAT_THREAD_CLICKED: 'SIDE_BAR_CHAT_THREAD_CLICKED',
 	SIDE_BAR_CHAT_DELETED: 'SIDE_BAR_CHAT_DELETED',
 
+	// AI CONCIERGE
+	SIDE_BAR_AI_CONCIERGE_CLICKED: 'SIDE_BAR_AI_CONCIERGE_CLICKED',
+	AI_CONCIERGE_TILE_CLICKED: 'AI_CONCIERGE_TILE_CLICKED',
+
 	// RACM GENERATOR FUNNEL
 	SIDE_BAR_RACM_GENERATOR_CLICKED: 'SIDE_BAR_RACM_GENERATOR_CLICKED',
 	RACM_GENERATION_STARTED: 'RACM_GENERATION_STARTED',
@@ -683,6 +687,16 @@ const EVENTS_REGISTRY = {
 	SIDE_BAR_CHAT_DELETED: {
 		trigger: 'when user deletes a chat thread from side bar',
 		parameters: ['type', 'chat_session_id', 'workflow_id'],
+	},
+
+	// AI CONCIERGE
+	SIDE_BAR_AI_CONCIERGE_CLICKED: {
+		trigger: 'when user clicks on AI Concierge in side bar',
+		parameters: [],
+	},
+	AI_CONCIERGE_TILE_CLICKED: {
+		trigger: 'when user clicks on a feature tile in AI Concierge',
+		parameters: ['feature_id', 'feature_name'],
 	},
 
 	// RACM GENERATOR FUNNEL

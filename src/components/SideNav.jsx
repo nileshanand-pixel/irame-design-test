@@ -37,7 +37,7 @@ import { Hint } from './Hint';
 import Tag from './elements/Tag';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
-import { TbTableOptions, TbChartHistogram } from 'react-icons/tb';
+import { TbSparkles } from 'react-icons/tb';
 import { useSessionId } from '@/hooks/use-session-id';
 import { queryClient } from '@/lib/react-query';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
@@ -153,27 +153,15 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						),
 				},
 				{
-					link: '/app/racm-generator',
-					text: 'RACM Generator',
-					icon: TbTableOptions,
+					link: '/app/ai-concierge',
+					text: 'AI Concierge',
+					icon: TbSparkles,
 					showHint: true,
 					beta: true,
 					trackingCall: () =>
 						trackEvent(
-							EVENTS_ENUM.SIDE_BAR_RACM_GENERATOR_CLICKED,
-							EVENTS_REGISTRY.SIDE_BAR_RACM_GENERATOR_CLICKED,
-						),
-				},
-				{
-					link: '/app/eda-builder',
-					text: 'EDA Builder',
-					icon: TbChartHistogram,
-					showHint: true,
-					beta: true,
-					trackingCall: () =>
-						trackEvent(
-							EVENTS_ENUM.SIDE_BAR_EDA_BUILDER_CLICKED,
-							EVENTS_REGISTRY.SIDE_BAR_EDA_BUILDER_CLICKED,
+							EVENTS_ENUM.SIDE_BAR_AI_CONCIERGE_CLICKED,
+							EVENTS_REGISTRY.SIDE_BAR_AI_CONCIERGE_CLICKED,
 						),
 				},
 			],
@@ -618,9 +606,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			if (pathname.includes('business-process'))
 				setActiveTab('/app/business-process');
 			if (pathname.includes('dashboard')) setActiveTab('/app/dashboard');
-			if (pathname.includes('racm-generator'))
-				setActiveTab('/app/racm-generator');
-			if (pathname.includes('eda-builder')) setActiveTab('/app/eda-builder');
+			if (pathname.includes('ai-concierge')) setActiveTab('/app/ai-concierge');
 		}
 	}, [pathname]);
 

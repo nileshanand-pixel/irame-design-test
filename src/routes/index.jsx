@@ -25,6 +25,7 @@ import WorkflowPageV2 from '@/components/features/business-process/workflow/page
 import Home from '@/components/features/home';
 import RACMGeneratorPage from '@/components/features/racm-generator/page';
 import EDABuilderPage from '@/components/features/eda-builder/page';
+import AiConciergePage from '@/components/features/ai-concierge/page';
 
 const AppRoutes = () => {
 	return (
@@ -153,8 +154,17 @@ const AppRoutes = () => {
 										/>
 									}
 								/>
+								{/* AI Concierge — landing + nested feature pages */}
 								<Route
-									path="racm-generator"
+									path="ai-concierge"
+									element={
+										<ProtectedRoute
+											element={<AiConciergePage />}
+										/>
+									}
+								/>
+								<Route
+									path="ai-concierge/racm-generator"
 									element={
 										<ProtectedRoute
 											element={<RACMGeneratorPage />}
@@ -162,10 +172,29 @@ const AppRoutes = () => {
 									}
 								/>
 								<Route
-									path="eda-builder"
+									path="ai-concierge/eda-builder"
 									element={
 										<ProtectedRoute
 											element={<EDABuilderPage />}
+										/>
+									}
+								/>
+								{/* Redirects for old bookmarked URLs */}
+								<Route
+									path="racm-generator"
+									element={
+										<Navigate
+											to="/app/ai-concierge/racm-generator"
+											replace
+										/>
+									}
+								/>
+								<Route
+									path="eda-builder"
+									element={
+										<Navigate
+											to="/app/ai-concierge/eda-builder"
+											replace
 										/>
 									}
 								/>

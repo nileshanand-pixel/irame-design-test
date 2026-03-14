@@ -32,12 +32,14 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 		(r) => reportUrls?.[r.key] || reportUrls?.[r.key + '_standalone'],
 	);
 
-	// Set initial tab if provided after mount
+	// Set initial tab if provided, or auto-select first available report
 	useEffect(() => {
 		if (initialTab && initialTab !== activeTab) {
 			setActiveTab(initialTab);
+		} else if (!activeTab && availableReports.length > 0) {
+			setActiveTab(availableReports[0].key);
 		}
-	}, [initialTab]);
+	}, [initialTab, availableReports.length]);
 
 	const fetchReport = useCallback(
 		async (reportKey) => {
