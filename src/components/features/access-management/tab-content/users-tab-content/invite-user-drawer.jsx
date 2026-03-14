@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import InputText from '@/components/elements/InputText';
 import { roleService } from '@/api/gatekeeper/role.service';
 import { getTeams } from '@/api/gatekeeper/team.service';
+import { filterHiddenPermissionsList } from '@/lib/hidden-permissions';
 import { userService } from '@/api/gatekeeper/user.service';
 import { toast } from 'react-toastify';
 
@@ -90,7 +91,7 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 					if (response.success) {
 						setRolePermissions((prev) => ({
 							...prev,
-							[roleId]: response.data,
+							[roleId]: filterHiddenPermissionsList(response.data),
 						}));
 					}
 				} catch (error) {

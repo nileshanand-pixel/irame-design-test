@@ -8,6 +8,7 @@ import { roleService } from '@/api/gatekeeper/role.service';
 import { getTeams } from '@/api/gatekeeper/team.service';
 import { userService } from '@/api/gatekeeper/user.service';
 import { toast } from 'react-toastify';
+import { filterHiddenPermissionsList } from '@/lib/hidden-permissions';
 
 export default function EditUserDrawer({
 	open,
@@ -125,7 +126,7 @@ export default function EditUserDrawer({
 					if (response.success) {
 						setRolePermissions((prev) => ({
 							...prev,
-							[roleId]: response.data,
+							[roleId]: filterHiddenPermissionsList(response.data),
 						}));
 					}
 				} catch (error) {
