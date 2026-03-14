@@ -18,6 +18,8 @@ import { useDebounce } from '@/hooks/use-debounce';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
 import { cn } from '@/lib/utils';
 import { Copy, Eye } from 'lucide-react';
+import { useMyPermissions } from '@/hooks/use-my-permissions';
+import { useRbac } from '@/hooks/useRbac';
 import {
 	Select,
 	SelectContent,
@@ -123,6 +125,32 @@ export default function UsersTabContent() {
 	const [isEditUserDrawerOpen, setIsEditUserDrawerOpen] = useState(false);
 	const [isViewReadOnly, setIsViewReadOnly] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
+
+	const { isRbacActive } = useRbac();
+	const { data: myPermissions, isLoading: permissionsLoading } =
+		useMyPermissions();
+
+	const hasTeamPerm = (...actions) =>
+		permissionsLoading ||
+		!isRbacActive ||
+		myPermissions?.some(
+			(p) => p.resource === 'team' && actions.includes(p.action),
+		);
+	const hasRolePermission = (...actions) =>
+		permissionsLoading ||
+		!isRbacActive ||
+		myPermissions?.some(
+			(p) => p.resource === 'role' && actions.includes(p.action),
+		);
+	const canManageInvitations = hasTeamPerm('manage_invitations', 'admin_manage');
+	const canEditRole = hasRolePermission('assign', 'revoke', 'admin_manage');
+	const canEditTeams = hasTeamPerm(
+		'add_member',
+		'delete_member',
+		'manage_invitations',
+		'admin_manage',
+	);
+	const canEditUser = canEditRole || canEditTeams;
 
 	const queryParams = useMemo(() => {
 		const params = {
@@ -295,7 +323,7 @@ export default function UsersTabContent() {
 							type: 'item',
 							label: 'Edit User',
 							onClick: () => handleEditUser(user, false),
-							show: !isInvitation, // Only show for actual users
+							show: !isInvitation && canEditUser,
 							icon: <img src={editIcon} className="size-4" />,
 						},
 						// {
@@ -335,7 +363,7 @@ export default function UsersTabContent() {
 									);
 								}
 							},
-							show: isInvitation && isPending, // Only for pending invitations
+							show: isInvitation && isPending && canManageInvitations,
 							icon: <img src={resendIcon} className="size-4" />,
 						},
 						{
@@ -364,7 +392,7 @@ export default function UsersTabContent() {
 									);
 								}
 							},
-							show: isInvitation && isPending, // Only for pending invitations
+							show: isInvitation && isPending && canManageInvitations,
 							icon: <img src={userCrossIcon} className="size-4" />,
 						},
 						{
@@ -385,7 +413,7 @@ export default function UsersTabContent() {
 				},
 			},
 		],
-		[],
+		[canEditUser, canManageInvitations],
 	);
 
 	return (

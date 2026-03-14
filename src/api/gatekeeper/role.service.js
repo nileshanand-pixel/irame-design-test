@@ -104,4 +104,18 @@ export const roleService = {
 		const response = await axiosGatekeeper.delete(`/roles/${roleId}`);
 		return response.data;
 	},
+
+	getMyRole: async (userId) => {
+		const response = await axiosGatekeeper.get(
+			`/role-assignments/users/${userId}/role`,
+		);
+		return response.data;
+	},
+
+	getAssignableRoles: async (params = {}) => {
+		const response = await axiosGatekeeper.get('/roles', {
+			params: { ...params, assignable: true },
+		});
+		return response.data;
+	},
 };

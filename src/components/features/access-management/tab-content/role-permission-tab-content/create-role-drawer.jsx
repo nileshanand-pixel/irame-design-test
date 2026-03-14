@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import redInfoIcon from '@/assets/icons/red-info.svg';
 import { usePermissions } from '@/hooks/use-permissions';
+import {
+	useMyPermissions,
+	filterPermissionsByUserPerms,
+} from '@/hooks/use-my-permissions';
 import { useRoleCreate } from '@/hooks/use-role-create';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -17,7 +21,13 @@ export default function CreateRoleDrawer({ open, setOpen }) {
 
 	const { data: permissionsByResource, isLoading: isLoadingPermissions } =
 		usePermissions();
+	const { data: myPermissions } = useMyPermissions();
 	const createRoleMutation = useRoleCreate();
+
+	const filteredPerms = filterPermissionsByUserPerms(
+		permissionsByResource?.data,
+		myPermissions,
+	);
 
 	const handleCreateRole = async () => {
 		if (!roleName.trim()) {
@@ -88,7 +98,7 @@ export default function CreateRoleDrawer({ open, setOpen }) {
 					<PermissionsAccordion
 						permissions={permissions}
 						setPermissions={setPermissions}
-						permissionsByResource={permissionsByResource?.data}
+						permissionsByResource={filteredPerms}
 						title="Set permissions for this role"
 						isLoading={isLoadingPermissions}
 					/>

@@ -12,6 +12,8 @@ import EditTeamDrawer from './edit-team-drawer';
 import ManageUsersDrawer from './manage-users-drawer';
 import { useTeams } from '@/hooks/use-teams';
 import { useDebounce } from '@/hooks/use-debounce';
+import { useMyPermissions } from '@/hooks/use-my-permissions';
+import { useRbac } from '@/hooks/useRbac';
 
 const EMPTY_STATE_CONFIG = {
 	image: teamsEmpty,
@@ -36,6 +38,24 @@ export default function TeamsTabContent() {
 	const [isViewReadOnly, setIsViewReadOnly] = useState(false);
 	const [isManageUsersDrawerOpen, setIsManageUsersDrawerOpen] = useState(false);
 	const [isViewMembersReadOnly, setIsViewMembersReadOnly] = useState(false);
+
+	const { isRbacActive } = useRbac();
+	const { data: myPermissions, isLoading: permissionsLoading } =
+		useMyPermissions();
+
+	const hasTeamPerm = (...actions) =>
+		permissionsLoading ||
+		!isRbacActive ||
+		myPermissions?.some(
+			(p) => p.resource === 'team' && actions.includes(p.action),
+		);
+	const canEditTeam = hasTeamPerm('edit', 'admin_manage');
+	const canManageUsers = hasTeamPerm(
+		'add_member',
+		'delete_member',
+		'manage_invitations',
+		'admin_manage',
+	);
 
 	// Reset to page 1 when search changes
 	useEffect(() => {
@@ -142,14 +162,14 @@ export default function TeamsTabContent() {
 						type: 'item',
 						label: 'Edit Team',
 						onClick: () => handleEditTeam(team, false),
-						show: true,
+						show: canEditTeam,
 						icon: <img src={editIcon} className="size-4" />,
 					},
 					{
 						type: 'item',
 						label: 'Manage Users',
 						onClick: () => handleManageUsers(team, false),
-						show: true,
+						show: canManageUsers,
 						icon: <img src={userPlusIcon} className="size-4" />,
 					},
 				];

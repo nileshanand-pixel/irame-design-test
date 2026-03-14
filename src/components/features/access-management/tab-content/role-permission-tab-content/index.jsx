@@ -9,6 +9,8 @@ import CloneRoleDrawer from './clone-role-drawer';
 import EditPermissionsDrawer from './edit-permissions-drawer';
 import { useRoles } from '@/hooks/use-roles';
 import { useRoleDelete } from '@/hooks/use-role-delete';
+import { useMyPermissions } from '@/hooks/use-my-permissions';
+import { useRbac } from '@/hooks/useRbac';
 import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'react-toastify';
 import { Copy, Eye } from 'lucide-react';
@@ -41,6 +43,22 @@ export default function RolePermissionTabContent() {
 	// Hooks
 	const { mutate: deleteRole, isPending: isDeleting } = useRoleDelete();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
+	const { data: myPermissions, isLoading: permissionsLoading } =
+		useMyPermissions();
+	const { isRbacActive } = useRbac();
+
+	const isRoleAdmin = myPermissions.some(
+		(p) => p.resource === 'role' && p.action === 'admin_manage',
+	);
+	const hasRolePerm = (action) =>
+		permissionsLoading ||
+		!isRbacActive ||
+		isRoleAdmin ||
+		myPermissions.some((p) => p.resource === 'role' && p.action === action);
+
+	const canEdit = hasRolePerm('edit') || hasRolePerm('manage_permissions');
+	const canClone = hasRolePerm('clone') || hasRolePerm('create');
+	const canDelete = hasRolePerm('delete');
 
 	const handleEditPermissions = (role, readOnly = false) => {
 		setSelectedRole(role);
@@ -125,7 +143,7 @@ export default function RolePermissionTabContent() {
 							type: 'item',
 							label: 'Edit Permissions',
 							onClick: () => handleEditPermissions(role, false),
-							show: !role.isSystem, // Only show for non-system roles
+							show: !role.isSystem && canEdit,
 							icon: <img src={editIcon} className="size-4" />,
 						},
 
@@ -133,7 +151,7 @@ export default function RolePermissionTabContent() {
 							type: 'item',
 							label: 'Duplicate Role',
 							onClick: () => handleCloneRole(role),
-							show: true, // Show for all roles (both system and custom)
+							show: canClone,
 							icon: (
 								<span className="material-symbols-outlined text-[#26064A] text-xl">
 									content_copy
@@ -151,7 +169,7 @@ export default function RolePermissionTabContent() {
 							type: 'item',
 							label: 'Remove Role',
 							onClick: () => handleRemoveRole(role),
-							show: !role.isSystem, // Only show for non-system roles
+							show: !role.isSystem && canDelete,
 							icon: <img src={deleteIcon} className="size-4" />,
 						},
 					];
@@ -165,7 +183,7 @@ export default function RolePermissionTabContent() {
 				},
 			},
 		],
-		[],
+		[canEdit, canClone, canDelete],
 	);
 
 	return (

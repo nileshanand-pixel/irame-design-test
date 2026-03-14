@@ -1,9 +1,23 @@
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import CreateRoleDrawer from './create-role-drawer';
+import { useMyPermissions } from '@/hooks/use-my-permissions';
+import { useRbac } from '@/hooks/useRbac';
 
 export default function CreateRoleCta({ text }) {
 	const [isCreateRoleDrawerOpen, setIsCreateRoleDrawerOpen] = useState(false);
+	const { data: myPermissions, isLoading: permissionsLoading } =
+		useMyPermissions();
+	const { isRbacActive } = useRbac();
+
+	if (isRbacActive && !permissionsLoading) {
+		const canCreate = myPermissions.some(
+			(p) =>
+				p.resource === 'role' &&
+				(p.action === 'create' || p.action === 'admin_manage'),
+		);
+		if (!canCreate) return null;
+	}
 
 	return (
 		<>

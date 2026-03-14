@@ -24,6 +24,8 @@ export default function EditUserDrawer({
 	const [rolePermissions, setRolePermissions] = useState({});
 	const [loadingPermissions, setLoadingPermissions] = useState({});
 	const [loading, setLoading] = useState(false);
+	const [roleChangeBlock, setRoleChangeBlock] = useState(null);
+	const canChangeRole = !roleChangeBlock;
 	const currentUserId = (() => {
 		try {
 			const raw = localStorage.getItem('userDetails');
@@ -47,12 +49,38 @@ export default function EditUserDrawer({
 			try {
 				setLoading(true);
 				const [rolesRes, teamsRes] = await Promise.all([
-					roleService.getRoles({ limit: 100 }),
+					isReadOnly
+						? roleService.getRoles({ limit: 100 })
+						: roleService.getAssignableRoles({ limit: 100 }),
 					getTeams({ limit: 100 }),
 				]);
 
 				if (rolesRes.success) {
-					setRoles(rolesRes.data);
+					let rolesList = rolesRes.data;
+					// In edit mode, ensure current role is always visible even if not assignable
+					if (!isReadOnly && user.role) {
+						const currentInList = rolesList.find(
+							(r) => r.id === user.role.id,
+						);
+						if (!currentInList) {
+							rolesList = [
+								...rolesList,
+								{ ...user.role, isNotAssignable: true },
+							];
+						}
+					}
+					// Determine if actor can change this user's role
+					if (!isReadOnly && user.role) {
+						const currentRoleInList = rolesRes.data.find(
+							(r) => r.id === user.role.id,
+						);
+						if (!currentRoleInList) {
+							setRoleChangeBlock('insufficient_perms');
+						} else if (!currentRoleInList.canRevoke) {
+							setRoleChangeBlock('same_level');
+						}
+					}
+					setRoles(rolesList);
 				}
 
 				if (teamsRes.success) {
@@ -65,11 +93,7 @@ export default function EditUserDrawer({
 
 				// Set initial selections from user data
 				if (user.role) {
-					// Find role ID by name or use ID if available
-					const userRole = rolesRes.data.find(
-						(r) => r.id === user.role.id || r.name === user.role.name,
-					);
-					if (userRole) setSelectedRole(userRole.id);
+					setSelectedRole(user.role.id);
 				}
 				if (user.teams) {
 					setSelectedTeams(user.teams.map((t) => t.id));
@@ -123,7 +147,7 @@ export default function EditUserDrawer({
 				teamIds: selectedTeams,
 			};
 
-			if (!isSelfEdit) {
+			if (!isSelfEdit && canChangeRole && selectedRole !== user?.role?.id) {
 				updateData.roleId = selectedRole;
 			}
 
@@ -140,6 +164,15 @@ export default function EditUserDrawer({
 		} finally {
 			setLoading(false);
 		}
+	};
+
+	const getRoleSubtext = () => {
+		if (isSelfEdit) return 'You cannot change your own role.';
+		if (roleChangeBlock === 'same_level')
+			return "You cannot change this user's role as you both hold the same role.";
+		if (roleChangeBlock === 'insufficient_perms')
+			return "You cannot change this user's role because their role includes permissions you do not have.";
+		return 'You can assign only one role to a user.';
 	};
 
 	return (
@@ -206,9 +239,7 @@ export default function EditUserDrawer({
 						</div>
 						{!isReadOnly && (
 							<div className="text-[#26064ACC] text-xs">
-								{isSelfEdit
-									? 'You cannot change your own role.'
-									: 'You can assign only one role to a user.'}
+								{getRoleSubtext()}
 							</div>
 						)}
 					</div>
@@ -227,13 +258,20 @@ export default function EditUserDrawer({
 									<div
 										className={cn(
 											'flex items-center justify-between px-4 py-3',
-											isReadOnly || isSelfEdit
+											isReadOnly ||
+												isSelfEdit ||
+												!canChangeRole ||
+												role.isNotAssignable
 												? 'cursor-default select-none'
 												: 'cursor-pointer',
 										)}
 										onClick={() =>
-											!(isReadOnly || isSelfEdit) &&
-											setSelectedRole(role.id)
+											!(
+												isReadOnly ||
+												isSelfEdit ||
+												!canChangeRole ||
+												role.isNotAssignable
+											) && setSelectedRole(role.id)
 										}
 									>
 										<div className="flex items-center gap-3 flex-1">
@@ -242,7 +280,10 @@ export default function EditUserDrawer({
 													`flex-shrink-0 size-5 rounded-full border-1 flex items-center justify-center transition-colors border-[#26064A66] bg-white`,
 													selectedRole === role.id &&
 														'bg-[#6A12CD]',
-													(isReadOnly || isSelfEdit) &&
+													(isReadOnly ||
+														isSelfEdit ||
+														!canChangeRole ||
+														role.isNotAssignable) &&
 														selectedRole !== role.id &&
 														'opacity-30',
 												)}

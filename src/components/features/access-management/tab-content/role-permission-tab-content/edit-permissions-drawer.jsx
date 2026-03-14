@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { usePermissions } from '@/hooks/use-permissions';
+import {
+	useMyPermissions,
+	filterPermissionsByUserPerms,
+} from '@/hooks/use-my-permissions';
 import { useRolePermissionsUpdate } from '@/hooks/use-role-permissions-update';
 import { roleService } from '@/api/gatekeeper/role.service';
 import { Loader2 } from 'lucide-react';
@@ -24,7 +28,13 @@ export default function EditPermissionsDrawer({
 
 	const { data: permissionsByResource, isLoading: isLoadingPermissions } =
 		usePermissions();
+	const { data: myPermissions } = useMyPermissions();
 	const updateRoleMutation = useRolePermissionsUpdate();
+
+	// View mode shows all permissions, edit mode shows only user's own
+	const effectivePermissions = isReadOnly
+		? permissionsByResource?.data
+		: filterPermissionsByUserPerms(permissionsByResource?.data, myPermissions);
 
 	useEffect(() => {
 		if (open && role?.id) {
@@ -131,7 +141,7 @@ export default function EditPermissionsDrawer({
 					<PermissionsAccordion
 						permissions={permissions}
 						setPermissions={setPermissions}
-						permissionsByResource={permissionsByResource?.data}
+						permissionsByResource={effectivePermissions}
 						defaultOpenCategory={firstCategoryKey}
 						isLoading={isLoadingPermissions || isLoadingRolePermissions}
 						readOnly={isReadOnly}

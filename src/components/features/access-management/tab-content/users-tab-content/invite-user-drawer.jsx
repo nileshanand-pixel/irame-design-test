@@ -29,7 +29,7 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 			try {
 				setLoading(true);
 				const [rolesRes, teamsRes] = await Promise.all([
-					roleService.getRoles({ limit: 100 }),
+					roleService.getAssignableRoles({ limit: 100 }),
 					getTeams({ limit: 100 }),
 				]);
 
