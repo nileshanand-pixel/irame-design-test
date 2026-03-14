@@ -108,16 +108,33 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 	if (availableReports.length === 0) return null;
 
 	return (
-		<div className="mt-6 border rounded-xl overflow-hidden">
+		<div className="mt-6 border border-gray-200/80 rounded-xl overflow-hidden shadow-sm">
 			{/* Header */}
-			<div className="px-5 py-3 border-b bg-purple-4 flex items-center justify-between">
-				<h3 className="text-sm font-semibold text-primary80">
-					Report Viewer
-				</h3>
+			<div className="px-5 py-3.5 border-b bg-gradient-to-r from-purple-4 to-indigo-50/50 flex items-center justify-between">
+				<div className="flex items-center gap-2.5">
+					<div className="w-7 h-7 rounded-lg bg-purple-100/10 flex items-center justify-center">
+						<svg
+							className="w-4 h-4 text-purple-100"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={1.5}
+								d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+							/>
+						</svg>
+					</div>
+					<h3 className="text-sm font-semibold text-primary80">
+						Report Viewer
+					</h3>
+				</div>
 				{activeTab && htmlCache[activeTab] && (
 					<button
 						onClick={handleDownload}
-						className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-100 border border-purple-100 rounded-lg hover:bg-purple-4 transition-colors"
+						className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-purple-100 bg-white border border-purple-100/30 rounded-lg hover:bg-purple-100 hover:text-white transition-all duration-200 shadow-sm"
 					>
 						<svg
 							className="w-3.5 h-3.5"
@@ -139,13 +156,13 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 
 			{/* Tabs */}
 			<Tabs value={activeTab} onValueChange={setActiveTab}>
-				<div className="px-5 pt-3 border-b">
-					<TabsList className="bg-transparent gap-1 p-0 h-auto">
+				<div className="px-5 pt-2 pb-0 border-b bg-gray-50/50">
+					<TabsList className="bg-transparent gap-2 p-0 h-auto">
 						{availableReports.map(({ key, label, icon }) => (
 							<TabsTrigger
 								key={key}
 								value={key}
-								className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-primary40 rounded-none border-b-2 border-transparent data-[state=active]:border-purple-100 data-[state=active]:text-purple-100 data-[state=active]:bg-transparent data-[state=active]:shadow-none hover:text-primary60 transition-colors"
+								className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary40 rounded-t-lg border-b-2 border-transparent data-[state=active]:border-purple-100 data-[state=active]:text-purple-100 data-[state=active]:bg-white data-[state=active]:shadow-sm hover:text-primary60 hover:bg-white/60 transition-all duration-200 -mb-[1px]"
 							>
 								<svg
 									className="w-4 h-4"
@@ -170,7 +187,7 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 				{availableReports.map(({ key }) => (
 					<TabsContent key={key} value={key} className="mt-0">
 						{loading && !htmlCache[key] ? (
-							<div className="flex items-center justify-center py-20">
+							<div className="flex items-center justify-center py-20 bg-gray-50/30">
 								<div className="text-center space-y-3">
 									<div className="animate-spin w-8 h-8 border-2 border-purple-100 border-t-transparent rounded-full mx-auto" />
 									<p className="text-sm text-primary40">
@@ -179,7 +196,7 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 								</div>
 							</div>
 						) : error && !htmlCache[key] ? (
-							<div className="flex items-center justify-center py-20">
+							<div className="flex items-center justify-center py-20 bg-red-50/20">
 								<div className="text-center space-y-3">
 									<svg
 										className="w-10 h-10 text-red-400 mx-auto"
@@ -207,22 +224,24 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 								</div>
 							</div>
 						) : htmlCache[key] ? (
-							<iframe
-								ref={iframeRef}
-								srcDoc={htmlCache[key]}
-								onLoad={handleIframeLoad}
-								title={`${key} report`}
-								className="w-full border-0"
-								style={{ minHeight: '600px', height: '800px' }}
-								sandbox="allow-scripts allow-same-origin"
-							/>
+							<div className="bg-white">
+								<iframe
+									ref={iframeRef}
+									srcDoc={htmlCache[key]}
+									onLoad={handleIframeLoad}
+									title={`${key} report`}
+									className="w-full border-0"
+									style={{ minHeight: '600px', height: '800px' }}
+									sandbox="allow-scripts allow-same-origin"
+								/>
+							</div>
 						) : null}
 					</TabsContent>
 				))}
 
 				{/* No tab selected state */}
 				{!activeTab && (
-					<div className="flex items-center justify-center py-20">
+					<div className="flex items-center justify-center py-20 bg-gray-50/30">
 						<div className="text-center space-y-2">
 							<svg
 								className="w-10 h-10 text-primary20 mx-auto"
@@ -247,14 +266,31 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 
 			{/* Pipeline & LLM Stats */}
 			{hasStats && (
-				<div className="border-t">
+				<div className="border-t border-gray-100">
 					<button
 						onClick={() => setStatsOpen(!statsOpen)}
-						className="w-full px-5 py-3 flex items-center justify-between text-sm text-primary40 hover:text-primary60 transition-colors"
+						className="w-full px-5 py-3 flex items-center justify-between text-sm text-primary40 hover:text-primary60 hover:bg-gray-50/50 transition-all duration-200"
 					>
-						<span className="font-medium">Pipeline &amp; LLM Stats</span>
+						<div className="flex items-center gap-2">
+							<svg
+								className="w-4 h-4"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={1.5}
+									d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+								/>
+							</svg>
+							<span className="font-medium">
+								Pipeline &amp; LLM Stats
+							</span>
+						</div>
 						<svg
-							className={`w-4 h-4 transition-transform ${statsOpen ? 'rotate-180' : ''}`}
+							className={`w-4 h-4 transition-transform duration-200 ${statsOpen ? 'rotate-180' : ''}`}
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -268,7 +304,7 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 						</svg>
 					</button>
 					{statsOpen && (
-						<div className="px-5 pb-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+						<div className="px-5 pb-4 grid grid-cols-2 md:grid-cols-4 gap-3">
 							{llmCosts.total_cost != null && (
 								<StatCard
 									label="Total LLM Cost"
@@ -312,7 +348,7 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 };
 
 const StatCard = ({ label, value }) => (
-	<div className="bg-purple-4 rounded-lg p-3">
+	<div className="bg-white border border-gray-100 rounded-lg p-3 shadow-sm">
 		<p className="text-xs text-primary40">{label}</p>
 		<p className="text-sm font-semibold text-primary80 mt-0.5">{value}</p>
 	</div>

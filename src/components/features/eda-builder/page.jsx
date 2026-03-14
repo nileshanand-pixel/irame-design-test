@@ -44,7 +44,7 @@ const EDABuilderPage = () => {
 	);
 
 	return (
-		<div className="h-full w-full flex flex-col px-6 py-4 pt-1">
+		<div className="h-full w-full flex flex-col px-6 py-4 pt-2">
 			<EDAHeader />
 
 			<Tabs
@@ -54,7 +54,7 @@ const EDABuilderPage = () => {
 			>
 				<EDATabs />
 
-				<div className="h-[calc(100%-5rem)] overflow-auto pt-4">
+				<div className="h-[calc(100%-5rem)] overflow-auto pt-4 pb-6">
 					<TabsContent value={EDA_TABS.GENERATOR.value} className="mt-0">
 						<GeneratorTab
 							selectedJobId={selectedJobId}
