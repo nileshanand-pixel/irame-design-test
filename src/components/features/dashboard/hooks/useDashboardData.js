@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getMyDashboards, getSharedDashboards } from '../service/dashboard.service';
 import { logError } from '@/lib/logger';
+import { useRbac } from '@/hooks/useRbac';
 
 export const useMyDashboards = () => {
 	return useQuery({
@@ -27,9 +28,11 @@ export const useMyDashboards = () => {
 };
 
 export const useSharedDashboards = () => {
+	const { isRbacActive } = useRbac();
 	return useQuery({
 		queryKey: ['shared-dashboards'],
 		queryFn: getSharedDashboards,
+		enabled: isRbacActive,
 		staleTime: 30000,
 		refetchOnWindowFocus: false,
 		retry: 2,

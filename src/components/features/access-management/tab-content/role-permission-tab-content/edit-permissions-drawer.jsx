@@ -7,6 +7,7 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { useRolePermissionsUpdate } from '@/hooks/use-role-permissions-update';
 import { roleService } from '@/api/gatekeeper/role.service';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import PermissionsAccordion from './permissions-accordion';
 
 export default function EditPermissionsDrawer({
@@ -54,6 +55,11 @@ export default function EditPermissionsDrawer({
 	};
 
 	const handleUpdateRole = async () => {
+		if (!description.trim()) {
+			toast.error('Description is required');
+			return;
+		}
+
 		const currentSelectedIds = Object.keys(permissions).filter(
 			(id) => permissions[id],
 		);
@@ -110,7 +116,7 @@ export default function EditPermissionsDrawer({
 
 						<div className="space-y-2">
 							<label className="text-sm font-medium text-[#26064A]">
-								Description
+								Description <span className="text-red-500">*</span>
 							</label>
 							<Textarea
 								placeholder="Enter a description..."
@@ -138,7 +144,8 @@ export default function EditPermissionsDrawer({
 									onClick={handleUpdateRole}
 									disabled={
 										updateRoleMutation.isLoading ||
-										!roleName.trim()
+										!roleName.trim() ||
+										!description.trim()
 									}
 								>
 									{updateRoleMutation.isLoading ? (

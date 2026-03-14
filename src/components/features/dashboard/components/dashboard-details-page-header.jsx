@@ -91,7 +91,7 @@ const DashboardDetailsPageHeader = memo(
 					queryKey: ['dashboard-metadata', dashboardId],
 				});
 				queryClient.invalidateQueries({
-					queryKey: ['dashboard-content', dashboardId],
+					queryKey: ['dashboard-details-new', dashboardId],
 				});
 			},
 			onError: (error) => {
@@ -116,10 +116,8 @@ const DashboardDetailsPageHeader = memo(
 			mutationFn: (id) => deleteUserDashboard(dashboardId),
 			onSuccess: () => {
 				toast.success('Dashboard deleted successfully');
-				queryClient.invalidateQueries(
-					['shared-dashboards'],
-					['my-dashboards'],
-				);
+				queryClient.invalidateQueries({ queryKey: ['shared-dashboards'] });
+				queryClient.invalidateQueries({ queryKey: ['my-dashboards'] });
 				navigate('/app/dashboard');
 			},
 			onError: (error, id) => {

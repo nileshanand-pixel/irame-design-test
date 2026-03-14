@@ -21,8 +21,8 @@ import CircularLoader from '@/components/elements/loading/CircularLoader';
 
 const QUERY_KEYS = {
 	DASHBOARD_DETAILS: (id) => ['dashboard-details-new', id],
-	MY_DASHBOARDS: ['live-dashboard', 'my-dashboards'],
-	SHARED_DASHBOARDS: ['live-dashboard', 'shared-dashboards'],
+	MY_DASHBOARDS: ['my-dashboards'],
+	SHARED_DASHBOARDS: ['shared-dashboards'],
 	USER_DASHBOARD: ['user-dashboard'],
 };
 

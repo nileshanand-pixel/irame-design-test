@@ -8,6 +8,7 @@ import { usePermissions } from '@/hooks/use-permissions';
 import { useRoleClone } from '@/hooks/use-role-clone';
 import { roleService } from '@/api/gatekeeper/role.service';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import PermissionsAccordion from './permissions-accordion';
 
 export default function CloneRoleDrawer({ open, setOpen, role }) {
@@ -52,6 +53,11 @@ export default function CloneRoleDrawer({ open, setOpen, role }) {
 			return;
 		}
 
+		if (!description.trim()) {
+			toast.error('Description is required');
+			return;
+		}
+
 		try {
 			await cloneRoleMutation.mutateAsync({
 				roleId: role.id,
@@ -90,7 +96,7 @@ export default function CloneRoleDrawer({ open, setOpen, role }) {
 
 						<div className="space-y-2">
 							<label className="text-sm font-medium text-[#26064A]">
-								Description
+								Description <span className="text-red-500">*</span>
 							</label>
 							<Textarea
 								placeholder="Enter a description..."
@@ -123,7 +129,9 @@ export default function CloneRoleDrawer({ open, setOpen, role }) {
 							<Button
 								onClick={handleCloneRole}
 								disabled={
-									cloneRoleMutation.isLoading || !roleName.trim()
+									cloneRoleMutation.isLoading ||
+									!roleName.trim() ||
+									!description.trim()
 								}
 							>
 								{cloneRoleMutation.isLoading ? (

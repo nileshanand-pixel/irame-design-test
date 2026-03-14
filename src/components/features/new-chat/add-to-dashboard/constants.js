@@ -29,7 +29,7 @@ export const DEFAULT_VALUES = {
 };
 
 export const QUERY_KEYS = {
-	MY_DASHBOARDS: ['live-dashboard', 'my-dashboards'],
+	MY_DASHBOARDS: ['my-dashboards'],
 	DASHBOARDS_CONTAINING_QUERY: (queryId) => [
 		'dashboards-containing-query',
 		queryId,

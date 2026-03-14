@@ -33,6 +33,7 @@ const DashboardDetailsPage = () => {
 	const dashboardDetailsQuery = useQuery({
 		queryKey: ['dashboard-details'],
 		queryFn: () => getDashboardContent(query.id),
+		enabled: !!query?.id,
 	});
 	const handleItemClick = (item) => {
 		scrollToElement();
