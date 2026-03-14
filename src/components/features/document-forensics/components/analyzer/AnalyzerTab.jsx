@@ -15,6 +15,22 @@ import { uploadFile } from '@/components/features/upload/service';
 
 const isLocalEnv = import.meta.env.VITE_ENV === 'local';
 
+/** Map raw pipeline errors to user-friendly messages */
+const toUserFriendlyError = (raw) => {
+	if (!raw) return 'Something went wrong. Please try again.';
+	const lower = raw.toLowerCase();
+	if (lower.includes('timeout') || lower.includes('timed out'))
+		return 'Analysis took too long. Please try with a smaller file.';
+	if (lower.includes('out of memory') || lower.includes('oom'))
+		return 'The file is too large to process. Please try a smaller file.';
+	if (lower.includes('unsupported') || lower.includes('file type'))
+		return 'This file type is not supported. Please upload a JPEG, PNG, PDF, TIFF, BMP, or WebP file.';
+	if (lower.includes('corrupt') || lower.includes('cannot read'))
+		return 'The file could not be read. Please check the file and try again.';
+	// All other errors (config issues, API errors, import errors, etc.)
+	return 'Something went wrong while analyzing your document. Please try again later.';
+};
+
 const STATES = {
 	IDLE: 'idle',
 	UPLOADING: 'uploading',
@@ -56,10 +72,12 @@ const AnalyzerTab = ({ selectedJobId, onJobIdChange }) => {
 			loadResult(jobId);
 		} else if (statusData.status === 'FAILED') {
 			setState(STATES.ERROR);
-			setErrorMessage(statusData.message || 'Forensic analysis failed');
+			const rawError =
+				statusData.error_message || statusData.errorMessage || '';
+			setErrorMessage(toUserFriendlyError(rawError));
 		} else if (statusData.status === 'CANCELLED') {
 			setState(STATES.ERROR);
-			setErrorMessage(statusData.message || 'Forensic analysis was cancelled');
+			setErrorMessage('Analysis was cancelled.');
 		}
 	}, [statusData?.status, jobId]);
 
