@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import UploadSection from './UploadSection';
 import ProgressSection from './ProgressSection';
 import ResultsSection from './ResultsSection';
+import ReportViewer from './ReportViewer';
 import {
 	createEdaJob,
 	getEdaJobResult,
@@ -20,15 +21,17 @@ const STATES = {
 	PROCESSING: 'processing',
 	COMPLETED: 'completed',
 	ERROR: 'error',
+	LOADING: 'loading',
 };
 
 const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
-	const [state, setState] = useState(STATES.IDLE);
-	const [jobId, setJobId] = useState(null);
+	const [state, setState] = useState(selectedJobId ? STATES.LOADING : STATES.IDLE);
+	const [jobId, setJobId] = useState(selectedJobId || null);
 	const [result, setResult] = useState(null);
 	const [fileNames, setFileNames] = useState([]);
 	const [errorMessage, setErrorMessage] = useState('');
 	const [uploadProgress, setUploadProgress] = useState(0);
+	const [viewerTab, setViewerTab] = useState('');
 	const internalJobIdRef = useRef(null);
 
 	const { data: statusData } = useEdaJobPolling(
@@ -36,12 +39,12 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 		state === STATES.PROCESSING,
 	);
 
-	// Handle selectedJobId from History tab
+	// Handle selectedJobId from History tab (including initial mount)
 	useEffect(() => {
 		if (selectedJobId && selectedJobId !== internalJobIdRef.current) {
 			setJobId(selectedJobId);
 			setResult(null);
-			setState(STATES.IDLE);
+			setState(STATES.LOADING);
 			loadResult(selectedJobId);
 		}
 	}, [selectedJobId]);
@@ -65,7 +68,7 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 		try {
 			const data = await getEdaJobResult(id);
 			setResult(data);
-			setFileNames(data.fileNames || fileNames);
+			setFileNames(data.file_names || fileNames);
 			setState(STATES.COMPLETED);
 		} catch {
 			setState(STATES.ERROR);
@@ -88,7 +91,7 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 					setUploadProgress(50);
 					const response = await uploadEdaFilesLocal(files);
 					setUploadProgress(100);
-					newJobId = response.jobId;
+					newJobId = response.job_id;
 				} else {
 					// Production: upload to S3 via presigned URLs, then create job
 					const fileUrls = [];
@@ -107,7 +110,7 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 
 					setUploadProgress(100);
 					const response = await createEdaJob(fileUrls, names);
-					newJobId = response.jobId;
+					newJobId = response.job_id;
 				}
 
 				setJobId(newJobId);
@@ -133,6 +136,7 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 		setResult(null);
 		setFileNames([]);
 		setErrorMessage('');
+		setViewerTab('');
 		onJobIdChange?.(null);
 	};
 
@@ -187,11 +191,29 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 			)}
 
 			{state === STATES.COMPLETED && result && (
-				<ResultsSection
-					result={result}
-					fileNames={fileNames}
-					onNewAnalysis={handleNewAnalysis}
-				/>
+				<>
+					<ResultsSection
+						result={result}
+						fileNames={fileNames}
+						onNewAnalysis={handleNewAnalysis}
+						onViewReport={(key) => setViewerTab(key)}
+					/>
+					<ReportViewer
+						jobId={jobId}
+						reportUrls={result?.report_urls}
+						summary={result?.summary}
+						initialTab={viewerTab}
+					/>
+				</>
+			)}
+
+			{state === STATES.LOADING && (
+				<div className="text-center py-12 space-y-3">
+					<div className="animate-spin w-8 h-8 border-2 border-purple-100 border-t-transparent rounded-full mx-auto" />
+					<p className="text-sm text-primary60 font-medium">
+						Loading results...
+					</p>
+				</div>
 			)}
 
 			{state === STATES.ERROR && (

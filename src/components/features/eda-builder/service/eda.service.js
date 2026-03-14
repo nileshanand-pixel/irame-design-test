@@ -76,6 +76,23 @@ export const getEdaJobs = async () => {
 	}
 };
 
+export const getEdaReportHtml = async (jobId, reportType) => {
+	try {
+		const response = await axiosClientV1.get(
+			`${BASE_PATH}/${jobId}/reports/${reportType}`,
+			{ responseType: 'text', headers: { Accept: 'text/html' } },
+		);
+		return response.data;
+	} catch (error) {
+		logError(error, {
+			feature: 'eda-builder',
+			action: 'getEdaReportHtml',
+			extra: { jobId, reportType, errorMessage: error.message },
+		});
+		throw error;
+	}
+};
+
 export const uploadEdaFilesLocal = async (files) => {
 	try {
 		const formData = new FormData();

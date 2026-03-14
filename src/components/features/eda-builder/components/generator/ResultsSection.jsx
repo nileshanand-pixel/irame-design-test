@@ -1,6 +1,16 @@
-const ResultsSection = ({ result, fileNames, onNewAnalysis }) => {
-	const reportUrls = result?.reportUrls || {};
-	const evidenceUrls = result?.evidenceUrls || [];
+const BASE_URL = import.meta.env.VITE_STAGE_BASE_URL || '';
+
+const resolveReportUrl = (url) => {
+	if (!url) return url;
+	// Absolute URLs (S3 presigned) — use as-is
+	if (url.startsWith('http://') || url.startsWith('https://')) return url;
+	// Relative paths (local dev) — prepend BE base URL
+	return `${BASE_URL}${url}`;
+};
+
+const ResultsSection = ({ result, fileNames, onNewAnalysis, onViewReport }) => {
+	const reportUrls = result?.report_urls || {};
+	const evidenceUrls = result?.evidence_urls || [];
 	const summary = result?.summary;
 
 	const reportTypes = [
@@ -50,29 +60,29 @@ const ResultsSection = ({ result, fileNames, onNewAnalysis }) => {
 						Summary
 					</h4>
 					<div className="grid grid-cols-3 gap-4 text-sm">
-						{summary.totalRows != null && (
+						{summary.total_rows != null && (
 							<div>
 								<span className="text-primary40">Total Rows</span>
 								<p className="font-medium text-primary80">
-									{summary.totalRows?.toLocaleString()}
+									{summary.total_rows?.toLocaleString()}
 								</p>
 							</div>
 						)}
-						{summary.totalColumns != null && (
+						{summary.total_columns != null && (
 							<div>
 								<span className="text-primary40">Total Columns</span>
 								<p className="font-medium text-primary80">
-									{summary.totalColumns}
+									{summary.total_columns}
 								</p>
 							</div>
 						)}
-						{summary.filesAnalyzed != null && (
+						{summary.files_analyzed != null && (
 							<div>
 								<span className="text-primary40">
 									Files Analyzed
 								</span>
 								<p className="font-medium text-primary80">
-									{summary.filesAnalyzed}
+									{summary.files_analyzed}
 								</p>
 							</div>
 						)}
@@ -82,7 +92,9 @@ const ResultsSection = ({ result, fileNames, onNewAnalysis }) => {
 
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 				{reportTypes.map(({ key, label, description, icon }) => {
-					const url = reportUrls[key + '_standalone'] || reportUrls[key];
+					const rawUrl =
+						reportUrls[key + '_standalone'] || reportUrls[key];
+					const url = resolveReportUrl(rawUrl);
 					const hasReport = !!url;
 
 					return (
@@ -93,7 +105,7 @@ const ResultsSection = ({ result, fileNames, onNewAnalysis }) => {
 									? 'hover:border-purple-40 cursor-pointer'
 									: 'opacity-50'
 							}`}
-							onClick={() => hasReport && window.open(url, '_blank')}
+							onClick={() => hasReport && onViewReport?.(key)}
 						>
 							<div className="flex items-start gap-3">
 								<div className="w-10 h-10 rounded-lg bg-purple-4 flex items-center justify-center shrink-0">
@@ -171,9 +183,9 @@ const ResultsSection = ({ result, fileNames, onNewAnalysis }) => {
 				</div>
 			)}
 
-			{result?.llmCostUsd != null && result.llmCostUsd > 0 && (
+			{result?.llm_cost_usd != null && result.llm_cost_usd > 0 && (
 				<p className="text-xs text-primary40 text-right">
-					LLM cost: ${result.llmCostUsd.toFixed(4)}
+					LLM cost: ${result.llm_cost_usd.toFixed(4)}
 				</p>
 			)}
 		</div>
