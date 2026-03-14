@@ -143,16 +143,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				},
 
 				{
-					link: '/app/configuration?source=side_bar',
-					text: 'Configuration',
-					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/database.svg',
-					trackingCall: () =>
-						trackEvent(
-							EVENTS_ENUM.SIDE_BAR_CONFIGURATION_CLICKED,
-							EVENTS_REGISTRY.SIDE_BAR_CONFIGURATION_CLICKED,
-						),
-				},
-				{
 					link: '/app/ai-concierge',
 					text: 'AI Concierge',
 					icon: TbSparkles,
@@ -162,6 +152,16 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						trackEvent(
 							EVENTS_ENUM.SIDE_BAR_AI_CONCIERGE_CLICKED,
 							EVENTS_REGISTRY.SIDE_BAR_AI_CONCIERGE_CLICKED,
+						),
+				},
+				{
+					link: '/app/configuration?source=side_bar',
+					text: 'Configuration',
+					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/database.svg',
+					trackingCall: () =>
+						trackEvent(
+							EVENTS_ENUM.SIDE_BAR_CONFIGURATION_CLICKED,
+							EVENTS_REGISTRY.SIDE_BAR_CONFIGURATION_CLICKED,
 						),
 				},
 			],
