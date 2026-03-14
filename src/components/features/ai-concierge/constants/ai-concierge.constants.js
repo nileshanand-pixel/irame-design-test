@@ -1,4 +1,4 @@
-import { TbTableOptions, TbChartHistogram } from 'react-icons/tb';
+import { TbTableOptions, TbChartHistogram, TbShieldCheck } from 'react-icons/tb';
 
 /**
  * AI Concierge feature registry — single source of truth for all AI features.
@@ -23,6 +23,15 @@ export const AI_FEATURES = [
 		icon: TbChartHistogram,
 		route: 'eda-builder',
 		tags: ['EDA', 'Analytics', 'Data'],
+		beta: true,
+	},
+	{
+		id: 'document-forensics',
+		name: 'Document Forensics',
+		description: 'Analyze documents for forgery, tampering, and AI generation',
+		icon: TbShieldCheck,
+		route: 'document-forensics',
+		tags: ['Forensics', 'Document', 'Fraud'],
 		beta: true,
 	},
 ];

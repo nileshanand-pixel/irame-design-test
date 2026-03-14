@@ -25,6 +25,7 @@ import WorkflowPageV2 from '@/components/features/business-process/workflow/page
 import Home from '@/components/features/home';
 import RACMGeneratorPage from '@/components/features/racm-generator/page';
 import EDABuilderPage from '@/components/features/eda-builder/page';
+import DocumentForensicsPage from '@/components/features/document-forensics/page';
 import AiConciergePage from '@/components/features/ai-concierge/page';
 
 const AppRoutes = () => {
@@ -179,6 +180,14 @@ const AppRoutes = () => {
 										/>
 									}
 								/>
+								<Route
+									path="ai-concierge/document-forensics"
+									element={
+										<ProtectedRoute
+											element={<DocumentForensicsPage />}
+										/>
+									}
+								/>
 								{/* Redirects for old bookmarked URLs */}
 								<Route
 									path="racm-generator"
@@ -194,6 +203,15 @@ const AppRoutes = () => {
 									element={
 										<Navigate
 											to="/app/ai-concierge/eda-builder"
+											replace
+										/>
+									}
+								/>
+								<Route
+									path="document-forensics"
+									element={
+										<Navigate
+											to="/app/ai-concierge/document-forensics"
 											replace
 										/>
 									}
