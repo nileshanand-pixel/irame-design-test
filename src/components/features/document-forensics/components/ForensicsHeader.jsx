@@ -1,25 +1,19 @@
-import { useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 const ForensicsHeader = () => {
-	const navigate = useNavigate();
-
 	return (
-		<div className="mb-4">
-			<button
-				onClick={() => navigate('/app/ai-concierge')}
-				className="inline-flex items-center gap-1 text-sm text-primary40 hover:text-purple-100 transition-colors mb-2"
-			>
-				<ChevronLeft className="size-4" />
-				Back to AI Concierge
-			</button>
-			<h1 className="text-2xl font-semibold text-primary80">
-				Document Forensics
-			</h1>
-			<p className="text-sm text-primary40 mt-1">
-				Analyze documents for forgery, tampering, and AI generation — get
-				forensic reports with risk scores and evidence chains
-			</p>
+		<div className="bg-purple-100 px-6 py-4">
+			<div className="flex items-center gap-3">
+				<ShieldCheck className="w-5 h-5 text-white/90" />
+				<div>
+					<h1 className="text-lg font-semibold text-white uppercase tracking-wide">
+						Document Forensics
+					</h1>
+					<p className="text-xs text-white/60 mt-0.5">
+						Analyze documents for forgery, tampering, and AI generation
+					</p>
+				</div>
+			</div>
 		</div>
 	);
 };

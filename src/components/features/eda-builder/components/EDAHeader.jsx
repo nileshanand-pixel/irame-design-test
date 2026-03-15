@@ -1,23 +1,20 @@
-import { useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 
 const EDAHeader = () => {
-	const navigate = useNavigate();
-
 	return (
-		<div className="mb-4">
-			<button
-				onClick={() => navigate('/app/ai-concierge')}
-				className="inline-flex items-center gap-1 text-sm text-primary40 hover:text-purple-100 transition-colors mb-2"
-			>
-				<ChevronLeft className="size-4" />
-				Back to AI Concierge
-			</button>
-			<h1 className="text-2xl font-semibold text-primary80">EDA Builder</h1>
-			<p className="text-sm text-primary40 mt-1">
-				Exploratory Data Analysis — upload your datasets and get automated
-				statistical profiling, anomaly detection, and heuristic reports
-			</p>
+		<div className="bg-purple-100 px-6 py-4">
+			<div className="flex items-center gap-3">
+				<BarChart3 className="w-5 h-5 text-white/90" />
+				<div>
+					<h1 className="text-lg font-semibold text-white uppercase tracking-wide">
+						EDA Builder
+					</h1>
+					<p className="text-xs text-white/60 mt-0.5">
+						Automated statistical profiling, anomaly detection, and
+						heuristic reports
+					</p>
+				</div>
+			</div>
 		</div>
 	);
 };

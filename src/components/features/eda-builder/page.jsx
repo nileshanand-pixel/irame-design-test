@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import EDAHeader from './components/EDAHeader';
 import EDATabs from './components/EDATabs';
@@ -8,6 +9,7 @@ import HistoryTab from './components/history/HistoryTab';
 import { EDA_TABS } from './constants/eda.constants';
 
 const EDABuilderPage = () => {
+	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [selectedJobId, setSelectedJobId] = useState(null);
 
@@ -45,28 +47,41 @@ const EDABuilderPage = () => {
 
 	return (
 		<div className="h-full w-full flex flex-col px-6 py-4 pt-2">
-			<EDAHeader />
-
-			<Tabs
-				value={activeTab}
-				onValueChange={handleTabChange}
-				className="h-[calc(100%-3rem)]"
+			<button
+				onClick={() => navigate('/app/ai-concierge')}
+				className="inline-flex items-center gap-1 text-sm text-primary40 hover:text-purple-100 transition-colors mb-3"
 			>
-				<EDATabs />
+				<ChevronLeft className="size-4" />
+				Back to AI Concierge
+			</button>
 
-				<div className="h-[calc(100%-5rem)] overflow-auto pt-4 pb-6">
-					<TabsContent value={EDA_TABS.GENERATOR.value} className="mt-0">
-						<GeneratorTab
-							selectedJobId={selectedJobId}
-							onJobIdChange={setSelectedJobId}
-						/>
-					</TabsContent>
+			<div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex-1 flex flex-col min-h-0">
+				<EDAHeader />
 
-					<TabsContent value={EDA_TABS.HISTORY.value} className="mt-0">
-						<HistoryTab onViewJob={handleViewJob} />
-					</TabsContent>
-				</div>
-			</Tabs>
+				<Tabs
+					value={activeTab}
+					onValueChange={handleTabChange}
+					className="flex-1 flex flex-col min-h-0"
+				>
+					<EDATabs />
+
+					<div className="flex-1 overflow-auto px-6 pt-4 pb-6">
+						<TabsContent
+							value={EDA_TABS.GENERATOR.value}
+							className="mt-0"
+						>
+							<GeneratorTab
+								selectedJobId={selectedJobId}
+								onJobIdChange={setSelectedJobId}
+							/>
+						</TabsContent>
+
+						<TabsContent value={EDA_TABS.HISTORY.value} className="mt-0">
+							<HistoryTab onViewJob={handleViewJob} />
+						</TabsContent>
+					</div>
+				</Tabs>
+			</div>
 		</div>
 	);
 };

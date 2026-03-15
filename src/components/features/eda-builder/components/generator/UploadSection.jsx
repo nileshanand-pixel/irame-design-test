@@ -160,6 +160,78 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 				{files.length > 0 &&
 					` (${files.length} file${files.length > 1 ? 's' : ''})`}
 			</button>
+
+			{/* Feature summary & flow */}
+			<div className="pt-5 border-t border-gray-100 space-y-4">
+				<p className="text-sm text-primary60 text-center leading-relaxed">
+					Upload your datasets and get comprehensive statistical profiling
+					— identify data quality issues, detect anomalies, and uncover
+					hidden patterns, all powered by AI.
+				</p>
+
+				<div>
+					<p className="text-xs font-semibold text-primary40 uppercase tracking-wider mb-4 text-center">
+						How it works
+					</p>
+					<div className="flex items-start justify-between">
+						{[
+							{
+								title: 'Upload',
+								desc: 'CSV or Excel files',
+							},
+							{
+								title: 'Data Profiling',
+								desc: 'Statistical column summaries',
+							},
+							{
+								title: 'Anomaly Detection',
+								desc: 'Outliers & irregularities',
+							},
+							{
+								title: 'Heuristic Analysis',
+								desc: 'Rule-based quality checks',
+							},
+							{
+								title: 'Report',
+								desc: 'Interactive visual report',
+							},
+						].map((step, i, arr) => (
+							<div key={step.title} className="contents">
+								<div className="flex-1 flex flex-col items-center text-center px-1">
+									<div className="w-9 h-9 rounded-full bg-purple-4 border border-purple-20 flex items-center justify-center mb-2">
+										<span className="text-purple-100 font-bold text-sm">
+											{i + 1}
+										</span>
+									</div>
+									<p className="text-xs font-semibold text-primary80">
+										{step.title}
+									</p>
+									<p className="text-[11px] text-primary40 mt-0.5 leading-tight">
+										{step.desc}
+									</p>
+								</div>
+								{i < arr.length - 1 && (
+									<div className="flex items-center pt-3.5">
+										<svg
+											className="w-4 h-4 text-purple-40"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												strokeWidth={2}
+												d="M9 5l7 7-7 7"
+											/>
+										</svg>
+									</div>
+								)}
+							</div>
+						))}
+					</div>
+				</div>
+			</div>
 		</div>
 	);
 };
