@@ -156,7 +156,7 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 				disabled={files.length === 0 || isDisabled}
 				className="w-full bg-purple-100 text-white font-medium py-3 rounded-lg hover:bg-purple-80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 			>
-				Run EDA Analysis
+				Run Analysis
 				{files.length > 0 &&
 					` (${files.length} file${files.length > 1 ? 's' : ''})`}
 			</button>

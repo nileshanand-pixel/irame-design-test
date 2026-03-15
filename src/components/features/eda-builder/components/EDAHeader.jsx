@@ -7,7 +7,7 @@ const EDAHeader = () => {
 				<BarChart3 className="w-5 h-5 text-white/90" />
 				<div>
 					<h1 className="text-lg font-semibold text-white uppercase tracking-wide">
-						EDA Builder
+						Insights & Anomaly Report
 					</h1>
 					<p className="text-xs text-white/60 mt-0.5">
 						Automated statistical profiling, anomaly detection, and

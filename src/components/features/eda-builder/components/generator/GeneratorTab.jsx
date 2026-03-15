@@ -57,10 +57,10 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 			loadResult(jobId);
 		} else if (statusData.status === 'FAILED') {
 			setState(STATES.ERROR);
-			setErrorMessage(statusData.message || 'EDA analysis failed');
+			setErrorMessage(statusData.message || 'Analysis failed');
 		} else if (statusData.status === 'CANCELLED') {
 			setState(STATES.ERROR);
-			setErrorMessage(statusData.message || 'EDA analysis was cancelled');
+			setErrorMessage(statusData.message || 'Analysis was cancelled');
 		}
 	}, [statusData?.status, jobId]);
 
@@ -117,13 +117,13 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 				internalJobIdRef.current = newJobId;
 				onJobIdChange?.(newJobId);
 				setState(STATES.PROCESSING);
-				toast.info('EDA analysis started');
+				toast.info('Analysis started');
 			} catch (error) {
 				setState(STATES.ERROR);
 				setErrorMessage(
-					error?.response?.data?.message || 'Failed to start EDA analysis',
+					error?.response?.data?.message || 'Failed to start analysis',
 				);
-				toast.error('Failed to start EDA analysis');
+				toast.error('Failed to start analysis');
 			}
 		},
 		[onJobIdChange],

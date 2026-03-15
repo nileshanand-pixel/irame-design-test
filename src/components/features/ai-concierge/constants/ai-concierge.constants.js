@@ -22,7 +22,7 @@ export const AI_FEATURES = [
 	},
 	{
 		id: 'eda-builder',
-		name: 'EDA Builder',
+		name: 'Insights & Anomaly Report',
 		description:
 			'Automated statistical profiling, anomaly detection, and heuristic reports',
 		icon: TbChartHistogram,

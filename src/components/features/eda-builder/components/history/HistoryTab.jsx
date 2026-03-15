@@ -55,7 +55,7 @@ const HistoryTab = ({ onViewJob }) => {
 		return (
 			<div className="text-center py-12">
 				<p className="text-primary40 text-sm">
-					No EDA jobs yet. Run your first analysis from the Generator tab.
+					No jobs yet. Run your first analysis from the Generator tab.
 				</p>
 			</div>
 		);
