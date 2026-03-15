@@ -51,11 +51,26 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 				const type = reportUrls?.[reportKey + '_standalone']
 					? reportKey + '_standalone'
 					: reportKey;
-				const html = await getEdaReportHtml(jobId, type);
+				const url = reportUrls?.[type];
+
+				let html;
+				if (
+					url &&
+					(url.startsWith('http://') || url.startsWith('https://'))
+				) {
+					// Production: fetch HTML directly from S3 URL
+					const res = await fetch(url);
+					if (!res.ok) throw new Error(`HTTP ${res.status}`);
+					html = await res.text();
+				} else {
+					// Local dev: fetch via BE endpoint
+					html = await getEdaReportHtml(jobId, type);
+				}
+
 				setHtmlCache((prev) => ({ ...prev, [reportKey]: html }));
 			} catch (err) {
 				setError(
-					`Failed to load ${reportKey} report: ${err?.response?.status === 404 ? 'Report not found' : err.message}`,
+					`Failed to load ${reportKey} report: ${err?.response?.status === 404 || err.message?.includes('404') ? 'Report not found' : err.message}`,
 				);
 			} finally {
 				setLoading(false);
