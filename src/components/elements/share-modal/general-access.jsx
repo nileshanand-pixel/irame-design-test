@@ -18,6 +18,7 @@ export default function GeneralAccess({ generalAccess = {} }) {
 			<Select
 				value={generalAccess.value}
 				onValueChange={generalAccess.onChange}
+				disabled={generalAccess.disabled}
 			>
 				<SelectTrigger className="w-full flex items-center justify-between border-none shadow-none text-[#26064a] font-medium p-0 h-auto focus:ring-0">
 					<SelectValue>

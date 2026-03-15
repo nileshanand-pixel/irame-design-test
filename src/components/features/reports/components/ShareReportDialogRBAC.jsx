@@ -13,6 +13,7 @@ import { toast } from '@/lib/toast';
 import { Globe, Lock } from 'lucide-react';
 import { logError } from '@/lib/logger';
 import { useDebounce } from '@/hooks/use-debounce';
+import { useMyPermissions } from '@/hooks/use-my-permissions';
 import { FiUser, FiUsers } from 'react-icons/fi';
 import { closeModal } from '@/redux/reducer/modalReducer';
 import { updateReportStoreProp } from '@/redux/reducer/reportReducer';
@@ -75,6 +76,13 @@ const ShareReportDialogRBAC = React.memo(() => {
 	const queryClient = useQueryClient();
 	const modalState = useSelector((state) => state.modalReducer);
 	const reportReducer = useSelector((state) => state.reportStoreReducer);
+
+	const { data: myPermissions } = useMyPermissions();
+	const canShare = myPermissions?.some(
+		(p) =>
+			p.resource === 'report' &&
+			['share', 'delete', 'admin_manage'].includes(p.action),
+	);
 
 	// User search and selection state
 	const [searchQuery, setSearchQuery] = useState('');
@@ -343,6 +351,7 @@ const ShareReportDialogRBAC = React.memo(() => {
 		return {
 			value: currentVisibility,
 			icon: icons[currentVisibility] || icons.restricted,
+			disabled: !canShare,
 			options: [
 				{
 					label: 'Only Invited Users',
@@ -370,7 +379,7 @@ const ShareReportDialogRBAC = React.memo(() => {
 				});
 			},
 		};
-	}, [accessData, reportId, visibilityMutation]);
+	}, [accessData, reportId, visibilityMutation, canShare]);
 
 	const isLoading = isAccessLoading;
 
@@ -403,17 +412,7 @@ const ShareReportDialogRBAC = React.memo(() => {
 				members,
 				isLoading,
 				generalAccess: generalAccessConfig,
-				footer: {
-					onCopy: async () => {
-						const link = `${window.location.origin}/app/reports/${reportId}`;
-						try {
-							await navigator.clipboard.writeText(link);
-							toast.success('Link copied');
-						} catch (err) {
-							toast.error('Failed to copy link');
-						}
-					},
-				},
+				footer: {},
 			}}
 		/>
 	);

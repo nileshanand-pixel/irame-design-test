@@ -13,6 +13,7 @@ import { toast } from '@/lib/toast';
 import { Globe, Lock } from 'lucide-react';
 import { logError } from '@/lib/logger';
 import { useDebounce } from '@/hooks/use-debounce';
+import { useMyPermissions } from '@/hooks/use-my-permissions';
 import { FiUser, FiUsers } from 'react-icons/fi';
 
 /**
@@ -69,6 +70,13 @@ const ACCESS_OPTIONS = [
 
 export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 	const queryClient = useQueryClient();
+
+	const { data: myPermissions } = useMyPermissions();
+	const canShare = myPermissions?.some(
+		(p) =>
+			p.resource === 'dashboard' &&
+			['share', 'delete', 'admin_manage'].includes(p.action),
+	);
 
 	// User search and selection state
 	const [searchQuery, setSearchQuery] = useState('');
@@ -341,6 +349,7 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 		return {
 			value: currentVisibility,
 			icon: icons[currentVisibility] || icons.restricted,
+			disabled: !canShare,
 			options: [
 				{
 					label: 'Only Invited Users',
@@ -368,7 +377,7 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 				});
 			},
 		};
-	}, [accessData, dashboardId, visibilityMutation]);
+	}, [accessData, dashboardId, visibilityMutation, canShare]);
 
 	const isLoading = isDashboardLoading || isAccessLoading;
 
@@ -401,17 +410,7 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 				members,
 				isLoading,
 				generalAccess: generalAccessConfig,
-				footer: {
-					onCopy: async () => {
-						const link = `${window.location.origin}/app/dashboard/content?id=${dashboardId}`;
-						try {
-							await navigator.clipboard.writeText(link);
-							toast.success('Link copied');
-						} catch (err) {
-							toast.error('Failed to copy link');
-						}
-					},
-				},
+				footer: {},
 			}}
 		/>
 	);
