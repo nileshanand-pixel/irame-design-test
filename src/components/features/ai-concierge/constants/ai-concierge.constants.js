@@ -1,4 +1,9 @@
-import { TbTableOptions, TbChartHistogram, TbShieldCheck } from 'react-icons/tb';
+import {
+	TbTableOptions,
+	TbChartHistogram,
+	TbShieldCheck,
+	TbPhoto,
+} from 'react-icons/tb';
 
 /**
  * AI Concierge feature registry — single source of truth for all AI features.
@@ -32,6 +37,15 @@ export const AI_FEATURES = [
 		icon: TbShieldCheck,
 		route: 'document-forensics',
 		tags: ['Forensics', 'Document', 'Fraud'],
+		beta: true,
+	},
+	{
+		id: 'image-analytics',
+		name: 'Image Analytics',
+		description: 'AI-powered image chat, comparison, and compliance auditing',
+		icon: TbPhoto,
+		route: 'image-analytics',
+		tags: ['Image', 'Audit', 'Compare'],
 		beta: true,
 	},
 ];

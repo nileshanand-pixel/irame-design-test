@@ -26,6 +26,7 @@ import Home from '@/components/features/home';
 import RACMGeneratorPage from '@/components/features/racm-generator/page';
 import EDABuilderPage from '@/components/features/eda-builder/page';
 import DocumentForensicsPage from '@/components/features/document-forensics/page';
+import ImageAnalyticsPage from '@/components/features/image-analytics/page';
 import AiConciergePage from '@/components/features/ai-concierge/page';
 
 const AppRoutes = () => {
@@ -185,6 +186,14 @@ const AppRoutes = () => {
 									element={
 										<ProtectedRoute
 											element={<DocumentForensicsPage />}
+										/>
+									}
+								/>
+								<Route
+									path="ai-concierge/image-analytics"
+									element={
+										<ProtectedRoute
+											element={<ImageAnalyticsPage />}
 										/>
 									}
 								/>
