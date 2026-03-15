@@ -50,16 +50,16 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 		<div className="space-y-4">
 			<div
 				{...getRootProps()}
-				className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+				className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 ${
 					isDragActive
-						? 'border-purple-100 bg-purple-4'
-						: 'border-gray-300 hover:border-purple-40'
+						? 'border-purple-100 bg-[rgba(106,18,205,0.04)]'
+						: 'border-[rgba(106,18,205,0.12)] hover:border-[rgba(106,18,205,0.25)] bg-white/40 backdrop-blur-sm'
 				} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
 			>
 				<input {...getInputProps()} />
 				{file ? (
 					<div className="flex items-center justify-center gap-3">
-						<div className="bg-purple-4 text-primary80 rounded-lg px-3 py-2 flex items-center gap-2">
+						<div className="bg-white/60 backdrop-blur-sm border border-white/70 text-primary80 rounded-lg px-3 py-2 flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
 							<svg
 								className="w-4 h-4"
 								fill="none"
@@ -102,7 +102,7 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 				) : (
 					<div>
 						<svg
-							className="w-10 h-10 mx-auto text-primary40 mb-3"
+							className="w-10 h-10 mx-auto text-purple-40 mb-3"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -137,7 +137,7 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 					value={customPrompt}
 					onChange={(e) => setCustomPrompt(e.target.value)}
 					placeholder="E.g., Focus on procurement risks, Include IT general controls..."
-					className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-primary80 placeholder-primary40 focus:outline-none focus:ring-2 focus:ring-purple-40 focus:border-transparent resize-none"
+					className="w-full border border-[rgba(106,18,205,0.1)] bg-white/40 backdrop-blur-sm rounded-xl px-3 py-2 text-sm text-primary80 placeholder-primary40 focus:outline-none focus:ring-2 focus:ring-[rgba(106,18,205,0.15)] focus:border-transparent resize-none"
 					rows={3}
 					disabled={isDisabled}
 				/>
@@ -146,21 +146,21 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 			<button
 				onClick={handleGenerate}
 				disabled={!file || isDisabled}
-				className="w-full bg-purple-100 text-white font-medium py-3 rounded-lg hover:bg-purple-80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+				className="w-full bg-gradient-to-r from-[rgba(106,18,205,0.85)] to-[rgba(130,60,220,0.9)] text-white font-medium py-3 rounded-xl hover:from-[rgba(106,18,205,0.95)] hover:to-[rgba(130,60,220,1)] transition-all duration-300 shadow-[0_2px_12px_rgba(106,18,205,0.2),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_4px_20px_rgba(106,18,205,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
 			>
 				Generate RACM
 			</button>
 
 			{/* Feature summary & flow */}
-			<div className="pt-5 border-t border-gray-100 space-y-4">
-				<p className="text-sm text-primary60 text-center leading-relaxed">
+			<div className="pt-5 border-t border-[rgba(106,18,205,0.06)] space-y-4">
+				<p className="text-sm text-primary40 text-center leading-relaxed">
 					Transform your Standard Operating Procedures into structured Risk
 					Assessment and Control Matrices — AI identifies risks, maps
 					controls, and highlights compliance gaps automatically.
 				</p>
 
 				<div>
-					<p className="text-xs font-semibold text-primary40 uppercase tracking-wider mb-4 text-center">
+					<p className="text-xs font-semibold text-primary20 uppercase tracking-wider mb-4 text-center">
 						How it works
 					</p>
 					<div className="flex items-start justify-between">
@@ -188,7 +188,7 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 						].map((step, i, arr) => (
 							<div key={step.title} className="contents">
 								<div className="flex-1 flex flex-col items-center text-center px-1">
-									<div className="w-9 h-9 rounded-full bg-purple-4 border border-purple-20 flex items-center justify-center mb-2">
+									<div className="w-9 h-9 rounded-full bg-white/60 backdrop-blur-sm border border-[rgba(106,18,205,0.1)] shadow-[0_2px_8px_rgba(106,18,205,0.06),inset_0_1px_0_rgba(255,255,255,0.8)] flex items-center justify-center mb-2">
 										<span className="text-purple-100 font-bold text-sm">
 											{i + 1}
 										</span>
@@ -203,7 +203,7 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 								{i < arr.length - 1 && (
 									<div className="flex items-center pt-3.5">
 										<svg
-											className="w-4 h-4 text-purple-40"
+											className="w-4 h-4 text-[rgba(106,18,205,0.2)]"
 											fill="none"
 											stroke="currentColor"
 											viewBox="0 0 24 24"

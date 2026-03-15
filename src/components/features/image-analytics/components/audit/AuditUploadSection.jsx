@@ -56,16 +56,16 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 					</label>
 					<div
 						{...guidelinesDropzone.getRootProps()}
-						className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
+						className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 ${
 							guidelinesDropzone.isDragActive
 								? 'border-purple-100 bg-purple-4'
-								: 'border-gray-300 hover:border-purple-40'
+								: 'border-[rgba(106,18,205,0.12)] hover:border-[rgba(106,18,205,0.25)] bg-white/40 backdrop-blur-sm'
 						}`}
 					>
 						<input {...guidelinesDropzone.getInputProps()} />
 						{guidelines ? (
 							<div className="flex items-center justify-center gap-2">
-								<div className="bg-purple-4 text-primary80 rounded-lg px-3 py-2 flex items-center gap-2">
+								<div className="bg-white/60 backdrop-blur-sm border border-white/70 text-primary80 rounded-lg px-3 py-2 flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
 									<span className="text-sm font-medium">
 										{guidelines.name}
 									</span>
@@ -95,7 +95,7 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 						) : (
 							<div>
 								<svg
-									className="w-8 h-8 mx-auto text-primary40 mb-2"
+									className="w-8 h-8 mx-auto text-purple-40 mb-2"
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
@@ -125,10 +125,10 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 					</label>
 					<div
 						{...imagesDropzone.getRootProps()}
-						className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
+						className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 ${
 							imagesDropzone.isDragActive
 								? 'border-purple-100 bg-purple-4'
-								: 'border-gray-300 hover:border-purple-40'
+								: 'border-[rgba(106,18,205,0.12)] hover:border-[rgba(106,18,205,0.25)] bg-white/40 backdrop-blur-sm'
 						}`}
 					>
 						<input {...imagesDropzone.getInputProps()} />
@@ -141,7 +141,7 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 									{images.slice(0, 5).map((f) => (
 										<span
 											key={f.name}
-											className="text-xs bg-purple-4 text-primary60 px-2 py-1 rounded"
+											className="text-xs bg-white/50 backdrop-blur-sm border border-white/60 text-primary60 px-2 py-1 rounded"
 										>
 											{f.name}
 										</span>
@@ -165,7 +165,7 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 						) : (
 							<div>
 								<svg
-									className="w-8 h-8 mx-auto text-primary40 mb-2"
+									className="w-8 h-8 mx-auto text-purple-40 mb-2"
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
@@ -197,7 +197,7 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 					value={instructions}
 					onChange={(e) => setInstructions(e.target.value)}
 					placeholder="E.g., Focus strictly on safety gear compliance. Report in bullet points..."
-					className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-primary80 placeholder-primary40 focus:outline-none focus:ring-2 focus:ring-purple-40 focus:border-transparent resize-none"
+					className="w-full border border-[rgba(106,18,205,0.1)] bg-white/40 backdrop-blur-sm rounded-xl px-3 py-2 text-sm text-primary80 placeholder-primary40 focus:outline-none focus:ring-2 focus:ring-[rgba(106,18,205,0.15)] focus:border-transparent resize-none"
 					rows={3}
 					disabled={isDisabled}
 				/>
@@ -206,12 +206,12 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 			<button
 				onClick={handleGenerate}
 				disabled={!guidelines || images.length === 0 || isDisabled}
-				className="w-full bg-purple-100 text-white font-medium py-3 rounded-lg hover:bg-purple-80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+				className="w-full bg-gradient-to-r from-[rgba(106,18,205,0.85)] to-[rgba(130,60,220,0.9)] text-white font-medium py-3 rounded-xl hover:from-[rgba(106,18,205,0.95)] hover:to-[rgba(130,60,220,1)] transition-all duration-300 shadow-[0_2px_12px_rgba(106,18,205,0.2),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_4px_20px_rgba(106,18,205,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
 			>
 				Generate Audit Report
 			</button>
 
-			<div className="pt-5 border-t border-gray-100 space-y-4">
+			<div className="pt-5 border-t border-[rgba(106,18,205,0.06)] space-y-4">
 				<p className="text-sm text-primary60 text-center leading-relaxed">
 					Upload a guidelines document and images to audit — AI reviews
 					each image against your compliance standards and generates a
@@ -219,7 +219,7 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 					recommendations.
 				</p>
 				<div>
-					<p className="text-xs font-semibold text-primary40 uppercase tracking-wider mb-4 text-center">
+					<p className="text-xs font-semibold text-primary20 uppercase tracking-wider mb-4 text-center">
 						How it works
 					</p>
 					<div className="flex items-start justify-between">
@@ -232,7 +232,7 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 						].map((step, i, arr) => (
 							<div key={step.title} className="contents">
 								<div className="flex-1 flex flex-col items-center text-center px-1">
-									<div className="w-9 h-9 rounded-full bg-purple-4 border border-purple-20 flex items-center justify-center mb-2">
+									<div className="w-9 h-9 rounded-full bg-white/60 backdrop-blur-sm border border-[rgba(106,18,205,0.1)] shadow-[0_2px_8px_rgba(106,18,205,0.06),inset_0_1px_0_rgba(255,255,255,0.8)] flex items-center justify-center mb-2">
 										<span className="text-purple-100 font-bold text-sm">
 											{i + 1}
 										</span>
@@ -247,7 +247,7 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 								{i < arr.length - 1 && (
 									<div className="flex items-center pt-3.5">
 										<svg
-											className="w-4 h-4 text-purple-40"
+											className="w-4 h-4 text-[rgba(106,18,205,0.2)]"
 											fill="none"
 											stroke="currentColor"
 											viewBox="0 0 24 24"

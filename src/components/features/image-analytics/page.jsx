@@ -51,7 +51,7 @@ const ImageAnalyticsPage = () => {
 	);
 
 	return (
-		<div className="h-full w-full flex flex-col px-6 py-4 pt-2">
+		<div className="h-full w-full flex flex-col px-6 py-4 pt-2 bg-gradient-to-br from-[rgba(249,245,255,1)] via-[rgba(238,232,248,0.5)] to-[rgba(249,250,251,1)] rounded-lg">
 			<button
 				onClick={() => navigate('/app/ai-concierge')}
 				className="inline-flex items-center gap-1 text-sm text-primary40 hover:text-purple-100 transition-colors mb-3"
@@ -60,7 +60,7 @@ const ImageAnalyticsPage = () => {
 				Back to AI Concierge
 			</button>
 
-			<div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex-1 flex flex-col min-h-0">
+			<div className="bg-white/55 backdrop-blur-xl rounded-2xl shadow-[0_4px_16px_rgba(106,18,205,0.06),inset_0_1px_0_rgba(255,255,255,0.8)] border border-white/70 overflow-hidden flex-1 flex flex-col min-h-0">
 				<ImageAnalyticsHeader />
 
 				<Tabs
