@@ -91,7 +91,7 @@ const HistoryTab = ({ onViewJob }) => {
 							className="border-t border-gray-100 hover:bg-purple-2 cursor-pointer transition-colors"
 							onClick={() => {
 								if (row.original.status === 'COMPLETED') {
-									onViewJob(row.original.external_id);
+									onViewJob(row.original.externalId);
 								}
 							}}
 						>

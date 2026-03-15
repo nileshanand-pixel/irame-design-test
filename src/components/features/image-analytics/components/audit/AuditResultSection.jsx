@@ -8,7 +8,7 @@ const AuditResultSection = ({ result, onNewAnalysis }) => {
 	const auditResult = result?.result || {};
 	const nonCompliances = auditResult.non_compliances || [];
 	const summary = auditResult.summary || 'No summary available.';
-	const reportUrls = result?.report_urls || {};
+	const reportUrls = result?.reportUrls || {};
 
 	return (
 		<div className="space-y-6">
@@ -171,9 +171,9 @@ const AuditResultSection = ({ result, onNewAnalysis }) => {
 			</div>
 
 			{/* LLM Cost */}
-			{result?.llm_cost_usd > 0 && (
+			{result?.llmCostUsd > 0 && (
 				<p className="text-xs text-primary40 text-right">
-					LLM Cost: ${result.llm_cost_usd.toFixed(4)}
+					LLM Cost: ${result.llmCostUsd.toFixed(4)}
 				</p>
 			)}
 		</div>

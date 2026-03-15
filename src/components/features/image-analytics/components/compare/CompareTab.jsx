@@ -54,7 +54,6 @@ const CompareTab = ({ selectedJobId, onJobIdChange }) => {
 			setState(STATES.ERROR);
 			setErrorMessage(
 				statusData.errorMessage ||
-					statusData.error_message ||
 					statusData.message ||
 					'Comparison failed. Please try again.',
 			);

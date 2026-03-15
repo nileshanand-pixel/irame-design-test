@@ -68,7 +68,7 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 		try {
 			const data = await getEdaJobResult(id);
 			setResult(data);
-			setFileNames(data.file_names || fileNames);
+			setFileNames(data.fileNames || fileNames);
 			setState(STATES.COMPLETED);
 		} catch {
 			setState(STATES.ERROR);
@@ -200,7 +200,7 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 					/>
 					<ReportViewer
 						jobId={jobId}
-						reportUrls={result?.report_urls}
+						reportUrls={result?.reportUrls}
 						summary={result?.summary}
 						initialTab={viewerTab}
 					/>

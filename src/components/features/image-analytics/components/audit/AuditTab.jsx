@@ -54,7 +54,6 @@ const AuditTab = ({ selectedJobId, onJobIdChange }) => {
 			setState(STATES.ERROR);
 			setErrorMessage(
 				statusData.errorMessage ||
-					statusData.error_message ||
 					statusData.message ||
 					'Audit failed. Please try again.',
 			);

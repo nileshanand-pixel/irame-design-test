@@ -9,8 +9,8 @@ const resolveReportUrl = (url) => {
 };
 
 const ResultsSection = ({ result, fileNames, onNewAnalysis, onViewReport }) => {
-	const reportUrls = result?.report_urls || {};
-	const evidenceUrls = result?.evidence_urls || [];
+	const reportUrls = result?.reportUrls || {};
+	const evidenceUrls = result?.evidenceUrls || [];
 	const summary = result?.summary;
 
 	const reportTypes = [
@@ -252,9 +252,9 @@ const ResultsSection = ({ result, fileNames, onNewAnalysis, onViewReport }) => {
 				</div>
 			)}
 
-			{result?.llm_cost_usd != null && result.llm_cost_usd > 0 && (
+			{result?.llmCostUsd != null && result.llmCostUsd > 0 && (
 				<p className="text-xs text-primary40 text-right">
-					LLM cost: ${result.llm_cost_usd.toFixed(4)}
+					LLM cost: ${result.llmCostUsd.toFixed(4)}
 				</p>
 			)}
 		</div>

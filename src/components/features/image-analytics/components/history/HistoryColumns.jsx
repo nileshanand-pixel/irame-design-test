@@ -3,7 +3,7 @@ import { IA_STATUSES, IA_JOB_TYPES } from '../../constants/imageAnalytics.consta
 
 export const createHistoryColumns = (onView, onDelete) => [
 	{
-		accessorKey: 'file_names',
+		accessorKey: 'fileNames',
 		header: 'Files',
 		cell: ({ getValue }) => {
 			const names = getValue();
@@ -25,7 +25,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 		},
 	},
 	{
-		accessorKey: 'job_type',
+		accessorKey: 'jobType',
 		header: 'Type',
 		cell: ({ getValue }) => {
 			const type = IA_JOB_TYPES[getValue()] || IA_JOB_TYPES.CHAT;
@@ -39,7 +39,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 		},
 	},
 	{
-		accessorKey: 'created_at',
+		accessorKey: 'createdAt',
 		header: 'Date',
 		cell: ({ getValue }) => {
 			const val = getValue();
@@ -73,7 +73,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 					<button
 						onClick={(e) => {
 							e.stopPropagation();
-							onView(row.original.external_id, row.original.job_type);
+							onView(row.original.externalId, row.original.jobType);
 						}}
 						className="text-xs text-purple-100 hover:text-purple-80 font-medium"
 					>
@@ -83,7 +83,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 				<button
 					onClick={(e) => {
 						e.stopPropagation();
-						onDelete(row.original.external_id);
+						onDelete(row.original.externalId);
 					}}
 					className="text-xs text-red-500 hover:text-red-700 font-medium"
 				>

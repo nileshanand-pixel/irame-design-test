@@ -54,7 +54,6 @@ const ChatTab = ({ selectedJobId, onJobIdChange }) => {
 			setState(STATES.ERROR);
 			setErrorMessage(
 				statusData.errorMessage ||
-					statusData.error_message ||
 					statusData.message ||
 					'Analysis failed. Please try again.',
 			);

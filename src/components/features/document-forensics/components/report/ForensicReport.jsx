@@ -87,11 +87,11 @@ const ForensicReport = ({ result }) => {
 									<span>{Math.round(confidence)}% confidence</span>
 								</div>
 							)}
-							{result?.llm_cost_usd != null && (
+							{result?.llmCostUsd != null && (
 								<div className="flex items-center gap-1">
 									<DollarSign className="w-3.5 h-3.5" />
 									<span>
-										${result.llm_cost_usd.toFixed(4)} LLM cost
+										${result.llmCostUsd.toFixed(4)} LLM cost
 									</span>
 								</div>
 							)}

@@ -4,7 +4,7 @@ import RiskBadge from '../report/RiskBadge';
 
 export const createHistoryColumns = (onView, onDelete) => [
 	{
-		accessorKey: 'file_name',
+		accessorKey: 'fileName',
 		header: 'File Name',
 		cell: ({ getValue }) => {
 			const name = getValue();
@@ -16,7 +16,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 		},
 	},
 	{
-		accessorKey: 'risk_level',
+		accessorKey: 'riskLevel',
 		header: 'Risk Level',
 		cell: ({ getValue }) => {
 			const level = getValue();
@@ -24,7 +24,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 		},
 	},
 	{
-		accessorKey: 'composite_score',
+		accessorKey: 'compositeScore',
 		header: 'Score',
 		cell: ({ getValue }) => {
 			const score = getValue();
@@ -54,7 +54,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 		},
 	},
 	{
-		accessorKey: 'created_at',
+		accessorKey: 'createdAt',
 		header: 'Date',
 		cell: ({ getValue }) => {
 			const val = getValue();
@@ -74,7 +74,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 					<button
 						onClick={(e) => {
 							e.stopPropagation();
-							onView(row.original.external_id);
+							onView(row.original.externalId);
 						}}
 						className="text-xs text-purple-100 hover:text-purple-80 font-medium"
 					>
@@ -84,7 +84,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 				<button
 					onClick={(e) => {
 						e.stopPropagation();
-						onDelete(row.original.external_id);
+						onDelete(row.original.externalId);
 					}}
 					className="text-xs text-red-500 hover:text-red-700 font-medium"
 				>

@@ -40,8 +40,7 @@ const ProgressSection = ({ statusData, fileNames, onCancel }) => {
 		return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 	};
 
-	const progressPercent =
-		statusData?.progress_percent || statusData?.progressPercent || 0;
+	const progressPercent = statusData?.progressPercent || 0;
 
 	return (
 		<div className="space-y-6">

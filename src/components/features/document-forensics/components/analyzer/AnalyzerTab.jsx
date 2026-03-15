@@ -72,8 +72,7 @@ const AnalyzerTab = ({ selectedJobId, onJobIdChange }) => {
 			loadResult(jobId);
 		} else if (statusData.status === 'FAILED') {
 			setState(STATES.ERROR);
-			const rawError =
-				statusData.error_message || statusData.errorMessage || '';
+			const rawError = statusData.errorMessage || '';
 			setErrorMessage(toUserFriendlyError(rawError));
 		} else if (statusData.status === 'CANCELLED') {
 			setState(STATES.ERROR);
@@ -85,7 +84,7 @@ const AnalyzerTab = ({ selectedJobId, onJobIdChange }) => {
 		try {
 			const data = await getForensicJobResult(id);
 			setResult(data);
-			setFileName(data.file_name || fileName);
+			setFileName(data.fileName || fileName);
 			setState(STATES.COMPLETED);
 		} catch {
 			setState(STATES.ERROR);

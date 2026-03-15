@@ -95,8 +95,8 @@ const HistoryTab = ({ onViewJob }) => {
 							onClick={() => {
 								if (row.original.status === 'COMPLETED') {
 									onViewJob(
-										row.original.external_id,
-										row.original.job_type,
+										row.original.externalId,
+										row.original.jobType,
 									);
 								}
 							}}

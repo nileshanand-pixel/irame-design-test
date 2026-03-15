@@ -3,7 +3,7 @@ import { EDA_STATUSES } from '../../constants/eda.constants';
 
 export const createHistoryColumns = (onView, onDelete) => [
 	{
-		accessorKey: 'file_names',
+		accessorKey: 'fileNames',
 		header: 'Files',
 		cell: ({ getValue }) => {
 			const names = getValue();
@@ -25,7 +25,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 		},
 	},
 	{
-		accessorKey: 'created_at',
+		accessorKey: 'createdAt',
 		header: 'Date',
 		cell: ({ getValue }) => {
 			const val = getValue();
@@ -59,7 +59,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 					<button
 						onClick={(e) => {
 							e.stopPropagation();
-							onView(row.original.external_id);
+							onView(row.original.externalId);
 						}}
 						className="text-xs text-purple-100 hover:text-purple-80 font-medium"
 					>
@@ -69,7 +69,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 				<button
 					onClick={(e) => {
 						e.stopPropagation();
-						onDelete(row.original.external_id);
+						onDelete(row.original.externalId);
 					}}
 					className="text-xs text-red-500 hover:text-red-700 font-medium"
 				>
