@@ -126,6 +126,32 @@ const ShareReportDialogRBAC = React.memo(() => {
 			setSelectedUsers([]);
 		},
 		onError: (err) => {
+			const raw = err?.response?.data?.message || '';
+			const LABELS = {
+				deleter: 'Full Access',
+				editor: 'Can Edit',
+				viewer: 'Can View',
+				sharer: 'Can Share',
+			};
+			const maxMatch = raw.match(
+				/Maximum available access level for this user is '(\w+)'/,
+			);
+			const requestedMatch = raw.match(/access level '(\w+)'/);
+
+			let message;
+			if (raw.includes('role capability') && maxMatch) {
+				const maxLabel = LABELS[maxMatch[1]] || maxMatch[1];
+				const requestedLabel =
+					LABELS[requestedMatch?.[1]] || requestedMatch?.[1] || '';
+				message = `Cannot share with '${requestedLabel}'. This user's role supports up to '${maxLabel}'. Try selecting a lower access level.`;
+			} else if (raw.includes('role capability')) {
+				message =
+					"Cannot share — this user's role does not include any report permissions. Contact an admin to update their role.";
+			} else {
+				message = raw || 'Failed to share report';
+			}
+
+			toast.error(message);
 			logError(err, {
 				feature: 'report',
 				action: 'share-report',
@@ -367,6 +393,7 @@ const ShareReportDialogRBAC = React.memo(() => {
 					accessLevel: inviteAccessLevel,
 					onAccessLevelChange: setInviteAccessLevel,
 					onInvite: handleInvite,
+					isLoading: shareMutation.isPending,
 					accessLevelOptions: [
 						{ ...ACCESS_LEVELS.viewer, value: 'viewer' },
 						{ ...ACCESS_LEVELS.editor, value: 'editor' },

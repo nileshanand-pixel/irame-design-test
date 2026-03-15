@@ -89,11 +89,14 @@ const transformDashboard = (apiDashboard, isShared = false) => {
 			new Date().toISOString(),
 		createdBy: {
 			id:
+				apiDashboard.user_id ||
 				apiDashboard.created_by?.id ||
 				apiDashboard.createdBy?.id ||
 				'user-1',
 			name: isShared
-				? apiDashboard.created_by?.name ||
+				? apiDashboard.user_name ||
+					apiDashboard.userName ||
+					apiDashboard.created_by?.name ||
 					apiDashboard.createdBy?.name ||
 					'Unknown User'
 				: 'You',

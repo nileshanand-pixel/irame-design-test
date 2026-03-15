@@ -118,12 +118,37 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 			queryClient.invalidateQueries({ queryKey: ['my-dashboards'] });
 		},
 		onError: (err) => {
+			const raw = err?.response?.data?.message || '';
+			const LABELS = {
+				deleter: 'Full Access',
+				editor: 'Can Edit',
+				viewer: 'Can View',
+				sharer: 'Can Share',
+			};
+			const maxMatch = raw.match(
+				/Maximum available access level for this user is '(\w+)'/,
+			);
+			const requestedMatch = raw.match(/access level '(\w+)'/);
+
+			let message;
+			if (raw.includes('role capability') && maxMatch) {
+				const maxLabel = LABELS[maxMatch[1]] || maxMatch[1];
+				const requestedLabel =
+					LABELS[requestedMatch?.[1]] || requestedMatch?.[1] || '';
+				message = `Cannot share with '${requestedLabel}'. This user's role supports up to '${maxLabel}'. Try selecting a lower access level.`;
+			} else if (raw.includes('role capability')) {
+				message =
+					"Cannot share — this user's role does not include any dashboard permissions. Contact an admin to update their role.";
+			} else {
+				message = raw || 'Failed to share dashboard';
+			}
+
+			toast.error(message);
 			logError(err, {
 				feature: 'dashboard',
 				action: 'share-dashboard',
 				dashboardId,
 			});
-			// toast.error('Failed to share dashboard'); // Removed to avoid double toasts
 		},
 	});
 
@@ -366,6 +391,7 @@ export const ShareDashboardDialog = ({ open, onClose, dashboardId }) => {
 					accessLevel: inviteAccessLevel,
 					onAccessLevelChange: setInviteAccessLevel,
 					onInvite: handleInvite,
+					isLoading: shareMutation.isPending,
 					accessLevelOptions: [
 						{ ...ACCESS_LEVELS.viewer, value: 'viewer' },
 						{ ...ACCESS_LEVELS.editor, value: 'editor' },

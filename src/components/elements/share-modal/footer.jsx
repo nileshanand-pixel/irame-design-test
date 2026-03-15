@@ -19,9 +19,13 @@ export default function Footer({ footer = {}, invite = {} }) {
 				onClick={() => {
 					invite.onInvite?.();
 				}}
-				disabled={!invite.selectedUsers || invite.selectedUsers.length === 0}
+				disabled={
+					!invite.selectedUsers ||
+					invite.selectedUsers.length === 0 ||
+					!!invite.isLoading
+				}
 			>
-				{invite.buttonText || 'Invite'}
+				{invite.isLoading ? 'Inviting...' : invite.buttonText || 'Invite'}
 			</Button>
 		</div>
 	);
