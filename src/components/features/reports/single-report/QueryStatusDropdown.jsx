@@ -16,13 +16,21 @@ export const QueryStatusDropdown = ({ value, onChange, reportCardId }) => {
 		mutationFn: async (status) => {
 			await updateReportCardStatus({ reportId, reportCardId, status });
 		},
+		onMutate: (newStatus) => {
+			const previous = value;
+			onChange(newStatus);
+			return { previous };
+		},
 		onSuccess: () => {
 			toast.success('Status updated!');
 			queryClient.invalidateQueries({
 				queryKey: ['report-details', reportId],
 			});
 		},
-		onError: (error) => {
+		onError: (error, _newStatus, context) => {
+			if (context?.previous !== undefined) {
+				onChange(context.previous);
+			}
 			logError(error, {
 				feature: 'reports',
 				action: 'update-query-status',
@@ -35,7 +43,6 @@ export const QueryStatusDropdown = ({ value, onChange, reportCardId }) => {
 
 	const handleStatusChange = (newStatus) => {
 		mutation.mutate(newStatus);
-		onChange(newStatus);
 	};
 
 	return (

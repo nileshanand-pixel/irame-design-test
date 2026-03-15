@@ -108,7 +108,9 @@ const DataSource = () => {
 			setIsEditing(false);
 			toast.success('Dataset updated successfully');
 			// Invalidate and refetch to force fresh data
-			queryClient.invalidateQueries(getDatasourceDetailsQueryKey(query?.id));
+			queryClient.invalidateQueries({
+				queryKey: getDatasourceDetailsQueryKey(query?.id),
+			});
 			// const eventProperties = {
 			// 	dataset_id: datasourceQuery?.data?.datasource_id,
 			// 	dataset_name: datasourceQuery?.data?.name,
