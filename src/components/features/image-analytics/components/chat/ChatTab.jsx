@@ -51,7 +51,12 @@ const ChatTab = ({ selectedJobId, onJobIdChange }) => {
 			loadResult(jobId);
 		} else if (statusData.status === 'FAILED') {
 			setState(STATES.ERROR);
-			setErrorMessage(statusData.message || 'Analysis failed');
+			setErrorMessage(
+				statusData.errorMessage ||
+					statusData.error_message ||
+					statusData.message ||
+					'Analysis failed. Please try again.',
+			);
 		} else if (statusData.status === 'CANCELLED') {
 			setState(STATES.ERROR);
 			setErrorMessage('Analysis was cancelled');

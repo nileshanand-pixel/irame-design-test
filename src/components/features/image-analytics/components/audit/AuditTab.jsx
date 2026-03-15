@@ -52,7 +52,12 @@ const AuditTab = ({ selectedJobId, onJobIdChange }) => {
 			loadResult(jobId);
 		} else if (statusData.status === 'FAILED') {
 			setState(STATES.ERROR);
-			setErrorMessage(statusData.message || 'Audit failed');
+			setErrorMessage(
+				statusData.errorMessage ||
+					statusData.error_message ||
+					statusData.message ||
+					'Audit failed. Please try again.',
+			);
 		} else if (statusData.status === 'CANCELLED') {
 			setState(STATES.ERROR);
 			setErrorMessage('Audit was cancelled');

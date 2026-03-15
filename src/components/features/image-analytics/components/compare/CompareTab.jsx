@@ -51,7 +51,12 @@ const CompareTab = ({ selectedJobId, onJobIdChange }) => {
 			loadResult(jobId);
 		} else if (statusData.status === 'FAILED') {
 			setState(STATES.ERROR);
-			setErrorMessage(statusData.message || 'Comparison failed');
+			setErrorMessage(
+				statusData.errorMessage ||
+					statusData.error_message ||
+					statusData.message ||
+					'Comparison failed. Please try again.',
+			);
 		} else if (statusData.status === 'CANCELLED') {
 			setState(STATES.ERROR);
 			setErrorMessage('Comparison was cancelled');
