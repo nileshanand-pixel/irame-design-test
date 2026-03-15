@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-toastify';
+import ReactMarkdown from 'react-markdown';
 import CompareUploadSection from './CompareUploadSection';
 import ProgressSection from '../shared/ProgressSection';
 import {
@@ -218,8 +219,10 @@ const CompareTab = ({ selectedJobId, onJobIdChange }) => {
 							New Comparison
 						</button>
 					</div>
-					<div className="bg-gray-50 rounded-lg p-6 whitespace-pre-wrap text-sm text-primary80 leading-relaxed">
-						{result.result?.answer || 'No comparison generated.'}
+					<div className="bg-gray-50 rounded-lg p-6 text-sm text-primary80 leading-relaxed prose prose-sm prose-slate max-w-none prose-headings:text-primary80 prose-headings:font-semibold prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-li:my-0.5 prose-strong:text-primary80">
+						<ReactMarkdown>
+							{result.result?.answer || 'No comparison generated.'}
+						</ReactMarkdown>
 					</div>
 				</div>
 			)}
