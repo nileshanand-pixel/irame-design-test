@@ -45,7 +45,7 @@ const GenerateSampleModal = ({
 				queryKey: ['report-card-cases', reportId, cardId],
 			});
 			queryClient.invalidateQueries({
-				queryKey: ['report-card-sample-check', reportId, cardId],
+				queryKey: ['report-card-samples', reportId, cardId],
 			});
 			toast.success('Sample data generation initiated successfully');
 			setSelectedSampleId(data?.sample_id);
