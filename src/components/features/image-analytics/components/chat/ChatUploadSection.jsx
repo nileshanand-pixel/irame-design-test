@@ -41,7 +41,11 @@ const ChatUploadSection = ({ onGenerate, isDisabled }) => {
 
 	const handleGenerate = () => {
 		if (files.length > 0) {
-			onGenerate(files, question || 'Describe these images.');
+			onGenerate(
+				files,
+				question ||
+					'Provide a detailed, comprehensive description of these images. Include: all main subjects and their appearance (colors, expressions, clothing, posture), the setting and background elements, lighting and atmosphere, artistic style, any text or symbols visible, spatial relationships between elements, and the overall mood or feeling conveyed. Be thorough and descriptive.',
+			);
 		}
 	};
 
