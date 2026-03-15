@@ -701,11 +701,9 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 											<p className="truncate">{option.text}</p>
 										)}
 										{isSideNavOpen && option.beta && (
-											<Tag
-												text="Beta"
-												className="shrink-0 !px-1.5 !py-0.5 !gap-1 !shadow-none"
-												textClassName="!text-[10px] !font-semibold"
-											/>
+											<span className="shrink-0 px-1.5 py-px rounded-md bg-white/50 backdrop-blur-sm border border-[rgba(106,18,205,0.12)] text-[9px] font-medium text-purple-100 tracking-wide">
+												Beta
+											</span>
 										)}
 									</Link>
 								</Hint>
