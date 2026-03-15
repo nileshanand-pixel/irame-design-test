@@ -135,7 +135,9 @@ export const getQueriesOfSession = async (sessionId) => {
 		});
 		return response.data;
 	} catch (error) {
-		toast.error('Failed to get session');
+		if (error?.response?.status !== 403) {
+			toast.error('Failed to get session');
+		}
 		throw error;
 	}
 };

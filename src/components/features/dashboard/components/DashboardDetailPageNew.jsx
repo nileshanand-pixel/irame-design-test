@@ -21,16 +21,18 @@ import CircularLoader from '@/components/elements/loading/CircularLoader';
 
 const QUERY_KEYS = {
 	DASHBOARD_DETAILS: (id) => ['dashboard-details-new', id],
-	MY_DASHBOARDS: ['live-dashboard', 'my-dashboards'],
-	SHARED_DASHBOARDS: ['live-dashboard', 'shared-dashboards'],
+	MY_DASHBOARDS: ['my-dashboards'],
+	SHARED_DASHBOARDS: ['shared-dashboards'],
 	USER_DASHBOARD: ['user-dashboard'],
 };
 
 export const invalidateDashboardQueries = (queryClient, dashboardId) => {
-	queryClient.invalidateQueries(QUERY_KEYS.DASHBOARD_DETAILS(dashboardId));
-	queryClient.invalidateQueries(QUERY_KEYS.MY_DASHBOARDS);
-	queryClient.invalidateQueries(QUERY_KEYS.SHARED_DASHBOARDS);
-	queryClient.invalidateQueries(QUERY_KEYS.USER_DASHBOARD);
+	queryClient.invalidateQueries({
+		queryKey: QUERY_KEYS.DASHBOARD_DETAILS(dashboardId),
+	});
+	queryClient.invalidateQueries({ queryKey: QUERY_KEYS.MY_DASHBOARDS });
+	queryClient.invalidateQueries({ queryKey: QUERY_KEYS.SHARED_DASHBOARDS });
+	queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER_DASHBOARD });
 };
 
 const DashboardDetailPageNew = () => {
@@ -73,7 +75,9 @@ const DashboardDetailPageNew = () => {
 			);
 
 			// Invalidate and refetch dashboard content
-			queryClient.invalidateQueries(QUERY_KEYS.DASHBOARD_DETAILS(dashboardId));
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.DASHBOARD_DETAILS(dashboardId),
+			});
 		},
 		onError: (error, variables) => {
 			const { contentId, itemId, itemType } = variables;

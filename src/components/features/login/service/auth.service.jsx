@@ -22,7 +22,7 @@ export const ensureCleanup = async () => {
 	}
 };
 
-export const logout = async () => {
+export const logout = async (redirectUrl = '/') => {
 	try {
 		const response = await axiosClientV1.post('/users/logout');
 		if (response.status === 200) {
@@ -41,14 +41,14 @@ export const logout = async () => {
 		localStorage.removeItem('userDetails');
 		// resetCookies();
 		resetAllStores();
-		if (window.location.pathname !== '/') {
-			window.location.href = '/';
+		if (window.location.pathname !== redirectUrl) {
+			window.location.href = redirectUrl;
 		}
 	}
 };
 
-export const fullLogout = async () => {
-	await logout();
+export const fullLogout = async (redirectUrl = '/') => {
+	await logout(redirectUrl);
 	mixpanelLogoutCleanup();
 	storageLogoutCleanup();
 };

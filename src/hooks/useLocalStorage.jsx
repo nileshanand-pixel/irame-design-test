@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { logError } from '@/lib/logger';
 
 const initialValue = {
@@ -38,10 +38,13 @@ const useLocalStorage = (key) => {
 
 	const [value, setValue] = useState(initial);
 
-	const updateValue = (newValue) => {
-		setValue(newValue);
-		localStorage.setItem(key, JSON.stringify(newValue));
-	};
+	const updateValue = useCallback(
+		(newValue) => {
+			setValue(newValue);
+			localStorage.setItem(key, JSON.stringify(newValue));
+		},
+		[key],
+	);
 
 	return [value, updateValue];
 };

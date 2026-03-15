@@ -81,8 +81,10 @@ export const getDataSources = async (options) => {
 	return response.data?.datasource_list;
 };
 
-export const getDataSourcesV2 = async (options) => {
-	const response = await axiosClientV2.get(`/datasources`, {
+export const getDataSourcesV2 = async (options = {}) => {
+	const { limit } = options;
+	const queryParams = limit ? `?limit=${limit}` : '';
+	const response = await axiosClientV2.get(`/datasources${queryParams}`, {
 		headers: {},
 	});
 
@@ -173,6 +175,10 @@ export const createEmptyDatasource = async (data) => {
 		return response.data;
 	} catch (error) {
 		console.error('Error creating temp datasource', error);
+		// Mark error to suppress axios interceptor toast (components show custom ones)
+		if (error?.response?.status === 403) {
+			error._skipAxiosToast = true;
+		}
 		throw error;
 	}
 };

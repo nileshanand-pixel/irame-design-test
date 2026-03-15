@@ -1,13 +1,26 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { DASHBOARD_TABS } from '../constants/dashboard.constants';
+import { useRbac } from '@/hooks/useRbac';
 
 const DashboardTabs = () => {
+	const { isRbacActive } = useRbac();
+
+	const visibleTabs = useMemo(() => {
+		const tabs = Object.values(DASHBOARD_TABS);
+		if (!isRbacActive) {
+			return tabs.filter(
+				(tab) => tab.value !== DASHBOARD_TABS.SHARED_DASHBOARD.value,
+			);
+		}
+		return tabs;
+	}, [isRbacActive]);
+
 	return (
 		<div className="mb-6">
 			<TabsList className="bg-transparent p-0 rounded-none border-none gap-8">
-				{Object.values(DASHBOARD_TABS).map((tab) => (
+				{visibleTabs.map((tab) => (
 					<TabsTrigger
 						key={tab.value}
 						value={tab.value}

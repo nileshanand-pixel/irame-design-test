@@ -8,13 +8,12 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog';
 import { useEffect, useState } from 'react';
-import { getDataSourcesV2 } from './features/configuration/service/configuration.service';
 import { useNavigate } from 'react-router-dom';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
-import { useQuery } from '@tanstack/react-query';
+import { useDataSources } from '@/hooks/useDataSources';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { cn } from '@/lib/utils';
@@ -27,7 +26,6 @@ const ChooseDataSourceDialog = ({
 	setSelectedDataSource,
 	selectedDataSource,
 }) => {
-	const [dataSources, setDataSources] = useState([]);
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
 	const [search, setSearch] = useState('');
@@ -35,16 +33,16 @@ const ChooseDataSourceDialog = ({
 	const handleSelect = () => {
 		if (!selectedDataSource) return;
 
-		const selectedDataSourceIndex = data?.findIndex(
+		const selectedDataSourceIndex = dataSources?.findIndex(
 			(item) => item.datasource_id === selectedDataSource,
 		);
-		const selectedDataSourceData = data[selectedDataSourceIndex];
+		const selectedDataSourceData = dataSources[selectedDataSourceIndex];
 
 		trackEvent(
 			EVENTS_ENUM.SELECT_FROM_LIBRARY_CONTINUE_CLICKED,
 			EVENTS_REGISTRY.SELECT_FROM_LIBRARY_CONTINUE_CLICKED,
 			() => ({
-				total_datasets_shown: dataSources.length,
+				total_datasets_shown: dataSources?.length || 0,
 				clicked_on: selectedDataSourceIndex + 1,
 				dataset_id: selectedDataSource,
 				dataset_name: selectedDataSourceData?.name,
@@ -57,7 +55,7 @@ const ChooseDataSourceDialog = ({
 	};
 	const handleSelectedDS = (dataSourceId) => {
 		setSelectedDataSource(dataSourceId);
-		const dsName = data?.find(
+		const dsName = dataSources?.find(
 			(item) => item.datasource_id === dataSourceId,
 		)?.name;
 		if (!dsName) return;
@@ -69,24 +67,11 @@ const ChooseDataSourceDialog = ({
 		// 	};
 		// });
 	};
-	const fetchDataSources = async () => {
-		const data = await getDataSourcesV2();
-		return Array.isArray(data) ? data : [];
-	};
+	// Use custom hook that handles team-based caching properly
+	const { dataSources, isLoading: dataSourceFetch } = useDataSources();
 
-	const { data, isLoading: dataSourceFetch } = useQuery({
-		queryKey: ['data-sources'],
-		queryFn: fetchDataSources,
-	});
-
-	useEffect(() => {
-		if (data?.length > 0) {
-			setDataSources(data);
-			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
-		}
-	}, [data]);
-
-	const dataToShow = dataSources.filter((source) =>
+	// Filter datasources directly from React Query data (not from stale local state)
+	const dataToShow = (dataSources || []).filter((source) =>
 		source.name.toLowerCase().includes(search.toLowerCase()),
 	);
 
@@ -197,8 +182,8 @@ const ChooseDataSourceDialog = ({
 						disabled={
 							!selectedDataSource ||
 							dataSourceFetch ||
-							!data ||
-							!data?.length
+							!dataSources ||
+							!dataSources?.length
 						}
 						className="rounded-lg w-full hover:bg-purple-100 hover:text-white hover:opacity-80"
 					>

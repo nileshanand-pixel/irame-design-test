@@ -112,7 +112,9 @@ const PdfDemoConnectorContent = ({ workflow }) => {
 				position: 'bottom-center',
 			});
 
-			queryClient.invalidateQueries(['workflow-runs', workflowId]);
+			queryClient.invalidateQueries({
+				queryKey: ['workflow-runs', workflowId],
+			});
 
 			// Set run_id in search params to trigger polling
 			if (data?.external_id) {

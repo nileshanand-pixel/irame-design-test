@@ -68,7 +68,9 @@ export const QueryCard = ({
 		mutationFn: deleteReportCard,
 		onSuccess: () => {
 			toast.success('Report card deleted successfully');
-			queryClient.invalidateQueries(['report-details', report.report_id]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-details', report.report_id],
+			});
 		},
 		onError: (error) => {
 			logError(error, {
@@ -84,11 +86,12 @@ export const QueryCard = ({
 	const generateCasesMutation = useMutation({
 		mutationFn: generateCases,
 		onSuccess: () => {
-			queryClient.invalidateQueries(['report-details', report.report_id]);
-			queryClient.invalidateQueries([
-				'report-cards-case-generation-status',
-				report.report_id,
-			]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-details', report.report_id],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['report-cards-case-generation-status', report.report_id],
+			});
 		},
 		onError: (error) => {
 			setCardStatus(reportCardsCaseGenerationStatus?.[card.external_id]);

@@ -56,7 +56,7 @@ const AddQueryToNewReportDialog = ({
 				),
 			});
 
-			queryClient.invalidateQueries(['user-reports']);
+			queryClient.invalidateQueries({ queryKey: ['user-reports'] });
 			trackEvent(
 				EVENTS_ENUM.ADDED_ANALYSIS_TO_REPORT,
 				EVENTS_REGISTRY.ADDED_ANALYSIS_TO_REPORT,

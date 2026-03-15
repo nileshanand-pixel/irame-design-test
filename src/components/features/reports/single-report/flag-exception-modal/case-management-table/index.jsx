@@ -39,6 +39,13 @@ import {
 } from './row-selection-helpers';
 import { useShiftKeyPressedRef } from './use-shift-key-pressed';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
+import {
+	SELECTION_SCOPE_OPTIONS,
+	SELECT_ALL_STATES,
+	addIndexRangeToArraySelection,
+	toggleIdInArraySelection,
+} from './row-selection-helpers';
+import { useShiftKeyPressedRef } from './use-shift-key-pressed';
 
 export default function CaseManagementTable({
 	isFetchingCases,
@@ -219,7 +226,9 @@ export default function CaseManagementTable({
 			}),
 		onSuccess: () => {
 			// Invalidate and refetch cases data
-			queryClient.invalidateQueries(['report-card-cases', reportId, cardId]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-card-cases', reportId, cardId],
+			});
 			toast.success('Case updated successfully');
 			setUpdatingCell(null);
 		},
@@ -397,6 +406,7 @@ export default function CaseManagementTable({
 												}
 												className="focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 ring-offset-0 outline-none data-[state=unchecked]:border-primary80 border-2"
 												disabled={!isOwner}
+												className="focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 ring-offset-0 outline-none data-[state=unchecked]:border-primary80 border-2"
 											/>
 										</td>
 										{columnsConfig.map((columnConfig) => {

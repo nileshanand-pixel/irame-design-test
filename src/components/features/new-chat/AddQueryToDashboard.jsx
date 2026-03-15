@@ -45,7 +45,7 @@ const AddQueryToDashboard = ({ open, setDashboard, newDashboardIds, queryId }) =
 	const handleAddQueryToDashboard = () => {
 		setIsLoading(true);
 		createDashboardContent(selectedDashboard.dashboard_id, {
-			query_id: queryId,
+			queryId,
 		})
 			.then((res) => {
 				trackEvent(

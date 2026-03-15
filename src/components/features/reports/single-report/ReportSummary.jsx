@@ -116,7 +116,9 @@ export default function ReportSummary({ pdfMode }) {
 			if (index >= fullText.length) {
 				clearInterval(interval);
 				setStatus('done');
-				queryClient.invalidateQueries(['report-details', reportId]);
+				queryClient.invalidateQueries({
+					queryKey: ['report-details', reportId],
+				});
 				toast.success('Summary ready');
 			}
 		}, speed);

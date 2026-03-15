@@ -18,7 +18,9 @@ export const ReportStatusDropdown = ({ value, onChange }) => {
 		mutationFn: updateReportStatus,
 		onSuccess: () => {
 			toast.success('Report status updated successfully!');
-			queryClient.invalidateQueries(['report-details', reportId]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-details', reportId],
+			});
 		},
 		onError: (error) => {
 			logError(error, {

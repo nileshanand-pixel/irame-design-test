@@ -94,17 +94,25 @@ const DashboardSelectionStep = ({
 	}, []);
 
 	// Handler: Create new dashboard success
-	const handleCreateDashboardSuccess = useCallback((data) => {
-		if (data) {
-			const dashboardId = getDashboardId(data);
-			if (dashboardId) {
-				setSelectedDashboardIdFromDropdown(dashboardId);
-				setSelectedQueryDashboardId(null);
-				setShowCreateModal(false);
-				queryClient.invalidateQueries(QUERY_KEYS.MY_DASHBOARDS);
+	const handleCreateDashboardSuccess = useCallback(
+		(data) => {
+			if (data) {
+				const dashboardId = getDashboardId(data);
+				if (dashboardId) {
+					setSelectedDashboardIdFromDropdown(dashboardId);
+					setSelectedQueryDashboardId(null);
+					setShowCreateModal(false);
+					queryClient.invalidateQueries({
+						queryKey: QUERY_KEYS.MY_DASHBOARDS,
+					});
+					queryClient.invalidateQueries({
+						queryKey: QUERY_KEYS.DASHBOARDS_CONTAINING_QUERY(queryId),
+					});
+				}
 			}
-		}
-	}, []);
+		},
+		[queryId],
+	);
 
 	// Handler: Continue to next step
 	const handleContinue = useCallback(() => {

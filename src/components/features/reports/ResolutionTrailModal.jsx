@@ -1036,6 +1036,10 @@ function CommentComposerComponent({
 	};
 
 	const getAllowedFiles = (allFiles, filesInfo) => {
+		// TEMPORARY: Accept all file types - TODO: Revert this change
+		return [allFiles, false];
+
+		/* ORIGINAL CODE - Uncomment to restore file type restrictions
 		const allowedFiles = [];
 		const allowedFileTypes = ['pdf', 'jpg', 'png', 'gif'];
 		let hasNotAllowedFiles = false;
@@ -1051,6 +1055,7 @@ function CommentComposerComponent({
 		});
 
 		return [allowedFiles, hasNotAllowedFiles];
+		*/
 	};
 
 	const getFilesInfo = async (files) => {
@@ -1430,8 +1435,10 @@ export default function ResolutionTrailModal({ open, onClose }) {
 		mutationFn: updateCaseData,
 		onSuccess: (data) => {
 			toast.success('Case updated successfully');
-			queryClient.invalidateQueries(['resolutionTrail']);
-			queryClient.invalidateQueries(['report-card-cases', reportId, cardId]);
+			queryClient.invalidateQueries({ queryKey: ['resolutionTrail'] });
+			queryClient.invalidateQueries({
+				queryKey: ['report-card-cases', reportId, cardId],
+			});
 			resetUploads();
 			setComment('');
 		},

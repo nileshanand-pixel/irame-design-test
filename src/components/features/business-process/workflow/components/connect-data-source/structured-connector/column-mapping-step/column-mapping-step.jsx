@@ -197,7 +197,9 @@ export const ColumnMappingStep = ({
 			toast.success('Workflow column mapping sent successfully', {
 				position: 'bottom-center',
 			});
-			queryClient.invalidateQueries(['workflow-run-details', runId]);
+			queryClient.invalidateQueries({
+				queryKey: ['workflow-run-details', runId],
+			});
 			await queryClient.refetchQueries(['workflow-run-details', runId]);
 			// Move to next step after successful submission
 			// stepper.next();

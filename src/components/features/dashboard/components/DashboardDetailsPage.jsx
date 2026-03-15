@@ -33,6 +33,7 @@ const DashboardDetailsPage = () => {
 	const dashboardDetailsQuery = useQuery({
 		queryKey: ['dashboard-details'],
 		queryFn: () => getDashboardContent(query.id),
+		enabled: !!query?.id,
 	});
 	const handleItemClick = (item) => {
 		scrollToElement();
@@ -124,10 +125,7 @@ const DashboardDetailsPage = () => {
 			}
 		}
 		return () => {
-			queryClient.invalidateQueries(['dashboard-details'], {
-				refetchActive: true,
-				refetchInactive: true,
-			});
+			queryClient.invalidateQueries({ queryKey: ['dashboard-details'] });
 		};
 	}, [query, dashboardDetailsQuery.data]);
 

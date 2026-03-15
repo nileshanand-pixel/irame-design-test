@@ -58,6 +58,8 @@ import SiblingNavigation from './components/SiblingNavigation';
 import QueryActions from './components/QueryActions';
 import { REDIRECTION_URL_AFTER_LOGIN } from '@/constants/login-constants';
 import UnderstandingStats from './components/understanding-stats';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
+import { RiErrorWarningLine } from 'react-icons/ri';
 
 const Workzone = () => {
 	const [value] = useLocalStorage('userDetails');
@@ -97,19 +99,25 @@ const Workzone = () => {
 	}, [answers, selectedPathLeafId]);
 
 	// Fetch current session details to check if it's shared and track background processing
-	const { data: currentSessionData, refetch: refetchSession } = useQuery({
+	const {
+		data: currentSessionData,
+		refetch: refetchSession,
+		isError: isSessionError,
+		error: sessionError,
+	} = useQuery({
 		queryKey: ['session', currentSessionId],
 		queryFn: () => getSession(currentSessionId),
 		enabled: !!currentSessionId,
 		staleTime: 60000, // Cache for 1 minute
 		refetchOnWindowFocus: false, // Prevent unnecessary refetches when user returns to tab
-		// Poll session status when active path has no pending queries but session might have background queries
-		refetchInterval: () => {
-			// Poll at 30-second intervals when active path is not pending (to catch background queries)
-			return !selectedPathLeafPending ? 30000 : false;
+		retry: (failureCount, error) => {
+			// Do not retry on 403
+			if (error?.response?.status === 403) return false;
+			return failureCount < 3;
 		},
-		refetchIntervalInBackground: true,
 	});
+
+	const isForbidden = isSessionError && sessionError?.response?.status === 403;
 
 	// React Query for fetching session data
 	const {
@@ -126,7 +134,7 @@ const Workzone = () => {
 			selectedPathLeafId,
 		],
 		queryFn: () => getQueriesOfSession(currentSessionId),
-		enabled: !!currentSessionId,
+		enabled: !!currentSessionId && !isForbidden,
 		refetchOnWindowFocus: false, // Prevent unnecessary refetches when user returns to tab
 		// Only poll when user is actively waiting on current path
 		refetchInterval: () => (selectedPathLeafPending ? 5000 : false),
@@ -166,11 +174,20 @@ const Workzone = () => {
 
 	// When user navigates to a path with no pending queries, check session status
 	useEffect(() => {
-		if (!selectedPathLeafPending && currentSessionId) {
+		if (!selectedPathLeafPending && currentSessionId && !isForbidden) {
 			// Refetch session to check if there are background queries processing
 			refetchSession();
 		}
-	}, [selectedPathLeafPending, currentSessionId, refetchSession]);
+	}, [selectedPathLeafPending, currentSessionId, refetchSession, isForbidden]);
+
+	// manual polling for session status when not forbidden
+	useEffect(() => {
+		if (isForbidden || selectedPathLeafPending || !currentSessionId) return;
+		const interval = setInterval(() => {
+			refetchSession();
+		}, 30000);
+		return () => clearInterval(interval);
+	}, [isForbidden, selectedPathLeafPending, currentSessionId, refetchSession]);
 
 	// Use workspace manager hook
 	const {
@@ -354,6 +371,8 @@ const Workzone = () => {
 	// Handle session query errors
 	useEffect(() => {
 		if (sessionQueryError) {
+			if (sessionQueryError?.response?.status === 403) return;
+
 			logError(sessionQueryError, {
 				feature: 'chat',
 				action: 'fetch-session-queries',
@@ -418,7 +437,7 @@ const Workzone = () => {
 
 	// Fetch datasource details (needed by handlers)
 	const { data: datasourceData } = useDatasourceDetailsV2({
-		queryOptions: { refetchOnWindowFocus: false },
+		queryOptions: { refetchOnWindowFocus: false, enabled: !isForbidden },
 	});
 
 	// Edit handler
@@ -516,7 +535,9 @@ const Workzone = () => {
 							chat_session_type: 'old',
 						});
 
-						queryClient.invalidateQueries(['chat-history']);
+						queryClient.invalidateQueries({
+							queryKey: ['chat-history'],
+						});
 					})
 					.catch((error) => {
 						console.error('Edit query failed', error);
@@ -732,7 +753,7 @@ const Workzone = () => {
 					chat_session_id: res?.session_id,
 					chat_session_type: 'old',
 				});
-				queryClient.invalidateQueries(['chat-history']);
+				queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 			});
 
 			setResponseTimeElapsed(0);
@@ -818,7 +839,7 @@ const Workzone = () => {
 					chat_session_type: 'old',
 				});
 
-				queryClient.invalidateQueries(['chat-history']);
+				queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 			});
 
 			setResponseTimeElapsed(0);
@@ -852,10 +873,7 @@ const Workzone = () => {
 				if (pathname.includes('/app/dashboard')) {
 					navigate(REDIRECTION_URL_AFTER_LOGIN);
 				} else if (pathname.includes('/app/new-chat/')) {
-					queryClient.invalidateQueries(['user-dashboard'], {
-						refetchActive: true,
-						refetchInactive: true,
-					});
+					queryClient.invalidateQueries({ queryKey: ['user-dashboard'] });
 				}
 			}
 		} catch (error) {
@@ -966,7 +984,7 @@ const Workzone = () => {
 				chat_session_type: 'old',
 			});
 
-			queryClient.invalidateQueries(['chat-history']);
+			queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 			queryClient.invalidateQueries({
 				queryKey: ['chat', 'session', currentSessionId, 'queries'],
 			});
@@ -1105,13 +1123,15 @@ const Workzone = () => {
 									}
 									onDeleteSuccess={() => {
 										// Refetch queries to update the UI after save/delete
-										queryClient.invalidateQueries([
-											'chat',
-											'session',
-											currentSessionId,
-											'queries',
-											selectedPathLeafId,
-										]);
+										queryClient.invalidateQueries({
+											queryKey: [
+												'chat',
+												'session',
+												currentSessionId,
+												'queries',
+												selectedPathLeafId,
+											],
+										});
 									}}
 									setUserHasNavigated={setUserHasNavigated}
 									setDisableAutoScroll={setDisableAutoScroll}
@@ -1304,6 +1324,8 @@ const Workzone = () => {
 	};
 
 	useEffect(() => {
+		// if we have forbidden access, don't perform any polling/invalidations
+		if (isForbidden) return;
 		const allDone =
 			doingScience.length && doingScience.every((item) => !item.status);
 		if (allDone) {
@@ -1314,8 +1336,11 @@ const Workzone = () => {
 			}
 			setActivateGraphOnLast(true);
 			// Invalidate queries to refresh session list with updated status
-			queryClient.invalidateQueries(['chat-history']);
-			queryClient.invalidateQueries(['session', currentSessionId]);
+			queryClient.invalidateQueries({ queryKey: ['chat-history'] });
+			queryClient.invalidateQueries({
+				queryKey: ['session', currentSessionId],
+			});
+
 			// Restart export status polling only if any query has an in-progress consolidated export
 			const hasInProgressExport = answers.some((ans) => {
 				const exportEntry = Object.values(ans?.answer || {}).find(
@@ -1327,6 +1352,7 @@ const Workzone = () => {
 				resetExportTerminal();
 				refetchExportStatus();
 			}
+
 			// inputDisabled is now controlled by session status, not doingScience
 			// Do not reset userHasNavigated; preserve path selection on completion
 			return;
@@ -1339,6 +1365,7 @@ const Workzone = () => {
 		queryClient,
 		userHasNavigated,
 		disableAutoScroll,
+		isForbidden,
 	]);
 
 	// useEffect(() => {
@@ -1516,6 +1543,35 @@ const Workzone = () => {
 		}
 	};
 
+	if (isForbidden) {
+		return (
+			<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+				<div className="bg-white/90 rounded-2xl shadow-xl border border-primary8 p-10 flex flex-col items-center gap-4 w-[28rem] text-center">
+					<div className="flex items-center justify-center w-16 h-16 rounded-full bg-purple-10">
+						<RiErrorWarningLine className="text-purple-100 w-8 h-8" />
+					</div>
+					<div className="space-y-1.5">
+						<h2 className="text-lg font-semibold text-primary100">
+							Access Denied
+						</h2>
+						<p className="text-sm text-primary60">
+							You don't have permission to view this session.
+						</p>
+						<p className="text-sm text-primary60">
+							Please contact your Administrators
+						</p>
+					</div>
+					<Button
+						className="mt-2 bg-primary text-white font-medium px-6"
+						onClick={() => navigate('/app/home')}
+					>
+						Go Home
+					</Button>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="flex gap-4 px-4 w-full overflow-hidden pb-4 transition-all duration-500 ease-in-out">
 			<div
@@ -1625,6 +1681,7 @@ const Workzone = () => {
 								answers.every((item) => item?.status === 'done')
 							}
 							setWorkspace={() => {}}
+							sessionQueriesData={sessionQueriesData}
 						/>
 					</WorkspaceEditProvider>
 				) : (
@@ -1656,27 +1713,33 @@ const Workzone = () => {
 								</button>
 							)}
 
-							{displayedTabs.includes('reference') && (
-								<button
-									onClick={() =>
-										expandWorkspace(currentQueryId, 'reference')
-									}
-									className="flex flex-col items-center focus:outline-none"
-								>
-									{isLoading ? (
-										<LoadingContainer width={2.5}>
-											<FileSearch className="h-5 w-5 text-primary100" />
-										</LoadingContainer>
-									) : (
-										<span className="p-2 rounded-full border flex items-center justify-center">
-											<FileSearch className="h-5 w-5 text-primary100" />
-										</span>
-									)}
-									<p className="mt-2 text-sm text-primary80">
-										Reference
-									</p>
-								</button>
-							)}
+							{displayedTabs.includes('reference') &&
+								sessionQueriesData?.datasource_details
+									?.datasource_type !==
+									DATASOURCE_TYPES.SQL_GENERATED && (
+									<button
+										onClick={() =>
+											expandWorkspace(
+												currentQueryId,
+												'reference',
+											)
+										}
+										className="flex flex-col items-center focus:outline-none"
+									>
+										{isLoading ? (
+											<LoadingContainer width={2.5}>
+												<FileSearch className="h-5 w-5 text-primary100" />
+											</LoadingContainer>
+										) : (
+											<span className="p-2 rounded-full border flex items-center justify-center">
+												<FileSearch className="h-5 w-5 text-primary100" />
+											</span>
+										)}
+										<p className="mt-2 text-sm text-primary80">
+											Reference
+										</p>
+									</button>
+								)}
 
 							{displayedTabs.includes('coder') && (
 								<button

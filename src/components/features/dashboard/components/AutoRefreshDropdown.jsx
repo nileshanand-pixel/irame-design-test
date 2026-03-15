@@ -43,7 +43,9 @@ const AutoRefreshDropdown = ({ dashboardMetadata, dashboardId }) => {
 			toast.success(message);
 
 			// Invalidate dashboard metadata to refetch updated data
-			queryClient.invalidateQueries(['dashboard-metadata', dashboardId]);
+			queryClient.invalidateQueries({
+				queryKey: ['dashboard-metadata', dashboardId],
+			});
 		},
 		onError: (error, variables) => {
 			logError(error, {

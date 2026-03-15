@@ -1,14 +1,21 @@
 import { getShareableUsers } from '@/api/share.service';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '../ui/button';
 import SearchableDropdown from './searchable-dropdown';
 
 export function OwnerDropdown({ value, onChange }) {
+	const [hasOpened, setHasOpened] = useState(false);
+
 	const { data: shareableUsersData, isLoading } = useQuery({
 		queryKey: ['shareable-users'],
 		queryFn: getShareableUsers,
+		enabled: hasOpened,
 	});
+
+	const handleOpenChange = (open) => {
+		if (open && !hasOpened) setHasOpened(true);
+	};
 
 	const ownerOptions = useMemo(() => {
 		return (shareableUsersData || []).map((user) => ({
@@ -18,7 +25,7 @@ export function OwnerDropdown({ value, onChange }) {
 		}));
 	}, [shareableUsersData]);
 
-	if (isLoading) {
+	if (hasOpened && isLoading) {
 		return (
 			<Button
 				variant="outline"
@@ -39,6 +46,7 @@ export function OwnerDropdown({ value, onChange }) {
 			searchPlaceholder="Search Owners"
 			buttonLabel="Owner"
 			isMultiSelect={true}
+			onOpenChange={handleOpenChange}
 			renderOption={(opt) => (
 				<div className="flex flex-col gap-1">
 					<div className="text-sm truncate-ellipsis-1">{opt.label}</div>

@@ -61,7 +61,9 @@ export default function ReportSidebar({ reportDetails, cards, setCards }) {
 		mutationFn: updateReportCardOrder,
 		onSuccess: () => {
 			toast.success('Order updated successfully!');
-			queryClient.invalidateQueries(['report-details', reportId]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-details', reportId],
+			});
 		},
 		onError: (error) => {
 			logError(error, {

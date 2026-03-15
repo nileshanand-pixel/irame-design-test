@@ -65,7 +65,9 @@ export default function DashboardsTabContent({ dateRange }) {
 				setIsLoading(false);
 				setShowCreateDashboard(false);
 				toast.success('Dashboard created successfully');
-				queryClient.invalidateQueries(['dashboards', dateRange]);
+				queryClient.invalidateQueries({
+					queryKey: ['dashboards', dateRange],
+				});
 				navigate(`/app/dashboard`);
 			}
 		} catch (error) {

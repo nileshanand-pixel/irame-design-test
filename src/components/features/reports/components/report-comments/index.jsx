@@ -49,7 +49,7 @@ export default function ReportComments({
 	}, [reportId, reportCardId]);
 
 	const onSuccessCommentAddition = useCallback(() => {
-		queryClient.invalidateQueries(['activity-trail']);
+		queryClient.invalidateQueries({ queryKey: ['activity-trail'] });
 		queryClient.invalidateQueries(queryKey);
 	}, [queryKey]);
 

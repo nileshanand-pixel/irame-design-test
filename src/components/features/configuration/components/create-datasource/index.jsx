@@ -61,6 +61,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [dataSourceIntent, setDataSourceIntent] = useState([]);
 	const [deletingSheets, setDeletingSheets] = useState(new Set());
+	const [uploadPermissionError, setUploadPermissionError] = useState('');
 
 	const inputRef = useRef();
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -174,6 +175,8 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 	const handleFilesSelect = async (userSelectedFiles) => {
 		try {
+			setIsInitializingUpload(true);
+			setUploadPermissionError('');
 			const filesArr = Array.from(userSelectedFiles);
 
 			const newFiles = [];
@@ -285,7 +288,13 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 			}
 			uploadFilesOnS3(newFiles);
 		} catch (error) {
-			toast.error('Failed to initialize upload');
+			if (error?.response?.status === 403) {
+				setUploadPermissionError(
+					'Your role does not have permission to upload dataset.',
+				);
+			} else {
+				toast.error('Failed to initialize upload');
+			}
 		} finally {
 			setIsInitializingUpload(false);
 		}
@@ -602,7 +611,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 			await saveDatasource(data);
 
-			queryClient.invalidateQueries(['data-sources-v2']);
+			queryClient.invalidateQueries({ queryKey: ['data-sources-v2'] });
 			toast.success('Data source created successfully');
 			if (files.some((f) => f.status !== FILE_STATUS.SUCCESS)) {
 				handleUploadCardClossClick();
@@ -684,6 +693,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 
 	const handleInputClick = (e) => {
 		e.preventDefault();
+		setUploadPermissionError('');
 		trackEvent(
 			EVENTS_ENUM.UPLOAD_DATASET_CLICKED,
 			EVENTS_REGISTRY.UPLOAD_DATASET_CLICKED,
@@ -733,21 +743,28 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 						</Button>
 					</div>
 				) : (
-					<Button
-						className={` w-full hover:bg-purple-100 hover:text-white hover:opacity-80 rounded-lg ${
-							isLoading
-								? 'cursor-not-allowed opacity-80'
-								: 'cursor-pointer'
-						}`}
-						onClick={handleInputClick}
-					>
-						<label
-							htmlFor="file-upload"
-							className=" block text-center cursor-pointer px-4"
+					<div className="w-full">
+						<Button
+							className={` w-full hover:bg-purple-100 hover:text-white hover:opacity-80 rounded-lg ${
+								isLoading
+									? 'cursor-not-allowed opacity-80'
+									: 'cursor-pointer'
+							}`}
+							onClick={handleInputClick}
 						>
-							Upload Dataset
-						</label>
-					</Button>
+							<label
+								htmlFor="file-upload"
+								className=" block text-center cursor-pointer px-4"
+							>
+								Upload Dataset
+							</label>
+						</Button>
+						{uploadPermissionError ? (
+							<p className="mt-2 text-sm text-red-600">
+								{uploadPermissionError}
+							</p>
+						) : null}
+					</div>
 				)}
 
 				<Input

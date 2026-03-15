@@ -21,6 +21,7 @@ import { useSelector } from 'react-redux';
 import { cn } from '@/lib/utils';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 import { Activity, Code, FileSearch } from 'lucide-react';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 
 const Workspace = ({
 	handleTabClick,
@@ -28,6 +29,7 @@ const Workspace = ({
 	answerResp,
 	setWorkspace,
 	canEdit,
+	sessionQueriesData,
 }) => {
 	const [workspaceHasChanges, setWorkspaceHasChanges] = useState(false);
 	const {
@@ -42,10 +44,19 @@ const Workspace = ({
 
 	const { data: datasourceData } = useDatasourceDetailsV2();
 	const availableTabs = useMemo(() => {
-		return TAB_ORDER.filter(
+		const tabs = TAB_ORDER.filter(
 			(tab) => answerResp?.answer?.[tab]?.tool_space === 'secondary',
 		);
-	}, [answerResp?.answer]);
+
+		if (
+			sessionQueriesData?.datasource_details?.datasource_type ===
+			DATASOURCE_TYPES.SQL_GENERATED
+		) {
+			return tabs.filter((tab) => tab !== WorkspaceEnum.Reference);
+		}
+
+		return tabs;
+	}, [answerResp?.answer, sessionQueriesData]);
 
 	const renderedComponent = useMemo(() => {
 		const componentMap = {

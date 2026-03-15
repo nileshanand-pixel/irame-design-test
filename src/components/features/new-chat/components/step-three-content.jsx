@@ -18,7 +18,7 @@ const StepThreeContent = ({ setPrompt, dataSources }) => {
 			onSuccess: (data) => {
 				if (data?.status === 'active') {
 					setProcessingState(1);
-					queryClient.invalidateQueries(['data-sources']);
+					queryClient.invalidateQueries({ queryKey: ['data-sources'] });
 				} else {
 					setProcessingState(0);
 					// setProcessingComplete(false);

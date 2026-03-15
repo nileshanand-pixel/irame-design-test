@@ -243,7 +243,9 @@ export const FileMappingStep = ({ stepper, requiredFiles, workflowRunDetails }) 
 				`Workflow check ${isPostRun ? 're-initiated' : 'initiated'}`,
 				{ position: 'bottom-center' },
 			);
-			queryClient.invalidateQueries(['workflow-runs', workflowId]);
+			queryClient.invalidateQueries({
+				queryKey: ['workflow-runs', workflowId],
+			});
 			if (data?.external_id) {
 				navigate(
 					`/app/business-process/${businessProcessId}/workflows/${workflowId}?run_id=${data.external_id}&&datasource_id=${data.datasource_id}`,
