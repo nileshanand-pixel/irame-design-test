@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { getEdaReportHtml } from '../../service/eda.service';
-import html2pdf from 'html2pdf.js';
 
 const REPORT_TYPES = [
 	{
@@ -255,50 +254,6 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 		}
 	};
 
-	/** Download current report as PDF using html2pdf.js */
-	const [generatingPdf, setGeneratingPdf] = useState(false);
-	const handleDownloadPdf = async () => {
-		const iframe = iframeRef.current;
-		if (!iframe) return;
-
-		setGeneratingPdf(true);
-		try {
-			const doc = iframe.contentDocument || iframe.contentWindow?.document;
-			if (!doc?.body) return;
-
-			// Remove nav/header from the iframe content before capturing
-			const clonedBody = doc.body.cloneNode(true);
-			clonedBody
-				.querySelectorAll('header, nav, .navbar')
-				.forEach((el) => el.remove());
-
-			await html2pdf()
-				.from(clonedBody)
-				.set({
-					margin: [8, 8, 8, 8],
-					filename: `${activeTab}-report.pdf`,
-					image: { type: 'jpeg', quality: 0.95 },
-					html2canvas: {
-						scale: 2,
-						useCORS: true,
-						logging: false,
-						scrollY: 0,
-					},
-					jsPDF: {
-						unit: 'mm',
-						format: 'a4',
-						orientation: 'landscape',
-					},
-					pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-				})
-				.save();
-		} catch {
-			setError('Failed to generate PDF. Try Download HTML instead.');
-		} finally {
-			setGeneratingPdf(false);
-		}
-	};
-
 	const llmCosts = summary?.llm_costs || {};
 	const hasStats =
 		llmCosts &&
@@ -337,26 +292,6 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 				</div>
 				{activeTab && htmlCache[activeTab] && (
 					<div className="flex items-center gap-2">
-						<button
-							onClick={handleDownloadPdf}
-							disabled={generatingPdf}
-							className={`${btnClass} disabled:opacity-50`}
-						>
-							<svg
-								className="w-3.5 h-3.5"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-								/>
-							</svg>
-							{generatingPdf ? 'Generating...' : 'Download PDF'}
-						</button>
 						<button onClick={handleDownload} className={btnClass}>
 							<DownloadIcon />
 							Download HTML
