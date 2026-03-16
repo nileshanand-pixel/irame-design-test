@@ -44,7 +44,7 @@ const axiosGatekeeper = axios.create({
 });
 
 const setupInterceptors = (axiosClient) => {
-	// Request interceptor: attach X-TENANT-ID, X-USER-ID, and X-TEAM-ID when RBAC enabled
+	// Request interceptor: attach X-TENANT-ID, X-USER-ID, and X-TEAM-ID
 	axiosClient.interceptors.request.use(
 		(config) => {
 			try {
@@ -66,16 +66,14 @@ const setupInterceptors = (axiosClient) => {
 						config.headers['X-TENANT-ID'] = tenantId;
 					}
 
-					if (ENABLE_RBAC) {
-						if (userId) {
-							config.headers = config.headers || {};
-							config.headers['X-USER-ID'] = userId;
+					if (userId) {
+						config.headers = config.headers || {};
+						config.headers['X-USER-ID'] = userId;
 
-							// Add X-TEAM-ID if available in localStorage
-							const teamId = localStorage.getItem(`team_${userId}`);
-							if (teamId) {
-								config.headers['X-TEAM-ID'] = teamId;
-							}
+						// Add X-TEAM-ID if available in localStorage
+						const teamId = localStorage.getItem(`team_${userId}`);
+						if (teamId) {
+							config.headers['X-TEAM-ID'] = teamId;
 						}
 					}
 				}
