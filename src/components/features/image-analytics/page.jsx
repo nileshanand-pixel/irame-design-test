@@ -2,29 +2,32 @@ import { useMemo, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import RACMHeader from './components/RACMHeader';
-import RACMTabs from './components/RACMTabs';
-import GeneratorTab from './components/generator/GeneratorTab';
+import ImageAnalyticsHeader from './components/ImageAnalyticsHeader';
+import ImageAnalyticsTabs from './components/ImageAnalyticsTabs';
+import ChatTab from './components/chat/ChatTab';
+import CompareTab from './components/compare/CompareTab';
+import AuditTab from './components/audit/AuditTab';
 import HistoryTab from './components/history/HistoryTab';
-import { RACM_TABS } from './constants/racm.constants';
+import { IA_TABS } from './constants/imageAnalytics.constants';
 
-const RACMGeneratorPage = () => {
+const ImageAnalyticsPage = () => {
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
-	const selectedJobId = useMemo(
-		() => searchParams.get('jobId') || null,
-		[searchParams],
-	);
 
 	const activeTab = useMemo(() => {
 		const tabParam = searchParams.get('tab');
 		return tabParam &&
-			Object.values(RACM_TABS)
+			Object.values(IA_TABS)
 				?.map((t) => t.value)
 				.includes(tabParam)
 			? tabParam
-			: RACM_TABS.GENERATOR.value;
+			: IA_TABS.CHAT.value;
 	}, [searchParams]);
+
+	const selectedJobId = useMemo(
+		() => searchParams.get('jobId') || null,
+		[searchParams],
+	);
 
 	useEffect(() => {
 		if (!searchParams.get('tab')) {
@@ -35,16 +38,15 @@ const RACMGeneratorPage = () => {
 
 	const handleTabChange = useCallback(
 		(value) => {
-			const params = { tab: value };
-			if (value !== 'history' && selectedJobId) params.jobId = selectedJobId;
-			setSearchParams(params, { replace: true });
+			// Clear jobId when switching tabs — each tab has its own job context
+			setSearchParams({ tab: value }, { replace: true });
 		},
-		[setSearchParams, selectedJobId],
+		[setSearchParams],
 	);
 
 	const setSelectedJobId = useCallback(
 		(jobId) => {
-			const tab = searchParams.get('tab') || RACM_TABS.GENERATOR.value;
+			const tab = searchParams.get('tab') || IA_TABS.CHAT.value;
 			if (jobId) {
 				setSearchParams({ tab, jobId }, { replace: true });
 			} else {
@@ -55,11 +57,10 @@ const RACMGeneratorPage = () => {
 	);
 
 	const handleViewJob = useCallback(
-		(jobId) => {
-			setSearchParams(
-				{ tab: RACM_TABS.GENERATOR.value, jobId },
-				{ replace: true },
-			);
+		(jobId, jobType) => {
+			const tabMap = { CHAT: 'chat', COMPARE: 'compare', AUDIT: 'audit' };
+			const tab = tabMap[jobType] || 'chat';
+			setSearchParams({ tab, jobId }, { replace: true });
 		},
 		[setSearchParams],
 	);
@@ -75,30 +76,44 @@ const RACMGeneratorPage = () => {
 			</button>
 
 			<div className="bg-white/55 backdrop-blur-xl rounded-2xl shadow-[0_4px_16px_rgba(106,18,205,0.06),inset_0_1px_0_rgba(255,255,255,0.8)] border border-white/70 overflow-hidden flex-1 flex flex-col min-h-0">
-				<RACMHeader />
+				<ImageAnalyticsHeader />
 
 				<Tabs
 					value={activeTab}
 					onValueChange={handleTabChange}
 					className="flex-1 flex flex-col min-h-0"
 				>
-					<RACMTabs />
+					<ImageAnalyticsTabs />
 
 					<div className="flex-1 overflow-auto px-6 pt-4 pb-6">
-						<TabsContent
-							value={RACM_TABS.GENERATOR.value}
-							className="mt-0"
-						>
-							<GeneratorTab
-								selectedJobId={selectedJobId}
+						<TabsContent value={IA_TABS.CHAT.value} className="mt-0">
+							<ChatTab
+								selectedJobId={
+									activeTab === 'chat' ? selectedJobId : null
+								}
 								onJobIdChange={setSelectedJobId}
 							/>
 						</TabsContent>
 
-						<TabsContent
-							value={RACM_TABS.HISTORY.value}
-							className="mt-0"
-						>
+						<TabsContent value={IA_TABS.COMPARE.value} className="mt-0">
+							<CompareTab
+								selectedJobId={
+									activeTab === 'compare' ? selectedJobId : null
+								}
+								onJobIdChange={setSelectedJobId}
+							/>
+						</TabsContent>
+
+						<TabsContent value={IA_TABS.AUDIT.value} className="mt-0">
+							<AuditTab
+								selectedJobId={
+									activeTab === 'audit' ? selectedJobId : null
+								}
+								onJobIdChange={setSelectedJobId}
+							/>
+						</TabsContent>
+
+						<TabsContent value={IA_TABS.HISTORY.value} className="mt-0">
 							<HistoryTab onViewJob={handleViewJob} />
 						</TabsContent>
 					</div>
@@ -108,4 +123,4 @@ const RACMGeneratorPage = () => {
 	);
 };
 
-export default RACMGeneratorPage;
+export default ImageAnalyticsPage;

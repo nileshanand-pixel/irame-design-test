@@ -1,19 +1,19 @@
-import { FileText } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 
-const RACMHeader = () => {
+const EDAHeader = () => {
 	return (
 		<div className="bg-white/40 backdrop-blur-lg border-b border-white/60 px-6 py-4">
 			<div className="flex items-center gap-3">
 				<span className="rounded-xl bg-white/60 backdrop-blur-sm p-2 border border-white/70 inline-flex shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
-					<FileText className="w-4 h-4 text-purple-100" />
+					<BarChart3 className="w-4 h-4 text-purple-100" />
 				</span>
 				<div>
 					<h1 className="text-lg font-semibold text-primary80 uppercase tracking-wide">
-						RACM Generator
+						Insights & Anomaly Report
 					</h1>
 					<p className="text-xs text-primary40 mt-0.5">
-						Generate Risk Assessment and Control Matrices from SOP
-						documents
+						Automated statistical profiling, anomaly detection, and
+						heuristic reports
 					</p>
 				</div>
 			</div>
@@ -21,4 +21,4 @@ const RACMHeader = () => {
 	);
 };
 
-export default RACMHeader;
+export default EDAHeader;

@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { getRacmJobStatus } from '../service/racm.service';
+import { getEdaJobStatus } from '../service/eda.service';
 
-export const useRacmJobPolling = (jobId, enabled = true) => {
+export const useEdaJobPolling = (jobId, enabled = true) => {
 	return useQuery({
-		queryKey: ['racm-job-status', jobId],
-		queryFn: () => getRacmJobStatus(jobId),
+		queryKey: ['eda-job-status', jobId],
+		queryFn: () => getEdaJobStatus(jobId),
 		enabled: !!jobId && enabled,
 		retry: 3,
 		retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),

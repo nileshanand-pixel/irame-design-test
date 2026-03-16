@@ -27,8 +27,12 @@ import RACMGeneratorPage from '@/components/features/racm-generator/page';
 import AccessManagementPage from '@/components/features/access-management/page';
 import AcceptInvitationPage from '@/components/features/invitation/AcceptInvitationPage';
 import DeclineInvitationPage from '@/components/features/invitation/DeclineInvitationPage';
+import EDABuilderPage from '@/components/features/eda-builder/page';
+import DocumentForensicsPage from '@/components/features/document-forensics/page';
+import ImageAnalyticsPage from '@/components/features/image-analytics/page';
+import AiConciergePage from '@/components/features/ai-concierge/page';
 
-const AppRoutes = () => {
+function AppRoutes() {
 	return (
 		<>
 			<TermsModal />
@@ -111,7 +115,20 @@ const AppRoutes = () => {
 											element={<WorkflowPageV2 />}
 										/>
 										<Route
-											path="racm-generator"
+											path="access-management"
+											element={<AccessManagementPage />}
+										/>
+										{/* AI Concierge — landing + nested feature pages */}
+										<Route
+											path="ai-concierge"
+											element={
+												<ProtectedRoute
+													element={<AiConciergePage />}
+												/>
+											}
+										/>
+										<Route
+											path="ai-concierge/racm-generator"
 											element={
 												<ProtectedRoute
 													element={<RACMGeneratorPage />}
@@ -119,8 +136,58 @@ const AppRoutes = () => {
 											}
 										/>
 										<Route
-											path="access-management"
-											element={<AccessManagementPage />}
+											path="ai-concierge/eda-builder"
+											element={
+												<ProtectedRoute
+													element={<EDABuilderPage />}
+												/>
+											}
+										/>
+										<Route
+											path="ai-concierge/document-forensics"
+											element={
+												<ProtectedRoute
+													element={
+														<DocumentForensicsPage />
+													}
+												/>
+											}
+										/>
+										<Route
+											path="ai-concierge/image-analytics"
+											element={
+												<ProtectedRoute
+													element={<ImageAnalyticsPage />}
+												/>
+											}
+										/>
+										{/* Redirects for old bookmarked URLs */}
+										<Route
+											path="racm-generator"
+											element={
+												<Navigate
+													to="/app/ai-concierge/racm-generator"
+													replace
+												/>
+											}
+										/>
+										<Route
+											path="eda-builder"
+											element={
+												<Navigate
+													to="/app/ai-concierge/eda-builder"
+													replace
+												/>
+											}
+										/>
+										<Route
+											path="document-forensics"
+											element={
+												<Navigate
+													to="/app/ai-concierge/document-forensics"
+													replace
+												/>
+											}
 										/>
 									</Routes>
 								</Layout>
@@ -142,6 +209,6 @@ const AppRoutes = () => {
 			{/* {!window.location.pathname.includes('export') && <HelpMenu />} */}
 		</>
 	);
-};
+}
 
 export default AppRoutes;

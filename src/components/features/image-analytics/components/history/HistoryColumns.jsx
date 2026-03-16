@@ -1,15 +1,42 @@
 import dayjs from 'dayjs';
-import { RACM_STATUSES } from '../../constants/racm.constants';
+import { IA_STATUSES, IA_JOB_TYPES } from '../../constants/imageAnalytics.constants';
 
 export const createHistoryColumns = (onView, onDelete) => [
 	{
-		accessorKey: 'fileName',
-		header: 'File Name',
-		cell: ({ getValue }) => (
-			<span className="text-sm font-medium text-primary80">
-				{getValue() || '-'}
-			</span>
-		),
+		accessorKey: 'fileNames',
+		header: 'Files',
+		cell: ({ getValue }) => {
+			const names = getValue();
+			if (!names?.length) return '-';
+			return (
+				<div className="text-sm font-medium text-primary80">
+					{names.length === 1 ? (
+						names[0]
+					) : (
+						<span>
+							{names[0]}{' '}
+							<span className="text-primary40 font-normal">
+								+{names.length - 1} more
+							</span>
+						</span>
+					)}
+				</div>
+			);
+		},
+	},
+	{
+		accessorKey: 'jobType',
+		header: 'Type',
+		cell: ({ getValue }) => {
+			const type = IA_JOB_TYPES[getValue()] || IA_JOB_TYPES.CHAT;
+			return (
+				<span
+					className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${type.color} ${type.bgColor}`}
+				>
+					{type.label}
+				</span>
+			);
+		},
 	},
 	{
 		accessorKey: 'createdAt',
@@ -27,7 +54,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 		accessorKey: 'status',
 		header: 'Status',
 		cell: ({ getValue }) => {
-			const status = RACM_STATUSES[getValue()] || RACM_STATUSES.PENDING;
+			const status = IA_STATUSES[getValue()] || IA_STATUSES.PENDING;
 			return (
 				<span
 					className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${status.color} ${status.bgColor}`}
@@ -46,7 +73,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 					<button
 						onClick={(e) => {
 							e.stopPropagation();
-							onView(row.original.jobId);
+							onView(row.original.externalId, row.original.jobType);
 						}}
 						className="text-xs text-purple-100 hover:text-purple-80 font-medium"
 					>
@@ -59,7 +86,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 				<button
 					onClick={(e) => {
 						e.stopPropagation();
-						onDelete(row.original.jobId);
+						onDelete(row.original.externalId);
 					}}
 					className="text-xs text-red-500 hover:text-red-700 font-medium"
 				>
