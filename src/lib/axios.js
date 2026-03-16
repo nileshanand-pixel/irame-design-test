@@ -54,27 +54,29 @@ const setupInterceptors = (axiosClient) => {
 					config.url?.includes('/invitations/') &&
 					config.url?.match(/\/(validate|auth-config)$/);
 
-				if (ENABLE_RBAC && config && !isInvitationRoute) {
+				if (!isInvitationRoute) {
 					const raw = localStorage.getItem('userDetails');
 					const user = raw ? JSON.parse(raw) : null;
 					const userId =
 						user && (user.user_id || user.id || user.sub || user.userId);
 					const tenantId = user && (user.tenant_id || user.tenantId);
 
-					if (userId) {
-						config.headers = config.headers || {};
-						config.headers['X-USER-ID'] = userId;
-
-						// Add X-TEAM-ID if available in localStorage
-						const teamId = localStorage.getItem(`team_${userId}`);
-						if (teamId) {
-							config.headers['X-TEAM-ID'] = teamId;
-						}
-					}
-
 					if (tenantId) {
 						config.headers = config.headers || {};
 						config.headers['X-TENANT-ID'] = tenantId;
+					}
+
+					if (ENABLE_RBAC) {
+						if (userId) {
+							config.headers = config.headers || {};
+							config.headers['X-USER-ID'] = userId;
+
+							// Add X-TEAM-ID if available in localStorage
+							const teamId = localStorage.getItem(`team_${userId}`);
+							if (teamId) {
+								config.headers['X-TEAM-ID'] = teamId;
+							}
+						}
 					}
 				}
 			} catch (e) {
