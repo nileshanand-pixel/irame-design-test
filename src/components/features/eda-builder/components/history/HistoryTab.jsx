@@ -12,6 +12,15 @@ const HistoryTab = ({ onViewJob }) => {
 	const { data: jobs, isLoading } = useQuery({
 		queryKey: ['eda-jobs-history'],
 		queryFn: getEdaJobs,
+		refetchInterval: (query) => {
+			const data = query?.state?.data;
+			if (!data?.length) return false;
+			const hasActiveJobs = data.some(
+				(job) => job.status === 'PENDING' || job.status === 'IN_PROGRESS',
+			);
+			return hasActiveJobs ? 3000 : false;
+		},
+		refetchIntervalInBackground: true,
 	});
 
 	const handleDelete = useCallback(
@@ -87,7 +96,7 @@ const HistoryTab = ({ onViewJob }) => {
 							key={row.id}
 							className="border-t border-gray-100 hover:bg-purple-2 cursor-pointer transition-colors"
 							onClick={() => {
-								if (row.original.status === 'COMPLETED') {
+								if (row.original.status !== 'CANCELLED') {
 									onViewJob(row.original.externalId);
 								}
 							}}

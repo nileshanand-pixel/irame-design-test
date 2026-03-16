@@ -1,11 +1,34 @@
-import { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Eye, EyeOff, Download } from 'lucide-react';
 
 const DocumentViewer = ({ fileUrl, fileName, suspiciousRegions }) => {
 	const [showOverlays, setShowOverlays] = useState(true);
 	const [hoveredRegion, setHoveredRegion] = useState(null);
+	const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
+	const [pdfLoadError, setPdfLoadError] = useState(false);
 
 	const isPdf = fileName?.toLowerCase().endsWith('.pdf');
+
+	useEffect(() => {
+		if (!isPdf || !fileUrl) return;
+		if (fileUrl.startsWith('blob:')) {
+			setPdfBlobUrl(fileUrl);
+			return;
+		}
+		fetch(fileUrl)
+			.then((res) => res.blob())
+			.then((blob) => {
+				const url = URL.createObjectURL(blob);
+				setPdfBlobUrl(url);
+			})
+			.catch(() => setPdfLoadError(true));
+
+		return () => {
+			if (pdfBlobUrl && pdfBlobUrl !== fileUrl) {
+				URL.revokeObjectURL(pdfBlobUrl);
+			}
+		};
+	}, [fileUrl, isPdf]);
 
 	if (!fileUrl) return null;
 
@@ -16,6 +39,16 @@ const DocumentViewer = ({ fileUrl, fileName, suspiciousRegions }) => {
 					Document Viewer
 				</h3>
 				<div className="flex items-center gap-3">
+					{isPdf && fileUrl && (
+						<a
+							href={fileUrl}
+							download={fileName || 'document.pdf'}
+							className="flex items-center gap-1.5 text-xs text-primary60 hover:text-primary80 transition-colors"
+						>
+							<Download className="w-3.5 h-3.5" />
+							Download
+						</a>
+					)}
 					{suspiciousRegions?.length > 0 && (
 						<button
 							onClick={() => setShowOverlays(!showOverlays)}
@@ -33,14 +66,45 @@ const DocumentViewer = ({ fileUrl, fileName, suspiciousRegions }) => {
 			</div>
 
 			<div className="flex gap-4">
-				{/* Image / PDF display */}
 				<div className="flex-1 relative bg-gray-50 rounded-lg overflow-hidden">
 					{isPdf ? (
-						<iframe
-							src={fileUrl}
-							title={fileName}
-							className="w-full h-[500px] border-0"
-						/>
+						pdfLoadError ? (
+							<div className="flex flex-col items-center justify-center h-[500px] text-center">
+								<p className="text-sm text-primary60 mb-2">
+									Unable to preview PDF inline.
+								</p>
+								<a
+									href={fileUrl}
+									download={fileName || 'document.pdf'}
+									className="px-4 py-2 text-sm bg-purple-100 text-white rounded-lg hover:bg-purple-80 transition-colors"
+								>
+									Download PDF
+								</a>
+							</div>
+						) : pdfBlobUrl ? (
+							<object
+								data={pdfBlobUrl}
+								type="application/pdf"
+								className="w-full h-[500px]"
+							>
+								<div className="flex flex-col items-center justify-center h-[500px] text-center">
+									<p className="text-sm text-primary60 mb-2">
+										PDF preview is not available in this browser.
+									</p>
+									<a
+										href={fileUrl}
+										download={fileName || 'document.pdf'}
+										className="px-4 py-2 text-sm bg-purple-100 text-white rounded-lg hover:bg-purple-80 transition-colors"
+									>
+										Download PDF
+									</a>
+								</div>
+							</object>
+						) : (
+							<div className="flex items-center justify-center h-[500px]">
+								<div className="animate-spin w-6 h-6 border-2 border-purple-100 border-t-transparent rounded-full" />
+							</div>
+						)
 					) : (
 						<div className="relative">
 							<img
@@ -48,7 +112,6 @@ const DocumentViewer = ({ fileUrl, fileName, suspiciousRegions }) => {
 								alt={fileName}
 								className="w-full h-auto max-h-[500px] object-contain"
 							/>
-							{/* Suspicious Region Overlays */}
 							{showOverlays &&
 								suspiciousRegions?.map((region, i) => (
 									<div
@@ -72,7 +135,6 @@ const DocumentViewer = ({ fileUrl, fileName, suspiciousRegions }) => {
 												{region.label}
 											</div>
 										)}
-										{/* Corner markers */}
 										<div className="absolute -top-0.5 -left-0.5 w-2 h-2 border-t-2 border-l-2 border-red-500" />
 										<div className="absolute -top-0.5 -right-0.5 w-2 h-2 border-t-2 border-r-2 border-red-500" />
 										<div className="absolute -bottom-0.5 -left-0.5 w-2 h-2 border-b-2 border-l-2 border-red-500" />
@@ -83,7 +145,6 @@ const DocumentViewer = ({ fileUrl, fileName, suspiciousRegions }) => {
 					)}
 				</div>
 
-				{/* Findings Sidebar */}
 				{suspiciousRegions?.length > 0 && (
 					<div className="w-64 shrink-0">
 						<h4 className="text-xs font-semibold text-primary60 mb-2">

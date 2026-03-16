@@ -7,6 +7,7 @@ import ReportViewer from './ReportViewer';
 import {
 	createEdaJob,
 	getEdaJobResult,
+	getEdaJobStatus,
 	deleteEdaJob,
 	uploadEdaFilesLocal,
 } from '../../service/eda.service';
@@ -44,8 +45,29 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 		if (selectedJobId && selectedJobId !== internalJobIdRef.current) {
 			setJobId(selectedJobId);
 			setResult(null);
-			setState(STATES.LOADING);
-			loadResult(selectedJobId);
+			getEdaJobStatus(selectedJobId)
+				.then((status) => {
+					if (status.status === 'COMPLETED') {
+						setState(STATES.LOADING);
+						loadResult(selectedJobId);
+					} else if (status.status === 'FAILED') {
+						setState(STATES.ERROR);
+						setErrorMessage(
+							status.errorMessage ||
+								status.message ||
+								'Analysis failed. Please try again.',
+						);
+					} else if (status.status === 'CANCELLED') {
+						setState(STATES.ERROR);
+						setErrorMessage('The analysis was cancelled.');
+					} else {
+						setState(STATES.PROCESSING);
+					}
+				})
+				.catch(() => {
+					setState(STATES.ERROR);
+					setErrorMessage('Failed to load job. Please try again.');
+				});
 		}
 	}, [selectedJobId]);
 
@@ -57,10 +79,14 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 			loadResult(jobId);
 		} else if (statusData.status === 'FAILED') {
 			setState(STATES.ERROR);
-			setErrorMessage(statusData.message || 'Analysis failed');
+			setErrorMessage(
+				statusData.errorMessage ||
+					statusData.message ||
+					'Analysis failed. Please try again.',
+			);
 		} else if (statusData.status === 'CANCELLED') {
 			setState(STATES.ERROR);
-			setErrorMessage(statusData.message || 'Analysis was cancelled');
+			setErrorMessage('The analysis was cancelled.');
 		}
 	}, [statusData?.status, jobId]);
 
@@ -72,7 +98,7 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 			setState(STATES.COMPLETED);
 		} catch {
 			setState(STATES.ERROR);
-			setErrorMessage('Failed to load results');
+			setErrorMessage('Failed to load results. Please try again.');
 		}
 	};
 
@@ -121,7 +147,9 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 			} catch (error) {
 				setState(STATES.ERROR);
 				setErrorMessage(
-					error?.response?.data?.message || 'Failed to start analysis',
+					error?.response?.data?.error ||
+						error?.response?.data?.message ||
+						'Failed to start analysis',
 				);
 				toast.error('Failed to start analysis');
 			}
@@ -149,7 +177,9 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 			await deleteEdaJob(jobId);
 			toast.info('Job cancelled');
 		} catch {
-			// Job may already be completed or deleted
+			toast.warning(
+				'Could not cancel the job — it may have already completed.',
+			);
 		}
 		handleNewAnalysis();
 	};

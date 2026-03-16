@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
@@ -11,7 +11,10 @@ import { EDA_TABS } from './constants/eda.constants';
 const EDABuilderPage = () => {
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
-	const [selectedJobId, setSelectedJobId] = useState(null);
+	const selectedJobId = useMemo(
+		() => searchParams.get('jobId') || null,
+		[searchParams],
+	);
 
 	const activeTab = useMemo(() => {
 		const tabParam = searchParams.get('tab');
@@ -32,15 +35,31 @@ const EDABuilderPage = () => {
 
 	const handleTabChange = useCallback(
 		(value) => {
-			setSearchParams({ tab: value }, { replace: true });
+			const params = { tab: value };
+			if (value !== 'history' && selectedJobId) params.jobId = selectedJobId;
+			setSearchParams(params, { replace: true });
 		},
-		[setSearchParams],
+		[setSearchParams, selectedJobId],
+	);
+
+	const setSelectedJobId = useCallback(
+		(jobId) => {
+			const tab = searchParams.get('tab') || EDA_TABS.GENERATOR.value;
+			if (jobId) {
+				setSearchParams({ tab, jobId }, { replace: true });
+			} else {
+				setSearchParams({ tab }, { replace: true });
+			}
+		},
+		[setSearchParams, searchParams],
 	);
 
 	const handleViewJob = useCallback(
 		(jobId) => {
-			setSelectedJobId(jobId);
-			setSearchParams({ tab: EDA_TABS.GENERATOR.value }, { replace: true });
+			setSearchParams(
+				{ tab: EDA_TABS.GENERATOR.value, jobId },
+				{ replace: true },
+			);
 		},
 		[setSearchParams],
 	);

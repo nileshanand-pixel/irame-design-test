@@ -6,6 +6,7 @@ import ProgressSection from '../shared/ProgressSection';
 import {
 	createImageAnalyticsJob,
 	getImageAnalyticsJobResult,
+	getImageAnalyticsJobStatus,
 	deleteImageAnalyticsJob,
 	uploadImageAnalyticsFilesLocal,
 } from '../../service/imageAnalytics.service';
@@ -41,8 +42,28 @@ const CompareTab = ({ selectedJobId, onJobIdChange }) => {
 		if (selectedJobId && selectedJobId !== internalJobIdRef.current) {
 			setJobId(selectedJobId);
 			setResult(null);
-			setState(STATES.LOADING);
-			loadResult(selectedJobId);
+			getImageAnalyticsJobStatus(selectedJobId)
+				.then((status) => {
+					if (status.status === 'COMPLETED') {
+						setState(STATES.LOADING);
+						loadResult(selectedJobId);
+					} else if (status.status === 'FAILED') {
+						setState(STATES.ERROR);
+						setErrorMessage(
+							status.errorMessage ||
+								'Analysis failed. Please try again.',
+						);
+					} else if (status.status === 'CANCELLED') {
+						setState(STATES.ERROR);
+						setErrorMessage('The analysis was cancelled.');
+					} else {
+						setState(STATES.PROCESSING);
+					}
+				})
+				.catch(() => {
+					setState(STATES.ERROR);
+					setErrorMessage('Failed to load job. Please try again.');
+				});
 		}
 	}, [selectedJobId]);
 
@@ -55,11 +76,11 @@ const CompareTab = ({ selectedJobId, onJobIdChange }) => {
 			setErrorMessage(
 				statusData.errorMessage ||
 					statusData.message ||
-					'Comparison failed. Please try again.',
+					'Analysis failed. Please try again.',
 			);
 		} else if (statusData.status === 'CANCELLED') {
 			setState(STATES.ERROR);
-			setErrorMessage('Comparison was cancelled');
+			setErrorMessage('The analysis was cancelled.');
 		}
 	}, [statusData?.status, jobId]);
 
@@ -70,7 +91,7 @@ const CompareTab = ({ selectedJobId, onJobIdChange }) => {
 			setState(STATES.COMPLETED);
 		} catch {
 			setState(STATES.ERROR);
-			setErrorMessage('Failed to load results');
+			setErrorMessage('Failed to load results. Please try again.');
 		}
 	};
 
@@ -123,9 +144,11 @@ const CompareTab = ({ selectedJobId, onJobIdChange }) => {
 			} catch (error) {
 				setState(STATES.ERROR);
 				setErrorMessage(
-					error?.response?.data?.message || 'Failed to start comparison',
+					error?.response?.data?.error ||
+						error?.response?.data?.message ||
+						'Failed to start analysis',
 				);
-				toast.error('Failed to start comparison');
+				toast.error('Failed to start analysis');
 			}
 		},
 		[onJobIdChange],
@@ -150,7 +173,9 @@ const CompareTab = ({ selectedJobId, onJobIdChange }) => {
 			await deleteImageAnalyticsJob(jobId);
 			toast.info('Job cancelled');
 		} catch {
-			// ignore
+			toast.warning(
+				'Could not cancel the job — it may have already completed.',
+			);
 		}
 		handleNewAnalysis();
 	};

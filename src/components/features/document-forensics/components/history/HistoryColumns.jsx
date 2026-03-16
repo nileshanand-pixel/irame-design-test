@@ -70,7 +70,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 		header: 'Actions',
 		cell: ({ row }) => (
 			<div className="flex items-center gap-2">
-				{row.original.status === 'COMPLETED' && (
+				{row.original.status !== 'CANCELLED' && (
 					<button
 						onClick={(e) => {
 							e.stopPropagation();
@@ -78,7 +78,10 @@ export const createHistoryColumns = (onView, onDelete) => [
 						}}
 						className="text-xs text-purple-100 hover:text-purple-80 font-medium"
 					>
-						View
+						{row.original.status === 'COMPLETED' ||
+						row.original.status === 'FAILED'
+							? 'View'
+							: 'Track'}
 					</button>
 				)}
 				<button

@@ -54,7 +54,11 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 						status.status === 'CANCELLED'
 					) {
 						setState(STATES.ERROR);
-						setErrorMessage(status.message || 'RACM generation failed');
+						setErrorMessage(
+							status.errorMessage ||
+								status.message ||
+								'RACM generation failed. Please try again.',
+						);
 					} else {
 						// Job is still running (PENDING / IN_PROGRESS) — start polling
 						setState(STATES.PROCESSING);
@@ -62,7 +66,7 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 				})
 				.catch(() => {
 					setState(STATES.ERROR);
-					setErrorMessage('Failed to load job status');
+					setErrorMessage('Failed to load job. Please try again.');
 				});
 		}
 	}, [selectedJobId]);
@@ -75,10 +79,14 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 			loadResult(jobId);
 		} else if (statusData.status === 'FAILED') {
 			setState(STATES.ERROR);
-			setErrorMessage(statusData.message || 'RACM generation failed');
+			setErrorMessage(
+				statusData.errorMessage ||
+					statusData.message ||
+					'RACM generation failed. Please try again.',
+			);
 		} else if (statusData.status === 'CANCELLED') {
 			setState(STATES.ERROR);
-			setErrorMessage(statusData.message || 'RACM generation was cancelled');
+			setErrorMessage('The generation was cancelled.');
 		}
 	}, [statusData?.status, jobId]);
 
@@ -94,7 +102,7 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 			setState(STATES.COMPLETED);
 		} catch {
 			setState(STATES.ERROR);
-			setErrorMessage('Failed to load results');
+			setErrorMessage('Failed to load results. Please try again.');
 		}
 	};
 
@@ -135,7 +143,8 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 			} catch (error) {
 				setState(STATES.ERROR);
 				setErrorMessage(
-					error?.response?.data?.message ||
+					error?.response?.data?.error ||
+						error?.response?.data?.message ||
 						'Failed to start RACM generation',
 				);
 				toast.error('Failed to start RACM generation');
@@ -163,7 +172,9 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 			await deleteRacmJob(jobId);
 			toast.info('Job cancelled');
 		} catch {
-			// Job may already be completed or deleted
+			toast.warning(
+				'Could not cancel the job — it may have already completed.',
+			);
 		}
 		handleNewGeneration();
 	};

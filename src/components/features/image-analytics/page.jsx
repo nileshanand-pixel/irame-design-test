@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
@@ -13,7 +13,6 @@ import { IA_TABS } from './constants/imageAnalytics.constants';
 const ImageAnalyticsPage = () => {
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
-	const [selectedJobId, setSelectedJobId] = useState(null);
 
 	const activeTab = useMemo(() => {
 		const tabParam = searchParams.get('tab');
@@ -25,6 +24,11 @@ const ImageAnalyticsPage = () => {
 			: IA_TABS.CHAT.value;
 	}, [searchParams]);
 
+	const selectedJobId = useMemo(
+		() => searchParams.get('jobId') || null,
+		[searchParams],
+	);
+
 	useEffect(() => {
 		if (!searchParams.get('tab')) {
 			setSearchParams({ tab: activeTab }, { replace: true });
@@ -34,18 +38,29 @@ const ImageAnalyticsPage = () => {
 
 	const handleTabChange = useCallback(
 		(value) => {
+			// Clear jobId when switching tabs — each tab has its own job context
 			setSearchParams({ tab: value }, { replace: true });
 		},
 		[setSearchParams],
 	);
 
+	const setSelectedJobId = useCallback(
+		(jobId) => {
+			const tab = searchParams.get('tab') || IA_TABS.CHAT.value;
+			if (jobId) {
+				setSearchParams({ tab, jobId }, { replace: true });
+			} else {
+				setSearchParams({ tab }, { replace: true });
+			}
+		},
+		[setSearchParams, searchParams],
+	);
+
 	const handleViewJob = useCallback(
 		(jobId, jobType) => {
-			setSelectedJobId(jobId);
-			// Navigate to the appropriate tab based on job type
 			const tabMap = { CHAT: 'chat', COMPARE: 'compare', AUDIT: 'audit' };
 			const tab = tabMap[jobType] || 'chat';
-			setSearchParams({ tab }, { replace: true });
+			setSearchParams({ tab, jobId }, { replace: true });
 		},
 		[setSearchParams],
 	);

@@ -6,6 +6,8 @@ export const useRacmJobPolling = (jobId, enabled = true) => {
 		queryKey: ['racm-job-status', jobId],
 		queryFn: () => getRacmJobStatus(jobId),
 		enabled: !!jobId && enabled,
+		retry: 3,
+		retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
 		refetchInterval: (query) => {
 			const data = query?.state?.data;
 			if (!data) return 2000;

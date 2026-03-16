@@ -11,6 +11,12 @@ const ChatUploadSection = ({ onGenerate, isDisabled }) => {
 		setFiles((prev) => {
 			const existingNames = new Set(prev.map((f) => f.name));
 			const newFiles = acceptedFiles.filter((f) => !existingNames.has(f.name));
+			const skipped = acceptedFiles.length - newFiles.length;
+			if (skipped > 0) {
+				toast.warning(
+					`${skipped} file(s) skipped — files with the same name are already added.`,
+				);
+			}
 			const combined = [...prev, ...newFiles];
 			if (combined.length > 500) {
 				toast.error('Maximum 500 images allowed.');

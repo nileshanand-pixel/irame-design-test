@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
 import { ACCEPTED_FILE_TYPES } from '../../constants/racm.constants';
+import { getFileSize } from '@/utils/file';
 
 const UploadSection = ({ onGenerate, isDisabled }) => {
 	const [file, setFile] = useState(null);
@@ -76,7 +77,7 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 							<span className="text-sm font-medium">
 								{file.name}{' '}
 								<span className="text-primary40 font-normal">
-									({(file.size / (1024 * 1024)).toFixed(1)} MB)
+									({getFileSize(file)})
 								</span>
 							</span>
 							<button

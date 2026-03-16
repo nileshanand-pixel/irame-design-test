@@ -7,6 +7,7 @@ import DocumentViewer from '../viewer/DocumentViewer';
 import {
 	createForensicJob,
 	getForensicJobResult,
+	getForensicJobStatus,
 	deleteForensicJob,
 	uploadForensicFileLocal,
 } from '../../service/forensics.service';
@@ -14,22 +15,6 @@ import { useForensicJobPolling } from '../../hooks/useForensicJobPolling';
 import { uploadFile } from '@/components/features/upload/service';
 
 const isLocalEnv = import.meta.env.VITE_ENV === 'local';
-
-/** Map raw pipeline errors to user-friendly messages */
-const toUserFriendlyError = (raw) => {
-	if (!raw) return 'Something went wrong. Please try again.';
-	const lower = raw.toLowerCase();
-	if (lower.includes('timeout') || lower.includes('timed out'))
-		return 'Analysis took too long. Please try with a smaller file.';
-	if (lower.includes('out of memory') || lower.includes('oom'))
-		return 'The file is too large to process. Please try a smaller file.';
-	if (lower.includes('unsupported') || lower.includes('file type'))
-		return 'This file type is not supported. Please upload a JPEG, PNG, PDF, TIFF, BMP, or WebP file.';
-	if (lower.includes('corrupt') || lower.includes('cannot read'))
-		return 'The file could not be read. Please check the file and try again.';
-	// All other errors (config issues, API errors, import errors, etc.)
-	return 'Something went wrong while analyzing your document. Please try again later.';
-};
 
 const STATES = {
 	IDLE: 'idle',
@@ -60,8 +45,28 @@ const AnalyzerTab = ({ selectedJobId, onJobIdChange }) => {
 			setJobId(selectedJobId);
 			setResult(null);
 			setFilePreviewUrl(null);
-			setState(STATES.LOADING);
-			loadResult(selectedJobId);
+			getForensicJobStatus(selectedJobId)
+				.then((status) => {
+					if (status.status === 'COMPLETED') {
+						setState(STATES.LOADING);
+						loadResult(selectedJobId);
+					} else if (status.status === 'FAILED') {
+						setState(STATES.ERROR);
+						setErrorMessage(
+							status.errorMessage ||
+								'Analysis failed. Please try again.',
+						);
+					} else if (status.status === 'CANCELLED') {
+						setState(STATES.ERROR);
+						setErrorMessage('The analysis was cancelled.');
+					} else {
+						setState(STATES.PROCESSING);
+					}
+				})
+				.catch(() => {
+					setState(STATES.ERROR);
+					setErrorMessage('Failed to load job. Please try again.');
+				});
 		}
 	}, [selectedJobId]);
 
@@ -72,11 +77,14 @@ const AnalyzerTab = ({ selectedJobId, onJobIdChange }) => {
 			loadResult(jobId);
 		} else if (statusData.status === 'FAILED') {
 			setState(STATES.ERROR);
-			const rawError = statusData.errorMessage || '';
-			setErrorMessage(toUserFriendlyError(rawError));
+			setErrorMessage(
+				statusData.errorMessage ||
+					statusData.message ||
+					'Analysis failed. Please try again.',
+			);
 		} else if (statusData.status === 'CANCELLED') {
 			setState(STATES.ERROR);
-			setErrorMessage('Analysis was cancelled.');
+			setErrorMessage('The analysis was cancelled.');
 		}
 	}, [statusData?.status, jobId]);
 
@@ -88,7 +96,7 @@ const AnalyzerTab = ({ selectedJobId, onJobIdChange }) => {
 			setState(STATES.COMPLETED);
 		} catch {
 			setState(STATES.ERROR);
-			setErrorMessage('Failed to load results');
+			setErrorMessage('Failed to load results. Please try again.');
 		}
 	};
 
@@ -130,7 +138,8 @@ const AnalyzerTab = ({ selectedJobId, onJobIdChange }) => {
 			} catch (error) {
 				setState(STATES.ERROR);
 				setErrorMessage(
-					error?.response?.data?.message ||
+					error?.response?.data?.error ||
+						error?.response?.data?.message ||
 						'Failed to start forensic analysis',
 				);
 				toast.error('Failed to start forensic analysis');
@@ -162,7 +171,9 @@ const AnalyzerTab = ({ selectedJobId, onJobIdChange }) => {
 			await deleteForensicJob(jobId);
 			toast.info('Job cancelled');
 		} catch {
-			// Job may already be completed or deleted
+			toast.warning(
+				'Could not cancel the job — it may have already completed.',
+			);
 		}
 		handleNewAnalysis();
 	};

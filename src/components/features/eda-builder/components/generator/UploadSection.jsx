@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
 import { EDA_ACCEPTED_FILE_TYPES } from '../../constants/eda.constants';
+import { getFileSize } from '@/utils/file';
 
 const UploadSection = ({ onGenerate, isDisabled }) => {
 	const [files, setFiles] = useState([]);
@@ -10,6 +11,12 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 		setFiles((prev) => {
 			const existingNames = new Set(prev.map((f) => f.name));
 			const newFiles = acceptedFiles.filter((f) => !existingNames.has(f.name));
+			const skipped = acceptedFiles.length - newFiles.length;
+			if (skipped > 0) {
+				toast.warning(
+					`${skipped} file(s) skipped — files with the same name are already added.`,
+				);
+			}
 			return [...prev, ...newFiles];
 		});
 	}, []);
@@ -84,8 +91,7 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 									<span className="text-sm font-medium">
 										{file.name}{' '}
 										<span className="text-primary40 font-normal">
-											({(file.size / (1024 * 1024)).toFixed(1)}{' '}
-											MB)
+											({getFileSize(file)})
 										</span>
 									</span>
 									<button

@@ -6,6 +6,8 @@ export const useEdaJobPolling = (jobId, enabled = true) => {
 		queryKey: ['eda-job-status', jobId],
 		queryFn: () => getEdaJobStatus(jobId),
 		enabled: !!jobId && enabled,
+		retry: 3,
+		retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
 		refetchInterval: (query) => {
 			const data = query?.state?.data;
 			if (!data) return 2000;
