@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { getEdaReportHtml } from '../../service/eda.service';
+import html2pdf from 'html2pdf.js';
 
 const REPORT_TYPES = [
 	{
@@ -254,25 +255,47 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 		}
 	};
 
-	/** Print current report as PDF via browser print dialog */
-	const handlePrintPdf = () => {
-		const html = htmlCache[activeTab];
-		if (!html) return;
-		const cleanHtml = stripNavFromHtml(html);
-		const printWindow = window.open('', '_blank');
-		if (printWindow) {
-			printWindow.document.write(cleanHtml);
-			printWindow.document.close();
-			// Wait for content (including Plotly charts) to render before printing
-			printWindow.onload = () => printWindow.print();
-			// Fallback timeout in case onload doesn't fire
-			setTimeout(() => {
-				try {
-					printWindow.print();
-				} catch {
-					// already printed or window closed
-				}
-			}, 2000);
+	/** Download current report as PDF using html2pdf.js */
+	const [generatingPdf, setGeneratingPdf] = useState(false);
+	const handleDownloadPdf = async () => {
+		const iframe = iframeRef.current;
+		if (!iframe) return;
+
+		setGeneratingPdf(true);
+		try {
+			const doc = iframe.contentDocument || iframe.contentWindow?.document;
+			if (!doc?.body) return;
+
+			// Remove nav/header from the iframe content before capturing
+			const clonedBody = doc.body.cloneNode(true);
+			clonedBody
+				.querySelectorAll('header, nav, .navbar')
+				.forEach((el) => el.remove());
+
+			await html2pdf()
+				.from(clonedBody)
+				.set({
+					margin: [8, 8, 8, 8],
+					filename: `${activeTab}-report.pdf`,
+					image: { type: 'jpeg', quality: 0.95 },
+					html2canvas: {
+						scale: 2,
+						useCORS: true,
+						logging: false,
+						scrollY: 0,
+					},
+					jsPDF: {
+						unit: 'mm',
+						format: 'a4',
+						orientation: 'landscape',
+					},
+					pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+				})
+				.save();
+		} catch {
+			setError('Failed to generate PDF. Try Download HTML instead.');
+		} finally {
+			setGeneratingPdf(false);
 		}
 	};
 
@@ -314,7 +337,11 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 				</div>
 				{activeTab && htmlCache[activeTab] && (
 					<div className="flex items-center gap-2">
-						<button onClick={handlePrintPdf} className={btnClass}>
+						<button
+							onClick={handleDownloadPdf}
+							disabled={generatingPdf}
+							className={`${btnClass} disabled:opacity-50`}
+						>
 							<svg
 								className="w-3.5 h-3.5"
 								fill="none"
@@ -325,10 +352,10 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 									strokeLinecap="round"
 									strokeLinejoin="round"
 									strokeWidth={2}
-									d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+									d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
 								/>
 							</svg>
-							Download PDF
+							{generatingPdf ? 'Generating...' : 'Download PDF'}
 						</button>
 						<button onClick={handleDownload} className={btnClass}>
 							<DownloadIcon />
