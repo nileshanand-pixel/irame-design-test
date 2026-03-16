@@ -20,12 +20,123 @@ const REPORT_TYPES = [
 	},
 ];
 
+/** Strip the standalone nav header and embedded download/print buttons from report HTML */
+const stripNavFromHtml = (html) => {
+	try {
+		const parser = new DOMParser();
+		const doc = parser.parseFromString(html, 'text/html');
+		// Remove header/nav elements (the dark top bar with report tabs)
+		doc.querySelectorAll('header, nav, .navbar').forEach((el) => el.remove());
+		// Remove embedded download/print button containers
+		doc.querySelectorAll(
+			'button, a[download], [class*="download"], [class*="print"]',
+		).forEach((el) => {
+			const text = (el.textContent || '').toLowerCase();
+			if (
+				text.includes('download') ||
+				text.includes('print') ||
+				text.includes('pdf')
+			) {
+				const parent = el.parentElement;
+				if (
+					parent &&
+					parent.children.length <= 2 &&
+					parent.tagName !== 'BODY'
+				) {
+					parent.remove();
+				} else {
+					el.remove();
+				}
+			}
+		});
+		return '<!DOCTYPE html>' + doc.documentElement.outerHTML;
+	} catch {
+		return html;
+	}
+};
+
+/** Build a combined navigable HTML with all reports in iframes */
+const buildCombinedReport = (reports, reportLabels) => {
+	const reportsJson = JSON.stringify(reports);
+	const tabsJson = JSON.stringify(reportLabels);
+
+	return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Insights &amp; Anomaly Report</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f8fafc}
+.nav{display:flex;align-items:center;padding:14px 28px;background:linear-gradient(135deg,#1e1b4b,#312e81);color:#fff;gap:36px}
+.nav-title{font-size:15px;font-weight:600;letter-spacing:.3px}
+.nav-tabs{display:flex;gap:6px}
+.nav-tab{padding:8px 18px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.7);border:none;background:none;font-size:13px;font-weight:500;transition:all .2s}
+.nav-tab:hover{color:#fff;background:rgba(255,255,255,.12)}
+.nav-tab.active{color:#fff;background:rgba(255,255,255,.18);font-weight:600}
+.report-frame{width:100%;height:calc(100vh - 56px);border:none;display:none}
+.report-frame.active{display:block}
+</style></head><body>
+<div class="nav"><div class="nav-title">Insights &amp; Anomaly Report</div>
+<div class="nav-tabs" id="nav-tabs"></div></div>
+<div id="frames"></div>
+<script>
+var reports=${reportsJson};
+var tabs=${tabsJson};
+var navTabs=document.getElementById('nav-tabs');
+var framesDiv=document.getElementById('frames');
+var keys=Object.keys(tabs);
+keys.forEach(function(key,i){
+if(!reports[key])return;
+var btn=document.createElement('button');
+btn.className='nav-tab'+(i===0?' active':'');
+btn.textContent=tabs[key];
+btn.setAttribute('data-key',key);
+btn.onclick=function(){showTab(key)};
+navTabs.appendChild(btn);
+var iframe=document.createElement('iframe');
+iframe.id='frame-'+key;
+iframe.className='report-frame'+(i===0?' active':'');
+framesDiv.appendChild(iframe);
+});
+function showTab(key){
+document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active')});
+document.querySelectorAll('.report-frame').forEach(function(f){f.classList.remove('active')});
+document.querySelector('[data-key="'+key+'"]').classList.add('active');
+document.getElementById('frame-'+key).classList.add('active');
+loadFrame(key);
+}
+function loadFrame(key){
+var iframe=document.getElementById('frame-'+key);
+if(iframe.dataset.loaded)return;
+var doc=iframe.contentDocument||iframe.contentWindow.document;
+doc.open();doc.write(reports[key]);doc.close();
+iframe.dataset.loaded='true';
+}
+if(keys.length>0)loadFrame(keys[0]);
+<\/script></body></html>`;
+};
+
+const DownloadIcon = () => (
+	<svg
+		className="w-3.5 h-3.5"
+		fill="none"
+		stroke="currentColor"
+		viewBox="0 0 24 24"
+	>
+		<path
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			strokeWidth={2}
+			d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+		/>
+	</svg>
+);
+
 const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 	const [activeTab, setActiveTab] = useState(initialTab || '');
 	const [htmlCache, setHtmlCache] = useState({});
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [statsOpen, setStatsOpen] = useState(false);
+	const [downloadingAll, setDownloadingAll] = useState(false);
 	const iframeRef = useRef(null);
 
 	const availableReports = REPORT_TYPES.filter(
@@ -86,16 +197,75 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 		}
 	}, []);
 
+	/** Download current tab's report HTML (nav stripped) */
 	const handleDownload = () => {
 		const html = htmlCache[activeTab];
 		if (!html) return;
-		const blob = new Blob([html], { type: 'text/html' });
+		const cleanHtml = stripNavFromHtml(html);
+		const blob = new Blob([cleanHtml], { type: 'text/html' });
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.href = url;
 		a.download = `${activeTab}-report.html`;
 		a.click();
 		URL.revokeObjectURL(url);
+	};
+
+	/** Download all reports combined into a single navigable HTML */
+	const handleDownloadAll = async () => {
+		setDownloadingAll(true);
+		try {
+			const allReports = {};
+			for (const { key } of availableReports) {
+				if (htmlCache[key]) {
+					allReports[key] = stripNavFromHtml(htmlCache[key]);
+				} else {
+					const type = reportUrls?.[key + '_standalone']
+						? key + '_standalone'
+						: key;
+					const html = await getEdaReportHtml(jobId, type);
+					setHtmlCache((prev) => ({ ...prev, [key]: html }));
+					allReports[key] = stripNavFromHtml(html);
+				}
+			}
+
+			const reportLabels = {};
+			availableReports.forEach(({ key, label }) => {
+				reportLabels[key] = label;
+			});
+
+			const combinedHtml = buildCombinedReport(allReports, reportLabels);
+			const blob = new Blob([combinedHtml], { type: 'text/html' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'insights-anomaly-report.html';
+			a.click();
+			URL.revokeObjectURL(url);
+		} catch {
+			setError('Failed to download all reports');
+		} finally {
+			setDownloadingAll(false);
+		}
+	};
+
+	/** Print current report as PDF via browser print dialog */
+	const handlePrintPdf = () => {
+		const iframe = iframeRef.current;
+		if (!iframe) return;
+		try {
+			iframe.contentWindow?.print();
+		} catch {
+			// Fallback: open HTML in new window and print
+			const html = htmlCache[activeTab];
+			if (!html) return;
+			const win = window.open('', '_blank');
+			if (win) {
+				win.document.write(stripNavFromHtml(html));
+				win.document.close();
+				setTimeout(() => win.print(), 500);
+			}
+		}
 	};
 
 	const llmCosts = summary?.llm_costs || {};
@@ -106,6 +276,9 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 			llmCosts.calls != null);
 
 	if (availableReports.length === 0) return null;
+
+	const btnClass =
+		'inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-purple-100 bg-white border border-purple-100/30 rounded-lg hover:bg-purple-100 hover:text-white transition-all duration-200 shadow-sm';
 
 	return (
 		<div className="mt-6 border border-gray-200/80 rounded-xl overflow-hidden shadow-sm">
@@ -132,25 +305,48 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 					</h3>
 				</div>
 				{activeTab && htmlCache[activeTab] && (
-					<button
-						onClick={handleDownload}
-						className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium text-purple-100 bg-white border border-purple-100/30 rounded-lg hover:bg-purple-100 hover:text-white transition-all duration-200 shadow-sm"
-					>
-						<svg
-							className="w-3.5 h-3.5"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
+					<div className="flex items-center gap-2">
+						<button onClick={handlePrintPdf} className={btnClass}>
+							<svg
+								className="w-3.5 h-3.5"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+								/>
+							</svg>
+							Download PDF
+						</button>
+						<button onClick={handleDownload} className={btnClass}>
+							<DownloadIcon />
+							Download HTML
+						</button>
+						<button
+							onClick={handleDownloadAll}
+							disabled={downloadingAll}
+							className={`${btnClass} disabled:opacity-50`}
 						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-							/>
-						</svg>
-						Download HTML
-					</button>
+							<svg
+								className="w-3.5 h-3.5"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+								/>
+							</svg>
+							{downloadingAll ? 'Preparing...' : 'Download All HTML'}
+						</button>
+					</div>
 				)}
 			</div>
 

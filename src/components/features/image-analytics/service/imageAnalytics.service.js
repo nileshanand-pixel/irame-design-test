@@ -83,6 +83,23 @@ export const getImageAnalyticsJobs = async () => {
 	}
 };
 
+export const downloadImageAnalyticsReport = async (jobId, reportType) => {
+	try {
+		const response = await axiosClientV1.get(
+			`${BASE_PATH}/${jobId}/reports/${reportType}`,
+			{ responseType: 'blob' },
+		);
+		return response.data;
+	} catch (error) {
+		logError(error, {
+			feature: 'image-analytics',
+			action: 'downloadReport',
+			extra: { jobId, reportType, errorMessage: error.message },
+		});
+		throw error;
+	}
+};
+
 export const uploadImageAnalyticsFilesLocal = async (
 	files,
 	jobType,

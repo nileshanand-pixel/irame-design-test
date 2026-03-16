@@ -188,6 +188,7 @@ const AuditTab = ({ selectedJobId, onJobIdChange }) => {
 			{state === STATES.COMPLETED && result && (
 				<AuditResultSection
 					result={result}
+					jobId={jobId}
 					onNewAnalysis={handleNewAnalysis}
 				/>
 			)}

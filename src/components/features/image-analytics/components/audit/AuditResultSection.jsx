@@ -1,14 +1,38 @@
+import { useState } from 'react';
+import { toast } from 'react-toastify';
+import { downloadImageAnalyticsReport } from '../../service/imageAnalytics.service';
+
 const SEVERITY_STYLES = {
 	high: 'bg-red-100 text-red-800',
 	medium: 'bg-yellow-100 text-yellow-800',
 	low: 'bg-blue-100 text-blue-800',
 };
 
-const AuditResultSection = ({ result, onNewAnalysis }) => {
+const AuditResultSection = ({ result, jobId, onNewAnalysis }) => {
 	const auditResult = result?.result || {};
 	const nonCompliances = auditResult.non_compliances || [];
 	const summary = auditResult.summary || 'No summary available.';
 	const reportUrls = result?.reportUrls || {};
+	const [downloading, setDownloading] = useState(null);
+
+	const handleDownload = async (reportType) => {
+		const isExcel = reportType.includes('excel');
+		const extension = isExcel ? 'xlsx' : 'pdf';
+		try {
+			setDownloading(reportType);
+			const blob = await downloadImageAnalyticsReport(jobId, reportType);
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `audit_report.${extension}`;
+			a.click();
+			URL.revokeObjectURL(url);
+		} catch {
+			toast.error(`Failed to download ${extension.toUpperCase()} report`);
+		} finally {
+			setDownloading(null);
+		}
+	};
 
 	return (
 		<div className="space-y-6">
@@ -37,11 +61,10 @@ const AuditResultSection = ({ result, onNewAnalysis }) => {
 				<div className="flex items-center gap-3">
 					{/* Download buttons */}
 					{reportUrls.pdf_report && (
-						<a
-							href={reportUrls.pdf_report}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-md text-sm font-medium hover:bg-red-100 transition-colors"
+						<button
+							onClick={() => handleDownload('pdf_report')}
+							disabled={downloading === 'pdf_report'}
+							className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 rounded-md text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50"
 						>
 							<svg
 								className="w-4 h-4"
@@ -56,15 +79,14 @@ const AuditResultSection = ({ result, onNewAnalysis }) => {
 									d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
 								/>
 							</svg>
-							PDF
-						</a>
+							{downloading === 'pdf_report' ? 'Downloading...' : 'PDF'}
+						</button>
 					)}
 					{reportUrls.excel_report && (
-						<a
-							href={reportUrls.excel_report}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-md text-sm font-medium hover:bg-green-100 transition-colors"
+						<button
+							onClick={() => handleDownload('excel_report')}
+							disabled={downloading === 'excel_report'}
+							className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-md text-sm font-medium hover:bg-green-100 transition-colors disabled:opacity-50"
 						>
 							<svg
 								className="w-4 h-4"
@@ -79,8 +101,10 @@ const AuditResultSection = ({ result, onNewAnalysis }) => {
 									d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
 								/>
 							</svg>
-							Excel
-						</a>
+							{downloading === 'excel_report'
+								? 'Downloading...'
+								: 'Excel'}
+						</button>
 					)}
 					<button
 						onClick={onNewAnalysis}
