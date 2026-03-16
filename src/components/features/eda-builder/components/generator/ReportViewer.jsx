@@ -57,7 +57,11 @@ const stripNavFromHtml = (html) => {
 
 /** Build a combined navigable HTML with all reports in iframes */
 const buildCombinedReport = (reports, reportLabels) => {
-	const reportsJson = JSON.stringify(reports);
+	// Escape </script> in JSON to prevent premature script tag closure in the combined HTML.
+	// JSON.stringify does NOT escape forward slashes, so </script> in report HTML
+	// would close the outer <script> tag. Replacing with <\/script works because
+	// JS interprets \/ as just / — so the data is preserved correctly.
+	const reportsJson = JSON.stringify(reports).replace(/<\/script/gi, '<\\/script');
 	const tabsJson = JSON.stringify(reportLabels);
 
 	return `<!DOCTYPE html>
@@ -94,6 +98,7 @@ navTabs.appendChild(btn);
 var iframe=document.createElement('iframe');
 iframe.id='frame-'+key;
 iframe.className='report-frame'+(i===0?' active':'');
+iframe.sandbox='allow-scripts allow-same-origin allow-modals';
 framesDiv.appendChild(iframe);
 });
 function showTab(key){
@@ -251,20 +256,23 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 
 	/** Print current report as PDF via browser print dialog */
 	const handlePrintPdf = () => {
-		const iframe = iframeRef.current;
-		if (!iframe) return;
-		try {
-			iframe.contentWindow?.print();
-		} catch {
-			// Fallback: open HTML in new window and print
-			const html = htmlCache[activeTab];
-			if (!html) return;
-			const win = window.open('', '_blank');
-			if (win) {
-				win.document.write(stripNavFromHtml(html));
-				win.document.close();
-				setTimeout(() => win.print(), 500);
-			}
+		const html = htmlCache[activeTab];
+		if (!html) return;
+		const cleanHtml = stripNavFromHtml(html);
+		const printWindow = window.open('', '_blank');
+		if (printWindow) {
+			printWindow.document.write(cleanHtml);
+			printWindow.document.close();
+			// Wait for content (including Plotly charts) to render before printing
+			printWindow.onload = () => printWindow.print();
+			// Fallback timeout in case onload doesn't fire
+			setTimeout(() => {
+				try {
+					printWindow.print();
+				} catch {
+					// already printed or window closed
+				}
+			}, 2000);
 		}
 	};
 
