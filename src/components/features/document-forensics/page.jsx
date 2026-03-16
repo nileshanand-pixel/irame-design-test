@@ -2,13 +2,13 @@ import { useMemo, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import RACMHeader from './components/RACMHeader';
-import RACMTabs from './components/RACMTabs';
-import GeneratorTab from './components/generator/GeneratorTab';
+import ForensicsHeader from './components/ForensicsHeader';
+import ForensicsTabs from './components/ForensicsTabs';
+import AnalyzerTab from './components/analyzer/AnalyzerTab';
 import HistoryTab from './components/history/HistoryTab';
-import { RACM_TABS } from './constants/racm.constants';
+import { FORENSICS_TABS } from './constants/forensics.constants';
 
-const RACMGeneratorPage = () => {
+const DocumentForensicsPage = () => {
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const selectedJobId = useMemo(
@@ -19,11 +19,11 @@ const RACMGeneratorPage = () => {
 	const activeTab = useMemo(() => {
 		const tabParam = searchParams.get('tab');
 		return tabParam &&
-			Object.values(RACM_TABS)
+			Object.values(FORENSICS_TABS)
 				?.map((t) => t.value)
 				.includes(tabParam)
 			? tabParam
-			: RACM_TABS.GENERATOR.value;
+			: FORENSICS_TABS.ANALYZER.value;
 	}, [searchParams]);
 
 	useEffect(() => {
@@ -44,7 +44,7 @@ const RACMGeneratorPage = () => {
 
 	const setSelectedJobId = useCallback(
 		(jobId) => {
-			const tab = searchParams.get('tab') || RACM_TABS.GENERATOR.value;
+			const tab = searchParams.get('tab') || FORENSICS_TABS.ANALYZER.value;
 			if (jobId) {
 				setSearchParams({ tab, jobId }, { replace: true });
 			} else {
@@ -57,7 +57,7 @@ const RACMGeneratorPage = () => {
 	const handleViewJob = useCallback(
 		(jobId) => {
 			setSearchParams(
-				{ tab: RACM_TABS.GENERATOR.value, jobId },
+				{ tab: FORENSICS_TABS.ANALYZER.value, jobId },
 				{ replace: true },
 			);
 		},
@@ -75,28 +75,28 @@ const RACMGeneratorPage = () => {
 			</button>
 
 			<div className="bg-white/55 backdrop-blur-xl rounded-2xl shadow-[0_4px_16px_rgba(106,18,205,0.06),inset_0_1px_0_rgba(255,255,255,0.8)] border border-white/70 overflow-hidden flex-1 flex flex-col min-h-0">
-				<RACMHeader />
+				<ForensicsHeader />
 
 				<Tabs
 					value={activeTab}
 					onValueChange={handleTabChange}
 					className="flex-1 flex flex-col min-h-0"
 				>
-					<RACMTabs />
+					<ForensicsTabs />
 
 					<div className="flex-1 overflow-auto px-6 pt-4 pb-6">
 						<TabsContent
-							value={RACM_TABS.GENERATOR.value}
+							value={FORENSICS_TABS.ANALYZER.value}
 							className="mt-0"
 						>
-							<GeneratorTab
+							<AnalyzerTab
 								selectedJobId={selectedJobId}
 								onJobIdChange={setSelectedJobId}
 							/>
 						</TabsContent>
 
 						<TabsContent
-							value={RACM_TABS.HISTORY.value}
+							value={FORENSICS_TABS.HISTORY.value}
 							className="mt-0"
 						>
 							<HistoryTab onViewJob={handleViewJob} />
@@ -108,4 +108,4 @@ const RACMGeneratorPage = () => {
 	);
 };
 
-export default RACMGeneratorPage;
+export default DocumentForensicsPage;

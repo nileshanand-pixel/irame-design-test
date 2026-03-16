@@ -107,7 +107,7 @@ const HistoryTab = ({ onViewJob }) => {
 								key={row.id}
 								className="border-t border-gray-100 hover:bg-purple-2 cursor-pointer transition-colors"
 								onClick={() => {
-									if (row.original.status === 'COMPLETED') {
+									if (row.original.status !== 'CANCELLED') {
 										onViewJob(row.original.jobId);
 									}
 								}}

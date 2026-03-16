@@ -24,6 +24,10 @@ import HelpMenu from '@/components/elements/HelpMenu';
 import WorkflowPageV2 from '@/components/features/business-process/workflow/page-v2';
 import Home from '@/components/features/home';
 import RACMGeneratorPage from '@/components/features/racm-generator/page';
+import EDABuilderPage from '@/components/features/eda-builder/page';
+import DocumentForensicsPage from '@/components/features/document-forensics/page';
+import ImageAnalyticsPage from '@/components/features/image-analytics/page';
+import AiConciergePage from '@/components/features/ai-concierge/page';
 
 const AppRoutes = () => {
 	return (
@@ -152,11 +156,72 @@ const AppRoutes = () => {
 										/>
 									}
 								/>
+								{/* AI Concierge — landing + nested feature pages */}
 								<Route
-									path="racm-generator"
+									path="ai-concierge"
+									element={
+										<ProtectedRoute
+											element={<AiConciergePage />}
+										/>
+									}
+								/>
+								<Route
+									path="ai-concierge/racm-generator"
 									element={
 										<ProtectedRoute
 											element={<RACMGeneratorPage />}
+										/>
+									}
+								/>
+								<Route
+									path="ai-concierge/eda-builder"
+									element={
+										<ProtectedRoute
+											element={<EDABuilderPage />}
+										/>
+									}
+								/>
+								<Route
+									path="ai-concierge/document-forensics"
+									element={
+										<ProtectedRoute
+											element={<DocumentForensicsPage />}
+										/>
+									}
+								/>
+								<Route
+									path="ai-concierge/image-analytics"
+									element={
+										<ProtectedRoute
+											element={<ImageAnalyticsPage />}
+										/>
+									}
+								/>
+								{/* Redirects for old bookmarked URLs */}
+								<Route
+									path="racm-generator"
+									element={
+										<Navigate
+											to="/app/ai-concierge/racm-generator"
+											replace
+										/>
+									}
+								/>
+								<Route
+									path="eda-builder"
+									element={
+										<Navigate
+											to="/app/ai-concierge/eda-builder"
+											replace
+										/>
+									}
+								/>
+								<Route
+									path="document-forensics"
+									element={
+										<Navigate
+											to="/app/ai-concierge/document-forensics"
+											replace
 										/>
 									}
 								/>

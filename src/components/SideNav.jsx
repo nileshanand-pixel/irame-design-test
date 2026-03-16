@@ -37,7 +37,7 @@ import { Hint } from './Hint';
 import Tag from './elements/Tag';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { trackEvent } from '@/lib/mixpanel';
-import { TbTableOptions } from 'react-icons/tb';
+import { TbSparkles } from 'react-icons/tb';
 import { useSessionId } from '@/hooks/use-session-id';
 import { queryClient } from '@/lib/react-query';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
@@ -143,6 +143,18 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				},
 
 				{
+					link: '/app/ai-concierge',
+					text: 'AI Concierge',
+					icon: TbSparkles,
+					showHint: true,
+					beta: true,
+					trackingCall: () =>
+						trackEvent(
+							EVENTS_ENUM.SIDE_BAR_AI_CONCIERGE_CLICKED,
+							EVENTS_REGISTRY.SIDE_BAR_AI_CONCIERGE_CLICKED,
+						),
+				},
+				{
 					link: '/app/configuration?source=side_bar',
 					text: 'Configuration',
 					icon: 'https://d2vkmtgu2mxkyq.cloudfront.net/database.svg',
@@ -150,18 +162,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 						trackEvent(
 							EVENTS_ENUM.SIDE_BAR_CONFIGURATION_CLICKED,
 							EVENTS_REGISTRY.SIDE_BAR_CONFIGURATION_CLICKED,
-						),
-				},
-				{
-					link: '/app/racm-generator',
-					text: 'RACM Generator',
-					icon: TbTableOptions,
-					showHint: true,
-					beta: true,
-					trackingCall: () =>
-						trackEvent(
-							EVENTS_ENUM.SIDE_BAR_RACM_GENERATOR_CLICKED,
-							EVENTS_REGISTRY.SIDE_BAR_RACM_GENERATOR_CLICKED,
 						),
 				},
 			],
@@ -606,8 +606,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 			if (pathname.includes('business-process'))
 				setActiveTab('/app/business-process');
 			if (pathname.includes('dashboard')) setActiveTab('/app/dashboard');
-			if (pathname.includes('racm-generator'))
-				setActiveTab('/app/racm-generator');
+			if (pathname.includes('ai-concierge')) setActiveTab('/app/ai-concierge');
 		}
 	}, [pathname]);
 
@@ -702,11 +701,9 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 											<p className="truncate">{option.text}</p>
 										)}
 										{isSideNavOpen && option.beta && (
-											<Tag
-												text="Beta"
-												className="shrink-0 !px-1.5 !py-0.5 !gap-1 !shadow-none"
-												textClassName="!text-[10px] !font-semibold"
-											/>
+											<span className="shrink-0 px-1.5 py-px rounded-md bg-white/50 backdrop-blur-sm border border-[rgba(106,18,205,0.12)] text-[9px] font-medium text-purple-100 tracking-wide">
+												Beta
+											</span>
 										)}
 									</Link>
 								</Hint>

@@ -1,12 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-toastify';
-import { ACCEPTED_FILE_TYPES } from '../../constants/racm.constants';
+import { FORENSICS_ACCEPTED_FILE_TYPES } from '../../constants/forensics.constants';
 import { getFileSize } from '@/utils/file';
 
 const UploadSection = ({ onGenerate, isDisabled }) => {
 	const [file, setFile] = useState(null);
-	const [customPrompt, setCustomPrompt] = useState('');
 
 	const onDrop = useCallback((acceptedFiles) => {
 		if (acceptedFiles.length > 0) {
@@ -18,10 +17,10 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 		const error = fileRejections[0]?.errors[0];
 		if (error?.code === 'file-invalid-type') {
 			toast.error(
-				'Unsupported file type. Please upload a PDF, CSV, or image file.',
+				'Unsupported file type. Please upload an image or PDF file.',
 			);
 		} else if (error?.code === 'file-too-large') {
-			toast.error('File is too large. Maximum size is 100 MB.');
+			toast.error('File is too large. Maximum size is 50 MB.');
 		} else {
 			toast.error('File not accepted. Please try a different file.');
 		}
@@ -30,15 +29,16 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
 		onDrop,
 		onDropRejected,
-		accept: ACCEPTED_FILE_TYPES,
+		accept: FORENSICS_ACCEPTED_FILE_TYPES,
+		maxSize: 50 * 1024 * 1024,
 		maxFiles: 1,
-		maxSize: 100 * 1024 * 1024, // 100 MB
+		multiple: false,
 		disabled: isDisabled,
 	});
 
 	const handleGenerate = () => {
 		if (file) {
-			onGenerate(file, customPrompt);
+			onGenerate(file);
 		}
 	};
 
@@ -53,39 +53,17 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 				{...getRootProps()}
 				className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 ${
 					isDragActive
-						? 'border-purple-100 bg-[rgba(106,18,205,0.04)]'
+						? 'border-purple-100 bg-purple-4'
 						: 'border-[rgba(106,18,205,0.12)] hover:border-[rgba(106,18,205,0.25)] bg-white/40 backdrop-blur-sm'
 				} ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
 			>
 				<input {...getInputProps()} />
 				{file ? (
-					<div className="flex items-center justify-center gap-3">
-						<div className="bg-white/60 backdrop-blur-sm border border-white/70 text-primary80 rounded-lg px-3 py-2 flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
-							<svg
-								className="w-4 h-4"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-								/>
-							</svg>
-							<span className="text-sm font-medium">
-								{file.name}{' '}
-								<span className="text-primary40 font-normal">
-									({getFileSize(file)})
-								</span>
-							</span>
-							<button
-								onClick={handleRemoveFile}
-								className="ml-1 text-primary40 hover:text-primary80"
-							>
+					<div className="space-y-2">
+						<div className="flex items-center justify-center gap-2">
+							<div className="bg-white/60 backdrop-blur-sm border border-white/70 text-primary80 rounded-lg px-3 py-2 flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
 								<svg
-									className="w-4 h-4"
+									className="w-4 h-4 shrink-0"
 									fill="none"
 									stroke="currentColor"
 									viewBox="0 0 24 24"
@@ -94,11 +72,38 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 										strokeLinecap="round"
 										strokeLinejoin="round"
 										strokeWidth={2}
-										d="M6 18L18 6M6 6l12 12"
+										d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
 									/>
 								</svg>
-							</button>
+								<span className="text-sm font-medium">
+									{file.name}{' '}
+									<span className="text-primary40 font-normal">
+										({getFileSize(file)})
+									</span>
+								</span>
+								<button
+									onClick={handleRemoveFile}
+									className="ml-1 text-primary40 hover:text-primary80"
+								>
+									<svg
+										className="w-4 h-4"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M6 18L18 6M6 6l12 12"
+										/>
+									</svg>
+								</button>
+							</div>
 						</div>
+						<p className="text-xs text-primary40 mt-2">
+							Drop a different file or click to change
+						</p>
 					</div>
 				) : (
 					<div>
@@ -117,31 +122,18 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 						</svg>
 						<p className="text-sm text-primary80 font-medium">
 							{isDragActive
-								? 'Drop your file here'
-								: 'Drag & drop your SOP document here'}
+								? 'Drop your document here'
+								: 'Drag & drop a document for forensic analysis'}
 						</p>
 						<p className="text-xs text-primary40 mt-1">
-							Supports PDF, CSV, and Images
+							Supports images (JPEG, PNG, TIFF, BMP, WebP) and PDF
+							files
 						</p>
 						<p className="text-xs text-primary40 mt-0.5">
-							Max file size: 100 MB
+							Single file — max 50 MB
 						</p>
 					</div>
 				)}
-			</div>
-
-			<div>
-				<label className="block text-sm font-medium text-primary60 mb-1">
-					Custom Instructions (Optional)
-				</label>
-				<textarea
-					value={customPrompt}
-					onChange={(e) => setCustomPrompt(e.target.value)}
-					placeholder="E.g., Focus on procurement risks, Include IT general controls..."
-					className="w-full border border-[rgba(106,18,205,0.1)] bg-white/40 backdrop-blur-sm rounded-xl px-3 py-2 text-sm text-primary80 placeholder-primary40 focus:outline-none focus:ring-2 focus:ring-[rgba(106,18,205,0.15)] focus:border-transparent resize-none"
-					rows={3}
-					disabled={isDisabled}
-				/>
 			</div>
 
 			<button
@@ -149,15 +141,15 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 				disabled={!file || isDisabled}
 				className="w-full bg-gradient-to-r from-[rgba(106,18,205,0.85)] to-[rgba(130,60,220,0.9)] text-white font-medium py-3 rounded-xl hover:from-[rgba(106,18,205,0.95)] hover:to-[rgba(130,60,220,1)] transition-all duration-300 shadow-[0_2px_12px_rgba(106,18,205,0.2),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_4px_20px_rgba(106,18,205,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
 			>
-				Generate RACM
+				Run Forensic Analysis
 			</button>
 
 			{/* Feature summary & flow */}
 			<div className="pt-5 border-t border-[rgba(106,18,205,0.06)] space-y-4">
-				<p className="text-sm text-primary40 text-center leading-relaxed">
-					Transform your Standard Operating Procedures into structured Risk
-					Assessment and Control Matrices — AI identifies risks, maps
-					controls, and highlights compliance gaps automatically.
+				<p className="text-sm text-primary60 text-center leading-relaxed">
+					Submit any document for deep forensic analysis — detect forgery,
+					tampering, AI-generated content, and metadata manipulation with
+					comprehensive evidence chains.
 				</p>
 
 				<div>
@@ -167,24 +159,24 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 					<div className="flex items-start justify-between">
 						{[
 							{
-								title: 'Upload SOP',
-								desc: 'PDF, CSV, or image',
+								title: 'Upload',
+								desc: 'Image or PDF file',
 							},
 							{
-								title: 'Document Parsing',
-								desc: 'AI reads your document',
+								title: 'Classification',
+								desc: 'Detect document type',
 							},
 							{
-								title: 'Risk Identification',
-								desc: 'Extracts risks & gaps',
+								title: 'Forensic Analysis',
+								desc: 'Metadata, ELA & copy-move',
 							},
 							{
-								title: 'Control Mapping',
-								desc: 'Maps controls to risks',
+								title: 'AI Review',
+								desc: 'Vision AI tampering check',
 							},
 							{
-								title: 'Generate RACM',
-								desc: 'Structured matrix output',
+								title: 'Risk Report',
+								desc: 'Score & evidence chain',
 							},
 						].map((step, i, arr) => (
 							<div key={step.title} className="contents">

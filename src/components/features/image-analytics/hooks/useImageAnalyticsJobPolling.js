@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { getRacmJobStatus } from '../service/racm.service';
+import { getImageAnalyticsJobStatus } from '../service/imageAnalytics.service';
 
-export const useRacmJobPolling = (jobId, enabled = true) => {
+export const useImageAnalyticsJobPolling = (jobId, enabled = true) => {
 	return useQuery({
-		queryKey: ['racm-job-status', jobId],
-		queryFn: () => getRacmJobStatus(jobId),
+		queryKey: ['ia-job-status', jobId],
+		queryFn: () => getImageAnalyticsJobStatus(jobId),
 		enabled: !!jobId && enabled,
 		retry: 3,
 		retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
