@@ -39,13 +39,6 @@ import {
 } from './row-selection-helpers';
 import { useShiftKeyPressedRef } from './use-shift-key-pressed';
 import { useReportPermission } from '@/contexts/ReportPermissionContext';
-import {
-	SELECTION_SCOPE_OPTIONS,
-	SELECT_ALL_STATES,
-	addIndexRangeToArraySelection,
-	toggleIdInArraySelection,
-} from './row-selection-helpers';
-import { useShiftKeyPressedRef } from './use-shift-key-pressed';
 
 export default function CaseManagementTable({
 	isFetchingCases,
