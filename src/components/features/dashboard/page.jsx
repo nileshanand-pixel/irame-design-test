@@ -7,19 +7,23 @@ import DashboardActionBar from './components/DashboardActionBar';
 import MyDashboardsTab from './components/MyDashboardsTab';
 import SharedDashboardsTab from './components/SharedDashboardsTab';
 import CreateDashboardModal from './components/CreateDashboardModal';
+import { ShareDashboardDialog } from './components/ShareDashboardDialog';
 import { useDebouncedSearch } from './hooks/useDashboardSearch';
 import {
 	DEFAULT_TIME_FILTER,
 	DASHBOARD_TABS,
 } from './constants/dashboard.constants';
+import { useRbac } from '@/hooks/useRbac';
 
 const DashboardPage = () => {
+	const { isRbacActive } = useRbac();
 	const [searchParams, setSearchParams] = useSearchParams();
 
 	const [timeFilter, setTimeFilter] = useState(DEFAULT_TIME_FILTER);
 	const [searchValue, debouncedSearchValue, setSearchValue] =
 		useDebouncedSearch(300);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+	const [sharingDashboard, setSharingDashboard] = useState(null);
 	const navigate = useNavigate();
 
 	// Get active tab from URL, default to MY_DASHBOARD
@@ -63,6 +67,10 @@ const DashboardPage = () => {
 		setIsCreateModalOpen(true);
 	}, []);
 
+	const handleShare = useCallback((dashboard) => {
+		setSharingDashboard(dashboard);
+	}, []);
+
 	const handleDashboardCreateSuccess = useCallback(
 		(data) => {
 			// Stay on the live-dashboard page with the current active tab
@@ -76,7 +84,6 @@ const DashboardPage = () => {
 	return (
 		<div className="h-full w-full flex flex-col px-6 py-4 pt-1">
 			<DashboardHeader />
-
 			<Tabs
 				value={activeTab}
 				onValueChange={handleTabChange}
@@ -102,29 +109,40 @@ const DashboardPage = () => {
 							timeFilter={timeFilter}
 							onDashboardClick={handleDashboardClick}
 							onCreateDashboard={handleCreateDashboardClick}
+							onShare={isRbacActive ? handleShare : undefined}
 						/>
 					</TabsContent>
 
-					{/* <TabsContent
-						value={DASHBOARD_TABS.SHARED_DASHBOARD.value}
-						className="mt-0"
-					>
-						<SharedDashboardsTab
-							searchQuery={debouncedSearchValue}
-							timeFilter={timeFilter}
-							onDashboardClick={handleDashboardClick}
-							onCreateDashboard={handleCreateDashboardClick}
-						/>
-					</TabsContent> */}
+					{isRbacActive && (
+						<TabsContent
+							value={DASHBOARD_TABS.SHARED_DASHBOARD.value}
+							className="mt-0"
+						>
+							<SharedDashboardsTab
+								searchQuery={debouncedSearchValue}
+								timeFilter={timeFilter}
+								onDashboardClick={handleDashboardClick}
+								onCreateDashboard={handleCreateDashboardClick}
+							/>
+						</TabsContent>
+					)}
 				</div>
 			</Tabs>
-
 			{/* Create Dashboard Modal */}
 			<CreateDashboardModal
 				open={isCreateModalOpen}
 				onOpenChange={setIsCreateModalOpen}
 				onSuccess={handleDashboardCreateSuccess}
 			/>
+			{isRbacActive && (
+				<ShareDashboardDialog
+					open={!!sharingDashboard}
+					onClose={() => setSharingDashboard(null)}
+					dashboardId={
+						sharingDashboard?.id || sharingDashboard?.dashboard_id
+					}
+				/>
+			)}
 		</div>
 	);
 };

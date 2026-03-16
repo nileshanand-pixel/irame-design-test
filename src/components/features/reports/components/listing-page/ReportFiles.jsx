@@ -28,13 +28,11 @@ const ReportFiles = ({
 
 	const space = activeTab.space;
 
-	const teamId = userDetails?.team_id;
-
-	// Create a stable query function that uses the latest teamId and filters
+	// Create a stable query function that uses the latest filters
+	// team_id is NOT passed here - it comes from X-TEAM-ID header set by axios
 	const unifiedReportsQueryFn = useCallback(
 		(params) => {
 			const queryParams = {
-				team_id: teamId,
 				space,
 				search: search || '',
 				sort_by: sortValue?.field || 'created_at',
@@ -46,7 +44,7 @@ const ReportFiles = ({
 
 			return getUnifiedReports(queryParams);
 		},
-		[teamId, space, search, sortValue, ownerFilter],
+		[space, search, sortValue, ownerFilter],
 	);
 
 	// Infinite scroll pagination with React Query
@@ -59,14 +57,7 @@ const ReportFiles = ({
 		hasNextPage,
 		Sentinel,
 	} = useInfiniteScroll({
-		queryKey: [
-			'unified-reports',
-			space,
-			search || '',
-			sortValue,
-			ownerFilter,
-			teamId,
-		],
+		queryKey: ['unified-reports', space, search || '', sortValue, ownerFilter],
 		queryFn: unifiedReportsQueryFn,
 		paginationType: 'cursor',
 		options: {
@@ -84,7 +75,7 @@ const ReportFiles = ({
 	const deleteReportMutation = useMutation({
 		mutationFn: ({ reportId }) => deleteReport({ reportId }),
 		onSuccess: () => {
-			queryClient.invalidateQueries(['unified-reports']);
+			queryClient.invalidateQueries({ queryKey: ['unified-reports'] });
 			toast.success('Report deleted successfully');
 		},
 		onError: (err) => {

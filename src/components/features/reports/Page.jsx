@@ -3,6 +3,7 @@ import ReportListingPageHeader from './components/listing-page/report-listing-pa
 import ReportFiles from './components/listing-page/ReportFiles';
 import BreadCrumbs from '@/components/BreadCrumbs';
 import { VIEWS, TABS } from './constants';
+import ShareReportDialog from './components/ShareReportDialog';
 
 // Helper function to find tab by fragment
 const getTabByFragment = (fragment) => {
@@ -92,6 +93,8 @@ const ReportsPage = () => {
 					// onDisplayReportsChange={setDisplayReportsCount}
 				/>
 			</div>
+
+			<ShareReportDialog />
 		</div>
 	);
 };

@@ -79,7 +79,7 @@ const FollowUpQuestions = ({
 						{ key: 'queries', value: updatedQueries },
 					]),
 				);
-				queryClient.invalidateQueries(['chat-history']);
+				queryClient.invalidateQueries({ queryKey: ['chat-history'] });
 
 				trackEvent(
 					EVENTS_ENUM.CHAT_MESSAGE_SENT,

@@ -6,6 +6,8 @@ import { authUserDetails, ssoLogin } from './service/auth.service';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { syncAuthIdentity } from '@/redux/reducer/authReducer';
 import { logError } from '@/lib/logger';
 import { toast } from '@/lib/toast';
 import useAuth from '@/hooks/useAuth';
@@ -18,6 +20,7 @@ const SignInSignUp = () => {
 
 	const router = useRouter();
 	const navigate = useNavigate();
+	const dispatch = useDispatch();
 	const hasCode = Boolean(router.query?.code);
 	const authResult = !hasCode ? useAuth() : { isAuthenticated: false };
 	const { isAuthenticated } = authResult;
@@ -39,6 +42,10 @@ const SignInSignUp = () => {
 						'userDetails',
 						JSON.stringify(authUserData),
 					);
+
+					// Sync identity to Redux store
+					dispatch(syncAuthIdentity(authUserData));
+
 					trackEvent(
 						EVENTS_ENUM.LOGIN_SUCCESSFUL,
 						EVENTS_REGISTRY.LOGIN_SUCCESSFUL,

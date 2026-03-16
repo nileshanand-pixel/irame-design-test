@@ -51,6 +51,11 @@ import {
 	TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { getFileSize } from '@/utils/file';
+import {
+	CONNECTOR_FILE_TYPES,
+	getAcceptString,
+	validateFileType,
+} from '@/config/file-upload.config';
 
 function Sidebar({
 	requiredFiles,
@@ -92,7 +97,7 @@ function Sidebar({
 
 				<div className="flex flex-col gap-4">
 					{/* {[...requiredFiles, ...requiredFiles, ...requiredFiles, ...requiredFiles, ...requiredFiles, ...requiredFiles ,...requiredFiles, ...requiredFiles, ...requiredFiles].map((requiredFile) => { */}
-					{requiredFiles.map((requiredFile) => {
+					{requiredFiles?.map((requiredFile) => {
 						const isActive =
 							selectedRequiredFile?.required_file_id ===
 							requiredFile?.required_file_id;
@@ -230,7 +235,7 @@ function DropZone({ messages, onFileSelect }) {
 
 			<input
 				type="file"
-				accept=".pdf,.jpg,.jpeg,.png,.hevc"
+				accept={getAcceptString(CONNECTOR_FILE_TYPES.UNSTRUCTURED)}
 				multiple
 				className="hidden"
 				id="file-upload"
@@ -314,7 +319,9 @@ function FileItem({
 					FILE_STATUS.AI_PROCESSING,
 				].includes(fileObj.status) ? (
 					<div className="w-10 h-10 flex items-center justify-center rounded-md border border-gray-300">
-						<span className="text-xs font-bold text-primary">PDF</span>
+						<span className="text-xs font-bold text-primary uppercase">
+							{fileObj.name?.split('.').pop()?.toUpperCase() || 'FILE'}
+						</span>
 					</div>
 				) : (
 					<CustomCheckbox
@@ -326,7 +333,7 @@ function FileItem({
 				<div className="flex flex-1 gap-2 items-center">
 					<div className="flex flex-col flex-1">
 						<span className="text-sm font-medium text-primary100 truncate max-w-[12.5rem]">
-							{fileObj.name}
+							{fileObj.name || 'Unknown File'}
 						</span>
 						{fileObj.size ? (
 							<span className="text-xs text-primary100 font-normal">
@@ -559,7 +566,7 @@ function FileListing({
 				<input
 					ref={inputRef}
 					type="file"
-					accept=".pdf,.jpg,.jpeg,.png,.hevc"
+					accept={getAcceptString(CONNECTOR_FILE_TYPES.UNSTRUCTURED)}
 					multiple
 					className="hidden"
 					id="file-upload"
@@ -652,10 +659,13 @@ function FileLimitReachedDialog({ onOpenChange, isOpen, description }) {
 }
 
 function UploadManager({
+	requiredFiles,
 	selectedRequiredFile,
 	setRequiredFilesError,
 	setRequiredFilesStatus,
 	onSelectedFileStatusChange,
+	isSizeLimitEnabled,
+	maxTotalSizeMB,
 }) {
 	const [datasourceId, setDatasourceId] = useState('');
 	const [files, setFiles] = useState([]);
@@ -818,59 +828,58 @@ function UploadManager({
 
 	// Calculate status for the selected required file based on current files
 	useEffect(() => {
-		if (!selectedRequiredFile?.required_file_id) return;
+		requiredFiles?.forEach((requiredFile) => {
+			let calculatedStatus = null;
 
-		let calculatedStatus = null;
-
-		// If no files uploaded yet, don't set any status
-		if (currentFiles.length === 0) {
-			calculatedStatus = null;
-		} else {
-			// Check for uploading/processing files
-			const hasUploadingOrProcessing = currentFiles.some((f) =>
-				[
-					FILE_STATUS.UPLOADING,
-					FILE_STATUS.UPLOADED,
-					FILE_STATUS.PROCESSING,
-					FILE_STATUS.AI_PROCESSING,
-				].includes(f.status),
+			const filesOfCurrentRequiredFile = files?.filter(
+				(f) => f.requiredFileId === requiredFile?.required_file_id,
 			);
 
-			// Check for failed files
-			const hasFailed = currentFiles.some(
-				(f) => f.status === FILE_STATUS.FAILED,
-			);
+			// If no files uploaded yet, don't set any status
+			if (filesOfCurrentRequiredFile.length === 0) {
+				calculatedStatus = null;
+			} else {
+				// Check for uploading/processing files
+				const hasUploadingOrProcessing = filesOfCurrentRequiredFile.some(
+					(f) =>
+						[
+							FILE_STATUS.UPLOADING,
+							FILE_STATUS.UPLOADED,
+							FILE_STATUS.PROCESSING,
+							FILE_STATUS.AI_PROCESSING,
+						].includes(f.status),
+				);
 
-			// Check if all files are successful
-			const allSuccess =
-				currentFiles.length > 0 &&
-				currentFiles.every((f) => f.status === FILE_STATUS.SUCCESS);
+				// Check for failed files
+				const hasFailed = filesOfCurrentRequiredFile.some(
+					(f) => f.status === FILE_STATUS.FAILED,
+				);
 
-			// Priority: Processing > Failed > Success
-			if (hasUploadingOrProcessing) {
-				calculatedStatus = FILE_STATUS.AI_PROCESSING;
-			} else if (hasFailed) {
-				calculatedStatus = FILE_STATUS.FAILED;
-			} else if (allSuccess) {
-				calculatedStatus = FILE_STATUS.SUCCESS;
+				// Check if all files are successful
+				const allSuccess =
+					filesOfCurrentRequiredFile.length > 0 &&
+					filesOfCurrentRequiredFile.every(
+						(f) => f.status === FILE_STATUS.SUCCESS,
+					);
+
+				// Priority: Processing > Failed > Success
+				if (hasUploadingOrProcessing) {
+					calculatedStatus = FILE_STATUS.AI_PROCESSING;
+				} else if (hasFailed) {
+					calculatedStatus = FILE_STATUS.FAILED;
+				} else if (allSuccess) {
+					calculatedStatus = FILE_STATUS.SUCCESS;
+				}
 			}
-		}
 
-		// Only notify parent if status has actually changed
-		if (previousStatusRef.current !== calculatedStatus) {
-			previousStatusRef.current = calculatedStatus;
 			if (onSelectedFileStatusChange) {
 				onSelectedFileStatusChange(
-					selectedRequiredFile.required_file_id,
+					requiredFile.required_file_id,
 					calculatedStatus,
 				);
 			}
-		}
-	}, [
-		currentFiles,
-		selectedRequiredFile?.required_file_id,
-		onSelectedFileStatusChange,
-	]);
+		});
+	}, [files, requiredFiles, onSelectedFileStatusChange]);
 
 	const uploadFilesOnS3 = (userSelectedFiles) => {
 		setRequiredFilesError((prev) => {
@@ -1200,35 +1209,30 @@ function UploadManager({
 	};
 
 	const handleFileSelect = (userSelectedFiles) => {
-		if (userSelectedFiles.length === 0) {
+		if (!userSelectedFiles || userSelectedFiles.length === 0) {
 			return;
 		}
 
-		// Accept PDF and all image files
-		const allowedTypes = [
-			'application/pdf',
-			'image/jpeg',
-			'image/jpg',
-			'image/png',
-			'image/hevc',
-		];
-
-		const validFiles = Array.from(userSelectedFiles).filter((file) => {
-			// Check both MIME type and file extension for better compatibility
-			const isValidMimeType = allowedTypes.includes(file.type);
-			return isValidMimeType;
-		});
-
-		if (validFiles.length !== userSelectedFiles.length) {
+		const filteredFiles = Array.from(userSelectedFiles).filter(
+			(file) =>
+				validateFileType(file, CONNECTOR_FILE_TYPES.UNSTRUCTURED).valid,
+		);
+		if (filteredFiles.length !== userSelectedFiles.length) {
 			toast.error(
-				'Please upload only PDF and image files (PDF, JPG, JPEG, PNG, HEVC). Other file types are not supported.',
+				`Please upload only supported files (${getAcceptString(
+					CONNECTOR_FILE_TYPES.UNSTRUCTURED,
+				)}). Other file types are not supported.`,
 			);
+		}
+
+		if (filteredFiles.length === 0) {
+			return;
 		}
 
 		// check file limit
 		const previouslyUploadedFilesCount = currentFiles?.length;
 		if (
-			previouslyUploadedFilesCount + validFiles?.length >
+			previouslyUploadedFilesCount + filteredFiles?.length >
 			selectedRequiredFile?.limit
 		) {
 			setLimitReachedDescription(
@@ -1238,17 +1242,17 @@ function UploadManager({
 			return;
 		}
 
-		const MAX_TOTAL_SIZE_BYTES = 100 * 1024 * 1024; // 100MB
-		let totalSize = Array.from(validFiles).reduce(
+		const MAX_TOTAL_SIZE_BYTES = maxTotalSizeMB * 1024 * 1024; // dynamic MB
+		let totalSize = Array.from(filteredFiles).reduce(
 			(acc, file) => acc + file.size,
 			0,
 		);
 
 		totalSize += currentFiles?.reduce((acc, file) => acc + (file.size ?? 0), 0);
 
-		if (totalSize > MAX_TOTAL_SIZE_BYTES) {
+		if (isSizeLimitEnabled && totalSize > MAX_TOTAL_SIZE_BYTES) {
 			setLimitReachedDescription(
-				`The total size of your selected files exceeds the 100MB limit. Please adjust your selection and try again.`,
+				`The total size of your selected files exceeds the ${maxTotalSizeMB}MB limit. Please adjust your selection and try again.`,
 			);
 			setIsFileLimitReachedModalVisible(true);
 			return;
@@ -1262,13 +1266,13 @@ function UploadManager({
 				{
 					onSuccess: (data) => {
 						setDatasourceId(data?.datasource_id);
-						uploadFilesOnS3(validFiles);
+						uploadFilesOnS3(filteredFiles);
 						setSearchParams({ datasource_id: data?.datasource_id });
 					},
 				},
 			);
 		} else {
-			uploadFilesOnS3(validFiles);
+			uploadFilesOnS3(filteredFiles);
 		}
 	};
 
@@ -1285,8 +1289,10 @@ function UploadManager({
 			{currentFiles.length === 0 ? (
 				<DropZone
 					messages={[
-						`Maximum ${selectedRequiredFile?.limit} files, total size up to 100 MB`,
-						`Supported file types: .pdf, .jpg, .jpeg, .png, .hevc only`,
+						`Maximum ${selectedRequiredFile?.limit} files${isSizeLimitEnabled ? `, total size up to ${maxTotalSizeMB} MB` : ''}`,
+						`Supported file types: ${getAcceptString(
+							CONNECTOR_FILE_TYPES.UNSTRUCTURED,
+						)}`,
 					]}
 					onFileSelect={handleFileSelect}
 				/>
@@ -1304,10 +1310,13 @@ function UploadManager({
 }
 
 function MainContent({
+	requiredFiles,
 	selectedRequiredFile,
 	setRequiredFilesError,
 	setRequiredFilesStatus,
 	onSelectedFileStatusChange,
+	isSizeLimitEnabled,
+	maxTotalSizeMB,
 }) {
 	return (
 		<div className="flex-1 p-4 bg-purple-2 flex flex-col gap-4 overflow-auto">
@@ -1318,7 +1327,7 @@ function MainContent({
 						<div className="text-primary100 text-base font-medium flex items-center gap-2">
 							{selectedRequiredFile?.file_name}
 							<span className="text-xs font-normal bg-gray-100 text-gray-700 px-2 py-0.5 rounded-xl">
-								PDF
+								Unstructured
 							</span>
 							<span className="text-xs font-normal bg-gray-100 text-gray-700 px-2 py-0.5 rounded-xl">
 								Limit: {selectedRequiredFile?.limit} files
@@ -1333,10 +1342,13 @@ function MainContent({
 			</div>
 
 			<UploadManager
+				requiredFiles={requiredFiles}
 				selectedRequiredFile={selectedRequiredFile}
 				setRequiredFilesError={setRequiredFilesError}
 				setRequiredFilesStatus={setRequiredFilesStatus}
 				onSelectedFileStatusChange={onSelectedFileStatusChange}
+				isSizeLimitEnabled={isSizeLimitEnabled}
+				maxTotalSizeMB={maxTotalSizeMB}
 			/>
 		</div>
 	);
@@ -1354,6 +1366,11 @@ export default function UnstructuredDatasourceConnector({ workflow }) {
 	);
 	const [isInitiatingWorkflowChecks, setIsInitiatingWorkflowChecks] =
 		useState(false);
+
+	const isSizeLimitEnabled =
+		import.meta.env.VITE_PDF_SIZE_LIMIT_ENABLED !== 'false';
+	const maxTotalSizeMB =
+		parseInt(import.meta.env.VITE_PDF_MAX_TOTAL_SIZE_MB) || 100;
 
 	const requiredFiles = workflow?.data?.required_files?.pdf_files;
 
@@ -1585,10 +1602,13 @@ export default function UnstructuredDatasourceConnector({ workflow }) {
 					/>
 
 					<MainContent
+						requiredFiles={requiredFiles}
 						selectedRequiredFile={selectedRequiredFile}
 						setRequiredFilesError={setRequiredFilesError}
 						setRequiredFilesStatus={setRequiredFilesStatus}
 						onSelectedFileStatusChange={handleSelectedFileStatusChange}
+						isSizeLimitEnabled={isSizeLimitEnabled}
+						maxTotalSizeMB={maxTotalSizeMB}
 					/>
 				</>
 			)}

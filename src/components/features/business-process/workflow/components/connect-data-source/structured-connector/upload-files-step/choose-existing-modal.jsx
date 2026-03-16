@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { getDataSourcesV2 } from '@/components/features/configuration/service/configuration.service';
+import { useDataSources } from '@/hooks/useDataSources';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export function ChooseExistingModal({
 	open,
@@ -24,9 +23,7 @@ export function ChooseExistingModal({
 		}
 	}, [open, selectedDataSources]);
 
-	const { data: dataSources, isLoading } = useQuery({
-		queryKey: ['data-sources'],
-		queryFn: getDataSourcesV2,
+	const { dataSources, isLoading } = useDataSources({
 		enabled: open,
 	});
 

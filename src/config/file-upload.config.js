@@ -76,7 +76,10 @@ export const ALLOWED_IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'hevc'];
 export const CONNECTOR_FILE_TYPES = {
 	STRUCTURED: ['csv', 'xlsx', 'xls'],
 	PDF_DEMO: ['csv', 'xlsx', 'xls', 'pdf'],
-	UNSTRUCTURED: ['pdf'],
+	UNSTRUCTURED:
+		import.meta.env.VITE_UNSTRUCTURED_IMAGES_ENABLED === 'true'
+			? ['pdf', 'jpg', 'png', 'gif']
+			: ['pdf'],
 	DATASOURCE: ['csv', 'xlsx', 'xls', 'pdf', ...ALLOWED_IMAGE_TYPES],
 };
 
@@ -90,6 +93,10 @@ export const UPLOAD_CONTEXTS = {
 
 // Get MIME types object for react-dropzone
 export const getMimeTypesForFileTypes = (fileTypes = []) => {
+	// TEMPORARY: Accept all file types - TODO: Revert this change
+	return {};
+
+	/* ORIGINAL CODE - Uncomment to restore file type restrictions
 	const mimeTypes = {};
 
 	fileTypes.forEach((fileType) => {
@@ -102,6 +109,7 @@ export const getMimeTypesForFileTypes = (fileTypes = []) => {
 	});
 
 	return mimeTypes;
+	*/
 };
 
 export const getExtensionsForFileTypes = (fileTypes = []) => {
@@ -125,7 +133,9 @@ export const getDisplayNamesForFileTypes = (fileTypes = []) => {
 
 // Get accept string for file input (e.g., '.csv,.xlsx,.xls')
 export const getAcceptString = (fileTypes = []) => {
-	return getExtensionsForFileTypes(fileTypes).join(',');
+	// TEMPORARY: Accept all file types - TODO: Revert this change
+	return '*';
+	// return getExtensionsForFileTypes(fileTypes).join(',');
 };
 
 export const validateFileType = (file, allowedFileTypes = []) => {
@@ -133,6 +143,10 @@ export const validateFileType = (file, allowedFileTypes = []) => {
 		return { valid: false, error: 'Invalid file' };
 	}
 
+	// TEMPORARY: Accept all file types - TODO: Revert this change
+	return { valid: true, fileType: 'any' };
+
+	/* ORIGINAL CODE - Uncomment to restore file type restrictions
 	const fileMimeType = (file.type || '').toLowerCase();
 	const fileName = (file.name || '').toLowerCase();
 
@@ -161,6 +175,7 @@ export const validateFileType = (file, allowedFileTypes = []) => {
 		valid: false,
 		error: getInvalidFileMessage(allowedFileTypes),
 	};
+	*/
 };
 
 export const getFileTypeFromFile = (file) => {
@@ -218,6 +233,10 @@ export const isBlockedFileType = (file, blockedTypes = ['xlsb']) => {
 };
 
 export const validateFiles = (files, allowedFileTypes = []) => {
+	// TEMPORARY: Accept all file types - TODO: Revert this change
+	return { valid: true, invalidFiles: [] };
+
+	/* ORIGINAL CODE - Uncomment to restore file type restrictions
 	const invalidFiles = [];
 
 	for (const file of files) {
@@ -236,6 +255,7 @@ export const validateFiles = (files, allowedFileTypes = []) => {
 	}
 
 	return { valid: true, invalidFiles: [] };
+	*/
 };
 
 // Legacy compatibility - maps granular types to 'pdf', 'excel', 'csv'

@@ -37,7 +37,9 @@ export const AddGraphModal = ({ open, reportCardId, graphs = [], onClose }) => {
 		},
 		onSuccess: () => {
 			toast.success('Visible graphs updated successfully');
-			queryClient.invalidateQueries(['report-details', reportId]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-details', reportId],
+			});
 			onClose();
 		},
 		onError: (error) => {

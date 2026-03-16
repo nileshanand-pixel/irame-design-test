@@ -18,6 +18,7 @@ export default function SearchableDropdown({
 	buttonLabel,
 	isMultiSelect = false,
 	renderOption,
+	onOpenChange,
 }) {
 	const [search, setSearch] = useState('');
 	const selectedOptions = isMultiSelect
@@ -52,7 +53,7 @@ export default function SearchableDropdown({
 		: selectedOptions?.label || buttonLabel;
 
 	return (
-		<DropdownMenu>
+		<DropdownMenu onOpenChange={onOpenChange}>
 			<DropdownMenuTrigger asChild>
 				<Button
 					variant="outline"

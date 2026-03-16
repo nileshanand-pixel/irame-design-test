@@ -17,6 +17,7 @@ const InputToolbar = ({
 	filesLoading,
 	isWorkflowLocked = false,
 	isDisabledWithoutLoading = false,
+	removeMentionIcon,
 }) => {
 	const isQnaDisabled = import.meta.env.VITE_QNA_DISABLED === 'true';
 	return (
@@ -53,23 +54,25 @@ const InputToolbar = ({
 							</Button>
 						</Hint>
 
-						{mode === 'single' && !filesLoading && (
-							<Hint label="Mention files">
-								<Button
-									onClick={onMentionClick}
-									variant="transparent"
-									size="iconSm"
-									disabled={
-										disabled ||
-										isQnaDisabled ||
-										isDisabledWithoutLoading
-									}
-									className="ml-2 -mt-1 text-base text-primary80"
-								>
-									@
-								</Button>
-							</Hint>
-						)}
+						{mode === 'single' &&
+							!filesLoading &&
+							!removeMentionIcon && (
+								<Hint label="Mention files">
+									<Button
+										onClick={onMentionClick}
+										variant="transparent"
+										size="iconSm"
+										disabled={
+											disabled ||
+											isQnaDisabled ||
+											isDisabledWithoutLoading
+										}
+										className="ml-2 -mt-1 text-base text-primary80"
+									>
+										@
+									</Button>
+								</Hint>
+							)}
 					</>
 				)}
 				{!disablePromptEnhancer && <PromptingRole />}

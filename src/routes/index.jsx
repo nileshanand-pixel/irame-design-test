@@ -24,209 +24,175 @@ import HelpMenu from '@/components/elements/HelpMenu';
 import WorkflowPageV2 from '@/components/features/business-process/workflow/page-v2';
 import Home from '@/components/features/home';
 import RACMGeneratorPage from '@/components/features/racm-generator/page';
+import AccessManagementPage from '@/components/features/access-management/page';
+import AcceptInvitationPage from '@/components/features/invitation/AcceptInvitationPage';
+import DeclineInvitationPage from '@/components/features/invitation/DeclineInvitationPage';
 import EDABuilderPage from '@/components/features/eda-builder/page';
 import DocumentForensicsPage from '@/components/features/document-forensics/page';
 import ImageAnalyticsPage from '@/components/features/image-analytics/page';
 import AiConciergePage from '@/components/features/ai-concierge/page';
 
-const AppRoutes = () => {
+function AppRoutes() {
 	return (
 		<>
 			<TermsModal />
 			<Routes>
-				<Route exact path="/*" element={<SignInSignUp />} />
+				<Route exact path="/" element={<SignInSignUp />} />
+
+				{/* Public invitation routes - no layout or auth */}
+				<Route
+					path="/accept-invitation"
+					element={<AcceptInvitationPage />}
+				/>
+				<Route
+					path="/decline-invitation"
+					element={<DeclineInvitationPage />}
+				/>
+
 				<Route
 					path="/app/*"
 					element={
-						<Layout>
-							<Routes>
-								<Route
-									path="/home"
-									element={<ProtectedRoute element={<Home />} />}
-								/>
-								<Route path="/" element={<Navigate to="/home" />} />
-								<Route
-									path="new-chat/session"
-									element={
-										<ProtectedRoute element={<Workzone />} />
-									}
-								/>
-								<Route
-									path="new-chat/*"
-									element={
-										<ProtectedRoute element={<NewChat />} />
-									}
-								/>
-								<Route
-									path="dashboard"
-									element={
-										<ProtectedRoute element={<Dashboard />} />
-									}
-								/>
-								<Route
-									path="dashboard/content"
-									element={
-										<ProtectedRoute
+						<ProtectedRoute
+							element={
+								<Layout>
+									<Routes>
+										<Route path="/home" element={<Home />} />
+										<Route
+											path="/"
+											element={<Navigate to="/app/home" />}
+										/>
+										<Route
+											path="new-chat/session"
+											element={<Workzone />}
+										/>
+										<Route
+											path="new-chat/*"
+											element={<NewChat />}
+										/>
+										<Route
+											path="dashboard"
+											element={<Dashboard />}
+										/>
+										<Route
+											path="dashboard/content"
 											element={<DashboardDetailPageNew />}
 										/>
-									}
-								/>
-								{/* <Route
-									path="dashboard/content"
-									element={
-										<ProtectedRoute
-											element={<DashboardContentRouter />}
+										<Route
+											path="dashboard/*"
+											element={<Dashboard />}
 										/>
-									}
-								/> */}
-
-								<Route
-									path="dashboard/*"
-									element={
-										<ProtectedRoute element={<Dashboard />} />
-									}
-								/>
-								<Route
-									path="configuration/datasource"
-									element={
-										<ProtectedRoute element={<DataSource />} />
-									}
-								/>
-								<Route
-									path="configuration"
-									element={
-										<ProtectedRoute
+										<Route
+											path="configuration/datasource"
+											element={<DataSource />}
+										/>
+										<Route
+											path="configuration"
 											element={<Configuration />}
 										/>
-									}
-								/>
-								<Route
-									path="help"
-									element={<ProtectedRoute element={<Help />} />}
-								/>
-								<Route
-									path="reports/datasources/report"
-									element={
-										<ProtectedRoute
+										<Route path="help" element={<Help />} />
+										<Route
+											path="reports/datasources/report"
 											element={<ReportsInDatasource />}
 										/>
-									}
-								/>
-								<Route
-									path="reports"
-									element={
-										<ProtectedRoute element={<ReportsPage />} />
-									}
-								/>
-								<Route
-									path="reports/:reportId"
-									element={
-										<ProtectedRoute
+										<Route
+											path="reports"
+											element={<ReportsPage />}
+										/>
+										<Route
+											path="reports/:reportId"
 											element={<SingleReportPage />}
 										/>
-									}
-								/>
-								<Route
-									path="business-process"
-									element={
-										<ProtectedRoute
+										<Route
+											path="business-process"
 											element={<BusinessProcessPage />}
 										/>
-									}
-								/>
-								<Route
-									path="business-process/:businessProcessId"
-									element={
-										<ProtectedRoute
+										<Route
+											path="business-process/:businessProcessId"
 											element={<SingleBusinessProcessPage />}
 										/>
-									}
-								/>
-								{/* <Route
-									path="business-process/:businessProcessId/workflows/:workflowId"
-									element={
-										<ProtectedRoute element={<WorkflowPage />} />
-									}
-								/> */}
-								<Route
-									path="business-process/:businessProcessId/workflows/:workflowId"
-									element={
-										<ProtectedRoute
+										<Route
+											path="business-process/:businessProcessId/workflows/:workflowId"
 											element={<WorkflowPageV2 />}
 										/>
-									}
-								/>
-								{/* AI Concierge — landing + nested feature pages */}
-								<Route
-									path="ai-concierge"
-									element={
-										<ProtectedRoute
-											element={<AiConciergePage />}
+										<Route
+											path="access-management"
+											element={<AccessManagementPage />}
 										/>
-									}
-								/>
-								<Route
-									path="ai-concierge/racm-generator"
-									element={
-										<ProtectedRoute
-											element={<RACMGeneratorPage />}
+										{/* AI Concierge — landing + nested feature pages */}
+										<Route
+											path="ai-concierge"
+											element={
+												<ProtectedRoute
+													element={<AiConciergePage />}
+												/>
+											}
 										/>
-									}
-								/>
-								<Route
-									path="ai-concierge/eda-builder"
-									element={
-										<ProtectedRoute
-											element={<EDABuilderPage />}
+										<Route
+											path="ai-concierge/racm-generator"
+											element={
+												<ProtectedRoute
+													element={<RACMGeneratorPage />}
+												/>
+											}
 										/>
-									}
-								/>
-								<Route
-									path="ai-concierge/document-forensics"
-									element={
-										<ProtectedRoute
-											element={<DocumentForensicsPage />}
+										<Route
+											path="ai-concierge/eda-builder"
+											element={
+												<ProtectedRoute
+													element={<EDABuilderPage />}
+												/>
+											}
 										/>
-									}
-								/>
-								<Route
-									path="ai-concierge/image-analytics"
-									element={
-										<ProtectedRoute
-											element={<ImageAnalyticsPage />}
+										<Route
+											path="ai-concierge/document-forensics"
+											element={
+												<ProtectedRoute
+													element={
+														<DocumentForensicsPage />
+													}
+												/>
+											}
 										/>
-									}
-								/>
-								{/* Redirects for old bookmarked URLs */}
-								<Route
-									path="racm-generator"
-									element={
-										<Navigate
-											to="/app/ai-concierge/racm-generator"
-											replace
+										<Route
+											path="ai-concierge/image-analytics"
+											element={
+												<ProtectedRoute
+													element={<ImageAnalyticsPage />}
+												/>
+											}
 										/>
-									}
-								/>
-								<Route
-									path="eda-builder"
-									element={
-										<Navigate
-											to="/app/ai-concierge/eda-builder"
-											replace
+										{/* Redirects for old bookmarked URLs */}
+										<Route
+											path="racm-generator"
+											element={
+												<Navigate
+													to="/app/ai-concierge/racm-generator"
+													replace
+												/>
+											}
 										/>
-									}
-								/>
-								<Route
-									path="document-forensics"
-									element={
-										<Navigate
-											to="/app/ai-concierge/document-forensics"
-											replace
+										<Route
+											path="eda-builder"
+											element={
+												<Navigate
+													to="/app/ai-concierge/eda-builder"
+													replace
+												/>
+											}
 										/>
-									}
-								/>
-							</Routes>
-						</Layout>
+										<Route
+											path="document-forensics"
+											element={
+												<Navigate
+													to="/app/ai-concierge/document-forensics"
+													replace
+												/>
+											}
+										/>
+									</Routes>
+								</Layout>
+							}
+						/>
 					}
 				/>
 				<Route
@@ -238,10 +204,11 @@ const AppRoutes = () => {
 					element={<ReportCoverPage />}
 				/>
 				<Route path="test" element={<TestRoute />} />
+				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>
 			{/* {!window.location.pathname.includes('export') && <HelpMenu />} */}
 		</>
 	);
-};
+}
 
 export default AppRoutes;

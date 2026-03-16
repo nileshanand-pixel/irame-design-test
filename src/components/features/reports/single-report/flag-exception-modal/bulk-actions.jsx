@@ -99,6 +99,10 @@ const BulkActions = ({
 	};
 
 	const getAllowedFiles = (allFiles, filesInfo) => {
+		// TEMPORARY: Accept all file types - TODO: Revert this change
+		return [allFiles, false];
+
+		/* ORIGINAL CODE - Uncomment to restore file type restrictions
 		const allowedFiles = [];
 		const allowedFileTypes = ['pdf', 'jpg', 'png', 'gif'];
 		let hasNotAllowedFiles = false;
@@ -114,6 +118,7 @@ const BulkActions = ({
 		});
 
 		return [allowedFiles, hasNotAllowedFiles];
+		*/
 	};
 
 	const getFilesInfo = async (files) => {
@@ -196,7 +201,9 @@ const BulkActions = ({
 			}),
 		onSuccess: (_data, operations) => {
 			// Invalidate and refetch cases data
-			queryClient.invalidateQueries(['report-card-cases', reportId, cardId]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-card-cases', reportId, cardId],
+			});
 			const appliedCount = operations?.[0]?.case_ids?.length ?? 0;
 			const rowLabel = appliedCount === 1 ? 'row' : 'rows';
 			toast.success(

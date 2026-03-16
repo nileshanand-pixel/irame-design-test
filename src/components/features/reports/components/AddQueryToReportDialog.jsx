@@ -44,7 +44,9 @@ const AddQueryToReportDialog = ({
 	const mutation = useMutation({
 		mutationFn: (payload) => addQueryToExistingReport(payload),
 		onSuccess: () => {
-			queryClient.invalidateQueries(['report-details', report.report_id]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-details', report.report_id],
+			});
 			toast.success('Query added to report successfully!', {
 				action: (
 					<div className="flex flex-col gap-4">

@@ -11,6 +11,7 @@ import GlobalPollReports from './features/reports/components/GlobalPollReports';
 import { pdfjs } from 'react-pdf';
 import Modals from './Modals';
 import FreshdeskWidget from './features/freshdesk/FreshdeskWidget';
+import UserSessionManager from './features/user-session-manager';
 import { CHAT_SESSION_STARTED_EVENT_DATA_KEY } from '@/constants/chat.constant';
 import { removeFromLocalStorage } from '@/utils/local-storage';
 import ChooseDataSourceDialog from './ChooseDataSourceDialog';
@@ -58,6 +59,7 @@ const Layout = ({ children }) => {
 
 	return (
 		<div className={`flex items-start h-screen justify-between`}>
+			<UserSessionManager />
 			<ChooseDataSourceDialog
 				open={utilReducer?.isDatasourceSelectionModalOpen}
 				setOpen={(value) =>

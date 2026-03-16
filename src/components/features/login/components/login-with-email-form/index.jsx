@@ -7,6 +7,8 @@ import { trackEvent, trackUser } from '@/lib/mixpanel';
 import { authUserDetails, login } from '../../service/auth.service';
 import { createOrUpdateUserSession } from '@/components/features/user-session-manager/helper';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { syncAuthIdentity } from '@/redux/reducer/authReducer';
 import { logError } from '@/lib/logger';
 import { toast } from '@/lib/toast';
 import { useEffect, useRef, useState } from 'react';
@@ -24,6 +26,7 @@ export default function LoginWithEmailForm({
 	const recaptchaRef = useRef(null);
 
 	const navigate = useNavigate();
+	const dispatch = useDispatch();
 
 	const {
 		register,
@@ -76,6 +79,9 @@ export default function LoginWithEmailForm({
 
 			const authUserData = await authUserDetails();
 			localStorage.setItem('userDetails', JSON.stringify(authUserData));
+
+			// Sync identity to Redux store
+			dispatch(syncAuthIdentity(authUserData));
 
 			trackEvent(
 				EVENTS_ENUM.LOGIN_SUCCESSFUL,

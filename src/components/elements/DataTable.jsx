@@ -42,6 +42,9 @@ import {
  * @property {Object} [selectedRow]
  * @property {any} [defaultSort]
  * @property {boolean} [enableSorting]
+ * @property {boolean} [simplePagination]
+ * @property {boolean} [stickyHeader]
+ * @property {boolean} [stickyPagination]
  * @property {number} [defaultRowsPerPage]
  * @property {boolean} [enableColumnFilters]
  * @property {Object} [columnFilters]
@@ -72,6 +75,9 @@ export function DataTable({
 	selectedRow,
 	onSortingChange,
 	enableSorting = false,
+	simplePagination = false,
+	stickyHeader = false,
+	stickyPagination = false,
 	defaultRowsPerPage = 10,
 	enableColumnFilters = false,
 	columnFilters = {},
@@ -114,10 +120,24 @@ export function DataTable({
 	};
 
 	return (
-		<div className="flex flex-col w-full h-full min-h-0">
-			<div className="relative flex-1 text-primary100 w-full overflow-auto min-h-0">
+		<div
+			className={cn(
+				'w-full space-y-2.5',
+				stickyPagination
+					? 'h-full flex flex-col overflow-hidden'
+					: 'overflow-auto',
+			)}
+		>
+			<div
+				className={cn(
+					'text-primary100 w-full overflow-auto',
+					stickyPagination && 'flex-1',
+				)}
+			>
 				<Table className="border-collapse">
-					<TableHeader className="sticky top-0 bg-white z-20">
+					<TableHeader
+						className={cn(stickyHeader && 'sticky top-0 z-20 bg-white')}
+					>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {
@@ -127,9 +147,7 @@ export function DataTable({
 									return (
 										<TableHead
 											key={header.id}
-											className={
-												'p-2 text-sm font-semibold transition-colors text-primary80 bg-purple-4'
-											}
+											className="p-2 text-sm font-semibold transition-colors text-primary80 bg-purple-4"
 										>
 											<div className="flex items-center gap-2 justify-between">
 												<span className="flex-1">
@@ -272,11 +290,14 @@ export function DataTable({
 												selectedRow?._id ===
 													row.original?._id &&
 												'bg-slate-100',
-											'text-xs font-normal textprimary80',
+											'text-sm font-normal text-primary80',
 										)}
 									>
 										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id} className="p-2">
+											<TableCell
+												key={cell.id}
+												className="px-4 py-3"
+											>
 												{flexRender(
 													cell.column.columnDef.cell,
 													cell.getContext(),
@@ -314,9 +335,16 @@ export function DataTable({
 				</Table>
 			</div>
 			{!hidePagination && (
-				<div className="pt-2 flex-none border-t border-[#E5E7EB]">
+				<div
+					className={cn(
+						'pt-2 flex-none border-t border-[#E5E7EB]',
+						simplePagination && 'pb-5',
+						stickyPagination && 'sticky bottom-0 z-10 bg-white',
+					)}
+				>
 					<DataTablePagination
 						table={table}
+						simpleMode={simplePagination}
 						defaultRowsPerPage={defaultRowsPerPage}
 					/>
 				</div>

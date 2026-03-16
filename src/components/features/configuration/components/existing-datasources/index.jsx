@@ -1,11 +1,7 @@
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { useQuery } from '@tanstack/react-query';
-import {
-	deleteDataSource,
-	getDataSourcesV2,
-} from '../../service/configuration.service';
+import { deleteDataSource } from '../../service/configuration.service';
 import {
 	Tooltip,
 	TooltipContent,
@@ -32,24 +28,30 @@ import { useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { useSearchParams } from 'react-router-dom';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
+import { useDataSources } from '@/hooks/useDataSources';
 
 const TABS = [
 	{
 		label: 'Uploaded',
 		description: 'These are the dataset uploaded by you for querying.',
-		type: 'user_generated',
+		type: DATASOURCE_TYPES.USER_GENERATED,
 	},
 	{
 		label: 'System Generated',
 		description: 'These are the dataset uploaded by you for Workflows.',
-		type: 'system_generated',
+		type: DATASOURCE_TYPES.SYSTEM_GENERATED,
+	},
+	{
+		label: 'Live',
+		description: 'These are the dataset generated for your SQL queries.',
+		type: DATASOURCE_TYPES.SQL_GENERATED,
 	},
 ];
 
 export default function ExistingDataSources({ showForm }) {
 	const [isFocused, setIsFocused] = useState(false);
 	const [selectedDatasourceTab, setSelectedDatasourceTab] = useState(TABS[0]);
-	const [dataSources, setDataSources] = useState([]);
 	const [search, setSearch] = useState('');
 	const [setSearchParams] = useSearchParams();
 
@@ -59,10 +61,20 @@ export default function ExistingDataSources({ showForm }) {
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
-	const fetchDataSources = async () => {
-		const data = await getDataSourcesV2();
-		return Array.isArray(data) ? data : [];
-	};
+	// Use unified hook with team-based caching + refetchInterval for processing
+	const {
+		dataSources,
+		isLoading: isFetchingData,
+		refetch,
+	} = useDataSources({
+		limit: 100, // You can adjust this limit as needed, backend defaults to 20
+		refetchInterval: (query) => {
+			if (query?.state?.data?.some((ds) => ds.status === 'processing')) {
+				return 2000;
+			}
+			return false;
+		},
+	});
 
 	const startChatting = (data) => {
 		navigate(
@@ -74,11 +86,6 @@ export default function ExistingDataSources({ showForm }) {
 		e.stopPropagation();
 		const dataSourceId = source.datasource_id;
 		try {
-			const updatedList = utilReducer?.dataSources.filter((source) => {
-				if (source.datasource_id !== dataSourceId) {
-					return source;
-				}
-			});
 			const confirmed = await confirm({
 				header: 'Delete Datasource?',
 				description: `This will permanently delete "${source.name}" and all its data. This action cannot be undone.`,
@@ -94,9 +101,8 @@ export default function ExistingDataSources({ showForm }) {
 					dataset_name: source.name,
 				}),
 			);
-			dispatch(updateUtilProp([{ key: 'dataSources', value: updatedList }]));
-			setDataSources(updatedList);
-			queryClient.invalidateQueries(['data-sources']);
+			// Refetch to update the list
+			refetch();
 		} catch (error) {
 			logError(error, {
 				feature: 'configuration',
@@ -116,17 +122,6 @@ export default function ExistingDataSources({ showForm }) {
 		}
 	};
 
-	const { data, isLoading: isFetchingData } = useQuery({
-		queryKey: ['data-sources-v2'],
-		queryFn: fetchDataSources,
-		refetchInterval: (data) => {
-			if (data?.state?.data?.some((ds) => ds.status === 'processing')) {
-				return 2000;
-			}
-			return false;
-		},
-	});
-
 	const handleSearch = (e) => {
 		setSearch(e.target.value);
 		trackEvent(
@@ -138,14 +133,8 @@ export default function ExistingDataSources({ showForm }) {
 		);
 	};
 
-	useEffect(() => {
-		if (data?.length > 0) {
-			setDataSources(data);
-			dispatch(updateUtilProp([{ key: 'dataSources', value: data }]));
-		}
-	}, [data]);
-
-	const currentDatasources = dataSources?.filter(
+	// Filter datasources, ensure we always have an array (not undefined)
+	const currentDatasources = (dataSources || [])?.filter(
 		(ds) =>
 			!ds?.is_duplicate &&
 			ds?.datasource_type === selectedDatasourceTab?.type &&
@@ -284,6 +273,10 @@ export default function ExistingDataSources({ showForm }) {
 															2,
 														);
 
+											const isSqlGenerated =
+												source?.datasource_type ===
+												DATASOURCE_TYPES.SQL_GENERATED;
+
 											return (
 												<div
 													className={cn(
@@ -364,48 +357,59 @@ export default function ExistingDataSources({ showForm }) {
 														</div>
 													</p>
 
-													{!isFailed && !isProcessing && (
-														<div className="flex gap-1 items-center shrink-0">
-															<DropdownMenu>
-																<DropdownMenuTrigger>
-																	<DotsThreeVertical
-																		className="size-7 hover:bg-purple-4 rounded-md p-1"
-																		weight="bold"
-																	/>
-																</DropdownMenuTrigger>
-																<DropdownMenuContent align="start">
-																	<DropdownMenuItem
-																		className="text-primary80 font-medium hover:!bg-purple-4"
-																		onClick={(
-																			e,
-																		) => {
-																			e.stopPropagation();
-																			navigate(
-																				`datasource?id=${source.datasource_id}`,
-																			);
-																		}}
-																	>
-																		<i className="bi-pencil me-2 text-primary80 font-medium"></i>
-																		Edit
-																	</DropdownMenuItem>
-																	<DropdownMenuItem
-																		className="text-primary80 font-medium hover:!bg-purple-4"
-																		onClick={(
-																			e,
-																		) =>
-																			handleDeleteDataSource(
-																				e,
-																				source,
-																			)
-																		}
-																	>
-																		<i className="bi-trash me-2 text-primary80 font-medium"></i>
-																		Delete
-																	</DropdownMenuItem>
-																</DropdownMenuContent>
-															</DropdownMenu>
+													{isSqlGenerated && (
+														<div className="flex items-center shrink-0">
+															<span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-xs font-semibold rounded-full">
+																<span className="size-2 bg-green-600 rounded-full animate-pulse"></span>
+																Live
+															</span>
 														</div>
 													)}
+
+													{!isFailed &&
+														!isProcessing &&
+														!isSqlGenerated && (
+															<div className="flex gap-1 items-center shrink-0">
+																<DropdownMenu>
+																	<DropdownMenuTrigger>
+																		<DotsThreeVertical
+																			className="size-7 hover:bg-purple-4 rounded-md p-1"
+																			weight="bold"
+																		/>
+																	</DropdownMenuTrigger>
+																	<DropdownMenuContent align="start">
+																		<DropdownMenuItem
+																			className="text-primary80 font-medium hover:!bg-purple-4"
+																			onClick={(
+																				e,
+																			) => {
+																				e.stopPropagation();
+																				navigate(
+																					`datasource?id=${source.datasource_id}`,
+																				);
+																			}}
+																		>
+																			<i className="bi-pencil me-2 text-primary80 font-medium"></i>
+																			Edit
+																		</DropdownMenuItem>
+																		<DropdownMenuItem
+																			className="text-primary80 font-medium hover:!bg-purple-4"
+																			onClick={(
+																				e,
+																			) =>
+																				handleDeleteDataSource(
+																					e,
+																					source,
+																				)
+																			}
+																		>
+																			<i className="bi-trash me-2 text-primary80 font-medium"></i>
+																			Delete
+																		</DropdownMenuItem>
+																	</DropdownMenuContent>
+																</DropdownMenu>
+															</div>
+														)}
 												</div>
 											);
 										})}

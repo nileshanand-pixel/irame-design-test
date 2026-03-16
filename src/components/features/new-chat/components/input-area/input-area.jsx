@@ -29,6 +29,7 @@ import { pxToRem } from '@/utils/unit-convertor';
 import { useSessionId } from '@/hooks/use-session-id';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 import { QUERY_TYPES } from '@/constants/query-type.constant';
+import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 
 const InputArea = ({
 	config,
@@ -226,6 +227,10 @@ const InputArea = ({
 				<InputToolbar
 					disabled={disabled || isQnaDisabled}
 					filesLoading={!datasourceData?.files?.length}
+					removeMentionIcon={
+						datasourceData?.datasource_type ===
+						DATASOURCE_TYPES.SQL_GENERATED
+					}
 					isEnhancing={isEnhancing}
 					showStream={showStream}
 					disablePromptEnhancer={disablePromptEnhancer}

@@ -14,11 +14,21 @@ export const RiskLevelDropdown = ({ value, riskTypes, reportId, reportCardId }) 
 
 	const updateMetadataMutation = useMutation({
 		mutationFn: updateReportMetadata,
+		onMutate: (variables) => {
+			const previous = riskLevel;
+			setRiskLevel(variables.riskLevel);
+			return { previous };
+		},
 		onSuccess: () => {
-			queryClient.invalidateQueries(['report-details', reportId]);
+			queryClient.invalidateQueries({
+				queryKey: ['report-details', reportId],
+			});
 			toast.success('Query risks updated');
 		},
-		onError: (error) => {
+		onError: (error, _variables, context) => {
+			if (context?.previous !== undefined) {
+				setRiskLevel(context.previous);
+			}
 			logError(error, {
 				feature: 'reports',
 				action: 'updateRiskLevel',
@@ -33,7 +43,6 @@ export const RiskLevelDropdown = ({ value, riskTypes, reportId, reportCardId }) 
 	});
 
 	const handleRiskLevelChange = (newRiskLevel) => {
-		setRiskLevel(newRiskLevel);
 		updateMetadataMutation.mutate({
 			reportId,
 			reportCardId,

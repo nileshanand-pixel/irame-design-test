@@ -61,7 +61,9 @@ const DataSource = () => {
 		mutationFn: (id) => deleteDataSource(id),
 		onSuccess: () => {
 			toast.success('Data source deleted successfully');
-			queryClient.invalidateQueries(['get-datasource-by-id', 'data-sources']);
+			queryClient.invalidateQueries({
+				queryKey: ['get-datasource-by-id', 'data-sources'],
+			});
 			trackEvent(
 				EVENTS_ENUM.DATASET_DELETION_SUCCESSFUL,
 				EVENTS_REGISTRY.DATASET_DELETION_SUCCESSFUL,
@@ -106,7 +108,9 @@ const DataSource = () => {
 			setIsEditing(false);
 			toast.success('Dataset updated successfully');
 			// Invalidate and refetch to force fresh data
-			queryClient.invalidateQueries(getDatasourceDetailsQueryKey(query?.id));
+			queryClient.invalidateQueries({
+				queryKey: getDatasourceDetailsQueryKey(query?.id),
+			});
 			// const eventProperties = {
 			// 	dataset_id: datasourceQuery?.data?.datasource_id,
 			// 	dataset_name: datasourceQuery?.data?.name,

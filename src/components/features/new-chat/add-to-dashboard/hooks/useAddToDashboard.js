@@ -270,18 +270,19 @@ export const useAddToDashboard = ({ onSuccess, onError } = {}) => {
 				}
 
 				// Invalidate queries to refresh dashboard content
-				queryClient.invalidateQueries(QUERY_KEYS.MY_DASHBOARDS);
-				queryClient.invalidateQueries(
-					QUERY_KEYS.DASHBOARDS_CONTAINING_QUERY(queryId),
-				);
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.MY_DASHBOARDS,
+				});
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.DASHBOARDS_CONTAINING_QUERY(queryId),
+				});
 				if (dashboardId) {
-					queryClient.invalidateQueries(
-						QUERY_KEYS.DASHBOARD_CONTENT(dashboardId),
-					);
-					queryClient.invalidateQueries([
-						'dashboard-details-new',
-						dashboardId,
-					]);
+					queryClient.invalidateQueries({
+						queryKey: QUERY_KEYS.DASHBOARD_CONTENT(dashboardId),
+					});
+					queryClient.invalidateQueries({
+						queryKey: ['dashboard-details-new', dashboardId],
+					});
 				}
 
 				// Create "View" button for toast

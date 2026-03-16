@@ -53,8 +53,12 @@ export default function WorkflowPageV2() {
 		mutationFn: () => RunWorkFlowRun(workflowId, runId),
 		onSuccess: async () => {
 			toast.success('Workflow run successful');
-			queryClient.invalidateQueries(['workflow-runs', workflowId]);
-			queryClient.invalidateQueries(['workflow-run-details', runId]);
+			queryClient.invalidateQueries({
+				queryKey: ['workflow-runs', workflowId],
+			});
+			queryClient.invalidateQueries({
+				queryKey: ['workflow-run-details', runId],
+			});
 			const data = await getWorkflowRunDetails(workflowId, runId);
 			navigate(
 				`/app/new-chat/session/?sessionId=${data.session_id}&source=workflow&datasource_id=${data.datasource_id}`,
