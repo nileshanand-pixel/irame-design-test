@@ -9,6 +9,7 @@ export const WorkspaceEnum = {
 	DataFrame: 'response_dataframe',
 	Clarification: 'clarification',
 	ConsolidatedExport: 'consolidated_export',
+	Extraction: 'extraction',
 };
 
 export const EXPORT_STATUS = {
@@ -29,4 +30,5 @@ export const workSpaceMap = {
 	answer: 'Observation',
 	reference: 'Reference',
 	response_dataframe: 'Table',
+	extraction: 'Extraction',
 };
