@@ -578,6 +578,7 @@ const ResponseCard = ({
 										graph: graphDataItem[1],
 										table: dataFrameItem[1],
 									}}
+									extraction={extractionItem?.[1]}
 									isGraphLoading={isGraphLoading}
 									setIsGraphLoading={setIsGraphLoading}
 									showTable={showTable}
@@ -605,20 +606,6 @@ const ResponseCard = ({
 									setIsGraphLoading={setIsTableLoading}
 									showTable={showTable}
 									queryId={answerResp?.query_id}
-								/>
-							</div>
-						)}
-
-						{extractionItem && (
-							<div className="mb-4">
-								<h3 className="text-lg font-semibold text-primary80 mb-2">
-									Extraction
-								</h3>
-								<TableResponse
-									data={extractionItem[1].tool_data}
-									isGraphLoading={false}
-									setIsGraphLoading={() => {}}
-									noStyles={true}
 								/>
 							</div>
 						)}

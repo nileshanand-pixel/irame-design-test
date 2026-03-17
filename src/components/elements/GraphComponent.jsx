@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
 import GraphRenderer from './GraphRenderer';
 import ScrollList from './ScrollList';
+import TableResponse from './TableResponse';
 import { trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { logError } from '@/lib/logger';
@@ -17,6 +18,7 @@ import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV
 
 const GraphComponent = ({
 	data,
+	extraction,
 	isGraphLoading,
 	setIsGraphLoading,
 	showTable,
@@ -28,6 +30,9 @@ const GraphComponent = ({
 	const [loadedData, setLoadedData] = useState([]);
 	const [columns, setColumns] = useState([]);
 	const [activeTab, setActiveTab] = useState(tab);
+	const [activeExtractionTab, setActiveExtractionTab] = useState(
+		extraction ? Object.keys(extraction.tool_data)[0] : null,
+	);
 	const [isCsvLoaded, setIsCsvLoaded] = useState(false);
 	const graphList = data?.graph?.tool_data?.graphs || [];
 	const tableData = data?.table?.tool_data;
@@ -45,6 +50,10 @@ const GraphComponent = ({
 	);
 
 	const { data: datasourceData } = useDatasourceDetailsV2();
+
+	const visibleTabs = Object.values(RESPONSE_CARD_VIEWS).filter(
+		(tab) => tab !== RESPONSE_CARD_VIEWS.EXTRACTIONS || !!extraction,
+	);
 
 	function generateColumns(keys) {
 		return keys?.map((key) => {
@@ -115,7 +124,7 @@ const GraphComponent = ({
 			) : (
 				<>
 					<ul className="ghost-tabs relative col-span-12 mb-2 inline-flex w-full border-b border-black-10">
-						{Object.values(RESPONSE_CARD_VIEWS).map((item, indx) => (
+						{visibleTabs.map((item, indx) => (
 							<li
 								key={`${queryId}_${indx}`}
 								className={`!py-0 ${
@@ -230,6 +239,33 @@ const GraphComponent = ({
 								/>
 							)}
 						</div>
+					)}
+					{activeTab === RESPONSE_CARD_VIEWS.EXTRACTIONS && extraction && (
+						<>
+							<ScrollList>
+								{Object.keys(extraction.tool_data).map((label) => (
+									<li
+										key={label}
+										className={`text-sm font-medium border rounded-2xl px-3 h-full py-2 mb-2 cursor-pointer min-w-fit whitespace-nowrap ${
+											activeExtractionTab === label
+												? 'text-purple-100 border-purple-40 tabActiveBg'
+												: 'text-black/60 border-black/10'
+										}`}
+										onClick={() => setActiveExtractionTab(label)}
+									>
+										{label}
+									</li>
+								))}
+							</ScrollList>
+							{activeExtractionTab && (
+								<TableResponse
+									data={extraction.tool_data[activeExtractionTab]}
+									isGraphLoading={false}
+									setIsGraphLoading={() => {}}
+									noStyles={true}
+								/>
+							)}
+						</>
 					)}
 				</>
 			)}
