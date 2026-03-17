@@ -161,6 +161,10 @@ const InvitationAuthForm = ({
 							className="block w-full px-3 py-2.5 bg-white border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
 							required
 						/>
+						<p className="text-xs text-gray-500">
+							Must include uppercase, lowercase, numbers, and special
+							characters
+						</p>
 					</div>
 
 					{isRecaptchaEnabled && (

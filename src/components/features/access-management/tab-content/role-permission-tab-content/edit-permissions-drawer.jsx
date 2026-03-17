@@ -116,7 +116,7 @@ export default function EditPermissionsDrawer({
 					<div className="border-t border-[#6A12CD1A] pt-4 px-6 pb-5 space-y-4">
 						<InputText
 							label="Role Name"
-							placeholder="e.g., nilesh anand"
+							placeholder="Enter role name"
 							className="w-full"
 							value={roleName}
 							setValue={(e) => setRoleName(e)}

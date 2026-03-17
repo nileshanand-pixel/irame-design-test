@@ -171,7 +171,7 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 					<div className="border-t border-[#6A12CD1A] pt-4 px-6 pb-5 space-y-4">
 						<InputText
 							label="Full Name"
-							placeholder="e.g., nilesh anand"
+							placeholder="Enter full name"
 							className="w-full"
 							value={fullName}
 							setValue={(e) => setFullName(e)}
@@ -179,7 +179,7 @@ export default function InviteUserDrawer({ open, setOpen, onSuccess }) {
 						/>
 						<InputText
 							label="Email"
-							placeholder="nilesh.anand@irame.ai"
+							placeholder="Enter email address"
 							className="w-full"
 							value={email}
 							setValue={(e) => setEmail(e)}
