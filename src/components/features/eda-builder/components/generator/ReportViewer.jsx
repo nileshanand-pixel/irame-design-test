@@ -138,7 +138,6 @@ const DownloadIcon = () => (
 const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 	const [activeTab, setActiveTab] = useState(initialTab || '');
 	const [htmlCache, setHtmlCache] = useState({});
-	const [blobUrls, setBlobUrls] = useState({});
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [statsOpen, setStatsOpen] = useState(false);
@@ -148,13 +147,6 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 	const availableReports = REPORT_TYPES.filter(
 		(r) => reportUrls?.[r.key] || reportUrls?.[r.key + '_standalone'],
 	);
-
-	// Cleanup blob URLs on unmount
-	useEffect(() => {
-		return () => {
-			Object.values(blobUrls).forEach(URL.revokeObjectURL);
-		};
-	}, []);
 
 	// Set initial tab if provided, or auto-select first available report
 	useEffect(() => {
@@ -177,14 +169,6 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 					: reportKey;
 				const html = await getEdaReportHtml(jobId, type);
 				setHtmlCache((prev) => ({ ...prev, [reportKey]: html }));
-				// Create blob URL for iframe — avoids sandbox restrictions that block Plotly
-				const cleanHtml = stripNavFromHtml(html);
-				const blob = new Blob([cleanHtml], { type: 'text/html' });
-				setBlobUrls((prev) => {
-					// Revoke previous blob URL to avoid memory leak
-					if (prev[reportKey]) URL.revokeObjectURL(prev[reportKey]);
-					return { ...prev, [reportKey]: URL.createObjectURL(blob) };
-				});
 			} catch (err) {
 				setError(
 					`Failed to load ${reportKey} report: ${err?.response?.status === 404 ? 'Report not found' : err.message}`,
@@ -413,11 +397,11 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 									</button>
 								</div>
 							</div>
-						) : blobUrls[key] ? (
+						) : htmlCache[key] ? (
 							<div className="bg-white">
 								<iframe
 									ref={iframeRef}
-									src={blobUrls[key]}
+									srcDoc={stripNavFromHtml(htmlCache[key])}
 									onLoad={handleIframeLoad}
 									title={`${key} report`}
 									className="w-full border-0"
