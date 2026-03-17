@@ -11,6 +11,7 @@ const CHAT_CONSTANTS = {
 export const RESPONSE_CARD_VIEWS = {
 	TABULAR_VIEW: 'Tabular View',
 	GRAPHICAL_VIEW: 'Graphical View',
+	EXTRACTIONS: 'Extractions',
 };
 
 export default CHAT_CONSTANTS;
