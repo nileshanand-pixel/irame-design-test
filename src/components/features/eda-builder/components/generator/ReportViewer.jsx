@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { getEdaReportHtml } from '../../service/eda.service';
 
 const REPORT_TYPES = [
@@ -138,6 +138,7 @@ const DownloadIcon = () => (
 const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 	const [activeTab, setActiveTab] = useState(initialTab || '');
 	const [htmlCache, setHtmlCache] = useState({});
+	const [blobUrls, setBlobUrls] = useState({});
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
 	const [statsOpen, setStatsOpen] = useState(false);
@@ -147,6 +148,13 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 	const availableReports = REPORT_TYPES.filter(
 		(r) => reportUrls?.[r.key] || reportUrls?.[r.key + '_standalone'],
 	);
+
+	// Cleanup blob URLs on unmount
+	useEffect(() => {
+		return () => {
+			Object.values(blobUrls).forEach(URL.revokeObjectURL);
+		};
+	}, []);
 
 	// Set initial tab if provided, or auto-select first available report
 	useEffect(() => {
@@ -169,6 +177,14 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 					: reportKey;
 				const html = await getEdaReportHtml(jobId, type);
 				setHtmlCache((prev) => ({ ...prev, [reportKey]: html }));
+				// Create blob URL for iframe — avoids sandbox restrictions that block Plotly
+				const cleanHtml = stripNavFromHtml(html);
+				const blob = new Blob([cleanHtml], { type: 'text/html' });
+				setBlobUrls((prev) => {
+					// Revoke previous blob URL to avoid memory leak
+					if (prev[reportKey]) URL.revokeObjectURL(prev[reportKey]);
+					return { ...prev, [reportKey]: URL.createObjectURL(blob) };
+				});
 			} catch (err) {
 				setError(
 					`Failed to load ${reportKey} report: ${err?.response?.status === 404 ? 'Report not found' : err.message}`,
@@ -201,6 +217,25 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 			// Cross-origin or access error — use default height
 		}
 	}, []);
+
+	/** Print current report as PDF via browser print dialog */
+	const handlePrintPdf = () => {
+		const iframe = iframeRef.current;
+		if (!iframe) return;
+		try {
+			iframe.contentWindow?.print();
+		} catch {
+			// Fallback: open HTML in new window and print
+			const html = htmlCache[activeTab];
+			if (!html) return;
+			const win = window.open('', '_blank');
+			if (win) {
+				win.document.write(stripNavFromHtml(html));
+				win.document.close();
+				setTimeout(() => win.print(), 500);
+			}
+		}
+	};
 
 	/** Download current tab's report HTML (nav stripped) */
 	const handleDownload = () => {
@@ -292,6 +327,22 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 				</div>
 				{activeTab && htmlCache[activeTab] && (
 					<div className="flex items-center gap-2">
+						<button onClick={handlePrintPdf} className={btnClass}>
+							<svg
+								className="w-3.5 h-3.5"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+								/>
+							</svg>
+							Download PDF
+						</button>
 						<button onClick={handleDownload} className={btnClass}>
 							<DownloadIcon />
 							Download HTML
@@ -320,35 +371,8 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 				)}
 			</div>
 
-			{/* Tabs */}
+			{/* Tabs — tab bar hidden since report cards above handle switching */}
 			<Tabs value={activeTab} onValueChange={setActiveTab}>
-				<div className="px-5 pt-2 pb-0 border-b bg-gray-50/50">
-					<TabsList className="bg-transparent gap-2 p-0 h-auto">
-						{availableReports.map(({ key, label, icon }) => (
-							<TabsTrigger
-								key={key}
-								value={key}
-								className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary40 rounded-t-lg border-b-2 border-transparent data-[state=active]:border-purple-100 data-[state=active]:text-purple-100 data-[state=active]:bg-white data-[state=active]:shadow-sm hover:text-primary60 hover:bg-white/60 transition-all duration-200 -mb-[1px]"
-							>
-								<svg
-									className="w-4 h-4"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={1.5}
-										d={icon}
-									/>
-								</svg>
-								{label}
-							</TabsTrigger>
-						))}
-					</TabsList>
-				</div>
-
 				{/* Content */}
 				{availableReports.map(({ key }) => (
 					<TabsContent key={key} value={key} className="mt-0">
@@ -389,45 +413,20 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 									</button>
 								</div>
 							</div>
-						) : htmlCache[key] ? (
+						) : blobUrls[key] ? (
 							<div className="bg-white">
 								<iframe
 									ref={iframeRef}
-									srcDoc={htmlCache[key]}
+									src={blobUrls[key]}
 									onLoad={handleIframeLoad}
 									title={`${key} report`}
 									className="w-full border-0"
 									style={{ minHeight: '600px', height: '800px' }}
-									sandbox="allow-scripts allow-same-origin"
 								/>
 							</div>
 						) : null}
 					</TabsContent>
 				))}
-
-				{/* No tab selected state */}
-				{!activeTab && (
-					<div className="flex items-center justify-center py-20 bg-gray-50/30">
-						<div className="text-center space-y-2">
-							<svg
-								className="w-10 h-10 text-primary20 mx-auto"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={1.5}
-									d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-								/>
-							</svg>
-							<p className="text-sm text-primary40">
-								Select a report tab above to view
-							</p>
-						</div>
-					</div>
-				)}
 			</Tabs>
 
 			{/* Pipeline & LLM Stats */}
