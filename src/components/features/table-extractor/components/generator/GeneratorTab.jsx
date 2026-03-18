@@ -6,11 +6,15 @@ import ProgressSection from './ProgressSection';
 import ResultsSection from './ResultsSection';
 import { useTableExtractorJobPolling } from '../../hooks/useTableExtractorJobPolling';
 import {
+	createTableExtractorJob,
 	uploadTableExtractorFilesLocal,
 	getTableExtractorJobResult,
 	deleteTableExtractorJob,
 } from '../../service/table-extractor.service';
+import { uploadFile } from '@/components/features/upload/service';
 import { INITIAL_EXTRACTION_FIELDS } from '../../constants/table-extractor.constants';
+
+const isLocalEnv = import.meta.env.VITE_ENV === 'local';
 
 const STATES = {
 	SCHEMA: 'schema',
@@ -104,13 +108,40 @@ const GeneratorTab = ({ selectedJobId, onJobIdChange }) => {
 				source: f.source,
 			}));
 
-			const response = await uploadTableExtractorFilesLocal(
-				uploadFiles,
-				extractionFields,
-				customInstruction,
-			);
+			let newJobId;
 
-			const newJobId = response.data.job_id;
+			if (isLocalEnv) {
+				// Local dev: upload files directly via multipart
+				const response = await uploadTableExtractorFilesLocal(
+					uploadFiles,
+					extractionFields,
+					customInstruction,
+				);
+				newJobId = response.data.job_id;
+			} else {
+				// Production/UAT: upload to S3 via presigned URLs, then create job
+				const fileUrls = [];
+				const names = [];
+
+				for (let i = 0; i < uploadFiles.length; i++) {
+					const file = uploadFiles[i];
+					const { url } = await uploadFile({
+						file,
+						updateProgress: () => {},
+					});
+					fileUrls.push(url);
+					names.push(file.name);
+				}
+
+				const response = await createTableExtractorJob(
+					fileUrls,
+					names,
+					extractionFields,
+					customInstruction,
+				);
+				newJobId = response.data.job_id;
+			}
+
 			setJobId(newJobId);
 			setFileNames(uploadFiles.map((f) => f.name));
 			onJobIdChange?.(newJobId);
