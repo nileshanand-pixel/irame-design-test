@@ -22,7 +22,7 @@ export const useDataSources = (options = {}, teamId) => {
 	const selectedTeamId = teamId || auth?.selectedTeamId;
 
 	// Extract limit from options if provided
-	const { limit, ...queryOptions } = options;
+	const { limit = 100, ...queryOptions } = options;
 
 	// Track previous teamId to detect actual changes
 	const prevTeamIdRef = useRef(null);
