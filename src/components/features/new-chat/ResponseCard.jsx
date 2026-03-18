@@ -281,6 +281,9 @@ const ResponseCard = ({
 	const dataFrameItem = mainItems.find(
 		([key, value]) => value?.tool_type === WorkspaceEnum.DataFrame,
 	);
+	const extractionItem = mainItems.find(
+		([key, value]) => value?.tool_type === WorkspaceEnum.Extraction,
+	);
 
 	const exportState = useMemo(() => {
 		const consolidatedExportItem = Object.entries(answerResp?.answer || {}).find(
@@ -575,6 +578,7 @@ const ResponseCard = ({
 										graph: graphDataItem[1],
 										table: dataFrameItem[1],
 									}}
+									extraction={extractionItem?.[1]}
 									isGraphLoading={isGraphLoading}
 									setIsGraphLoading={setIsGraphLoading}
 									showTable={showTable}
