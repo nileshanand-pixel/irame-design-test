@@ -96,12 +96,15 @@ const AuditTab = ({ selectedJobId, onJobIdChange }) => {
 	};
 
 	const handleGenerate = useCallback(
-		async (guidelinesFile, imageFiles, instructions) => {
+		async (guidelinesFiles, imageFiles, instructions) => {
 			try {
 				setState(STATES.UPLOADING);
 				setUploadProgress(0);
 				// Guidelines first, then images (order matters for Python pipeline)
-				const allFiles = [guidelinesFile, ...imageFiles];
+				const guidelinesList = Array.isArray(guidelinesFiles)
+					? guidelinesFiles
+					: [guidelinesFiles];
+				const allFiles = [...guidelinesList, ...imageFiles];
 				setFileNames(allFiles.map((f) => f.name));
 				setErrorMessage('');
 
