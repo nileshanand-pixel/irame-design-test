@@ -32,6 +32,7 @@ import DocumentForensicsPage from '@/components/features/document-forensics/page
 import ImageAnalyticsPage from '@/components/features/image-analytics/page';
 import AiConciergePage from '@/components/features/ai-concierge/page';
 import SpeechAuditorPage from '@/components/features/speech-auditor/page';
+import TableExtractorPage from '@/components/features/table-extractor/page';
 
 function AppRoutes() {
 	return (
@@ -167,6 +168,14 @@ function AppRoutes() {
 											element={
 												<ProtectedRoute
 													element={<SpeechAuditorPage />}
+												/>
+											}
+										/>
+										<Route
+											path="ai-concierge/table-extractor"
+											element={
+												<ProtectedRoute
+													element={<TableExtractorPage />}
 												/>
 											}
 										/>
