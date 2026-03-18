@@ -51,9 +51,11 @@ const GraphComponent = ({
 
 	const { data: datasourceData } = useDatasourceDetailsV2();
 
-	const visibleTabs = Object.values(RESPONSE_CARD_VIEWS).filter(
-		(tab) => tab !== RESPONSE_CARD_VIEWS.EXTRACTIONS || !!extraction,
-	);
+	const visibleTabs = Object.values(RESPONSE_CARD_VIEWS).filter((tab) => {
+		if (tab === RESPONSE_CARD_VIEWS.EXTRACTIONS) return !!extraction;
+		if (tab === RESPONSE_CARD_VIEWS.GRAPHICAL_VIEW) return graphList.length > 0;
+		return true;
+	});
 
 	function generateColumns(keys) {
 		return keys?.map((key) => {
