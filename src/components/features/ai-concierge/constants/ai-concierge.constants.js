@@ -3,6 +3,7 @@ import {
 	TbChartHistogram,
 	TbShieldCheck,
 	TbPhoto,
+	TbMicrophone,
 } from 'react-icons/tb';
 
 /**
@@ -46,6 +47,16 @@ export const AI_FEATURES = [
 		icon: TbPhoto,
 		route: 'image-analytics',
 		tags: ['Image', 'Audit', 'Compare'],
+		beta: true,
+	},
+	{
+		id: 'speech-auditor',
+		name: 'Speech Auditor',
+		description:
+			'AI-powered call recording analysis with transcription, sentiment, and audit reports',
+		icon: TbMicrophone,
+		route: 'speech-auditor',
+		tags: ['Speech', 'Audit', 'Sentiment'],
 		beta: true,
 	},
 ];

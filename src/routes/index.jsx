@@ -31,6 +31,7 @@ import EDABuilderPage from '@/components/features/eda-builder/page';
 import DocumentForensicsPage from '@/components/features/document-forensics/page';
 import ImageAnalyticsPage from '@/components/features/image-analytics/page';
 import AiConciergePage from '@/components/features/ai-concierge/page';
+import SpeechAuditorPage from '@/components/features/speech-auditor/page';
 
 function AppRoutes() {
 	return (
@@ -158,6 +159,14 @@ function AppRoutes() {
 											element={
 												<ProtectedRoute
 													element={<ImageAnalyticsPage />}
+												/>
+											}
+										/>
+										<Route
+											path="ai-concierge/speech-auditor"
+											element={
+												<ProtectedRoute
+													element={<SpeechAuditorPage />}
 												/>
 											}
 										/>
