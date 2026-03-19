@@ -7,8 +7,8 @@ import {
 	getDataSourcesV2,
 	getBulkPresignedUrls,
 } from '@/components/features/configuration/service/configuration.service';
-import axiosClientV1 from '@/lib/axios';
 import { logError } from '@/lib/logger';
+import { uploadWithResilience } from '@/utils/multipart-upload';
 
 const SERVER_TO_UI_STATUS = {
 	PROCESSING: 'processing',
@@ -30,7 +30,7 @@ const createBatches = (array, batchSize) => {
 	return batches;
 };
 
-// Upload a single file to S3 with presigned URL
+// Upload a single file to S3 (uses multipart for files > 10MB)
 const uploadSingleFileToS3 = async ({
 	file,
 	presignedUrl,
@@ -39,21 +39,21 @@ const uploadSingleFileToS3 = async ({
 	cancelToken,
 }) => {
 	try {
-		await axiosClientV1.put(presignedUrl, file, {
-			headers: {
-				'Content-Type': file.type,
-			},
-			onUploadProgress: (progressEvent) => {
-				const total = progressEvent.total ?? 0;
-				const loaded = progressEvent.loaded ?? 0;
-				const pct =
-					total > 0 ? Math.min(99, Math.round((loaded / total) * 100)) : 0;
-				if (typeof onProgress === 'function') onProgress(pct);
+		const result = await uploadWithResilience({
+			file,
+			presignedUrl,
+			url: fileUrl,
+			onProgress: (pct) => {
+				if (typeof onProgress === 'function') onProgress(Math.min(99, pct));
 			},
 			cancelToken,
 		});
 
-		return { url: fileUrl, file_url: fileUrl, name: file.name };
+		return {
+			url: result.url,
+			file_url: result.url,
+			name: file.name,
+		};
 	} catch (err) {
 		if (!axios.isCancel(err)) {
 			logError(err, {
@@ -390,10 +390,13 @@ export function useDatasourceIngest({
 
 				// Step 2: Upload all files in this batch concurrently to S3
 				const uploadPromises = batchItems.map((item) => {
-					const { presigned_url, url } = filesObject[item.name];
-					if (!presigned_url || !url) {
-						throw new Error(`No presigned URL for file: ${item.name}`);
+					const fileData = filesObject[item.name];
+					if (!fileData?.presigned_url || !fileData?.url) {
+						return Promise.reject(
+							new Error(`No presigned URL for file: ${item.name}`),
+						);
 					}
+					const { presigned_url, url } = fileData;
 
 					const source = axios.CancelToken.source();
 					cancelTokensRef.current[item.id] = source;
