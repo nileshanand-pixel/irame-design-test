@@ -128,3 +128,26 @@ export const IA_AUDIT_IMAGE_FILE_TYPES = {
 	'image/png': ['.png'],
 	'image/webp': ['.webp'],
 };
+
+export const IA_KPI_STATUSES = {
+	COMPLIANT: {
+		key: 'Compliant',
+		label: 'Compliant',
+		color: 'text-green-800',
+		bgColor: 'bg-green-100',
+	},
+	'PARTIALLY COMPLIANT': {
+		key: 'Partially Compliant',
+		label: 'Partially Compliant',
+		color: 'text-yellow-800',
+		bgColor: 'bg-yellow-100',
+	},
+	'NON-COMPLIANT': {
+		key: 'Non-Compliant',
+		label: 'Non-Compliant',
+		color: 'text-red-800',
+		bgColor: 'bg-red-100',
+	},
+};
+
+export const IA_MAX_GUIDELINES = 5;

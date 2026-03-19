@@ -4,22 +4,34 @@ import { toast } from 'react-toastify';
 import {
 	IA_AUDIT_GUIDELINES_FILE_TYPES,
 	IA_AUDIT_IMAGE_FILE_TYPES,
+	IA_MAX_GUIDELINES,
 } from '../../constants/imageAnalytics.constants';
 
 const AuditUploadSection = ({ onGenerate, isDisabled }) => {
-	const [guidelines, setGuidelines] = useState(null);
+	const [guidelines, setGuidelines] = useState([]);
 	const [images, setImages] = useState([]);
 	const [instructions, setInstructions] = useState('');
 
 	const guidelinesDropzone = useDropzone({
 		onDrop: useCallback((accepted) => {
-			if (accepted.length > 0) setGuidelines(accepted[0]);
+			setGuidelines((prev) => {
+				const existing = new Set(prev.map((f) => f.name));
+				const newFiles = accepted.filter((f) => !existing.has(f.name));
+				const merged = [...prev, ...newFiles];
+				if (merged.length > IA_MAX_GUIDELINES) {
+					toast.error(
+						`Maximum ${IA_MAX_GUIDELINES} guidelines documents allowed.`,
+					);
+					return merged.slice(0, IA_MAX_GUIDELINES);
+				}
+				return merged;
+			});
 		}, []),
 		onDropRejected: useCallback(() => {
 			toast.error('Please upload a PDF, DOC, DOCX, or TXT file.');
 		}, []),
 		accept: IA_AUDIT_GUIDELINES_FILE_TYPES,
-		maxFiles: 1,
+		maxFiles: IA_MAX_GUIDELINES,
 		maxSize: 50 * 1024 * 1024,
 		disabled: isDisabled,
 	});
@@ -41,7 +53,7 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 	});
 
 	const handleGenerate = () => {
-		if (guidelines && images.length > 0) {
+		if (guidelines.length > 0 && images.length > 0) {
 			onGenerate(guidelines, images, instructions);
 		}
 	};
@@ -52,7 +64,7 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 				{/* Guidelines upload */}
 				<div>
 					<label className="block text-sm font-medium text-primary60 mb-2">
-						1. Upload Guidelines Document
+						1. Upload Guidelines (Up to {IA_MAX_GUIDELINES})
 					</label>
 					<div
 						{...guidelinesDropzone.getRootProps()}
@@ -63,34 +75,30 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 						}`}
 					>
 						<input {...guidelinesDropzone.getInputProps()} />
-						{guidelines ? (
-							<div className="flex items-center justify-center gap-2">
-								<div className="bg-white/60 backdrop-blur-sm border border-white/70 text-primary80 rounded-lg px-3 py-2 flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
-									<span className="text-sm font-medium">
-										{guidelines.name}
-									</span>
-									<button
-										onClick={(e) => {
-											e.stopPropagation();
-											setGuidelines(null);
-										}}
-										className="ml-1 text-primary40 hover:text-primary80"
-									>
-										<svg
-											className="w-4 h-4"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
+						{guidelines.length > 0 ? (
+							<div className="space-y-2">
+								<p className="text-sm font-medium text-primary80">
+									{guidelines.length} document(s) selected
+								</p>
+								<div className="flex flex-wrap justify-center gap-1">
+									{guidelines.map((f) => (
+										<span
+											key={f.name}
+											className="text-xs bg-white/50 backdrop-blur-sm border border-white/60 text-primary60 px-2 py-1 rounded"
 										>
-											<path
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												strokeWidth={2}
-												d="M6 18L18 6M6 6l12 12"
-											/>
-										</svg>
-									</button>
+											{f.name}
+										</span>
+									))}
 								</div>
+								<button
+									onClick={(e) => {
+										e.stopPropagation();
+										setGuidelines([]);
+									}}
+									className="text-xs text-red-500 hover:text-red-700 font-medium"
+								>
+									Clear all
+								</button>
 							</div>
 						) : (
 							<div>
@@ -111,7 +119,7 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 									Drop guidelines here
 								</p>
 								<p className="text-xs text-primary40 mt-1">
-									PDF, DOC, DOCX, TXT
+									PDF, DOC, DOCX, TXT (up to {IA_MAX_GUIDELINES})
 								</p>
 							</div>
 						)}
@@ -205,7 +213,9 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 
 			<button
 				onClick={handleGenerate}
-				disabled={!guidelines || images.length === 0 || isDisabled}
+				disabled={
+					guidelines.length === 0 || images.length === 0 || isDisabled
+				}
 				className="w-full bg-gradient-to-r from-[rgba(106,18,205,0.85)] to-[rgba(130,60,220,0.9)] text-white font-medium py-3 rounded-xl hover:from-[rgba(106,18,205,0.95)] hover:to-[rgba(130,60,220,1)] transition-all duration-300 shadow-[0_2px_12px_rgba(106,18,205,0.2),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_4px_20px_rgba(106,18,205,0.35),inset_0_1px_0_rgba(255,255,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
 			>
 				Generate Audit Report
@@ -213,10 +223,10 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 
 			<div className="pt-5 border-t border-[rgba(106,18,205,0.06)] space-y-4">
 				<p className="text-sm text-primary60 text-center leading-relaxed">
-					Upload a guidelines document and images to audit — AI reviews
-					each image against your compliance standards and generates a
-					structured non-compliance report with severity ratings and
-					recommendations.
+					Upload guidelines and images to audit — AI extracts KPIs from
+					your compliance standards and evaluates each image, generating a
+					structured report with Compliant / Non-Compliant / Partially
+					Compliant status for every KPI.
 				</p>
 				<div>
 					<p className="text-xs font-semibold text-primary20 uppercase tracking-wider mb-4 text-center">
@@ -224,10 +234,19 @@ const AuditUploadSection = ({ onGenerate, isDisabled }) => {
 					</p>
 					<div className="flex items-start justify-between">
 						{[
-							{ title: 'Guidelines', desc: 'Upload standards doc' },
+							{
+								title: 'Guidelines',
+								desc: 'Upload standards (up to 5)',
+							},
 							{ title: 'Images', desc: 'Upload items to audit' },
-							{ title: 'AI Audit', desc: 'Review against rules' },
-							{ title: 'Report', desc: 'Non-compliance findings' },
+							{
+								title: 'KPI Extract',
+								desc: 'AI extracts rules',
+							},
+							{
+								title: 'Evaluate',
+								desc: 'Per-KPI compliance check',
+							},
 							{ title: 'Download', desc: 'PDF & Excel export' },
 						].map((step, i, arr) => (
 							<div key={step.title} className="contents">

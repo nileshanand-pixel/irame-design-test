@@ -2,6 +2,13 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { downloadImageAnalyticsReport } from '../../service/imageAnalytics.service';
 
+const KPI_STATUS_STYLES = {
+	compliant: 'bg-green-100 text-green-800',
+	'non-compliant': 'bg-red-100 text-red-800',
+	'partially compliant': 'bg-yellow-100 text-yellow-800',
+};
+
+// Legacy severity styles for old jobs that used non_compliances
 const SEVERITY_STYLES = {
 	high: 'bg-red-100 text-red-800',
 	medium: 'bg-yellow-100 text-yellow-800',
@@ -10,10 +17,14 @@ const SEVERITY_STYLES = {
 
 const AuditResultSection = ({ result, jobId, onNewAnalysis }) => {
 	const auditResult = result?.result || {};
+	const kpis = auditResult.kpis || [];
 	const nonCompliances = auditResult.non_compliances || [];
 	const summary = auditResult.summary || 'No summary available.';
 	const reportUrls = result?.reportUrls || {};
 	const [downloading, setDownloading] = useState(null);
+
+	// Determine if this is a new KPI-based result or legacy non_compliances
+	const isKpiBased = kpis.length > 0;
 
 	const handleDownload = async (reportType) => {
 		const isExcel = reportType.includes('excel');
@@ -123,76 +134,162 @@ const AuditResultSection = ({ result, jobId, onNewAnalysis }) => {
 				<p className="text-sm text-primary80 leading-relaxed">{summary}</p>
 			</div>
 
-			{/* Non-Compliances */}
-			<div>
-				<h4 className="text-xs font-semibold text-primary40 uppercase tracking-wider mb-3">
-					Non-Compliances
-					{nonCompliances.length > 0 && (
-						<span className="ml-2 text-red-500">
-							({nonCompliances.length})
-						</span>
-					)}
-				</h4>
+			{/* KPI Evaluations (new format) */}
+			{isKpiBased ? (
+				<div>
+					<h4 className="text-xs font-semibold text-primary40 uppercase tracking-wider mb-3">
+						KPI Evaluations
+						<span className="ml-2 text-primary60">({kpis.length})</span>
+					</h4>
 
-				{nonCompliances.length > 0 ? (
-					<div className="space-y-3">
-						{nonCompliances.map((nc, i) => (
-							<div
-								key={i}
-								className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
-							>
-								<div className="flex justify-between items-start mb-2">
-									<h5 className="font-medium text-sm text-primary80">
-										{nc.image_name || nc.imageName}
-									</h5>
-									<span
-										className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-											SEVERITY_STYLES[
-												(nc.severity || '').toLowerCase()
-											] || 'bg-gray-100 text-gray-600'
-										}`}
+					{kpis.length > 0 ? (
+						<div className="space-y-3">
+							{kpis.map((kpi, i) => {
+								const statusKey = (kpi.status || '').toLowerCase();
+								const statusStyle =
+									KPI_STATUS_STYLES[statusKey] ||
+									'bg-gray-100 text-gray-600';
+
+								return (
+									<div
+										key={i}
+										className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
 									>
-										{nc.severity}
-									</span>
-								</div>
-								<p className="text-sm text-primary60 mb-3">
-									<span className="font-medium text-primary80">
-										Issue:
-									</span>{' '}
-									{nc.issue}
-								</p>
-								<div className="bg-indigo-50 rounded p-3">
-									<p className="text-sm text-indigo-900">
-										<span className="font-medium">
-											Recommendation:
+										<div className="flex justify-between items-start mb-2">
+											<h5 className="font-medium text-sm text-primary80">
+												{kpi.kpiNumber}: {kpi.kpiDescription}
+											</h5>
+											<span
+												className={`px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${statusStyle}`}
+											>
+												{kpi.status}
+											</span>
+										</div>
+
+										<p className="text-sm text-primary60 mb-2">
+											<span className="font-medium text-primary80">
+												Evidence Images:
+											</span>{' '}
+											{kpi.evidenceImages?.length > 0
+												? kpi.evidenceImages.join(', ')
+												: 'None'}
+										</p>
+
+										<p className="text-sm text-primary60 mb-3">
+											<span className="font-medium text-primary80">
+												Reasoning:
+											</span>{' '}
+											{kpi.reasoning}
+										</p>
+
+										{statusKey !== 'compliant' &&
+											kpi.recommendation && (
+												<div className="bg-indigo-50 rounded p-3">
+													<p className="text-sm text-indigo-900">
+														<span className="font-medium">
+															Recommendation:
+														</span>{' '}
+														{kpi.recommendation}
+													</p>
+												</div>
+											)}
+									</div>
+								);
+							})}
+						</div>
+					) : (
+						<div className="text-center py-8 bg-green-50 rounded-lg border border-green-100">
+							<svg
+								className="w-8 h-8 text-green-500 mx-auto mb-2"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+								/>
+							</svg>
+							<p className="text-green-800 font-medium text-sm">
+								No KPIs evaluated!
+							</p>
+						</div>
+					)}
+				</div>
+			) : (
+				/* Legacy Non-Compliances (backward compat for old jobs) */
+				<div>
+					<h4 className="text-xs font-semibold text-primary40 uppercase tracking-wider mb-3">
+						Non-Compliances
+						{nonCompliances.length > 0 && (
+							<span className="ml-2 text-red-500">
+								({nonCompliances.length})
+							</span>
+						)}
+					</h4>
+
+					{nonCompliances.length > 0 ? (
+						<div className="space-y-3">
+							{nonCompliances.map((nc, i) => (
+								<div
+									key={i}
+									className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+								>
+									<div className="flex justify-between items-start mb-2">
+										<h5 className="font-medium text-sm text-primary80">
+											{nc.image_name || nc.imageName}
+										</h5>
+										<span
+											className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+												SEVERITY_STYLES[
+													(nc.severity || '').toLowerCase()
+												] || 'bg-gray-100 text-gray-600'
+											}`}
+										>
+											{nc.severity}
+										</span>
+									</div>
+									<p className="text-sm text-primary60 mb-3">
+										<span className="font-medium text-primary80">
+											Issue:
 										</span>{' '}
-										{nc.recommendation}
+										{nc.issue}
 									</p>
+									<div className="bg-indigo-50 rounded p-3">
+										<p className="text-sm text-indigo-900">
+											<span className="font-medium">
+												Recommendation:
+											</span>{' '}
+											{nc.recommendation}
+										</p>
+									</div>
 								</div>
-							</div>
-						))}
-					</div>
-				) : (
-					<div className="text-center py-8 bg-green-50 rounded-lg border border-green-100">
-						<svg
-							className="w-8 h-8 text-green-500 mx-auto mb-2"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth={2}
-								d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-							/>
-						</svg>
-						<p className="text-green-800 font-medium text-sm">
-							No non-compliances found!
-						</p>
-					</div>
-				)}
-			</div>
+							))}
+						</div>
+					) : (
+						<div className="text-center py-8 bg-green-50 rounded-lg border border-green-100">
+							<svg
+								className="w-8 h-8 text-green-500 mx-auto mb-2"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+								/>
+							</svg>
+							<p className="text-green-800 font-medium text-sm">
+								No non-compliances found!
+							</p>
+						</div>
+					)}
+				</div>
+			)}
 
 			{/* LLM Cost */}
 			{result?.llmCostUsd > 0 && (
