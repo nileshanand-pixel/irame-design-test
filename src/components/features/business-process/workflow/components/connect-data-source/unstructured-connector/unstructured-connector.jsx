@@ -6,9 +6,9 @@ import {
 	getDatasourceDetails,
 	getRequiredFilesStatus,
 	removeFileFromDs,
-	uploadFile,
 	uploadInit,
 } from '@/components/features/upload/service';
+import { uploadWithResilience } from '@/utils/multipart-upload';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -948,7 +948,7 @@ function UploadManager({
 		return batches;
 	};
 
-	// Upload a single file to S3 with presigned URL
+	// Upload a single file to S3 (uses multipart for files > 10MB)
 	const uploadSingleFileToS3 = async (file, presignedUrl, fileUrl) => {
 		const source = axios.CancelToken.source();
 
@@ -958,17 +958,12 @@ function UploadManager({
 		);
 
 		try {
-			await axios.put(presignedUrl, file.rawFile, {
-				headers: {
-					'Content-Type': file.type,
-				},
-				onUploadProgress: (progressEvent) => {
-					const uploadProgress = Math.min(
-						99,
-						Math.round(
-							(progressEvent.loaded / progressEvent.total) * 100,
-						),
-					);
+			const result = await uploadWithResilience({
+				file: file.rawFile,
+				presignedUrl,
+				url: fileUrl,
+				onProgress: (pct) => {
+					const uploadProgress = Math.min(99, pct);
 					setFiles((prev) =>
 						prev.map((f) =>
 							f.id === file.id ? { ...f, uploadProgress } : f,
@@ -985,7 +980,7 @@ function UploadManager({
 						const newF = {
 							...f,
 							status: FILE_STATUS.UPLOADED,
-							url: fileUrl,
+							url: result.url,
 						};
 						delete newF.cancelToken;
 						return newF;
@@ -994,7 +989,11 @@ function UploadManager({
 				}),
 			);
 
-			return { fileId: file.id, fileUrl, requiredFileId: file.requiredFileId };
+			return {
+				fileId: file.id,
+				fileUrl: result.url,
+				requiredFileId: file.requiredFileId,
+			};
 		} catch (err) {
 			if (!axios.isCancel(err)) {
 				// Mark file as failed
@@ -1024,6 +1023,10 @@ function UploadManager({
 			// Response structure: { files: { "filename.pdf": { presigned_url, url }, ... } }
 			const filesObject = presignedUrlsResponse?.files;
 
+			if (!filesObject) {
+				throw new Error('No presigned URLs received from server');
+			}
+
 			// Validate that all requested files have presigned URLs
 			const missingFiles = fileNames.filter(
 				(fileName) => !filesObject[fileName],
@@ -1031,15 +1034,21 @@ function UploadManager({
 
 			// Step 2: Upload all files in this batch concurrently to S3
 			const uploadPromises = batch.map((file) => {
-				const { presigned_url, url } = filesObject[file.name];
+				const fileData = filesObject[file.name];
+				if (!fileData) {
+					return Promise.reject(
+						new Error(`No presigned URL for ${file.name}`),
+					);
+				}
+				const { presigned_url, url } = fileData;
 				return uploadSingleFileToS3(file, presigned_url, url);
 			});
 
 			const uploadedFiles = await Promise.allSettled(uploadPromises);
 
-			// Step 3: Collect successfully uploaded files
+			// Step 3: Collect successfully uploaded files (exclude undefined from failed uploads)
 			const successfulUploads = uploadedFiles
-				.filter((result) => result.status === 'fulfilled')
+				.filter((result) => result.status === 'fulfilled' && result.value)
 				.map((result) => result.value);
 
 			// Step 4: Add successfully uploaded files to datasource

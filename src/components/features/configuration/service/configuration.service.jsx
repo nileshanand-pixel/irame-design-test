@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/lib/toast';
 import { logError } from '@/lib/logger';
 import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
+import { uploadWithResilience } from '@/utils/multipart-upload';
 
 export const getPresignedUrl = async (fileName, datasourceId) => {
 	// const dsId = datasourceId || uuidv4();
@@ -30,36 +31,24 @@ export const uploadFile = async (
 			datasourceId,
 		);
 
-		const headers = {};
+		const onProgress = (pct) => {
+			setProgress((prevProgress) => {
+				if (prevProgress[file.name] !== undefined) {
+					return { ...prevProgress, [file.name]: pct };
+				}
+				return { ...prevProgress };
+			});
+		};
 
-		if (presigned_url.includes('amazonaws.com')) {
-			headers['Content-Type'] = file.type;
-		} else if (presigned_url.includes('core.windows.net')) {
-			headers['x-ms-blob-type'] = 'BlockBlob';
-		}
-
-		await axiosClientV1.put(presigned_url, file, {
-			headers: {
-				'Content-Type': file.type,
-			},
-			onUploadProgress: (progressEvent) => {
-				const uploadProgress = Math.round(
-					(progressEvent.loaded / progressEvent.total) * 100,
-				);
-				setProgress((prevProgress) => {
-					if (prevProgress[file.name] !== undefined) {
-						return {
-							...prevProgress,
-							[file.name]: uploadProgress,
-						};
-					}
-					return { ...prevProgress };
-				});
-			},
+		const result = await uploadWithResilience({
+			file,
+			presignedUrl: presigned_url,
+			url,
+			onProgress,
 			cancelToken,
 		});
 
-		return { name: file.name, url, presigned_url };
+		return { name: file.name, url: result.url, presigned_url };
 	} catch (error) {
 		logError(error, {
 			feature: 'configuration',
@@ -285,35 +274,21 @@ export const uploadFileWithProgress = async (
 	cancelToken,
 	datasourceId,
 ) => {
-	// Step 1: Get presigned URL
 	const { presigned_url, url } = await getPresignedUrl(file?.name, datasourceId);
 
-	// Step 2: Prepare headers based on cloud provider
-	const headers = { 'Content-Type': file.type };
-	if (presigned_url.includes('amazonaws.com')) {
-		headers['Content-Type'] = file.type;
-	} else if (presigned_url.includes('core.windows.net')) {
-		headers['x-ms-blob-type'] = 'BlockBlob';
-	}
-
-	// Step 3: Upload file with progress tracking
-	await axiosClientV1.put(presigned_url, file, {
-		headers,
-		onUploadProgress: (progressEvent) => {
-			const total = progressEvent.total ?? 0;
-			const loaded = progressEvent.loaded ?? 0;
-			const pct = total > 0 ? Math.round((loaded / total) * 100) : 0;
-			if (typeof onProgress === 'function') onProgress(pct);
-		},
+	const result = await uploadWithResilience({
+		file,
+		presignedUrl: presigned_url,
+		url,
+		onProgress,
 		cancelToken,
 	});
 
-	// Return the result in the expected format
 	return {
 		name: file.name,
-		url,
+		url: result.url,
 		presigned_url,
-		file_url: url,
+		file_url: result.url,
 	};
 };
 

@@ -22,10 +22,10 @@ import {
 	getDatasourceDetails,
 	removeFileFromDs,
 	removeSheets,
-	uploadFile,
 	uploadInit,
 	getBulkPresignedUrls,
 } from '@/components/features/upload/service';
+import { uploadWithResilience } from '@/utils/multipart-upload';
 import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 import { useSearchParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -317,7 +317,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		return batches;
 	};
 
-	// Upload a single file to S3 with presigned URL
+	// Upload a single file to S3 (uses multipart for files > 10MB)
 	const uploadSingleFileToS3 = async (file, presignedUrl, fileUrl) => {
 		const source = axios.CancelToken.source();
 
@@ -327,17 +327,12 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 		);
 
 		try {
-			await axios.put(presignedUrl, file.rawFile, {
-				headers: {
-					'Content-Type': file.type,
-				},
-				onUploadProgress: (progressEvent) => {
-					const uploadProgress = Math.min(
-						99,
-						Math.round(
-							(progressEvent.loaded / progressEvent.total) * 100,
-						),
-					);
+			const result = await uploadWithResilience({
+				file: file.rawFile,
+				presignedUrl,
+				url: fileUrl,
+				onProgress: (pct) => {
+					const uploadProgress = Math.min(99, pct);
 					setFiles((prev) =>
 						prev.map((f) =>
 							f.id === file.id ? { ...f, uploadProgress } : f,
@@ -354,7 +349,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 						const newF = {
 							...f,
 							status: FILE_STATUS.UPLOADED,
-							url: fileUrl,
+							url: result.url,
 						};
 						delete newF.cancelToken;
 						return newF;
@@ -363,7 +358,7 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 				}),
 			);
 
-			return { fileId: file.id, fileUrl };
+			return { fileId: file.id, fileUrl: result.url };
 		} catch (err) {
 			if (!axios.isCancel(err)) {
 				// Mark file as failed
@@ -399,6 +394,10 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 			// Extract the files object from response
 			// Response structure: { files: { "filename.pdf": { presigned_url, url }, ... } }
 			const filesObject = presignedUrlsResponse?.files;
+
+			if (!filesObject) {
+				throw new Error('No presigned URLs received from server');
+			}
 
 			// Validate that all requested files have presigned URLs
 			const missingFiles = fileNames.filter(
