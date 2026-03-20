@@ -21,7 +21,7 @@ export const createHistoryColumns = (onView, onDelete) => [
 			const val = getValue();
 			return (
 				<span className="text-sm text-primary60">
-					{val ? dayjs(val + 'Z').format('MMM D, YYYY h:mm A') : '-'}
+					{val ? dayjs(val).format('MMM D, YYYY h:mm A') : '-'}
 				</span>
 			);
 		},
