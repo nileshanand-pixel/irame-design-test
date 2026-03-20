@@ -7,12 +7,8 @@ const ProgressSection = ({ statusData, fileNames, onCancel }) => {
 	const logEndRef = useRef(null);
 
 	useEffect(() => {
-		if (statusData?.createdAt && !startTimeRef.current) {
-			const ts = statusData.createdAt;
-			startTimeRef.current = new Date(ts).getTime();
-		}
-		if (!startTimeRef.current) {
-			startTimeRef.current = Date.now();
+		if (statusData?.createdAt) {
+			startTimeRef.current = new Date(statusData.createdAt).getTime();
 		}
 	}, [statusData?.createdAt]);
 
