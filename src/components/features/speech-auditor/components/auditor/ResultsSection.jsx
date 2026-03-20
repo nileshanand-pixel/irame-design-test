@@ -31,6 +31,18 @@ const getRiskColor = (risk) => {
 	}
 };
 
+const formatElapsed = (createdAt, completedAt) => {
+	if (!createdAt || !completedAt) return null;
+	const parseTs = (ts) =>
+		new Date(typeof ts === 'string' && !ts.endsWith('Z') ? ts + 'Z' : ts);
+	const seconds = Math.floor((parseTs(completedAt) - parseTs(createdAt)) / 1000);
+	if (seconds < 0) return null;
+	const mins = Math.floor(seconds / 60);
+	const secs = seconds % 60;
+	if (mins === 0) return `${secs}s`;
+	return `${mins}m ${secs}s`;
+};
+
 const ResultsSection = ({ result, onNewAnalysis }) => {
 	const [activeView, setActiveView] = useState('report');
 
@@ -99,6 +111,12 @@ const ResultsSection = ({ result, onNewAnalysis }) => {
 				</div>
 
 				<div className="flex items-center gap-2">
+					{formatElapsed(result?.createdAt, result?.completedAt) && (
+						<span className="text-xs text-primary40 mr-2">
+							Completed in{' '}
+							{formatElapsed(result.createdAt, result.completedAt)}
+						</span>
+					)}
 					<button
 						onClick={onNewAnalysis}
 						className="px-3 py-1.5 text-sm bg-purple-100 text-white rounded-lg hover:bg-purple-80 transition-colors font-medium"
