@@ -33,8 +33,7 @@ const getRiskColor = (risk) => {
 
 const formatElapsed = (createdAt, completedAt) => {
 	if (!createdAt || !completedAt) return null;
-	const parseTs = (ts) =>
-		new Date(typeof ts === 'string' && !ts.endsWith('Z') ? ts + 'Z' : ts);
+	const parseTs = (ts) => new Date(ts);
 	const seconds = Math.floor((parseTs(completedAt) - parseTs(createdAt)) / 1000);
 	if (seconds < 0) return null;
 	const mins = Math.floor(seconds / 60);
