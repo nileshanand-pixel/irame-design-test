@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { getEdaReportHtml } from '../../service/eda.service';
+import { STAGE_BASE_URL, STAGE_APP_TOKEN } from '@/config';
 
 const REPORT_TYPES = [
 	{
@@ -28,9 +29,12 @@ const stripNavFromHtml = (html) => {
 		// Remove header/nav elements (the dark top bar with report tabs)
 		doc.querySelectorAll('header, nav, .navbar').forEach((el) => el.remove());
 		// Remove embedded download/print button containers
+		// but KEEP evidence CSV download links (btn-csv class)
 		doc.querySelectorAll(
-			'button, a[download], [class*="download"], [class*="print"]',
+			'button, [class*="download"], [class*="print"]',
 		).forEach((el) => {
+			// Skip CSV evidence download buttons
+			if (el.classList && el.classList.contains('btn-csv')) return;
 			const text = (el.textContent || '').toLowerCase();
 			if (
 				text.includes('download') ||
@@ -167,7 +171,35 @@ const ReportViewer = ({ jobId, reportUrls, summary, initialTab }) => {
 				const type = reportUrls?.[reportKey + '_standalone']
 					? reportKey + '_standalone'
 					: reportKey;
-				const html = await getEdaReportHtml(jobId, type);
+				let html = await getEdaReportHtml(jobId, type);
+				// Inject script that intercepts CSV download clicks and fetches
+				// with auth headers (x-app-token), since plain <a> clicks
+				// don't send custom headers and get blocked by AuthenticationFilter.
+				const csvDownloadScript = `<script>
+document.addEventListener('click', function(e) {
+	var link = e.target.closest('a.btn-csv');
+	if (!link) return;
+	e.preventDefault();
+	var url = '${STAGE_BASE_URL || ''}' + link.getAttribute('href');
+	fetch(url, {
+		headers: { 'x-app-token': '${STAGE_APP_TOKEN || ''}' },
+		credentials: 'include'
+	})
+	.then(function(r) {
+		if (!r.ok) throw new Error('Download failed: ' + r.status);
+		return r.blob();
+	})
+	.then(function(blob) {
+		var a = document.createElement('a');
+		a.href = URL.createObjectURL(blob);
+		a.download = link.getAttribute('href').split('/').pop();
+		a.click();
+		URL.revokeObjectURL(a.href);
+	})
+	.catch(function(err) { alert('CSV download failed: ' + err.message); });
+});
+<\/script>`;
+				html = html.replace('</body>', csvDownloadScript + '</body>');
 				setHtmlCache((prev) => ({ ...prev, [reportKey]: html }));
 			} catch (err) {
 				setError(
