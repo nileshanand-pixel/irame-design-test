@@ -1,4 +1,5 @@
 import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
+import { uploadWithResilience } from '@/utils/multipart-upload';
 
 export const uploadInit = async (data) => {
 	try {
@@ -42,29 +43,15 @@ export const uploadFile = async ({
 			datasourceId,
 		});
 
-		await axiosClientV1.put(presigned_url, file, {
-			headers: {
-				'Content-Type': file.type,
-			},
-			onUploadProgress: (progressEvent) => {
-				const uploadProgress = Math.round(
-					(progressEvent.loaded / progressEvent.total) * 100,
-				);
-				updateProgress(uploadProgress);
-				// setProgress((prevProgress) => {
-				// 	if (prevProgress[file.name] !== undefined) {
-				// 		return {
-				// 			...prevProgress,
-				// 			[file.name]: uploadProgress,
-				// 		};
-				// 	}
-				// 	return { ...prevProgress };
-				// });
-			},
+		const result = await uploadWithResilience({
+			file,
+			presignedUrl: presigned_url,
+			url,
+			onProgress: updateProgress,
 			cancelToken,
 		});
 
-		return { name: file.name, url, presigned_url };
+		return { name: file.name, url: result.url, presigned_url };
 	} catch (error) {
 		console.error(`Error uploading file ${file.name}`, error);
 		throw error;

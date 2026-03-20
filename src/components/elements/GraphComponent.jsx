@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import TableComponent from './TableComponent';
 import * as d3 from 'd3';
+import * as XLSX from 'xlsx';
 import { DataTableColumnHeader } from './data-table/components/data-table-column-header';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
@@ -57,6 +58,7 @@ const GraphComponent = ({
 		return true;
 	});
 
+	console.log(loadedData, 'loadedData');
 	function generateColumns(keys) {
 		return keys?.map((key) => {
 			let headerTitle = key.replace(/_/g, ' ').toUpperCase();
@@ -78,9 +80,32 @@ const GraphComponent = ({
 			let url = tableData?.sample_url || tableData?.csv_url;
 			const fetchData = async () => {
 				try {
-					const csvData = await d3.csv(url);
-					setLoadedData(csvData);
-					setColumns(generateColumns(Object.keys(csvData[0])));
+					const urlPath = url?.split('?')?.[0]?.toLowerCase();
+					const isXlsx =
+						urlPath?.endsWith('.xlsx') || urlPath?.endsWith('.xls');
+
+					let parsedData;
+					if (isXlsx) {
+						const response = await fetch(url);
+						const arrayBuffer = await response?.arrayBuffer();
+						const workbook = arrayBuffer
+							? XLSX.read(arrayBuffer, { type: 'array' })
+							: null;
+						const sheetName = workbook?.SheetNames?.[0];
+						const firstSheet = sheetName
+							? workbook?.Sheets?.[sheetName]
+							: null;
+						parsedData = firstSheet
+							? XLSX.utils.sheet_to_json(firstSheet, { defval: '' })
+							: [];
+					} else {
+						parsedData = await d3.csv(url);
+					}
+
+					if (!parsedData?.length) return;
+
+					setLoadedData(parsedData);
+					setColumns(generateColumns(Object.keys(parsedData?.[0] ?? {})));
 				} catch (error) {
 					logError(error, {
 						feature: 'graphComponent',
