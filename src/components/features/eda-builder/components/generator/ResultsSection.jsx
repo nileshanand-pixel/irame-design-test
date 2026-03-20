@@ -214,43 +214,7 @@ const ResultsSection = ({ result, fileNames, onNewAnalysis, onViewReport }) => {
 				)}
 			</div>
 
-			{/* Evidence Files */}
-			{evidenceUrls.length > 0 && (
-				<div>
-					<h4 className="text-sm font-medium text-primary60 mb-2">
-						Evidence Files
-					</h4>
-					<div className="flex flex-wrap gap-2">
-						{evidenceUrls.map((url, i) => {
-							const fileName = url.split('/').pop();
-							return (
-								<a
-									key={i}
-									href={url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-100 hover:border-purple-200 hover:bg-purple-4 rounded-lg text-xs text-primary60 font-medium transition-all duration-200 shadow-sm"
-								>
-									<svg
-										className="w-3.5 h-3.5"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-										/>
-									</svg>
-									{fileName}
-								</a>
-							);
-						})}
-					</div>
-				</div>
-			)}
+			{/* Evidence CSV downloads are accessible via inline buttons within each report */}
 
 			{result?.llmCostUsd != null && result.llmCostUsd > 0 && (
 				<p className="text-xs text-primary40 text-right">
