@@ -502,6 +502,7 @@ const Workzone = () => {
 
 				createQuery(payload)
 					.then((res) => {
+						refetchQueries();
 						updateQuery('', { id: res.query_id, question: tempPrompt });
 						addDoingScience(res?.query_id);
 						// Note: currentQueryId will be updated automatically via selectedPathLeafId sync
@@ -721,6 +722,7 @@ const Workzone = () => {
 			}
 
 			createQuery(payload).then((res) => {
+				refetchQueries();
 				updateQuery('', { id: res.query_id, question: tempPrompt });
 				addDoingScience(res?.query_id);
 				// Note: currentQueryId will be updated automatically via selectedPathLeafId sync
@@ -806,6 +808,7 @@ const Workzone = () => {
 				},
 				type: answer?.type,
 			}).then((res) => {
+				refetchQueries();
 				updateQuery('', { id: res.query_id, question: tempPrompt });
 				addDoingScience(res?.query_id);
 				// Note: currentQueryId will be updated automatically via selectedPathLeafId sync
@@ -927,6 +930,7 @@ const Workzone = () => {
 
 		try {
 			const res = await createQuery(payload);
+			refetchQueries();
 			updateQuery('', { id: res.query_id, question: '' });
 
 			// Mark the parent answer's clarification as clarified locally so UI reflects the change immediately
