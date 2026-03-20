@@ -38,8 +38,10 @@ export const generateTableColumns = (keys) => {
 	}
 
 	return keys.map((key) => {
-		const accessorKey = normalizeColumnNameToKey(key);
-		const headerTitle = key.replace(/_/g, ' ').toUpperCase();
+		// const accessorKey = normalizeColumnNameToKey(key);
+		// const headerTitle = key.replace(/_/g, ' ').toUpperCase();
+		const accessorKey = key;
+		const headerTitle = key.toUpperCase();
 
 		return {
 			accessorKey,
