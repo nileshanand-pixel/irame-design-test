@@ -137,17 +137,17 @@ export const useCsvData = (csvUrl, options = {}) => {
 
 				// Normalize data keys to match normalized accessorKeys
 				// d3.csv uses original column names as keys, but we normalize them for consistency
-				const normalizedData = csvData.map((row) => {
-					const normalizedRow = {};
-					originalColumnNames.forEach((originalKey) => {
-						const normalizedKey = normalizeColumnNameToKey(originalKey);
-						normalizedRow[normalizedKey] = row[originalKey];
-					});
-					return normalizedRow;
-				});
+				// const normalizedData = csvData.map((row) => {
+				// 	const normalizedRow = {};
+				// 	originalColumnNames.forEach((originalKey) => {
+				// 		const normalizedKey = normalizeColumnNameToKey(originalKey);
+				// 		normalizedRow[normalizedKey] = row[originalKey];
+				// 	});
+				// 	return normalizedRow;
+				// });
 
-				setData(normalizedData);
-
+				// setData(normalizedData);
+				setData(csvData);
 				// Generate columns using original column names for proper header display
 				// but the data will use normalized keys
 				setColumns(generateTableColumns(originalColumnNames));
