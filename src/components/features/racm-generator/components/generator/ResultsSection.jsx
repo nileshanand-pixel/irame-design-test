@@ -8,6 +8,18 @@ import RACMDetailModal from './RACMDetailModal';
 import ExportButtons from './ExportButtons';
 import { updateRacmJobResult } from '../../service/racm.service';
 
+const formatElapsed = (createdAt, completedAt) => {
+	if (!createdAt || !completedAt) return null;
+	const parseTs = (ts) =>
+		new Date(typeof ts === 'string' && !ts.endsWith('Z') ? ts + 'Z' : ts);
+	const seconds = Math.floor((parseTs(completedAt) - parseTs(createdAt)) / 1000);
+	if (seconds < 0) return null;
+	const mins = Math.floor(seconds / 60);
+	const secs = seconds % 60;
+	if (mins === 0) return `${secs}s`;
+	return `${mins}m ${secs}s`;
+};
+
 const ResultsSection = ({ result, fileName, jobId, onNewGeneration }) => {
 	const [selectedEntry, setSelectedEntry] = useState(null);
 	const [showSummary, setShowSummary] = useState(true);
@@ -58,6 +70,8 @@ const ResultsSection = ({ result, fileName, jobId, onNewGeneration }) => {
 					<h3 className="text-lg font-semibold text-primary80">Results</h3>
 					<span className="text-sm text-primary40">
 						{displayEntries.length} entries generated
+						{formatElapsed(result?.createdAt, result?.completedAt) &&
+							` \u00B7 ${formatElapsed(result.createdAt, result.completedAt)}`}
 					</span>
 					{hasChanges && (
 						<span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md font-medium">

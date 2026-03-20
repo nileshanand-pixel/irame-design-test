@@ -8,6 +8,18 @@ const resolveReportUrl = (url) => {
 	return `${BASE_URL}${url}`;
 };
 
+const formatElapsed = (createdAt, completedAt) => {
+	if (!createdAt || !completedAt) return null;
+	const parseTs = (ts) =>
+		new Date(typeof ts === 'string' && !ts.endsWith('Z') ? ts + 'Z' : ts);
+	const seconds = Math.floor((parseTs(completedAt) - parseTs(createdAt)) / 1000);
+	if (seconds < 0) return null;
+	const mins = Math.floor(seconds / 60);
+	const secs = seconds % 60;
+	if (mins === 0) return `${secs}s`;
+	return `${mins}m ${secs}s`;
+};
+
 const ResultsSection = ({ result, fileNames, onNewAnalysis, onViewReport }) => {
 	const reportUrls = result?.reportUrls || {};
 	const evidenceUrls = result?.evidenceUrls || [];
@@ -94,6 +106,19 @@ const ResultsSection = ({ result, fileNames, onNewAnalysis, onViewReport }) => {
 					<div>
 						<h3 className="text-base font-semibold text-primary80">
 							Analysis Complete
+							{formatElapsed(
+								result?.createdAt,
+								result?.completedAt,
+							) && (
+								<span className="ml-2 text-xs font-normal text-primary40">
+									(
+									{formatElapsed(
+										result.createdAt,
+										result.completedAt,
+									)}
+									)
+								</span>
+							)}
 						</h3>
 						<p className="text-sm text-primary40 mt-0.5">
 							{fileNames?.join(', ')}

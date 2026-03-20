@@ -15,6 +15,18 @@ const SEVERITY_STYLES = {
 	low: 'bg-blue-100 text-blue-800',
 };
 
+const formatElapsed = (createdAt, completedAt) => {
+	if (!createdAt || !completedAt) return null;
+	const parseTs = (ts) =>
+		new Date(typeof ts === 'string' && !ts.endsWith('Z') ? ts + 'Z' : ts);
+	const seconds = Math.floor((parseTs(completedAt) - parseTs(createdAt)) / 1000);
+	if (seconds < 0) return null;
+	const mins = Math.floor(seconds / 60);
+	const secs = seconds % 60;
+	if (mins === 0) return `${secs}s`;
+	return `${mins}m ${secs}s`;
+};
+
 const AuditResultSection = ({ result, jobId, onNewAnalysis }) => {
 	const auditResult = result?.result || {};
 	const kpis = auditResult.kpis || [];
@@ -67,6 +79,13 @@ const AuditResultSection = ({ result, jobId, onNewAnalysis }) => {
 					</div>
 					<h3 className="text-sm font-semibold text-primary80">
 						Audit Complete
+						{formatElapsed(result?.createdAt, result?.completedAt) && (
+							<span className="ml-2 text-xs font-normal text-primary40">
+								(
+								{formatElapsed(result.createdAt, result.completedAt)}
+								)
+							</span>
+						)}
 					</h3>
 				</div>
 				<div className="flex items-center gap-3">
