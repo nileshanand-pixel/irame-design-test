@@ -4,12 +4,20 @@ import PhaseStepIndicator from './PhaseStepIndicator';
 const ProgressSection = ({ statusData, fileNames, onCancel }) => {
 	const [elapsed, setElapsed] = useState(0);
 	const [activityLog, setActivityLog] = useState([]);
-	const startTimeRef = useRef(Date.now());
+	const startTimeRef = useRef(null);
 	const logEndRef = useRef(null);
 
 	useEffect(() => {
+		if (statusData?.createdAt) {
+			startTimeRef.current = new Date(statusData.createdAt).getTime();
+		}
+	}, [statusData?.createdAt]);
+
+	useEffect(() => {
 		const timer = setInterval(() => {
-			setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+			if (startTimeRef.current) {
+				setElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
+			}
 		}, 1000);
 		return () => clearInterval(timer);
 	}, []);
@@ -77,7 +85,6 @@ const ProgressSection = ({ statusData, fileNames, onCancel }) => {
 					<span className="text-primary60 font-medium">
 						{statusData?.message || 'Processing...'}
 					</span>
-					<span className="text-primary40">{formatTime(elapsed)}</span>
 				</div>
 				<div className="w-full bg-gray-200 rounded-full h-2.5">
 					<div
@@ -87,7 +94,7 @@ const ProgressSection = ({ statusData, fileNames, onCancel }) => {
 				</div>
 				<div className="flex justify-between text-xs text-primary40">
 					<span>{progressPercent}%</span>
-					<span>Elapsed: {formatTime(elapsed)}</span>
+					<span>Time elapsed: {formatTime(elapsed)}</span>
 				</div>
 			</div>
 
