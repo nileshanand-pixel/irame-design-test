@@ -136,12 +136,6 @@ export const IA_KPI_STATUSES = {
 		color: 'text-green-800',
 		bgColor: 'bg-green-100',
 	},
-	'PARTIALLY COMPLIANT': {
-		key: 'Partially Compliant',
-		label: 'Partially Compliant',
-		color: 'text-yellow-800',
-		bgColor: 'bg-yellow-100',
-	},
 	'NON-COMPLIANT': {
 		key: 'Non-Compliant',
 		label: 'Non-Compliant',

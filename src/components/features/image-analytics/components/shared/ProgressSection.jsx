@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import PhaseStepIndicator from './PhaseStepIndicator';
 
 const ProgressSection = ({ statusData, fileNames, onCancel }) => {
 	const [elapsed, setElapsed] = useState(0);
@@ -73,6 +74,11 @@ const ProgressSection = ({ statusData, fileNames, onCancel }) => {
 					</span>
 				</div>
 			)}
+
+			<PhaseStepIndicator
+				currentStage={statusData?.stage || 'startup'}
+				status={statusData?.status}
+			/>
 
 			<div className="space-y-2">
 				<div className="flex justify-between text-sm">
