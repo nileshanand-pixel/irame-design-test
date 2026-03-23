@@ -5,7 +5,6 @@ import { downloadImageAnalyticsReport } from '../../service/imageAnalytics.servi
 const KPI_STATUS_STYLES = {
 	compliant: 'bg-green-100 text-green-800',
 	'non-compliant': 'bg-red-100 text-red-800',
-	'partially compliant': 'bg-yellow-100 text-yellow-800',
 };
 
 // Legacy severity styles for old jobs that used non_compliances

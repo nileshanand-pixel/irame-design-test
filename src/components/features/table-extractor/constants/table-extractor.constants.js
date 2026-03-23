@@ -10,6 +10,11 @@ export const TE_STAGES = {
 		color: 'text-blue-500',
 		icon: 'Download',
 	},
+	doc_scan: {
+		label: 'Document Scan',
+		color: 'text-cyan-500',
+		icon: 'Search',
+	},
 	extract_header: {
 		label: 'Extracting Headers',
 		color: 'text-purple-500',
@@ -19,6 +24,11 @@ export const TE_STAGES = {
 		label: 'Extracting Tables',
 		color: 'text-indigo-500',
 		icon: 'Table',
+	},
+	validation: {
+		label: 'Validating',
+		color: 'text-amber-500',
+		icon: 'ShieldCheck',
 	},
 	finalize: {
 		label: 'Finalizing',
@@ -31,8 +41,10 @@ export const TE_STAGES = {
 export const TE_STAGE_ORDER = [
 	'startup',
 	'download',
+	'doc_scan',
 	'extract_header',
 	'extract_tables',
+	'validation',
 	'finalize',
 	'complete',
 ];
