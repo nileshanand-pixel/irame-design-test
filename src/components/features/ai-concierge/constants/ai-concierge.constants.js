@@ -5,6 +5,7 @@ import {
 	TbPhoto,
 	TbMicrophone,
 	TbTableExport,
+	TbHeartRateMonitor,
 } from 'react-icons/tb';
 
 /**
@@ -68,6 +69,16 @@ export const AI_FEATURES = [
 		icon: TbTableExport,
 		route: 'table-extractor',
 		tags: ['Table', 'PDF', 'Extraction', 'Invoice'],
+		beta: true,
+	},
+	{
+		id: 'medical-report-reader',
+		name: 'Medical Report Reader',
+		description:
+			'AI-powered forensic medical report analysis for insurance fraud detection',
+		icon: TbHeartRateMonitor,
+		route: 'medical-report-reader',
+		tags: ['Medical', 'Forensics', 'Insurance'],
 		beta: true,
 	},
 ];

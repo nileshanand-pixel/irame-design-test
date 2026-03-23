@@ -33,6 +33,7 @@ import ImageAnalyticsPage from '@/components/features/image-analytics/page';
 import AiConciergePage from '@/components/features/ai-concierge/page';
 import SpeechAuditorPage from '@/components/features/speech-auditor/page';
 import TableExtractorPage from '@/components/features/table-extractor/page';
+import MedicalReportReaderPage from '@/components/features/medical-report-reader/page';
 
 function AppRoutes() {
 	return (
@@ -176,6 +177,16 @@ function AppRoutes() {
 											element={
 												<ProtectedRoute
 													element={<TableExtractorPage />}
+												/>
+											}
+										/>
+										<Route
+											path="ai-concierge/medical-report-reader"
+											element={
+												<ProtectedRoute
+													element={
+														<MedicalReportReaderPage />
+													}
 												/>
 											}
 										/>
