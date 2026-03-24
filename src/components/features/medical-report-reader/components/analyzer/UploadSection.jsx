@@ -1,24 +1,114 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, FileText, Image } from 'lucide-react';
+import { Upload, X, FileText, Image, FolderOpen } from 'lucide-react';
 import { MR_ACCEPTED_FILE_TYPES } from '../../constants/medical-reader.constants';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
+const ACCEPTED_EXTENSIONS = new Set([
+	'.pdf',
+	'.jpg',
+	'.jpeg',
+	'.png',
+	'.webp',
+	'.heic',
+	'.heif',
+]);
+
+const isAcceptedFile = (name) => {
+	const ext = ('.' + name.split('.').pop()).toLowerCase();
+	return ACCEPTED_EXTENSIONS.has(ext);
+};
+
+/** Recursively read all files from a dropped folder via FileSystemEntry API */
+const readEntriesRecursively = (entry) => {
+	return new Promise((resolve) => {
+		if (entry.isFile) {
+			entry.file((file) => {
+				// Preserve relative path from webkitRelativePath or entry.fullPath
+				Object.defineProperty(file, 'relativePath', {
+					value: entry.fullPath,
+					writable: false,
+				});
+				resolve(isAcceptedFile(file.name) ? [file] : []);
+			});
+		} else if (entry.isDirectory) {
+			const reader = entry.createReader();
+			const allEntries = [];
+			const readBatch = () => {
+				reader.readEntries((entries) => {
+					if (entries.length === 0) {
+						Promise.all(allEntries.map(readEntriesRecursively)).then(
+							(results) => resolve(results.flat()),
+						);
+					} else {
+						allEntries.push(...entries);
+						readBatch(); // Continue reading (batched API)
+					}
+				});
+			};
+			readBatch();
+		} else {
+			resolve([]);
+		}
+	});
+};
+
 const UploadSection = ({ onGenerate, isDisabled }) => {
 	const [files, setFiles] = useState([]);
+	const folderInputRef = useRef(null);
 
-	const onDrop = useCallback(
-		(accepted) => {
-			const newFiles = accepted.filter(
-				(f) => !files.some((e) => e.name === f.name && e.size === f.size),
+	const addFiles = useCallback((newFiles) => {
+		setFiles((prev) => {
+			const existing = new Set(prev.map((f) => `${f.name}-${f.size}`));
+			const unique = newFiles.filter(
+				(f) => !existing.has(`${f.name}-${f.size}`),
 			);
-			if (newFiles.length < accepted.length) {
-				// Duplicate files filtered
+			return [...prev, ...unique];
+		});
+	}, []);
+
+	// Standard file drop (react-dropzone)
+	const onDrop = useCallback((accepted) => addFiles(accepted), [addFiles]);
+
+	// Folder drop via native drag event (bypasses react-dropzone)
+	const handleNativeDrop = useCallback(
+		async (e) => {
+			const items = e.dataTransfer?.items;
+			if (!items) return;
+
+			// Check if any item is a directory
+			const entries = [];
+			let hasDirectory = false;
+			for (const item of items) {
+				const entry = item.webkitGetAsEntry?.();
+				if (entry) {
+					entries.push(entry);
+					if (entry.isDirectory) hasDirectory = true;
+				}
 			}
-			setFiles((prev) => [...prev, ...newFiles]);
+
+			if (!hasDirectory) return; // Let react-dropzone handle regular files
+
+			e.preventDefault();
+			e.stopPropagation();
+			const allFiles = (
+				await Promise.all(entries.map(readEntriesRecursively))
+			).flat();
+			addFiles(allFiles);
 		},
-		[files],
+		[addFiles],
+	);
+
+	// Folder picker via hidden input with webkitdirectory
+	const handleFolderSelect = useCallback(
+		(e) => {
+			const fileList = Array.from(e.target.files || []);
+			const accepted = fileList.filter((f) => isAcceptedFile(f.name));
+			addFiles(accepted);
+			e.target.value = ''; // Reset for re-selection
+		},
+		[addFiles],
 	);
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -26,6 +116,7 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 		accept: MR_ACCEPTED_FILE_TYPES,
 		maxSize: MAX_FILE_SIZE,
 		disabled: isDisabled,
+		noClick: false,
 	});
 
 	const removeFile = (index) => {
@@ -42,10 +133,20 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 		return <Image className="w-4 h-4 text-blue-500" />;
 	};
 
+	const getRelativePath = (file) => {
+		const path = file.relativePath || file.webkitRelativePath || '';
+		if (!path || path === file.name) return null;
+		// Show parent folder(s) only
+		const parts = path.split('/').filter(Boolean);
+		return parts.length > 1 ? parts.slice(0, -1).join('/') : null;
+	};
+
 	return (
 		<div className="space-y-6">
+			{/* Drop zone with folder support */}
 			<div
 				{...getRootProps()}
+				onDropCapture={handleNativeDrop}
 				className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-200
           ${isDragActive ? 'border-purple-100 bg-purple-100/5' : 'border-gray-300 hover:border-purple-100/50 bg-white/40 backdrop-blur-sm'}
           ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -56,22 +157,49 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 				</div>
 				<p className="text-sm font-medium text-primary80">
 					{isDragActive
-						? 'Drop medical reports here...'
-						: 'Drag & drop medical reports, or click to browse'}
+						? 'Drop files or folders here...'
+						: 'Drag & drop files or folders, or click to browse'}
 				</p>
 				<p className="text-xs text-primary40 mt-1">
 					PDF, JPEG, PNG, WebP, HEIC — up to 50 MB per file
 				</p>
 				<p className="text-xs text-primary40 mt-0.5">
-					Upload multiple reports for cross-report forensic analysis
+					Upload a patient case folder or individual reports
 				</p>
 			</div>
 
+			{/* Folder picker button */}
+			<div className="flex justify-center">
+				<input
+					ref={folderInputRef}
+					type="file"
+					webkitdirectory=""
+					directory=""
+					multiple
+					className="hidden"
+					onChange={handleFolderSelect}
+				/>
+				<button
+					onClick={() => folderInputRef.current?.click()}
+					disabled={isDisabled}
+					className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-purple-100 bg-purple-100/5 border border-purple-100/20 rounded-lg hover:bg-purple-100/10 transition-colors disabled:opacity-50"
+				>
+					<FolderOpen className="w-4 h-4" />
+					Upload Folder
+				</button>
+			</div>
+
+			{/* File list */}
 			{files.length > 0 && (
 				<div className="space-y-3">
 					<div className="flex items-center justify-between">
 						<p className="text-sm font-medium text-primary60">
 							{files.length} file{files.length > 1 ? 's' : ''} selected
+							{files.length > 4 && (
+								<span className="text-xs text-primary40 ml-2">
+									(will use batched analysis)
+								</span>
+							)}
 						</p>
 						<button
 							onClick={() => setFiles([])}
@@ -81,27 +209,37 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 						</button>
 					</div>
 
-					<div className="space-y-2 max-h-48 overflow-y-auto">
-						{files.map((file, index) => (
-							<div
-								key={`${file.name}-${index}`}
-								className="flex items-center gap-3 px-3 py-2 bg-white/60 backdrop-blur-sm rounded-lg border border-white/70"
-							>
-								{getFileIcon(file)}
-								<span className="text-sm text-primary80 truncate flex-1">
-									{file.name}
-								</span>
-								<span className="text-xs text-primary40 shrink-0">
-									{(file.size / 1024).toFixed(0)} KB
-								</span>
-								<button
-									onClick={() => removeFile(index)}
-									className="text-primary40 hover:text-red-500 transition-colors"
+					<div className="space-y-1.5 max-h-60 overflow-y-auto">
+						{files.map((file, index) => {
+							const folder = getRelativePath(file);
+							return (
+								<div
+									key={`${file.name}-${index}`}
+									className="flex items-center gap-3 px-3 py-1.5 bg-white/60 backdrop-blur-sm rounded-lg border border-white/70"
 								>
-									<X className="w-3.5 h-3.5" />
-								</button>
-							</div>
-						))}
+									{getFileIcon(file)}
+									<div className="flex-1 min-w-0">
+										<span className="text-sm text-primary80 truncate block">
+											{file.name}
+										</span>
+										{folder && (
+											<span className="text-xs text-primary40 truncate block">
+												{folder}
+											</span>
+										)}
+									</div>
+									<span className="text-xs text-primary40 shrink-0">
+										{(file.size / 1024).toFixed(0)} KB
+									</span>
+									<button
+										onClick={() => removeFile(index)}
+										className="text-primary40 hover:text-red-500 transition-colors"
+									>
+										<X className="w-3.5 h-3.5" />
+									</button>
+								</div>
+							);
+						})}
 					</div>
 
 					<button
@@ -120,7 +258,10 @@ const UploadSection = ({ onGenerate, isDisabled }) => {
 				</p>
 				<div className="flex items-start gap-4">
 					{[
-						{ n: '1', t: 'Upload medical reports for a patient case' },
+						{
+							n: '1',
+							t: 'Upload a case folder or individual medical reports',
+						},
 						{ n: '2', t: 'AI extracts every test result exhaustively' },
 						{ n: '3', t: 'Cross-report forensic & fraud analysis' },
 					].map(({ n, t }) => (
