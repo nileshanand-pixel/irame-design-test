@@ -1,86 +1,59 @@
-import { useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import { toast } from '@/lib/toast';
 import { useNavigate } from 'react-router-dom';
 import { getReports } from '@/components/features/reports/service/reports.service';
 import useAuth from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { logError } from '@/lib/logger';
+import { useQuery } from '@tanstack/react-query';
 
 const GlobalPollReports = () => {
-	const [previousReports, setPreviousReports] = useState([]);
-
+	const previousReportsRef = useRef([]);
 	const navigate = useNavigate();
 	const { isAuthenticated } = useAuth();
-	// added this for manually stopping polling to help development while keeping network tab clean
 	const stopPolling = localStorage.getItem('stopPolling');
 
+	const { data: currentReports } = useQuery({
+		queryKey: ['poll-reports'],
+		queryFn: getReports,
+		refetchInterval: 30000,
+		enabled: isAuthenticated && stopPolling !== 'yes',
+	});
+
 	useEffect(() => {
-		if (!isAuthenticated || stopPolling === 'yes') return;
+		if (!currentReports) return;
 
-		const pollReports = async () => {
-			try {
-				const currentReports = await getReports();
+		const prevReports = previousReportsRef.current;
 
-				currentReports.forEach((currentReport) => {
-					const currentReportId = currentReport?.report_id;
+		currentReports.forEach((currentReport) => {
+			const currentReportId = currentReport?.report_id;
+			const correspondingPrevReport = prevReports?.find(
+				(report) => report?.report_id === currentReportId,
+			);
 
-					const correspondingPrevReport = previousReports?.filter(
-						(report) => report?.report_id === currentReportId,
-					)?.[0];
-
-					if (
-						correspondingPrevReport &&
-						correspondingPrevReport?.status === 'in_progress' &&
-						currentReport?.status === 'done'
-					) {
-						toast.success(
-							`Report "${currentReport.name}" is now done!`,
-							{
-								duration: 30000,
-								action: (
-									<Button
-										onClick={() => {
-											navigate('/app/reports/');
-											trackEvent(
-												EVENTS_ENUM.VIEW_RE,
-												EVENTS_REGISTRY.VIEW_DASHBOARD_CLICKED,
-												() => ({
-													report_id:
-														currentReport?.report_id,
-													name: currentReport?.name,
-													from: 'snack-bar',
-												}),
-											);
-										}}
-										className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
-									>
-										View Reports
-									</Button>
-								),
-							},
-						);
-					}
+			if (
+				correspondingPrevReport &&
+				correspondingPrevReport?.status === 'in_progress' &&
+				currentReport?.status === 'done'
+			) {
+				toast.success(`Report "${currentReport.name}" is now done!`, {
+					duration: 30000,
+					action: (
+						<Button
+							onClick={() => {
+								navigate('/app/reports/');
+							}}
+							className="rounded-lg hover:bg-purple-100 hover:text-white hover:opacity-80"
+						>
+							View Reports
+						</Button>
+					),
 				});
-
-				// Update the previous reports reference with the latest data
-				setPreviousReports([...currentReports]);
-			} catch (error) {
-				logError(error, {
-					feature: 'reports',
-					action: 'poll-reports',
-				});
-				console.log(error);
 			}
-		};
+		});
 
-		// Start polling every 10 seconds
-		const intervalId = setInterval(() => {
-			pollReports();
-		}, 10000);
-
-		// Clean up the interval when the component is unmounted or user logs out
-		return () => clearInterval(intervalId);
-	}, [isAuthenticated, navigate, previousReports]);
+		previousReportsRef.current = [...currentReports];
+	}, [currentReports, navigate]);
 
 	return null;
 };

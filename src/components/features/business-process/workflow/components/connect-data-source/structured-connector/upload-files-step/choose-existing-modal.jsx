@@ -12,6 +12,7 @@ export function ChooseExistingModal({
 	selectedDataSources,
 }) {
 	const [search, setSearch] = useState('');
+	const [debouncedSearch, setDebouncedSearch] = useState('');
 	const [selected, setSelected] = useState([]);
 	const [initialSelectionCount, setInitialSelectionCount] = useState(0);
 
@@ -23,27 +24,23 @@ export function ChooseExistingModal({
 		}
 	}, [open, selectedDataSources]);
 
-	const { dataSources, isLoading } = useDataSources({
+	// Debounce search for server-side filtering
+	useEffect(() => {
+		const timer = setTimeout(() => setDebouncedSearch(search), 300);
+		return () => clearTimeout(timer);
+	}, [search]);
+
+	const { dataSources, isLoading, Sentinel, isFetchingNextPage } = useDataSources({
 		enabled: open,
+		search: debouncedSearch || undefined,
 	});
 
-	// Exclude data sources with PDF files and apply search
-	const filtered = (dataSources || [])
-		// removing this as we don't get files any more in the response
-		// will add something later from backend if needed
-		// .filter((item) => {
-		// 	const hasPDF = item.processed_files?.files?.some(
-		// 		(file) => file.type === 'pdf',
-		// 	);
-		// 	return !hasPDF;
-		// })
-		.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
-		.sort((a, b) => {
-			// Active items come first
-			if (a.status === 'active' && b.status !== 'active') return -1;
-			if (a.status !== 'active' && b.status === 'active') return 1;
-			return 0; // Keep original order for items with same status
-		});
+	// Sort: active items first (search is server-side now)
+	const filtered = (dataSources || []).sort((a, b) => {
+		if (a.status === 'active' && b.status !== 'active') return -1;
+		if (a.status !== 'active' && b.status === 'active') return 1;
+		return 0;
+	});
 
 	const toggleSelect = (ds) => {
 		setSelected((prev) =>
@@ -103,58 +100,65 @@ export function ChooseExistingModal({
 							No such data source found
 						</div>
 					) : (
-						<div className="grid grid-cols-2 gap-4">
-							{filtered.map((ds, index) => {
-								const isProcessing = ds.status !== 'active';
+						<>
+							<div className="grid grid-cols-2 gap-4">
+								{filtered.map((ds, index) => {
+									const isProcessing = ds.status !== 'active';
 
-								const isSelected = selected.some(
-									(s) => s.datasource_id === ds.datasource_id,
-								);
+									const isSelected = selected.some(
+										(s) => s.datasource_id === ds.datasource_id,
+									);
 
-								return (
-									<div
-										key={ds.datasource_id}
-										className={`border hover:bg-purple-4 rounded-lg py-2 px-4 flex items-center gap-3 cursor-pointer transition-all  ${isProcessing ? 'opacity-60 cursor-not-allowed' : ''}`}
-										onClick={() =>
-											!isProcessing && toggleSelect(ds)
-										}
-									>
-										<div className="flex-shrink-0">
-											<span className="material-symbols-outlined text-purple-100 text-2xl">
-												database
-											</span>
-										</div>
-
-										<div className="flex-1 truncate flex justify-between">
-											<div className="min-w-0">
-												<div className="font-medium truncate mb-1">
-													{ds.name}
-												</div>
-												<div className="text-sm ">
-													Last synced:{' '}
-													{ds.updated_at
-														? new Date(
-																ds.updated_at,
-															).toLocaleString()
-														: 'N/A'}
-												</div>
+									return (
+										<div
+											key={ds.datasource_id}
+											className={`border hover:bg-purple-4 rounded-lg py-2 px-4 flex items-center gap-3 cursor-pointer transition-all  ${isProcessing ? 'opacity-60 cursor-not-allowed' : ''}`}
+											onClick={() =>
+												!isProcessing && toggleSelect(ds)
+											}
+										>
+											<div className="flex-shrink-0">
+												<span className="material-symbols-outlined text-purple-100 text-2xl">
+													database
+												</span>
 											</div>
 
-											{isSelected && (
-												<div className="flex-shrink-0">
-													<div className="size-6 bg-purple-100 rounded-sm flex items-center justify-center">
-														{/* <Check className="size-4 font-semibold text-white" /> */}
-														<span className="material-symbols-outlined text-3xl text-white">
-															check_small
-														</span>
+											<div className="flex-1 truncate flex justify-between">
+												<div className="min-w-0">
+													<div className="font-medium truncate mb-1">
+														{ds.name}
+													</div>
+													<div className="text-sm ">
+														Last synced:{' '}
+														{ds.updated_at
+															? new Date(
+																	ds.updated_at,
+																).toLocaleString()
+															: 'N/A'}
 													</div>
 												</div>
-											)}
+
+												{isSelected && (
+													<div className="flex-shrink-0">
+														<div className="size-6 bg-purple-100 rounded-sm flex items-center justify-center">
+															<span className="material-symbols-outlined text-3xl text-white">
+																check_small
+															</span>
+														</div>
+													</div>
+												)}
+											</div>
 										</div>
-									</div>
-								);
-							})}
-						</div>
+									);
+								})}
+							</div>
+							<Sentinel />
+							{isFetchingNextPage && (
+								<p className="text-sm text-center text-gray-400 py-2">
+									Loading more...
+								</p>
+							)}
+						</>
 					)}
 				</div>
 

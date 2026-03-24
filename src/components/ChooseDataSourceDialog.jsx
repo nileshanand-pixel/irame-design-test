@@ -29,6 +29,14 @@ const ChooseDataSourceDialog = ({
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
 	const [search, setSearch] = useState('');
+	const [debouncedSearch, setDebouncedSearch] = useState('');
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearch(search);
+		}, 300);
+		return () => clearTimeout(timer);
+	}, [search]);
 
 	const handleSelect = () => {
 		if (!selectedDataSource) return;
@@ -68,12 +76,16 @@ const ChooseDataSourceDialog = ({
 		// });
 	};
 	// Use custom hook that handles team-based caching properly
-	const { dataSources, isLoading: dataSourceFetch } = useDataSources();
+	const {
+		dataSources,
+		isLoading: dataSourceFetch,
+		Sentinel,
+		isFetchingNextPage,
+	} = useDataSources({
+		search: debouncedSearch || undefined,
+	});
 
-	// Filter datasources directly from React Query data (not from stale local state)
-	const dataToShow = (dataSources || []).filter((source) =>
-		source.name.toLowerCase().includes(search.toLowerCase()),
-	);
+	const dataToShow = dataSources || [];
 
 	return (
 		<Dialog
@@ -121,40 +133,47 @@ const ChooseDataSourceDialog = ({
 							<i className="bi-arrow-repeat animate-spin text-primary80"></i>
 						</div>
 					) : dataToShow?.length ? (
-						<RadioGroup
-							className="w-full"
-							onValueChange={(value) => {
-								handleSelectedDS(value);
-							}}
-						>
-							{dataToShow?.map((source) => {
-								return (
-									<div
-										className="rounded-xl bg-purple-4 p-4 flex items-center gap-4"
-										key={source.datasource_id}
-									>
-										<div className="flex items-center justify-between w-full space-x-2">
-											<Label
-												htmlFor={source.datasource_id}
-												className="w-full flex items-center text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-7 cursor-pointer"
-											>
-												<img
-													src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
-													alt="database"
-													className="mr-2 size-6"
+						<>
+							<RadioGroup
+								className="w-full"
+								onValueChange={(value) => {
+									handleSelectedDS(value);
+								}}
+							>
+								{dataToShow?.map((source) => {
+									return (
+										<div
+											className="rounded-xl bg-purple-4 p-4 flex items-center gap-4"
+											key={source.datasource_id}
+										>
+											<div className="flex items-center justify-between w-full space-x-2">
+												<Label
+													htmlFor={source.datasource_id}
+													className="w-full flex items-center text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-7 cursor-pointer"
+												>
+													<img
+														src="https://d2vkmtgu2mxkyq.cloudfront.net/database.svg"
+														alt="database"
+														className="mr-2 size-6"
+													/>
+													{source.name}
+												</Label>
+												<RadioGroupItem
+													id={source.datasource_id}
+													value={source.datasource_id}
 												/>
-												{source.name}
-											</Label>
-											<RadioGroupItem
-												id={source.datasource_id}
-												value={source.datasource_id}
-											/>
+											</div>
 										</div>
-									</div>
-								);
-								// </div>
-							})}
-						</RadioGroup>
+									);
+								})}
+							</RadioGroup>
+							{Sentinel && <Sentinel />}
+							{isFetchingNextPage && (
+								<div className="flex items-center justify-center py-2">
+									<i className="bi-arrow-repeat animate-spin text-primary80"></i>
+								</div>
+							)}
+						</>
 					) : (
 						<div className="flex flex-col items-center gap-2 justify-center h-40">
 							<div className="text-primary40 text-sm">

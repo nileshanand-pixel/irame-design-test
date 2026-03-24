@@ -28,7 +28,7 @@ const useInfiniteScroll = ({
 
 	// Infinite query for paginated data
 	const infiniteQuery = useInfiniteQuery({
-		queryKey: infiniteQueryKey, // Use the unique key here
+		queryKey: infiniteQueryKey,
 		queryFn: ({ pageParam }) => {
 			const params = {};
 			if (paginationType === 'cursor') {
@@ -76,6 +76,7 @@ const useInfiniteScroll = ({
 			if (paginationType === 'offset') {
 				const limit = options.limit || 20;
 				const lastPageData =
+					lastPage?.datasource_list ||
 					lastPage?.session_list ||
 					lastPage?.sessions ||
 					lastPage?.reports ||
@@ -85,6 +86,7 @@ const useInfiniteScroll = ({
 				if (Array.isArray(lastPageData) && lastPageData.length === limit) {
 					const totalItems = allPages.reduce((total, page) => {
 						const pageData =
+							page?.datasource_list ||
 							page?.session_list ||
 							page?.sessions ||
 							page?.reports ||
@@ -153,9 +155,10 @@ const useInfiniteScroll = ({
 		queryClient,
 	]);
 
-	// Set up interval to refetch only first page
+	// Set up interval to refetch only first page (number-based only, ignores function-based)
 	useEffect(() => {
-		if (!isInfinite || !refetchInterval) return;
+		if (!isInfinite || !refetchInterval || typeof refetchInterval !== 'number')
+			return;
 
 		const intervalId = setInterval(refetchFirstPageOnly, refetchInterval);
 
@@ -192,6 +195,7 @@ const useInfiniteScroll = ({
 		// and the flatMap will not be called.
 		const flattened = data?.pages?.flatMap((page) => {
 			const pageData =
+				page?.datasource_list ||
 				page?.session_list ||
 				page?.sessions ||
 				page?.reports ||

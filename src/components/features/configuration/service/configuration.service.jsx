@@ -71,13 +71,20 @@ export const getDataSources = async (options) => {
 };
 
 export const getDataSourcesV2 = async (options = {}) => {
-	const { limit } = options;
-	const queryParams = limit ? `?limit=${limit}` : '';
-	const response = await axiosClientV2.get(`/datasources${queryParams}`, {
-		headers: {},
-	});
+	const { limit, cursor, search } = options;
+	const params = new URLSearchParams();
+	if (limit) params.set('limit', limit);
+	if (cursor) params.set('cursor', cursor);
+	if (search) params.set('search', search);
+	const query = params.toString();
+	const response = await axiosClientV2.get(
+		`/datasources${query ? `?${query}` : ''}`,
+		{
+			headers: {},
+		},
+	);
 
-	return response.data?.datasource_list;
+	return response.data;
 };
 
 export const getDataSourcesWithLimit = async (limit) => {
@@ -304,6 +311,11 @@ export const saveDatasourceV2 = async (datasourceId, data) => {
 		console.error('Error saving datasource v2', error);
 		throw error;
 	}
+};
+
+export const getProcessingStatus = async () => {
+	const response = await axiosClientV2.get('/datasources/processing-status');
+	return response.data;
 };
 
 // Clone an existing (non-draft) datasource into a new temporary draft datasource

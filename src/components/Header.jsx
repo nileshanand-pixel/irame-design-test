@@ -16,11 +16,11 @@ import {
 } from '@/lib/utils';
 import { useRouter } from '@/hooks/useRouter';
 import { useDispatch, useSelector } from 'react-redux';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
-import { syncAuthIdentity } from '@/redux/reducer/authReducer';
 import { logError } from '@/lib/logger';
-import { authUserDetails } from './features/login/service/auth.service';
+import useAuth from '@/hooks/useAuth';
+import useNotificationCount from '@/hooks/use-notification-count';
 import { getErrorAnalyticsProps, trackEvent } from '@/lib/mixpanel';
 import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { ENABLE_RBAC } from '@/config';
@@ -67,12 +67,12 @@ import logoutIcon from '@/assets/icons/logout.svg';
 import redirect from '@/assets/icons/redirect.svg';
 
 export const DataSourceSwitcher = () => {
-	const { dataSources, isLoading } = useDataSources();
 	const { query } = useRouter();
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
 
 	const [searchTerm, setSearchTerm] = useState('');
+	const [debouncedSearch, setDebouncedSearch] = useState('');
 	const [open, setOpen] = useState(false);
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [pendingDataSource, setPendingDataSource] = useState(null);
@@ -82,21 +82,20 @@ export const DataSourceSwitcher = () => {
 
 	const activeDataSourceId = query?.datasource_id || query?.dataSourceId || null;
 
-	const filteredDatasources = useMemo(
-		() =>
-			dataSources.filter((ds) =>
-				ds.name?.toLowerCase().includes(searchTerm.toLowerCase()),
-			),
-		[dataSources, searchTerm],
-	);
+	// Debounce search for server-side filtering
+	useEffect(() => {
+		const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
 
-	const activeDataSource = useMemo(
-		() =>
-			dataSources.find(
-				(ds) => String(ds.datasource_id) === String(activeDataSourceId),
-			),
-		[dataSources, activeDataSourceId],
-	);
+	const { dataSources, isLoading, Sentinel, isFetchingNextPage } = useDataSources({
+		search: debouncedSearch || undefined,
+	});
+
+	// Active DS fetched by ID — independent of paginated list
+	const { data: activeDataSource } = useDatasourceDetailsV2({
+		datasourceId: activeDataSourceId,
+	});
 
 	const handleConfirmSwitch = () => {
 		if (!pendingDataSource) return;
@@ -176,35 +175,43 @@ export const DataSourceSwitcher = () => {
 							<p className="text-xs text-center text-gray-400 py-2">
 								Loading...
 							</p>
-						) : filteredDatasources.length > 0 ? (
-							filteredDatasources.map((ds) => (
-								<button
-									key={ds.datasource_id}
-									className={cn(
-										'flex items-center justify-between gap-2 p-2 rounded-md cursor-pointer text-sm text-left',
-										String(activeDataSourceId) ===
-											String(ds.datasource_id)
-											? 'bg-purple-4 text-primary60'
-											: 'text-primary80 hover:bg-purple-4',
-									)}
-									onClick={() => handleDatasourceClick(ds)}
-								>
-									<div className="flex items-center gap-2 w-[calc(100%-5rem)]">
-										<DatabaseIcon
-											className="flex-shrink-0 w-4 h-4 text-primary60"
-											strokeWidth={2.5}
-										/>
-										{/* <div className="flex items-center justify-between"> */}
-										<span className="truncate">{ds.name}</span>
-									</div>
+						) : dataSources.length > 0 ? (
+							<>
+								{dataSources.map((ds) => (
+									<button
+										key={ds.datasource_id}
+										className={cn(
+											'flex items-center justify-between gap-2 p-2 rounded-md cursor-pointer text-sm text-left',
+											String(activeDataSourceId) ===
+												String(ds.datasource_id)
+												? 'bg-purple-4 text-primary60'
+												: 'text-primary80 hover:bg-purple-4',
+										)}
+										onClick={() => handleDatasourceClick(ds)}
+									>
+										<div className="flex items-center gap-2 w-[calc(100%-5rem)]">
+											<DatabaseIcon
+												className="flex-shrink-0 w-4 h-4 text-primary60"
+												strokeWidth={2.5}
+											/>
+											<span className="truncate">
+												{ds.name}
+											</span>
+										</div>
 
-									{ds?.datasource_type ===
-										DATASOURCE_TYPES.SQL_GENERATED && (
-										<LiveTag />
-									)}
-									{/* </div> */}
-								</button>
-							))
+										{ds?.datasource_type ===
+											DATASOURCE_TYPES.SQL_GENERATED && (
+											<LiveTag />
+										)}
+									</button>
+								))}
+								<Sentinel />
+								{isFetchingNextPage && (
+									<p className="text-xs text-center text-gray-400 py-1">
+										Loading more...
+									</p>
+								)}
+							</>
 						) : (
 							<p className="text-xs text-center text-gray-400 py-2">
 								No datasource found.
@@ -448,15 +455,8 @@ const Header = () => {
 
 	const { data: datasourceDetails } = useDatasourceDetailsV2();
 
-	const {
-		data: userDetails,
-		isLoading: isUserDetailsLoading,
-		error,
-	} = useQuery({
-		queryKey: ['user-details'],
-		queryFn: authUserDetails,
-		refetchInterval: 10000,
-	});
+	const { userDetails, isLoading: isUserDetailsLoading, error } = useAuth();
+	const { data: notifData } = useNotificationCount();
 
 	const { data: sessionData, isLoading: isSessionDataLoading } = useQuery({
 		queryKey: ['session', query.sessionId],
@@ -505,15 +505,17 @@ const Header = () => {
 
 	useEffect(() => {
 		if (userDetails) {
-			setHasUnreadNotifications(userDetails?.has_notifications);
 			setValue({
 				...userDetails,
 			});
-
-			// Sync identity to Redux store (non-destructive for selectedTeamId)
-			dispatch(syncAuthIdentity(userDetails));
 		}
-	}, [userDetails, dispatch, setValue]);
+	}, [userDetails, setValue]);
+
+	useEffect(() => {
+		if (notifData) {
+			setHasUnreadNotifications(notifData.has_notifications);
+		}
+	}, [notifData]);
 
 	useEffect(() => {
 		if (error) {

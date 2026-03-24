@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import InputText from './elements/InputText';
 import { resetChatStore, updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
-import { useDataSources } from '@/hooks/useDataSources';
 import useInfiniteScroll from '@/hooks/useInfiniteScroll';
 import Spinner from './elements/loading/Spinner';
 import dayjs from 'dayjs';
@@ -124,6 +123,14 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		[teams, teamSearchQuery],
 	);
 
+	const [pollingEnabled, setPollingEnabled] = useState(false);
+
+	// Delay session polling by 30s to reduce initial burst
+	useEffect(() => {
+		const timer = setTimeout(() => setPollingEnabled(true), 30000);
+		return () => clearTimeout(timer);
+	}, []);
+
 	const chatHistoryQueryKey = useMemo(() => ['chat-history'], []);
 	const {
 		data: sessionsData,
@@ -138,7 +145,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		paginationType: 'cursor',
 		options: {
 			limit: 20,
-			refetchInterval: 20000,
+			refetchInterval: pollingEnabled ? 20000 : false,
 		},
 	});
 
@@ -219,16 +226,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 		},
 	];
 
-	// Use custom hook that handles team-based caching properly
-	const { dataSources } = useDataSources();
-
-	const getChatHistoryDataSourceName = (dataSourceId) => {
-		const dataSource = dataSources?.find(
-			(source) => source.datasource_id === dataSourceId,
-		);
-		return dataSource?.name;
-	};
-
 	const getChatHistory = (session) => {
 		if (sessionId === session.session_id) return;
 		dispatch(resetChatStore());
@@ -245,9 +242,6 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 				{ key: 'resetIra', value: !chatStoreReducer?.resetIra },
 			]),
 		);
-
-		const datasourceId = session?.datasource_id;
-		const datasourceName = getChatHistoryDataSourceName(datasourceId);
 	};
 
 	const handleRedirectionAfterDeletion = (threadSessionId, threadWorkflowId) => {

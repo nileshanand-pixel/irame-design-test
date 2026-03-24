@@ -9,7 +9,7 @@ import { createQuerySession } from './service/new-chat.service';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUtilProp } from '@/redux/reducer/utilReducer';
 import { updateChatStoreProp } from '@/redux/reducer/chatReducer.js';
-import { useDataSources } from '@/hooks/useDataSources';
+import { useQueryClient } from '@tanstack/react-query';
 // import InputArea from './InputArea';
 import { trackEvent } from '@/lib/mixpanel';
 import { logError } from '@/lib/logger';
@@ -17,7 +17,6 @@ import { EVENTS_ENUM, EVENTS_REGISTRY } from '@/config/analytics-events';
 import { toast } from '@/lib/toast';
 import { queryClient } from '@/lib/react-query';
 import { useDatasourceId } from '@/hooks/use-datasource-id';
-import { useMemo } from 'react';
 import InputArea from './components/input-area/input-area';
 import StepThreeContent from './components/step-three-content';
 import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
@@ -111,7 +110,7 @@ const NewChat = () => {
 				return (
 					<StepThreeContent
 						setPrompt={setPrompt}
-						dataSources={dataSources}
+						dataSources={datasourceData ? [datasourceData] : []}
 					/>
 				);
 			default:
@@ -224,14 +223,15 @@ const NewChat = () => {
 		}
 	};
 
-	const { dataSources, isLoading, error } = useDataSources();
+	const queryClientInstance = useQueryClient();
 
-	const findDataSourceById = useMemo(() => {
-		return (dataSourceId) => {
-			const datasets = dataSources || utilReducer?.dataSources;
-			return datasets?.find((ds) => ds.datasource_id === dataSourceId);
-		};
-	}, [dataSources, utilReducer?.dataSources]);
+	const findDataSourceById = (dataSourceId) => {
+		const cached = queryClientInstance.getQueryData([
+			'data-source-details-v2',
+			dataSourceId,
+		]);
+		return cached || null;
+	};
 
 	const getChatHistoryDataSourceName = (dataSourceId) => {
 		const dataSource = findDataSourceById(dataSourceId);
@@ -247,25 +247,22 @@ const NewChat = () => {
 	};
 
 	useEffect(() => {
-		if (dataSources) {
+		if (datasourceData) {
 			const { dataSourceId, source } = query;
-			const currentDataSourceData = dataSources.filter(
-				(dataSource) => dataSource.datasource_id === dataSourceId,
-			)?.[0];
-			if (currentDataSourceData && !preChatScreenLoadedRef.current) {
+			if (!preChatScreenLoadedRef.current) {
 				trackEvent(
 					EVENTS_ENUM.PRE_CHAT_SCREEN_LOADED,
 					EVENTS_REGISTRY.PRE_CHAT_SCREEN_LOADED,
 					() => ({
 						dataset_id: dataSourceId,
-						dataset_name: currentDataSourceData?.name,
+						dataset_name: datasourceData?.name,
 						source: source || 'url',
 					}),
 				);
 				preChatScreenLoadedRef.current = true;
 			}
 		}
-	}, [dataSources, query]);
+	}, [datasourceData, query]);
 
 	useEffect(() => {
 		const { step, datasource_id } = query;
@@ -310,20 +307,6 @@ const NewChat = () => {
 			setDoingScience(true);
 		}
 	}, [utilReducer?.dataSources, utilReducer?.resetChat]);
-
-	// Handle data sources query errors
-	useEffect(() => {
-		if (error) {
-			logError(error, {
-				feature: 'chat',
-				action: 'fetchDataSources',
-				extra: {
-					errorMessage: error.message,
-					status: error.response?.status,
-				},
-			});
-		}
-	}, [error]);
 
 	return (
 		<div className="flex flex-col relative w-[70%] pt-10">

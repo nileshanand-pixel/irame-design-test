@@ -2,21 +2,45 @@ import axiosClientV1, { axiosClientV2 } from '@/lib/axios';
 import { toast } from '@/lib/toast';
 import { logError } from '@/lib/logger';
 
-export const getBusinessProcesses = async () => {
-	const response = await axiosClientV1.get(`/business-processes`, {
-		headers: {},
-	});
-	return response.data;
+export const getBusinessProcesses = async (options = {}) => {
+	const { limit, cursor, search } = options;
+	const params = new URLSearchParams();
+	if (limit) params.set('limit', limit);
+	if (cursor) params.set('cursor', cursor);
+	if (search) params.set('search', search);
+	const query = params.toString();
+	const response = await axiosClientV1.get(
+		`/business-processes${query ? `?${query}` : ''}`,
+		{ headers: {} },
+	);
+	return {
+		data: response.data.processes || [],
+		processes: response.data.processes || [],
+		cursor: response.data.cursor,
+	};
 };
 
-export const getWorkflowsByBusinessProcess = async (businessProcessId) => {
+export const getWorkflowsByBusinessProcess = async (options = {}) => {
+	const { businessProcessId, limit, cursor, search } =
+		typeof options === 'string' ? { businessProcessId: options } : options;
+	const params = new URLSearchParams();
+	if (limit) params.set('limit', limit);
+	if (cursor) params.set('cursor', cursor);
+	if (search) params.set('search', search);
+	const query = params.toString();
 	const response = await axiosClientV1.get(
-		`/workflow-checks/business-process/${businessProcessId}`,
+		`/workflow-checks/business-process/${businessProcessId}${query ? `?${query}` : ''}`,
 		{
 			headers: {},
 		},
 	);
-	return response.data;
+	const data = response.data;
+	return {
+		data: data.workflow_checks,
+		cursor: data.cursor,
+		businessProcess: data.business_process,
+		...data,
+	};
 };
 
 export const getRecentWorkflowsRunsHomePage = async () => {
@@ -150,6 +174,7 @@ export const deleteRunningWorkflow = async (runId) => {
 export const getFeaturedWorkflows = async ({ pageParam }) => {
 	const params = {
 		limit: 10,
+		lite: true,
 	};
 	if (pageParam) {
 		params.cursor = pageParam;
@@ -188,6 +213,30 @@ export const getWorkflowsForDashboard = async ({ queryKey, pageParam }) => {
 	const response = await axiosClientV1.get(`/workflows/list-workflows`, {
 		params,
 	});
+	return response.data;
+};
+
+export const getWorkflowsByBusinessProcessPaginated = async (options = {}) => {
+	const { businessProcessId, limit, cursor, search } = options;
+	const params = new URLSearchParams();
+	if (businessProcessId) params.set('business_process_id', businessProcessId);
+	if (limit) params.set('limit', limit);
+	if (cursor) params.set('cursor', cursor);
+	if (search) params.set('search', search);
+	const query = params.toString();
+	const response = await axiosClientV1.get(
+		`/workflows/list-workflows${query ? `?${query}` : ''}`,
+	);
+	return {
+		data: response.data.workflows || [],
+		cursor: response.data.cursor,
+	};
+};
+
+export const getWorkflowProcessingStatus = async (businessProcessId) => {
+	const response = await axiosClientV1.get(
+		`/workflows/workflow-status?business_process_id=${businessProcessId}`,
+	);
 	return response.data;
 };
 

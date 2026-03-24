@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -9,6 +8,7 @@ import { getBusinessProcesses } from './service/workflow.service';
 import BusinessProcessPageSkeleton from './BusinessProcessPageSkeleton';
 import BusinessProcessCard from './BusinessProcessCard';
 import { logError } from '@/lib/logger';
+import useInfiniteScroll from '@/hooks/useInfiniteScroll';
 
 const SearchBar = ({ value, onChange }) => (
 	<div className="flex items-center bg-white border rounded-[52px] h-11 pl-4 pr-6 transition-width duration-300 w-[18.75rem]">
@@ -31,20 +31,33 @@ const EmptyStateWrapper = ({ config }) => (
 );
 
 const BusinessProcessPage = () => {
-	const [processes, setProcesses] = useState([]);
 	const [search, setSearch] = useState('');
+	const [debouncedSearch, setDebouncedSearch] = useState('');
 	const navigate = useNavigate();
 
-	const { data, isLoading, error } = useQuery({
-		queryKey: ['get-business-processes'],
-		queryFn: () => getBusinessProcesses(),
-	});
-
+	// Debounce the search
 	useEffect(() => {
-		if (data) {
-			setProcesses(data.processes || []);
-		}
-	}, [data]);
+		const timer = setTimeout(() => setDebouncedSearch(search), 300);
+		return () => clearTimeout(timer);
+	}, [search]);
+
+	const {
+		data: businessProcesses,
+		isLoading,
+		error,
+		Sentinel,
+		isFetchingNextPage,
+	} = useInfiniteScroll({
+		queryKey: ['get-business-processes', debouncedSearch],
+		queryFn: (params) =>
+			getBusinessProcesses({
+				limit: 20,
+				search: debouncedSearch || undefined,
+				...params,
+			}),
+		paginationType: 'cursor',
+		options: { limit: 20, staleTime: 1000 * 60 },
+	});
 
 	// Handle business processes query errors
 	useEffect(() => {
@@ -59,17 +72,6 @@ const BusinessProcessPage = () => {
 			});
 		}
 	}, [error]);
-
-	const filteredProcesses = useMemo(() => {
-		if (!search) return processes;
-		return processes.filter(
-			({ name, tags }) =>
-				name.toLowerCase().startsWith(search.toLowerCase()) ||
-				tags.some((tag) =>
-					tag.toLowerCase().startsWith(search.toLowerCase()),
-				),
-		);
-	}, [processes, search]);
 
 	const handleCardClick = (externalId) =>
 		navigate(`/app/business-process/${externalId}`);
@@ -113,11 +115,11 @@ const BusinessProcessPage = () => {
 				<div className="px-4 py-2 mb-4 overflow-y-auto max-h-[calc(100vh-16.875rem)]">
 					{isLoading ? (
 						<BusinessProcessPageSkeleton />
-					) : processes.length === 0 ? (
+					) : businessProcesses.length === 0 ? (
 						<EmptyStateWrapper config={emptyStateConfig} />
-					) : filteredProcesses.length > 0 ? (
+					) : (
 						<div className="grid grid-cols-3 gap-4">
-							{filteredProcesses.map((process) => (
+							{businessProcesses.map((process) => (
 								<BusinessProcessCard
 									key={process.external_id}
 									process={process}
@@ -126,12 +128,12 @@ const BusinessProcessPage = () => {
 									}
 								/>
 							))}
+							<Sentinel />
 						</div>
-					) : (
-						<div className="w-full p-6  border border-primary1 rounded-s-xl rounded-e-xl">
-							<p className="text-lg text-center text-primary60 font-medium">
-								No matching processes found
-							</p>
+					)}
+					{isFetchingNextPage && (
+						<div className="flex justify-center py-4">
+							<div className="h-6 w-6 border-2 border-primary40 border-t-transparent rounded-full animate-spin" />
 						</div>
 					)}
 				</div>

@@ -31,6 +31,11 @@ import { logError } from '@/lib/logger';
 // 	}
 // };
 
+export const getUnreadNotificationCount = async () => {
+	const response = await axiosClientV1.get('/notifications/unread-count');
+	return response.data;
+};
+
 export const getAllNotifications = async ({ queryKey, pageParam }) => {
 	try {
 		const { notificationType } = queryKey[1];

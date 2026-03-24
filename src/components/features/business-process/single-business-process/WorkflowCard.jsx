@@ -7,6 +7,7 @@ import GradientSpinner from '@/components/elements/loading/GradientSpinner';
 
 const WorkflowCard = ({
 	workflow,
+	statusMap,
 	isHighlighted = false,
 	isHighlightVisible = false,
 	highlightedRef = null,
@@ -14,7 +15,8 @@ const WorkflowCard = ({
 	const { businessProcessId } = useParams();
 	const navigate = useNavigate();
 
-	const rawStatus = (workflow.status || '').toString();
+	const processingInfo = statusMap?.[workflow.external_id];
+	const rawStatus = (processingInfo?.status || workflow.status || '').toString();
 	const normalizedStatus = rawStatus.replace(/-$/, '').toUpperCase();
 
 	const isActive = normalizedStatus === 'ACTIVE';

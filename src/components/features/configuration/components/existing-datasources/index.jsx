@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { deleteDataSource } from '../../service/configuration.service';
 import {
@@ -30,6 +30,7 @@ import { useSearchParams } from 'react-router-dom';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
 import { DATASOURCE_TYPES } from '@/constants/datasource.constant';
 import { useDataSources } from '@/hooks/useDataSources';
+import useProcessingStatus from '@/hooks/useProcessingStatus';
 
 const TABS = [
 	{
@@ -53,6 +54,7 @@ export default function ExistingDataSources({ showForm }) {
 	const [isFocused, setIsFocused] = useState(false);
 	const [selectedDatasourceTab, setSelectedDatasourceTab] = useState(TABS[0]);
 	const [search, setSearch] = useState('');
+	const [debouncedSearch, setDebouncedSearch] = useState('');
 	const [setSearchParams] = useSearchParams();
 
 	const dispatch = useDispatch();
@@ -61,20 +63,24 @@ export default function ExistingDataSources({ showForm }) {
 	const utilReducer = useSelector((state) => state.utilReducer);
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 
-	// Use unified hook with team-based caching + refetchInterval for processing
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearch(search);
+		}, 300);
+		return () => clearTimeout(timer);
+	}, [search]);
+
 	const {
 		dataSources,
 		isLoading: isFetchingData,
-		refetch,
+		isFetchingNextPage,
+		hasNextPage,
+		fetchNextPage,
 	} = useDataSources({
-		limit: 100, // You can adjust this limit as needed, backend defaults to 20
-		refetchInterval: (query) => {
-			if (query?.state?.data?.some((ds) => ds.status === 'processing')) {
-				return 2000;
-			}
-			return false;
-		},
+		search: debouncedSearch || undefined,
 	});
+
+	const { processingMap } = useProcessingStatus();
 
 	const startChatting = (data) => {
 		navigate(
@@ -102,7 +108,7 @@ export default function ExistingDataSources({ showForm }) {
 				}),
 			);
 			// Refetch to update the list
-			refetch();
+			queryClient.invalidateQueries({ queryKey: ['data-sources'] });
 		} catch (error) {
 			logError(error, {
 				feature: 'configuration',
@@ -133,12 +139,9 @@ export default function ExistingDataSources({ showForm }) {
 		);
 	};
 
-	// Filter datasources, ensure we always have an array (not undefined)
-	const currentDatasources = (dataSources || [])?.filter(
+	const currentDatasources = (dataSources || []).filter(
 		(ds) =>
-			!ds?.is_duplicate &&
-			ds?.datasource_type === selectedDatasourceTab?.type &&
-			ds?.name?.toLowerCase()?.includes(search?.trim()?.toLowerCase()),
+			!ds?.is_duplicate && ds?.datasource_type === selectedDatasourceTab?.type,
 	);
 	const { groupArray } = groupItemsByDate(currentDatasources, 'created_at');
 
@@ -260,15 +263,25 @@ export default function ExistingDataSources({ showForm }) {
 												source?.status === 'failed';
 											const isProcessing =
 												source?.status === 'processing';
+											const processingInfo =
+												processingMap[source.datasource_id];
+											const successCount =
+												processingInfo?.success_count ??
+												source.success_count ??
+												0;
+											const uploadedCount =
+												processingInfo?.uploaded_count ??
+												source.uploaded_count ??
+												0;
 											const havePreparingPercentage =
-												source.uploaded_count !== null &&
-												source.success_count !== null;
+												uploadedCount !== null &&
+												successCount !== null;
 											const preparingPercentage =
-												source.success_count === 0
+												successCount === 0
 													? 0
 													: Math.floor(
-															(source.success_count /
-																source.uploaded_count) *
+															(successCount /
+																uploadedCount) *
 																100,
 															2,
 														);
@@ -418,6 +431,25 @@ export default function ExistingDataSources({ showForm }) {
 							);
 						})}
 					</div>
+
+					{hasNextPage && (
+						<div className="flex justify-center pt-2 pb-6 mt-auto">
+							<button
+								onClick={() => fetchNextPage()}
+								disabled={isFetchingNextPage}
+								className="px-5 py-1.5 text-xs font-medium text-primary40 hover:text-primary80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+							>
+								{isFetchingNextPage ? (
+									<>
+										<i className="bi-arrow-repeat animate-spin text-xs" />
+										Loading...
+									</>
+								) : (
+									'Load more'
+								)}
+							</button>
+						</div>
+					)}
 
 					{(!currentDatasources || currentDatasources.length === 0) && (
 						<p className="text-primary40 flex flex-col  justify-center items-center">

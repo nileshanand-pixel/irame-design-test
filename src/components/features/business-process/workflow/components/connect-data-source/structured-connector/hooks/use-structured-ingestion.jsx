@@ -262,7 +262,8 @@ export function useDatasourceIngest({
 			}
 		}
 		if (uniqueRefs.size > 0) {
-			const allDS = await getDataSourcesV2();
+			const allDSResponse = await getDataSourcesV2();
+			const allDS = allDSResponse?.datasource_list || [];
 			const refDS = allDS.filter((ds) =>
 				uniqueRefs.has(ds.datasource_id || ds.id),
 			);

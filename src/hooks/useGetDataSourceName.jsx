@@ -1,13 +1,11 @@
-import { useDataSources } from '@/hooks/useDataSources';
+import useDatasourceDetailsV2 from '@/api/datasource/hooks/useDatasourceDetailsV2';
 
 const useDataSourceName = (dataSourceId) => {
-	const { dataSources, isLoading, error } = useDataSources();
+	const { data, isLoading, error } = useDatasourceDetailsV2({
+		datasourceId: dataSourceId,
+	});
 
-	const dataSource = dataSources?.find(
-		(source) => source.datasource_id === dataSourceId,
-	);
-
-	return { dataSourceName: dataSource?.name, isLoading, error };
+	return { dataSourceName: data?.name, isLoading, error };
 };
 
 export default useDataSourceName;

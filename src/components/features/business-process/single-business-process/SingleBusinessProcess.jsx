@@ -11,6 +11,8 @@ import {
 	getWorkflowsByBusinessProcess,
 } from '../service/workflow.service';
 import BreadCrumbs from '@/components/BreadCrumbs';
+import useInfiniteScroll from '@/hooks/useInfiniteScroll';
+import useWorkflowProcessingStatus from '@/hooks/useWorkflowProcessingStatus';
 
 const EmptyStateWrapper = ({ config }) => (
 	<div className="flex justify-center">
@@ -44,26 +46,53 @@ const SingleBusinessProcessPage = () => {
 	const { businessProcessId } = useParams();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [search, setSearch] = useState('');
+	const [debouncedSearch, setDebouncedSearch] = useState('');
 	const [isFocused, setIsFocused] = useState(false);
 	const [highlightedWorkflowId, setHighlightedWorkflowId] = useState(null);
 	const [isHighlightVisible, setIsHighlightVisible] = useState(false);
 	const workflowListRef = useRef(null);
 	const highlightedWorkflowRef = useRef(null);
 
-	// Fetch business processes
+	// Debounce the search
+	useEffect(() => {
+		const timer = setTimeout(() => setDebouncedSearch(search), 300);
+		return () => clearTimeout(timer);
+	}, [search]);
+
+	// Fetch business processes (for breadcrumb/header only)
 	const { data: businessProcessesData, isLoading: isBusinessLoading } = useQuery({
 		queryKey: ['get-business-processes'],
 		queryFn: () => getBusinessProcesses(),
 	});
 
-	// Fetch workflows with polling every 20 seconds
-	const { data: workflowsData, isLoading: isWorkflowsLoading } = useQuery({
-		queryKey: ['get-workflows-by-business-process', businessProcessId],
-		queryFn: () => getWorkflowsByBusinessProcess(businessProcessId),
-		enabled: !!businessProcessId,
-		refetchInterval: 20000, // Poll every 20 seconds
-		refetchIntervalInBackground: false, // Only poll when tab is active
+	// Fetch workflows with pagination and polling
+	const {
+		data: workflows,
+		isLoading: isWorkflowsLoading,
+		Sentinel,
+		isFetchingNextPage,
+	} = useInfiniteScroll({
+		queryKey: [
+			'get-workflows-by-business-process',
+			businessProcessId,
+			debouncedSearch,
+		],
+		queryFn: (params) =>
+			getWorkflowsByBusinessProcess({
+				businessProcessId,
+				limit: 100,
+				search: debouncedSearch || undefined,
+				...params,
+			}),
+		paginationType: 'cursor',
+		options: {
+			limit: 100,
+			staleTime: 1000 * 60,
+			enabled: !!businessProcessId,
+		},
 	});
+
+	const { statusMap } = useWorkflowProcessingStatus(businessProcessId);
 
 	// Find matching business process
 	const businessProcess = useMemo(() => {
@@ -71,24 +100,6 @@ const SingleBusinessProcessPage = () => {
 			(bp) => bp.external_id === businessProcessId,
 		);
 	}, [businessProcessesData, businessProcessId]);
-
-	// Process workflows data
-	const workflows = useMemo(
-		() => workflowsData?.workflow_checks || [],
-		[workflowsData],
-	);
-
-	// Filtered workflows
-	const filteredWorkflows = useMemo(() => {
-		if (!search) return workflows;
-		return workflows.filter(
-			({ name, tags }) =>
-				name?.toLowerCase().includes(search.toLowerCase()) ||
-				tags?.some((tag) =>
-					tag.toLowerCase().includes(search.toLowerCase()),
-				),
-		);
-	}, [workflows, search]);
 
 	// Handle workflow highlighting from URL parameter
 	useEffect(() => {
@@ -237,30 +248,36 @@ const SingleBusinessProcessPage = () => {
 						</>
 					) : workflows.length === 0 ? (
 						<EmptyStateWrapper config={emptyStateConfig} />
-					) : filteredWorkflows.length > 0 ? (
-						filteredWorkflows.map((workflow) => (
-							<WorkflowCard
-								key={workflow.external_id}
-								workflow={workflow}
-								isHighlighted={
-									highlightedWorkflowId === workflow.external_id
-								}
-								isHighlightVisible={
-									isHighlightVisible &&
-									highlightedWorkflowId === workflow.external_id
-								}
-								highlightedRef={
-									highlightedWorkflowId === workflow.external_id
-										? highlightedWorkflowRef
-										: null
-								}
-							/>
-						))
 					) : (
-						<div className="w-full p-6 border border-primary1 rounded-s-xl rounded-e-xl">
-							<p className="text-lg text-center text-primary60 font-medium">
-								No matching workflows found
-							</p>
+						<>
+							{workflows.map((workflow) => (
+								<WorkflowCard
+									key={workflow.external_id}
+									workflow={workflow}
+									statusMap={statusMap}
+									isHighlighted={
+										highlightedWorkflowId ===
+										workflow.external_id
+									}
+									isHighlightVisible={
+										isHighlightVisible &&
+										highlightedWorkflowId ===
+											workflow.external_id
+									}
+									highlightedRef={
+										highlightedWorkflowId ===
+										workflow.external_id
+											? highlightedWorkflowRef
+											: null
+									}
+								/>
+							))}
+							<Sentinel />
+						</>
+					)}
+					{isFetchingNextPage && (
+						<div className="flex justify-center py-4">
+							<div className="h-6 w-6 border-2 border-primary40 border-t-transparent rounded-full animate-spin" />
 						</div>
 					)}
 				</div>

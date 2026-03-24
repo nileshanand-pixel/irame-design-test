@@ -5,7 +5,7 @@ const queryConfig = {
 		queries: {
 			staleTime: Infinity,
 			// useErrorBoundary: false,
-			refetchOnWindowFocus: true,
+			refetchOnWindowFocus: false,
 			retry: false,
 			retryDelay: 10000,
 		},
