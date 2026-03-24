@@ -1,23 +1,26 @@
 import dayjs from 'dayjs';
 import { MR_STATUSES } from '../../constants/medical-reader.constants';
 
+const getDisplayFileName = (name) => {
+	if (!name) return 'No files';
+	// Strip folder path prefixes, show only the filename
+	const parts = name.split('/');
+	return parts[parts.length - 1];
+};
+
 export const getMedicalReaderHistoryColumns = ({ onView, onDelete }) => [
 	{
 		accessorKey: 'fileNames',
 		header: 'Files',
 		cell: ({ row }) => {
 			const names = row.original.fileNames || [];
+			const displayName = getDisplayFileName(names[0]);
+			const extra = names.length > 1 ? ` +${names.length - 1} more` : '';
 			return (
-				<div className="max-w-[200px]">
-					<p className="text-sm text-primary80 truncate font-medium">
-						{names[0] || 'No files'}
-					</p>
-					{names.length > 1 && (
-						<p className="text-xs text-primary40">
-							+{names.length - 1} more
-						</p>
-					)}
-				</div>
+				<span className="text-sm text-primary80">
+					{displayName}
+					{extra && <span className="text-primary40">{extra}</span>}
+				</span>
 			);
 		},
 	},
@@ -27,7 +30,7 @@ export const getMedicalReaderHistoryColumns = ({ onView, onDelete }) => [
 		cell: ({ row }) => (
 			<span className="text-sm text-primary60">
 				{row.original.createdAt
-					? dayjs(row.original.createdAt).format('DD MMM YYYY, HH:mm')
+					? dayjs(row.original.createdAt).format('MMM DD, YYYY h:mm A')
 					: '—'}
 			</span>
 		),
@@ -38,9 +41,7 @@ export const getMedicalReaderHistoryColumns = ({ onView, onDelete }) => [
 		cell: ({ row }) => {
 			const status = MR_STATUSES[row.original.status] || MR_STATUSES.PENDING;
 			return (
-				<span
-					className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${status.bgColor} ${status.color}`}
-				>
+				<span className={`text-sm font-medium ${status.color}`}>
 					{status.label}
 				</span>
 			);
@@ -48,16 +49,16 @@ export const getMedicalReaderHistoryColumns = ({ onView, onDelete }) => [
 	},
 	{
 		id: 'actions',
-		header: '',
+		header: 'Actions',
 		cell: ({ row }) => {
 			const { status, externalId } = row.original;
 			const canView = status !== 'CANCELLED';
 			return (
-				<div className="flex items-center gap-2 justify-end">
+				<div className="flex items-center gap-3">
 					{canView && (
 						<button
 							onClick={() => onView(externalId)}
-							className="text-xs text-purple-100 hover:text-purple-80 font-medium transition-colors"
+							className="text-sm text-purple-100 hover:text-purple-80 font-medium transition-colors"
 						>
 							{status === 'COMPLETED'
 								? 'View'
@@ -68,7 +69,7 @@ export const getMedicalReaderHistoryColumns = ({ onView, onDelete }) => [
 					)}
 					<button
 						onClick={() => onDelete(externalId)}
-						className="text-xs text-primary40 hover:text-red-500 font-medium transition-colors"
+						className="text-sm text-red-500 hover:text-red-600 font-medium transition-colors"
 					>
 						Delete
 					</button>
