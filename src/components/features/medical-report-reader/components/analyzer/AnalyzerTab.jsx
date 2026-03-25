@@ -120,7 +120,11 @@ const AnalyzerTab = ({ selectedJobId, onJobIdChange }) => {
 							updateProgress: () => {},
 						});
 						fileUrls.push(url);
-						names.push(file.name);
+						names.push(
+							file.webkitRelativePath ||
+								file.relativePath ||
+								file.name,
+						);
 					}
 
 					setUploadProgress(100);
