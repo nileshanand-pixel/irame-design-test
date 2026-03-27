@@ -22,7 +22,7 @@ const InputToolbar = ({
 	const isQnaDisabled = import.meta.env.VITE_QNA_DISABLED === 'true';
 	return (
 		<div className="flex justify-between">
-			<div className="flex px-2 items-center">
+			<div className="flex gap-2 px-2 items-center">
 				{isEnhancing ? (
 					<div className="text-xs flex gap-1 items-center text-purple-80">
 						<CircularLoader size="sm" />
@@ -30,7 +30,7 @@ const InputToolbar = ({
 					</div>
 				) : (
 					<>
-						<Hint label="Enhance Prompt">
+						{/* <Hint label="Enhance Prompt">
 							<Button
 								onClick={onEnhancePrompt}
 								variant="transparent"
@@ -52,7 +52,7 @@ const InputToolbar = ({
 									alt="enhance icon"
 								/>
 							</Button>
-						</Hint>
+						</Hint> */}
 
 						{mode === 'single' &&
 							!filesLoading &&
@@ -67,7 +67,7 @@ const InputToolbar = ({
 											isQnaDisabled ||
 											isDisabledWithoutLoading
 										}
-										className="ml-2 -mt-1 text-base text-primary80"
+										className="-mt-1 text-base text-primary80"
 									>
 										@
 									</Button>

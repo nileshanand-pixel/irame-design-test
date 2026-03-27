@@ -399,7 +399,6 @@ export default function CaseManagementTable({
 												}
 												className="focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 ring-offset-0 outline-none data-[state=unchecked]:border-primary80 border-2"
 												disabled={!isOwner}
-												className="focus-visible:ring-0 focus-visible:ring-offset-0 ring-0 ring-offset-0 outline-none data-[state=unchecked]:border-primary80 border-2"
 											/>
 										</td>
 										{columnsConfig.map((columnConfig) => {

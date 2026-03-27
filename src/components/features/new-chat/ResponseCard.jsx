@@ -431,9 +431,31 @@ const ResponseCard = ({
 		chatStoreReducer,
 	]);
 
+	const handleRemoveFeedback = async () => {
+		try {
+			await submitFeedback({
+				entityId: answerResp?.query_id,
+				entityType: 'query',
+				feedback: 'feedback_removed',
+				comment: '',
+			});
+			setFeedbackMap((prev) => {
+				const next = { ...prev };
+				delete next[answerResp?.query_id];
+				return next;
+			});
+		} catch (err) {
+			console.error(err);
+		}
+	};
+
 	const handleSendPositiveFeedback = async () => {
 		const currentFeedback = feedbackMap[answerResp?.query_id];
-		if (currentFeedback === 'Positive') return;
+
+		if (currentFeedback === 'Positive') {
+			await handleRemoveFeedback();
+			return;
+		}
 
 		try {
 			await submitFeedback({
@@ -527,47 +549,53 @@ const ResponseCard = ({
 									)}
 								</button>
 
-								{feedbackMap[answerResp?.query_id] !==
-									'Negative' && (
-									<button
-										className=" hover:bg-purple-4 hover:scale-105 transition-all duration-150 rounded-md p-0"
-										title="Good Feedback"
-										onClick={handleSendPositiveFeedback}
-									>
-										<ThumbsUp
-											className={cn(
-												'h-9 w-9 p-2',
-												feedbackMap[answerResp?.query_id] ===
-													'Positive' &&
-													'text-primary fill-current cursor-default',
-											)}
-										/>
-									</button>
-								)}
+								<button
+									className="hover:bg-purple-4 hover:scale-105 transition-all duration-150 rounded-md p-0"
+									title={
+										feedbackMap[answerResp?.query_id] ===
+										'Positive'
+											? 'Remove feedback'
+											: 'Good response'
+									}
+									onClick={handleSendPositiveFeedback}
+								>
+									<ThumbsUp
+										className={cn(
+											'h-9 w-9 p-2',
+											feedbackMap[answerResp?.query_id] ===
+												'Positive' &&
+												'text-primary fill-current',
+										)}
+									/>
+								</button>
 
-								{feedbackMap[answerResp?.query_id] !==
-									'Positive' && (
-									<button
-										className=" hover:bg-purple-4 hover:scale-105 transition-all duration-150 rounded-md p-0"
-										title="Bad Feedback"
-										onClick={() => {
-											const currentFeedback =
-												feedbackMap[answerResp?.query_id];
-											if (currentFeedback === 'Negative')
-												return;
-											setFeedbackModalOpen(true);
-										}}
-									>
-										<ThumbsDown
-											className={cn(
-												'h-9 w-9 p-2',
-												feedbackMap[answerResp?.query_id] ===
-													'Negative' &&
-													'text-primary fill-current cursor-default',
-											)}
-										/>
-									</button>
-								)}
+								<button
+									className="hover:bg-purple-4 hover:scale-105 transition-all duration-150 rounded-md p-0"
+									title={
+										feedbackMap[answerResp?.query_id] ===
+										'Negative'
+											? 'Remove feedback'
+											: 'Bad response'
+									}
+									onClick={() => {
+										const currentFeedback =
+											feedbackMap[answerResp?.query_id];
+										if (currentFeedback === 'Negative') {
+											handleRemoveFeedback();
+											return;
+										}
+										setFeedbackModalOpen(true);
+									}}
+								>
+									<ThumbsDown
+										className={cn(
+											'h-9 w-9 p-2',
+											feedbackMap[answerResp?.query_id] ===
+												'Negative' &&
+												'text-primary fill-current',
+										)}
+									/>
+								</button>
 							</div>
 						)}
 
