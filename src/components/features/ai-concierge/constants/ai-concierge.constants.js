@@ -4,7 +4,6 @@ import {
 	TbShieldCheck,
 	TbPhoto,
 	TbMicrophone,
-	TbTableExport,
 	TbHeartRateMonitor,
 } from 'react-icons/tb';
 
@@ -59,16 +58,6 @@ export const AI_FEATURES = [
 		icon: TbMicrophone,
 		route: 'speech-auditor',
 		tags: ['Speech', 'Audit', 'Sentiment'],
-		beta: true,
-	},
-	{
-		id: 'table-extractor',
-		name: 'Table Extractor',
-		description:
-			'Extract structured data from PDF invoices and documents using AI vision',
-		icon: TbTableExport,
-		route: 'table-extractor',
-		tags: ['Table', 'PDF', 'Extraction', 'Invoice'],
 		beta: true,
 	},
 	{
