@@ -11,8 +11,8 @@ export const sanitizeFileName = (name) => {
 		// No extension or starts with dot
 		return name.replace(/[^a-zA-Z0-9()._ -]/g, '_');
 	}
-	const base = name.substring(0, lastDot).replace(/[^a-zA-Z0-9()._-]/g, '_');
-	const ext = name.substring(lastDot + 1).replace(/[^a-zA-Z0-9()._-]/g, '_');
+	const base = name.substring(0, lastDot).replace(/[^a-zA-Z0-9()._ -]/g, '_');
+	const ext = name.substring(lastDot + 1).replace(/[^a-zA-Z0-9()._ -]/g, '_');
 	return `${base}.${ext}`;
 };
 
