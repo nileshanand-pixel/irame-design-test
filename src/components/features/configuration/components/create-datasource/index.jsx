@@ -42,6 +42,7 @@ import {
 	getInvalidFileMessage,
 	getFileTypeLegacy,
 } from '@/config/file-upload.config';
+import { sanitizeFileName } from '@/utils/filename';
 
 // Get allowed file types for datasource creation (PDF supported)
 const ALLOWED_FILE_TYPES = CONNECTOR_FILE_TYPES.DATASOURCE;
@@ -183,22 +184,23 @@ const CreateDatasource = ({ showForm, onShowFormChange }) => {
 			const processedNames = new Set();
 
 			filesArr.forEach((file) => {
-				let uniqueName = file.name;
+				let uniqueName = sanitizeFileName(file.name);
 				let counter = 1;
 
 				// Check against existing files and already processed files in this batch
+				const sanitizedBase = uniqueName.substring(
+					0,
+					uniqueName.lastIndexOf('.'),
+				);
+				const sanitizedExt = uniqueName.substring(
+					uniqueName.lastIndexOf('.'),
+				);
+
 				while (
 					files.some((f) => f.name === uniqueName) ||
 					processedNames.has(uniqueName)
 				) {
-					const baseName = file.name.substring(
-						0,
-						file.name.lastIndexOf('.'),
-					);
-					const extension = file.name.substring(
-						file.name.lastIndexOf('.'),
-					);
-					uniqueName = `${baseName}_${counter}${extension}`;
+					uniqueName = `${sanitizedBase}_${counter}${sanitizedExt}`;
 					counter++;
 				}
 

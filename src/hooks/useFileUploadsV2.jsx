@@ -2,6 +2,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { uploadFile } from '@/components/features/configuration/service/configuration.service';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
+import { sanitizeFileName } from '@/utils/filename';
 
 export function useFileUploadsV2(options = {}) {
 	const { isDuplicateUploadAllowed = false } = options;
@@ -23,15 +24,16 @@ export function useFileUploadsV2(options = {}) {
 			const filesArr = Array.from(fileList);
 
 			filesArr.forEach((file) => {
-				let baseName = file.name;
+				const sanitized = sanitizeFileName(file.name);
+				let baseName = sanitized;
 				let ext = '';
-				const dotIdx = file.name.lastIndexOf('.');
+				const dotIdx = sanitized.lastIndexOf('.');
 				if (dotIdx !== -1) {
-					baseName = file.name.substring(0, dotIdx);
-					ext = file.name.substring(dotIdx);
+					baseName = sanitized.substring(0, dotIdx);
+					ext = sanitized.substring(dotIdx);
 				}
 
-				let finalName = file.name;
+				let finalName = sanitized;
 				let duplicateCount = 1;
 				let isDuplicate = files.some((f) => f.name === finalName);
 

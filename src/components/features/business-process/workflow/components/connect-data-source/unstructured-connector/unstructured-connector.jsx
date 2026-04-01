@@ -9,6 +9,7 @@ import {
 	uploadInit,
 } from '@/components/features/upload/service';
 import { uploadWithResilience } from '@/utils/multipart-upload';
+import { sanitizeFileName } from '@/utils/filename';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -894,7 +895,12 @@ function UploadManager({
 		const processedNames = new Set();
 
 		filesArr.forEach((file) => {
-			let uniqueName = file.name;
+			let uniqueName = sanitizeFileName(file.name);
+			const sanitizedBase = uniqueName.substring(
+				0,
+				uniqueName.lastIndexOf('.'),
+			);
+			const sanitizedExt = uniqueName.substring(uniqueName.lastIndexOf('.'));
 			let counter = 1;
 
 			// Check against existing files and already processed files in this batch
@@ -902,9 +908,7 @@ function UploadManager({
 				currentFiles.some((f) => f.name === uniqueName) ||
 				processedNames.has(uniqueName)
 			) {
-				const baseName = file.name.substring(0, file.name.lastIndexOf('.'));
-				const extension = file.name.substring(file.name.lastIndexOf('.'));
-				uniqueName = `${baseName}_${counter}${extension}`;
+				uniqueName = `${sanitizedBase}_${counter}${sanitizedExt}`;
 				counter++;
 			}
 

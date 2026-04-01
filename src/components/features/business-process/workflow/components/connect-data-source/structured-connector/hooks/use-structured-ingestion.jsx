@@ -9,6 +9,7 @@ import {
 } from '@/components/features/configuration/service/configuration.service';
 import { logError } from '@/lib/logger';
 import { uploadWithResilience } from '@/utils/multipart-upload';
+import { sanitizeFileName } from '@/utils/filename';
 
 const SERVER_TO_UI_STATUS = {
 	PROCESSING: 'processing',
@@ -301,7 +302,10 @@ export function useDatasourceIngest({
 				const existingNames = new Set(prev.map((p) => p.name));
 				const itemsToAdd = files.map((file) => {
 					const id = uuidv4();
-					const name = uniqueName(file.name, existingNames);
+					const name = uniqueName(
+						sanitizeFileName(file.name),
+						existingNames,
+					);
 					existingNames.add(name);
 
 					const modifiedFile = new File([file], name, {
