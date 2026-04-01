@@ -104,13 +104,18 @@ const extractKeyFindings = (modules) => {
 
 	const ts = modules?.truesight_analysis;
 	if (ts && ts.score < 30) {
-		const prob = ts.probability || 0;
-		findings.push({
-			icon: Bot,
-			title: 'AI Generation Detected',
-			description: `TrueSight: ${Math.round(prob)}% probability of synthetic generation`,
-			severity: 'CRITICAL',
-		});
+		const rawProb = ts.probability || 0;
+		// probability may be 0-1 decimal or 0-100 percentage
+		const probPct =
+			rawProb <= 1 ? Math.round(rawProb * 100) : Math.round(rawProb);
+		if (probPct >= 50) {
+			findings.push({
+				icon: Bot,
+				title: 'AI Generation Detected',
+				description: `TrueSight: ${probPct}% probability of synthetic generation`,
+				severity: 'CRITICAL',
+			});
+		}
 	}
 
 	return findings;
