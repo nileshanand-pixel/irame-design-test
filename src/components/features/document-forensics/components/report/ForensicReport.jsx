@@ -6,7 +6,6 @@ import { FORENSIC_MODULE_META } from '../../constants/forensics.constants';
 import {
 	Shield,
 	FileText,
-	DollarSign,
 	Clock,
 	AlertTriangle,
 	Calculator,
@@ -225,14 +224,6 @@ const ForensicReport = ({ result }) => {
 											result.createdAt,
 											result.completedAt,
 										)}
-									</span>
-								</div>
-							)}
-							{result?.llmCostUsd != null && (
-								<div className="flex items-center gap-1">
-									<DollarSign className="w-3.5 h-3.5" />
-									<span>
-										${result.llmCostUsd.toFixed(4)} LLM cost
 									</span>
 								</div>
 							)}
