@@ -8,6 +8,7 @@ import * as XLSX from 'xlsx'; // npm install xlsx
 import { v4 as uuidv4 } from 'uuid'; // <-- Add this import
 import { toast } from '@/lib/toast';
 import { logError } from '@/lib/logger';
+import { sanitizeFileName } from '@/utils/filename';
 
 const MAX_CONCURRENT_UPLOADS = 5;
 
@@ -53,7 +54,13 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 			setIsProcessingExcel(excelFiles.length > 0);
 
 			// Process Excel files sequentially, with try/catch per file
-			for (const file of excelFiles) {
+			for (const rawExcelFile of excelFiles) {
+				const sanitizedExcelName = sanitizeFileName(rawExcelFile.name);
+				const file = new File([rawExcelFile], sanitizedExcelName, {
+					type: rawExcelFile.type,
+					lastModified: rawExcelFile.lastModified,
+				});
+
 				if (files.some((f) => f.name === file.name)) continue; // prevent duplicates
 
 				try {
@@ -135,7 +142,12 @@ export function useFileUploads({ excelToCsv = false } = {}) {
 			}
 
 			// 2. Add direct CSV files to upload queue/UI
-			for (const file of csvFiles) {
+			for (const rawCsvFile of csvFiles) {
+				const sanitizedCsvName = sanitizeFileName(rawCsvFile.name);
+				const file = new File([rawCsvFile], sanitizedCsvName, {
+					type: rawCsvFile.type,
+					lastModified: rawCsvFile.lastModified,
+				});
 				if (files.some((f) => f.name === file.name)) continue; // prevent duplicates
 				const fileId = uuidv4();
 				const fileWithStatus = Object.assign(file, {
