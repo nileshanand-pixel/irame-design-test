@@ -699,7 +699,7 @@ export default function WorkflowModal({ open, onClose, queryId }) {
 			}
 		};
 
-		if (successStates.includes(status)) {
+		if (successStates.includes(status) && step !== 'details') {
 			setError('');
 			setFooterError('');
 			setWorkflowName(statusData.name || '');
@@ -1121,19 +1121,15 @@ export default function WorkflowModal({ open, onClose, queryId }) {
 							<div className="absolute inset-0 overflow-y-auto pr-2 custom-scrollbar">
 								<div className="grid grid-cols-2 gap-4 mb-4">
 									<FormField label="Workflow Name">
-										{workflowName ? (
-											<Input
-												placeholder="Name"
-												value={workflowName}
-												onChange={(e) =>
-													setWorkflowName(e.target.value)
-												}
-												disabled={disableAllInputs}
-												className="border-gray-300 placeholder:text-gray-300 text-primary80"
-											/>
-										) : (
-											<div className="h-10 bg-gray-200 animate-pulse rounded-md border border-gray-300"></div>
-										)}
+										<Input
+											placeholder="Name"
+											value={workflowName}
+											onChange={(e) =>
+												setWorkflowName(e.target.value)
+											}
+											disabled={disableAllInputs}
+											className="border-gray-300 placeholder:text-gray-300 text-primary80"
+										/>
 									</FormField>
 
 									<FormField label="Frequency of Workflow">
@@ -1174,20 +1170,16 @@ export default function WorkflowModal({ open, onClose, queryId }) {
 								{/* Description editable in details step */}
 								<div className="mt-4 mb-4">
 									<FormField label="Description">
-										{description ? (
-											<textarea
-												ref={descriptionRef}
-												value={description}
-												onChange={(e) =>
-													setDescription(e.target.value)
-												}
-												className="w-full border border-gray-300 rounded-md px-1 py-1 text-primary80 resize-none overflow-hidden"
-												disabled={disableAllInputs}
-												rows={1}
-											/>
-										) : (
-											<div className="h-20 bg-gray-200 animate-pulse rounded-md border border-gray-300"></div>
-										)}
+										<textarea
+											ref={descriptionRef}
+											value={description}
+											onChange={(e) =>
+												setDescription(e.target.value)
+											}
+											className="w-full border border-gray-300 rounded-md px-1 py-1 text-primary80 resize-none overflow-hidden"
+											disabled={disableAllInputs}
+											rows={1}
+										/>
 									</FormField>
 								</div>
 
