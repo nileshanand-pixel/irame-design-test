@@ -18,9 +18,9 @@ const CompareUploadSection = ({ onGenerate, isDisabled }) => {
 				);
 			}
 			const combined = [...prev, ...newFiles];
-			if (combined.length > 5) {
-				toast.error('Maximum 5 images allowed for comparison.');
-				return combined.slice(0, 5);
+			if (combined.length > 50) {
+				toast.error('Maximum 50 images allowed for comparison.');
+				return combined.slice(0, 50);
 			}
 			return combined;
 		});
@@ -106,9 +106,9 @@ const CompareUploadSection = ({ onGenerate, isDisabled }) => {
 								Upload at least 2 images to compare
 							</p>
 						)}
-						{files.length < 5 && (
+						{files.length < 50 && (
 							<p className="text-xs text-primary40 mt-1">
-								Drop more images or click to add (max 5)
+								Drop more images or click to add (max 50)
 							</p>
 						)}
 					</div>
@@ -130,7 +130,7 @@ const CompareUploadSection = ({ onGenerate, isDisabled }) => {
 						<p className="text-sm text-primary80 font-medium">
 							{isDragActive
 								? 'Drop your images here'
-								: 'Drag & drop 2-5 images to compare'}
+								: 'Drag & drop 2-50 images to compare'}
 						</p>
 						<p className="text-xs text-primary40 mt-1">
 							Supports JPEG, PNG, WebP
@@ -166,7 +166,7 @@ const CompareUploadSection = ({ onGenerate, isDisabled }) => {
 
 			<div className="pt-5 border-t border-[rgba(106,18,205,0.06)] space-y-4">
 				<p className="text-sm text-primary60 text-center leading-relaxed">
-					Upload 2-5 images for side-by-side comparison — AI identifies
+					Upload 2-50 images for side-by-side comparison — AI identifies
 					differences, similarities, and changes across your images.
 				</p>
 				<div>
@@ -175,7 +175,7 @@ const CompareUploadSection = ({ onGenerate, isDisabled }) => {
 					</p>
 					<div className="flex items-start justify-between">
 						{[
-							{ title: 'Upload', desc: '2-5 images' },
+							{ title: 'Upload', desc: '2-50 images' },
 							{ title: 'Instruct', desc: 'Optional focus areas' },
 							{ title: 'AI Compare', desc: 'Visual analysis' },
 							{ title: 'Results', desc: 'Detailed comparison' },
