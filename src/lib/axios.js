@@ -123,7 +123,8 @@ const setupInterceptors = (axiosClient) => {
 					error.response.status !== 401 &&
 					!error._skipAxiosToast
 				) {
-					error.response?.data?.message ||
+					const msg =
+						error.response?.data?.message ||
 						error.message ||
 						'API request failed';
 					toast.error(msg);

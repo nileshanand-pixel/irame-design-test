@@ -48,10 +48,13 @@ import {
 	BookOpen,
 	LayoutGrid,
 	ChevronUp,
+	Eye,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { generateWorkflow } from '../lib/mock-api';
 import { getWorkflows, saveWorkflow, deleteWorkflow } from '../lib/storage';
+import GuidedPromptModal from './GuidedPromptModal';
+import { useDataSources } from '@/hooks/useDataSources';
 
 const VSTEPS = [
 	{ num: 1, label: 'Write Prompt', icon: Pencil },
@@ -142,14 +145,14 @@ function matchDisplay(pct) {
 	if (pct >= 90)
 		return {
 			label: `${pct}% MATCH`,
-			bg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+			bg: 'text-emerald-700',
 		};
 	if (pct >= 70)
 		return {
 			label: `${pct}% MATCH`,
-			bg: 'bg-amber-50 text-amber-700 border-amber-200',
+			bg: 'text-amber-700',
 		};
-	return { label: `${pct}% MATCH`, bg: 'bg-red-50 text-red-600 border-red-200' };
+	return { label: `${pct}% MATCH`, bg: 'text-red-600' };
 }
 
 function fileMappedName(inp, uploadedFiles, idx) {
@@ -641,6 +644,8 @@ export default function WorkflowHome({ onRun }) {
 	const [rightTab, setRightTab] = useState('plan');
 	const [rightOpen, setRightOpen] = useState(true);
 	const [showPlanModal, setShowPlanModal] = useState(false);
+	const [isEditingPlan, setIsEditingPlan] = useState(false);
+	const [editableSteps, setEditableSteps] = useState([]);
 
 	// Map Data step
 	const [expandedSchemas, setExpandedSchemas] = useState({});
@@ -648,6 +653,7 @@ export default function WorkflowHome({ onRun }) {
 	const [manualColMappings, setManualColMappings] = useState({});
 	const [changingInputId, setChangingInputId] = useState(null);
 	const changeFileRef = useRef(null);
+	const [previewFile, setPreviewFile] = useState(null); // { file, name, schemaName }
 
 	// Review & Run step
 	const [isExecuting, setIsExecuting] = useState(false);
@@ -672,6 +678,17 @@ export default function WorkflowHome({ onRun }) {
 		autogroup: false,
 	});
 
+	// Guided prompt modal
+	const [guidedOpen, setGuidedOpen] = useState(false);
+	const [guidedTarget, setGuidedTarget] = useState('landing'); // 'landing' | 'builder'
+
+	// Required files expand/collapse
+	const [isRequiredFilesExpanded, setIsRequiredFilesExpanded] = useState(false);
+
+	// Data source search
+	const [dsSearch, setDsSearch] = useState('');
+	const [debouncedDsSearch, setDebouncedDsSearch] = useState('');
+
 	// Landing — template categories
 	const [selectedCategory, setSelectedCategory] = useState(null);
 	const [templatePage, setTemplatePage] = useState(0);
@@ -679,10 +696,17 @@ export default function WorkflowHome({ onRun }) {
 
 	const chatEndRef = useRef(null);
 	const fileInputRef = useRef(null);
+	const chatFileInputRef = useRef(null);
 
 	useEffect(() => {
 		chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 	}, [messages]);
+
+	// Debounce data source search
+	useEffect(() => {
+		const timer = setTimeout(() => setDebouncedDsSearch(dsSearch), 300);
+		return () => clearTimeout(timer);
+	}, [dsSearch]);
 
 	// Auto-switch right panel to Output Config on step 4
 	useEffect(() => {
@@ -699,6 +723,21 @@ export default function WorkflowHome({ onRun }) {
 		setMessages((prev) => [...prev, { role, content }]);
 
 	const refresh = () => setWorkflows(getWorkflows());
+
+	// Data sources for "Select from existing" section
+	const {
+		dataSources,
+		isLoading: dsLoading,
+		Sentinel: DsSentinel,
+	} = useDataSources({
+		enabled: activeStep === 2,
+		search: debouncedDsSearch || undefined,
+	});
+	const filteredDs = (dataSources || []).sort((a, b) => {
+		if (a.status === 'active' && b.status !== 'active') return -1;
+		if (a.status !== 'active' && b.status === 'active') return 1;
+		return 0;
+	});
 
 	// ── Builder transition ─────────────────────────────────────────────
 	const enterBuilder = async (text) => {
@@ -1075,6 +1114,16 @@ export default function WorkflowHome({ onRun }) {
 									<button className="p-2 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all duration-200">
 										<Plus className="size-4" />
 									</button>
+									<button
+										onClick={() => {
+											setGuidedTarget('landing');
+											setGuidedOpen(true);
+										}}
+										className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-violet-600 border border-violet-200 hover:bg-violet-50 transition-all duration-200"
+									>
+										<Sparkles className="size-3.5" />
+										Guide me
+									</button>
 								</div>
 								<button
 									onClick={handleLandingSubmit}
@@ -1424,10 +1473,36 @@ export default function WorkflowHome({ onRun }) {
 								<Send className="size-3.5" />
 							</button>
 						</div>
-						<p className="text-[10px] text-gray-400 mt-2">
-							Try: &ldquo;Add validation step&rdquo; or &ldquo;Change
-							output to table&rdquo;
-						</p>
+						<div className="flex items-center gap-1.5 mt-2">
+							<button
+								onClick={() => chatFileInputRef.current?.click()}
+								className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200"
+								title="Attach files"
+							>
+								<Paperclip className="size-3.5" />
+							</button>
+							<input
+								ref={chatFileInputRef}
+								type="file"
+								multiple
+								className="hidden"
+								onChange={handleFileInput}
+							/>
+							<button
+								onClick={() => {
+									setGuidedTarget('builder');
+									setGuidedOpen(true);
+								}}
+								className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium text-violet-600 border border-violet-200 hover:bg-violet-50 transition-all duration-200"
+							>
+								<Sparkles className="size-3" />
+								Guide me
+							</button>
+							<span className="text-[10px] text-gray-400 ml-auto">
+								Try: &ldquo;Add validation step&rdquo; or
+								&ldquo;Change output to table&rdquo;
+							</span>
+						</div>
 					</div>
 				</aside>
 
@@ -1474,61 +1549,79 @@ export default function WorkflowHome({ onRun }) {
 								</div>
 							</div>
 
-							<div className="flex-1 overflow-y-auto p-6 space-y-6">
-								{/* Expected inputs grid */}
-								<div>
-									<p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
-										Expected Inputs
-									</p>
-									<div className="grid grid-cols-2 gap-3">
-										{workflow.inputs?.map((inp) => {
-											const uploaded = uploadedFiles.find(
-												(f) => f.inputId === inp.id,
-											);
-											return (
-												<div
-													key={inp.id}
-													className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(148,163,184,0.18)] ${
-														uploaded
-															? 'bg-emerald-50 border-emerald-200'
-															: 'bg-white border-slate-200 hover:border-slate-300'
-													}`}
-												>
+							<div className="flex-1 overflow-y-auto p-6 space-y-4">
+								{/* Required Files collapsible */}
+								<div className="border border-black/10 rounded-lg bg-white">
+									<div className="flex items-center justify-between px-4 py-2 border-b border-black/10">
+										<div className="flex items-center gap-2">
+											<FileText className="size-5" />
+											<h3 className="text-sm font-medium text-gray-900">
+												Required Files
+											</h3>
+										</div>
+										<button
+											onClick={() =>
+												setIsRequiredFilesExpanded(
+													!isRequiredFilesExpanded,
+												)
+											}
+											className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+										>
+											{isRequiredFilesExpanded
+												? 'Click to Collapse'
+												: 'Click to Expand'}
+											{isRequiredFilesExpanded ? (
+												<ChevronUp className="size-4" />
+											) : (
+												<ChevronDown className="size-4" />
+											)}
+										</button>
+									</div>
+
+									{!isRequiredFilesExpanded ? (
+										<div className="px-4 py-3">
+											<div className="flex flex-wrap items-center gap-4">
+												{workflow.inputs?.map((inp) => (
 													<div
-														className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-															uploaded
-																? 'bg-emerald-100'
-																: 'bg-slate-100'
-														}`}
+														key={inp.id}
+														className="flex items-center gap-2 px-2 py-2 border border-[#F0F1F3] rounded-lg"
 													>
-														{uploaded ? (
-															<CheckCircle2 className="size-5 text-emerald-600" />
-														) : (
-															(FILE_TYPE_ICON[
-																inp.type
-															] ?? (
-																<FileText className="size-4 text-slate-400" />
-															))
+														<span className="text-sm font-medium truncate max-w-[180px]">
+															{inp.name}
+														</span>
+														<span className="text-xs text-[#344054] bg-[#F2F4F7] px-2 py-0.5 rounded-full">
+															{inp.type?.toUpperCase()}
+														</span>
+													</div>
+												))}
+											</div>
+										</div>
+									) : (
+										<div className="py-4 px-4 max-h-48 overflow-y-auto">
+											<div className="grid grid-cols-2 gap-4">
+												{workflow.inputs?.map((inp) => (
+													<div
+														key={inp.id}
+														className="border border-slate-200 rounded-lg px-3 py-2 bg-white space-y-1"
+													>
+														<div className="flex items-center gap-2">
+															<h4 className="text-sm text-gray-900">
+																{inp.name}
+															</h4>
+															<span className="text-xs text-[#344054] bg-[#F2F4F7] px-2 py-0.5 rounded-full">
+																{inp.type?.toUpperCase()}
+															</span>
+														</div>
+														{inp.description && (
+															<p className="text-xs text-[#6B7280]">
+																{inp.description}
+															</p>
 														)}
 													</div>
-													<div className="min-w-0">
-														<p
-															className={`text-sm font-semibold truncate ${uploaded ? 'text-emerald-800' : 'text-slate-800'}`}
-														>
-															{inp.name}
-														</p>
-														<p className="text-xs text-slate-400 mt-0.5">
-															{inp.type.toUpperCase()}{' '}
-															·{' '}
-															{inp.required
-																? 'Required'
-																: 'Optional'}
-														</p>
-													</div>
-												</div>
-											);
-										})}
-									</div>
+												))}
+											</div>
+										</div>
+									)}
 								</div>
 
 								{/* Drop zone */}
@@ -1536,7 +1629,7 @@ export default function WorkflowHome({ onRun }) {
 									onDragOver={(e) => e.preventDefault()}
 									onDrop={handleDrop}
 									onClick={() => fileInputRef.current?.click()}
-									className="border-2 border-dashed border-slate-300 hover:border-violet-400 rounded-2xl p-10 flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors bg-white hover:bg-violet-50/30 group"
+									className="border-2 border-dashed border-[#E5E7EB] hover:border-violet-400 rounded-xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors bg-white hover:bg-violet-50/30 group"
 								>
 									<div className="w-12 h-12 rounded-xl bg-slate-100 group-hover:bg-violet-100 flex items-center justify-center transition-colors">
 										<CloudUpload className="size-6 text-slate-400 group-hover:text-violet-600 transition-colors" />
@@ -1561,25 +1654,93 @@ export default function WorkflowHome({ onRun }) {
 
 								{/* Uploaded file pills */}
 								{filesReady && (
-									<div>
-										<p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-											{uploadedFiles.length} File
-											{uploadedFiles.length !== 1 ? 's' : ''}{' '}
-											Ready
-										</p>
-										<div className="flex flex-wrap gap-2">
-											{uploadedFiles.map((f, i) => (
-												<span
-													key={i}
-													className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-1.5 rounded-full"
-												>
-													<CheckCircle2 className="size-3" />{' '}
-													{f.name}
-												</span>
-											))}
-										</div>
+									<div className="flex flex-wrap gap-2">
+										{uploadedFiles.map((f, i) => (
+											<span
+												key={i}
+												className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-1.5 rounded-full"
+											>
+												<CheckCircle2 className="size-3" />{' '}
+												{f.name}
+											</span>
+										))}
 									</div>
 								)}
+
+								{/* OR separator */}
+								<div className="flex items-center gap-3 py-1">
+									<div className="flex-1 border-t border-gray-200" />
+									<span className="text-sm text-gray-400 font-medium px-1">
+										OR
+									</span>
+									<div className="flex-1 border-t border-gray-200" />
+								</div>
+
+								{/* Select from existing data source */}
+								<div>
+									<p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+										Select From Existing Data Source
+									</p>
+
+									{/* Search */}
+									<div className="relative mb-4">
+										<Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+										<input
+											type="text"
+											placeholder="Search data source..."
+											value={dsSearch}
+											onChange={(e) =>
+												setDsSearch(e.target.value)
+											}
+											className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-full bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-transparent"
+										/>
+									</div>
+
+									{/* Grid */}
+									{dsLoading ? (
+										<div className="grid grid-cols-2 gap-3">
+											{Array.from({ length: 4 }).map(
+												(_, i) => (
+													<div
+														key={i}
+														className="h-16 bg-gray-100 animate-pulse rounded-lg"
+													/>
+												),
+											)}
+										</div>
+									) : filteredDs.length === 0 ? (
+										<p className="text-center py-8 text-sm text-gray-400">
+											No data sources found
+										</p>
+									) : (
+										<>
+											<div className="grid grid-cols-2 gap-3">
+												{filteredDs.map((ds) => (
+													<div
+														key={ds.datasource_id}
+														className="border border-gray-200 hover:bg-violet-50 rounded-lg py-2 px-3 flex items-center gap-3 cursor-pointer transition-all"
+													>
+														<Database className="size-4 text-violet-600 flex-shrink-0" />
+														<div className="flex-1 truncate">
+															<div className="text-sm font-medium truncate">
+																{ds.name}
+															</div>
+															<div className="text-xs text-gray-400">
+																Last synced:{' '}
+																{ds.updated_at
+																	? new Date(
+																			ds.updated_at,
+																		).toLocaleString()
+																	: 'N/A'}
+															</div>
+														</div>
+													</div>
+												))}
+											</div>
+											<DsSentinel />
+										</>
+									)}
+								</div>
 							</div>
 
 							{/* Verify button */}
@@ -1632,11 +1793,22 @@ export default function WorkflowHome({ onRun }) {
 							<div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
 								{/* Mapping cards per input */}
 								{workflow.inputs?.map((inp, inputIdx) => {
-									const mappedFile = fileMappedName(
+									const fallbackMappedFile = fileMappedName(
 										inp,
 										uploadedFiles,
 										inputIdx,
 									);
+									const isMultiFileDemo =
+										inputIdx === 0 ||
+										inp?.name?.includes('Invoice');
+									const mappedFilesArr = isMultiFileDemo
+										? [
+												'Jan_Invoices.csv',
+												'Feb_Invoices.csv',
+												'Mar_Invoices.csv',
+											]
+										: [fallbackMappedFile];
+									const mappedFile = mappedFilesArr[0];
 									const rawPct = 90 + ((inputIdx * 3) % 10); // high confidence for auto-filled
 									const md = matchDisplay(rawPct);
 									const expanded =
@@ -1649,7 +1821,7 @@ export default function WorkflowHome({ onRun }) {
 									return (
 										<div
 											key={inp.id}
-											className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(148,163,184,0.18)]"
+											className="bg-white rounded-2xl border border-slate-200 shadow-[0_1px_3px_rgba(0,0,0,0.05),0_4px_16px_rgba(148,163,184,0.18)]"
 										>
 											{/* Card header — click to expand/collapse */}
 											<div
@@ -1679,53 +1851,157 @@ export default function WorkflowHome({ onRun }) {
 
 													{/* Right: Mapped Source */}
 													<div
-														className="flex-1 min-w-0 text-right"
+														className="flex-1 min-w-0"
 														onClick={(e) =>
 															e.stopPropagation()
 														}
 													>
-														<div className="flex items-center justify-end gap-2 mb-1.5">
+														<div className="flex items-center justify-between mb-1.5">
 															<p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-																Mapped Source
+																Mapped Source{' '}
+																{mappedFilesArr.length >
+																	1 &&
+																	`(Bundle of ${mappedFilesArr.length})`}
 															</p>
 															<span
-																className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded border ${md.bg}`}
+																className={`inline-flex items-center gap-1 text-xs font-bold ${md.bg}`}
 															>
-																<Plus className="size-2.5" />{' '}
+																<Check className="size-3" />{' '}
 																{md.label}
 															</span>
 														</div>
-														<div className="flex items-center justify-end gap-2">
-															<span className="inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 font-medium truncate max-w-[160px]">
-																<FileText className="size-3.5 text-slate-400 shrink-0" />
-																{mappedFile}
-															</span>
-															<button
-																onClick={() =>
-																	handleChangeFile(
-																		inp.id,
-																	)
-																}
-																className="text-xs text-violet-700 hover:text-violet-800 font-medium whitespace-nowrap transition-colors"
-															>
-																Change
-															</button>
-															<button className="text-slate-400 hover:text-slate-600 transition-colors">
-																<RefreshCw className="size-3.5" />
-															</button>
-														</div>
-													</div>
 
-													{/* Status indicator */}
-													<div
-														className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${rawPct >= 90 ? 'bg-emerald-100' : rawPct >= 70 ? 'bg-amber-100' : 'bg-red-100'}`}
-													>
-														{rawPct >= 90 ? (
-															<Check className="size-4 text-emerald-600" />
-														) : rawPct >= 70 ? (
-															<AlertTriangle className="size-4 text-amber-600" />
+														{mappedFilesArr.length >
+														1 ? (
+															<div className="flex flex-col relative pl-4 mt-2">
+																{/* Union Bracket Visualization */}
+																<div className="absolute left-[3px] top-[14px] bottom-[14px] w-2 border-l-2 border-y-2 border-slate-300 rounded-l-md opacity-70"></div>
+																<div className="absolute left-[-2px] top-1/2 -translate-y-1/2 bg-white text-slate-400 p-0.5">
+																	<Link2 className="size-3.5" />
+																</div>
+
+																<div className="flex flex-col gap-1.5 z-10 relative mt-0.5">
+																	{mappedFilesArr.map(
+																		(
+																			fName,
+																			i,
+																		) => (
+																			<div
+																				key={
+																					i
+																				}
+																				className="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.02)] group"
+																			>
+																				<div className="flex items-center gap-2 min-w-0">
+																					<FileText className="size-3.5 text-slate-400 shrink-0" />
+																					<span className="text-sm text-slate-700 font-medium truncate max-w-[140px]">
+																						{
+																							fName
+																						}
+																					</span>
+																				</div>
+																				<div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+																					<button className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors">
+																						<RefreshCw className="size-3" />
+																					</button>
+																					<button className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors">
+																						<X className="size-3" />
+																					</button>
+																				</div>
+																			</div>
+																		),
+																	)}
+
+																	<div className="flex items-center gap-2 mt-1 ml-1">
+																		<button
+																			onClick={() =>
+																				handleChangeFile(
+																					inp.id,
+																				)
+																			}
+																			className="inline-flex items-center gap-1.5 text-xs text-violet-700 hover:text-violet-800 font-medium whitespace-nowrap transition-colors py-1 pl-1 pr-2 hover:bg-violet-50 rounded-md"
+																		>
+																			<Plus className="size-3.5" />{' '}
+																			Add File
+																		</button>
+																		<button
+																			onClick={(
+																				e,
+																			) => {
+																				e.stopPropagation();
+																				setPreviewFile(
+																					{
+																						file: null,
+																						name: mappedFilesArr[0],
+																						schemaName:
+																							inp.name,
+																					},
+																				);
+																			}}
+																			className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-violet-700 font-medium whitespace-nowrap transition-colors py-1 px-2 hover:bg-slate-50 rounded-md ml-auto"
+																		>
+																			<Eye className="size-3.5" />{' '}
+																			Preview
+																			Union
+																		</button>
+																	</div>
+																</div>
+															</div>
 														) : (
-															<X className="size-4 text-red-500" />
+															<div className="flex items-center justify-between gap-2">
+																<div className="flex items-center gap-2 min-w-0">
+																	<span className="inline-flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 font-medium truncate max-w-[160px]">
+																		<FileText className="size-3.5 text-slate-400 shrink-0" />
+																		{
+																			mappedFilesArr[0]
+																		}
+																	</span>
+																	<button
+																		onClick={() =>
+																			handleChangeFile(
+																				inp.id,
+																			)
+																		}
+																		className="text-xs text-violet-700 hover:text-violet-800 font-medium whitespace-nowrap transition-colors"
+																	>
+																		Change
+																	</button>
+																	<button className="text-slate-400 hover:text-slate-600 transition-colors">
+																		<RefreshCw className="size-3.5" />
+																	</button>
+																</div>
+																<button
+																	type="button"
+																	onClick={(e) => {
+																		e.stopPropagation();
+																		const fileEntry =
+																			uploadedFiles.find(
+																				(
+																					f,
+																				) =>
+																					f.inputId ===
+																					inp.id,
+																			) ??
+																			uploadedFiles[
+																				inputIdx
+																			];
+																		setPreviewFile(
+																			{
+																				file:
+																					fileEntry?.file ??
+																					null,
+																				name: mappedFilesArr[0],
+																				schemaName:
+																					inp.name,
+																			},
+																		);
+																	}}
+																	className="p-1.5 rounded-lg border border-slate-200 bg-white hover:border-violet-300 hover:bg-violet-50 text-slate-400 hover:text-violet-600 transition-colors flex-shrink-0"
+																	title="Preview data"
+																>
+																	<Eye className="size-3.5" />
+																</button>
+															</div>
 														)}
 													</div>
 												</div>
@@ -1748,7 +2024,10 @@ export default function WorkflowHome({ onRun }) {
 														{/* Table header */}
 														<div className="grid grid-cols-4 gap-4 px-4 py-2.5 border-b border-slate-200">
 															<p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-																Source Column
+																Source Column{' '}
+																{mappedFilesArr.length >
+																	1 &&
+																	'(Combined)'}
 															</p>
 															<p className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center">
 																Mapping
@@ -2040,7 +2319,7 @@ export default function WorkflowHome({ onRun }) {
 																		{/* Confidence + info popover */}
 																		<div className="flex items-center justify-end gap-1.5 relative">
 																			<span
-																				className={`text-xs font-bold px-2 py-0.5 rounded border ${cd.bg}`}
+																				className={`text-xs font-bold ${cd.bg}`}
 																			>
 																				{
 																					cd.label
@@ -2137,6 +2416,7 @@ export default function WorkflowHome({ onRun }) {
 																												{
 																													p.score
 																												}
+
 																												%
 																											</span>
 																										</div>
@@ -2172,6 +2452,7 @@ export default function WorkflowHome({ onRun }) {
 																									{
 																										confPct
 																									}
+
 																									%
 																								</span>
 																								<span className="text-[10px] text-slate-400">
@@ -2215,6 +2496,142 @@ export default function WorkflowHome({ onRun }) {
 									Confirm &amp; Proceed{' '}
 									<ChevronRight className="size-4" />
 								</button>
+							</div>
+						</div>
+					)}
+
+					{/* ── Step 3: Data Preview Modal ── */}
+					{previewFile && (
+						<div
+							className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+							onClick={() => setPreviewFile(null)}
+						>
+							<div
+								className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden mx-4"
+								onClick={(e) => e.stopPropagation()}
+							>
+								{/* Header */}
+								<div className="px-6 pt-6 pb-5 flex items-center gap-4 border-b border-slate-100 relative">
+									<div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center flex-shrink-0">
+										<FileText size={18} className="text-white" />
+									</div>
+									<div>
+										<h2 className="text-base font-bold text-slate-900 leading-tight">
+											{previewFile.schemaName}
+										</h2>
+										<p className="text-xs text-slate-400 mt-0.5">
+											{previewFile.name}
+										</p>
+									</div>
+									<button
+										onClick={() => setPreviewFile(null)}
+										className="absolute right-4 top-4 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
+									>
+										<X size={16} />
+									</button>
+								</div>
+
+								{/* Body — demo table */}
+								<div className="flex-1 overflow-auto px-6 py-5">
+									<div className="overflow-x-auto rounded-lg border border-slate-100">
+										<table className="text-sm w-full">
+											<thead>
+												<tr>
+													<th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100 w-12">
+														ROW
+													</th>
+													{[
+														'invoice_no',
+														'vendor_id',
+														'amount',
+														'gl_code',
+														'invoice_date',
+													].map((h) => (
+														<th
+															key={h}
+															className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-50 border-b border-slate-100 whitespace-nowrap"
+														>
+															{h}
+														</th>
+													))}
+												</tr>
+											</thead>
+											<tbody>
+												{[
+													[
+														'INV-001',
+														'V-1042',
+														'12,450.00',
+														'5010',
+														'2024-01-05',
+													],
+													[
+														'INV-002',
+														'V-2381',
+														'8,200.00',
+														'5020',
+														'2024-01-12',
+													],
+													[
+														'INV-003',
+														'V-1042',
+														'3,750.50',
+														'5010',
+														'2024-01-18',
+													],
+													[
+														'INV-004',
+														'V-9901',
+														'22,000.00',
+														'6030',
+														'2024-01-22',
+													],
+													[
+														'INV-005',
+														'V-3310',
+														'5,600.00',
+														'5020',
+														'2024-01-29',
+													],
+												].map((row, i) => (
+													<tr
+														key={i}
+														className={
+															i < 4
+																? 'border-b border-slate-100'
+																: ''
+														}
+													>
+														<td className="px-4 py-3 text-xs text-slate-400 font-medium">
+															{i + 1}
+														</td>
+														{row.map((cell, ci) => (
+															<td
+																key={ci}
+																className="px-4 py-3 text-sm text-slate-700 whitespace-nowrap"
+															>
+																{cell}
+															</td>
+														))}
+													</tr>
+												))}
+											</tbody>
+										</table>
+									</div>
+									<p className="text-xs text-slate-400 mt-3">
+										Previewing first 5 entries
+									</p>
+								</div>
+
+								{/* Footer */}
+								<div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end rounded-b-2xl">
+									<button
+										onClick={() => setPreviewFile(null)}
+										className="px-5 py-2 bg-[#26064A] text-white text-sm font-semibold rounded-xl hover:bg-[#3a0d6e] transition-colors"
+									>
+										Close Preview
+									</button>
+								</div>
 							</div>
 						</div>
 					)}
@@ -3341,7 +3758,10 @@ export default function WorkflowHome({ onRun }) {
 				<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 					<div
 						className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-						onClick={() => setShowPlanModal(false)}
+						onClick={() => {
+							setShowPlanModal(false);
+							setIsEditingPlan(false);
+						}}
 					/>
 					<div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
 						{/* Header */}
@@ -3352,51 +3772,162 @@ export default function WorkflowHome({ onRun }) {
 									Step-by-Step Explanation of the Workflow
 								</h2>
 							</div>
-							<button
-								onClick={() => setShowPlanModal(false)}
-								className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									className="size-4"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth={2.5}
+							<div className="flex items-center gap-2">
+								{!isEditingPlan ? (
+									<button
+										onClick={() => {
+											setEditableSteps(
+												(workflow.steps ?? []).map((s) => ({
+													...s,
+												})),
+											);
+											setIsEditingPlan(true);
+										}}
+										className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-violet-700 bg-violet-50 hover:bg-violet-100 border border-violet-200 transition-colors"
+									>
+										<Pencil className="size-3.5" />
+										Edit
+									</button>
+								) : (
+									<>
+										<button
+											onClick={() => setIsEditingPlan(false)}
+											className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+										>
+											Cancel
+										</button>
+										<button
+											onClick={() => {
+												setWorkflow((prev) => ({
+													...prev,
+													steps: editableSteps,
+												}));
+												setIsEditingPlan(false);
+											}}
+											className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors"
+										>
+											<Check className="size-3.5" />
+											Save
+										</button>
+									</>
+								)}
+								<button
+									onClick={() => {
+										setShowPlanModal(false);
+										setIsEditingPlan(false);
+									}}
+									className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
 								>
-									<path d="M18 6 6 18M6 6l12 12" />
-								</svg>
-							</button>
+									<X className="size-4" />
+								</button>
+							</div>
 						</div>
 						{/* Body */}
-						<div className="overflow-y-auto px-6 py-5 space-y-5 flex-1">
-							{workflow.steps?.map((step, idx) => (
-								<div key={step.id}>
-									<p className="text-sm text-slate-800 leading-relaxed">
-										<span className="font-bold">
-											Step {idx + 1}:
-										</span>{' '}
-										{step.name} — {step.description}
-									</p>
-								</div>
-							))}
-							{workflow.output && (
-								<div>
-									<p className="text-sm text-slate-800 leading-relaxed">
-										<span className="font-bold">
-											Final Output:
-										</span>{' '}
-										{workflow.output.title} — The workflow
-										produces a {workflow.output.type} output
-										containing the processed results ready for
-										review or further analysis.
-									</p>
-								</div>
+						<div className="overflow-y-auto px-6 py-5 space-y-4 flex-1">
+							{isEditingPlan ? (
+								editableSteps.map((step, idx) => (
+									<div
+										key={step.id}
+										className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3"
+									>
+										<p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+											Step {idx + 1}
+										</p>
+										<div>
+											<label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1">
+												Name
+											</label>
+											<input
+												type="text"
+												value={step.name}
+												onChange={(e) =>
+													setEditableSteps((prev) =>
+														prev.map((s, i) =>
+															i === idx
+																? {
+																		...s,
+																		name: e
+																			.target
+																			.value,
+																	}
+																: s,
+														),
+													)
+												}
+												className="w-full text-sm font-semibold text-slate-800 bg-white border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 transition-all"
+											/>
+										</div>
+										<div>
+											<label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block mb-1">
+												Description
+											</label>
+											<textarea
+												value={step.description}
+												rows={3}
+												onChange={(e) =>
+													setEditableSteps((prev) =>
+														prev.map((s, i) =>
+															i === idx
+																? {
+																		...s,
+																		description:
+																			e.target
+																				.value,
+																	}
+																: s,
+														),
+													)
+												}
+												className="w-full text-sm text-slate-600 bg-white border border-slate-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 transition-all leading-relaxed"
+											/>
+										</div>
+									</div>
+								))
+							) : (
+								<>
+									{workflow.steps?.map((step, idx) => (
+										<div key={step.id}>
+											<p className="text-sm text-slate-800 leading-relaxed">
+												<span className="font-bold">
+													Step {idx + 1}:
+												</span>{' '}
+												{step.name} — {step.description}
+											</p>
+										</div>
+									))}
+									{workflow.output && (
+										<div>
+											<p className="text-sm text-slate-800 leading-relaxed">
+												<span className="font-bold">
+													Final Output:
+												</span>{' '}
+												{workflow.output.title} — The
+												workflow produces a{' '}
+												{workflow.output.type} output
+												containing the processed results
+												ready for review or further analysis.
+											</p>
+										</div>
+									)}
+								</>
 							)}
 						</div>
 					</div>
 				</div>
 			)}
+
+			<GuidedPromptModal
+				isOpen={guidedOpen}
+				onClose={() => setGuidedOpen(false)}
+				onInsert={(generatedPrompt) => {
+					if (guidedTarget === 'builder') {
+						setChatInput(generatedPrompt);
+					} else {
+						setPrompt(generatedPrompt);
+					}
+					setGuidedOpen(false);
+				}}
+			/>
 		</>
 	);
 }

@@ -5,6 +5,7 @@ import {
 	TbPhoto,
 	TbMicrophone,
 	TbHeartRateMonitor,
+	TbLayoutKanban,
 } from 'react-icons/tb';
 
 /**
@@ -68,6 +69,16 @@ export const AI_FEATURES = [
 		icon: TbHeartRateMonitor,
 		route: 'medical-report-reader',
 		tags: ['Medical', 'Forensics', 'Insurance'],
+		beta: true,
+	},
+	{
+		id: 'workflow-builder',
+		name: 'Workflow Builder',
+		description:
+			'Design and run custom AI-powered audit workflows with a chat-based builder',
+		icon: TbLayoutKanban,
+		route: 'workflow-builder',
+		tags: ['Workflow', 'Audit', 'Builder'],
 		beta: true,
 	},
 ];

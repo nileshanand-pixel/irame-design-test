@@ -2,6 +2,7 @@ import { useState, useRef, useMemo, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { DropZone } from './drop-zone';
 import { FilesList } from './files-list';
+import { ChooseExistingInline } from './choose-existing-inline';
 import { useDatasourceIngest } from '../hooks/use-structured-ingestion';
 import useConfirmDialog from '@/hooks/use-confirm-dialog';
 import {
@@ -358,9 +359,11 @@ export const UploadManager = ({
 	}, [items, datasourceId, isCreating, selectedDataSources, onManagerReady]);
 
 	return (
-		<div className="space-y-4 h-full">
+		<div className="flex flex-col gap-4 pb-4">
 			<ConfirmationDialog />
-			{items.length > 0 ? (
+
+			{/* Uploaded files — shown above the dropzone */}
+			{items.length > 0 && (
 				<>
 					<input
 						type="file"
@@ -385,15 +388,31 @@ export const UploadManager = ({
 						highlightErrors={highlightErrors}
 					/>
 				</>
-			) : (
-				<DropZone
-					onFilesAdded={addLocalFiles}
-					selectedDataSources={selectedDataSources}
-					onChooseExisting={handleChooseExisting}
-					creatingDS={isCreating}
-					allowedFileTypes={allowedFileTypes}
-				/>
 			)}
+
+			{/* Drop zone — always visible */}
+			<DropZone
+				onFilesAdded={addLocalFiles}
+				allowedFileTypes={allowedFileTypes}
+			/>
+
+			{/* OR separator */}
+			<div className="flex items-center gap-3 py-1">
+				<div className="flex-1 border-t border-gray-200" />
+				<span className="text-sm text-primary40 font-medium px-1">OR</span>
+				<div className="flex-1 border-t border-gray-200" />
+			</div>
+
+			{/* Choose from existing datasets — always inline */}
+			<div>
+				<p className="text-sm font-semibold text-primary80 mb-3">
+					Select From Existing Data Source
+				</p>
+				<ChooseExistingInline
+					onChooseExisting={handleChooseExisting}
+					selectedDataSources={selectedDataSources}
+				/>
+			</div>
 		</div>
 	);
 };

@@ -35,3 +35,4 @@ dist-ssr
 .roo
 .roomodes
 local-docs/
+.vercel

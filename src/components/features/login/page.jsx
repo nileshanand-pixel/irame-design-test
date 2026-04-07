@@ -151,7 +151,7 @@ const SignInSignUp = () => {
 	return (
 		<>
 			<h1 className="text-2xl font-semibold text-purple-100 pt-10 px-10">
-				Irame.ai
+				Nilesh.ai
 			</h1>
 
 			<div className="flex items-center justify-center ">

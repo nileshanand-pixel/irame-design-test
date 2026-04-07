@@ -34,6 +34,7 @@ import AiConciergePage from '@/components/features/ai-concierge/page';
 import SpeechAuditorPage from '@/components/features/speech-auditor/page';
 import TableExtractorPage from '@/components/features/table-extractor/page';
 import MedicalReportReaderPage from '@/components/features/medical-report-reader/page';
+import WorkflowBuilderPage from '@/components/features/workflow-builder/page';
 
 function AppRoutes() {
 	return (
@@ -187,6 +188,14 @@ function AppRoutes() {
 													element={
 														<MedicalReportReaderPage />
 													}
+												/>
+											}
+										/>
+										<Route
+											path="ai-concierge/workflow-builder"
+											element={
+												<ProtectedRoute
+													element={<WorkflowBuilderPage />}
 												/>
 											}
 										/>
