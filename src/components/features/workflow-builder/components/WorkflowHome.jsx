@@ -641,6 +641,7 @@ export default function WorkflowHome({ onRun }) {
 	const [workflow, setWorkflow] = useState(null);
 	const [activeStep, setActiveStep] = useState(1);
 	const [uploadedFiles, setUploadedFiles] = useState([]);
+	const [selectedDsSources, setSelectedDsSources] = useState([]);
 	const [rightTab, setRightTab] = useState('plan');
 	const [rightOpen, setRightOpen] = useState(true);
 	const [showPlanModal, setShowPlanModal] = useState(false);
@@ -689,6 +690,12 @@ export default function WorkflowHome({ onRun }) {
 	const [dsSearch, setDsSearch] = useState('');
 	const [debouncedDsSearch, setDebouncedDsSearch] = useState('');
 
+	// Plus-menu & Choose Existing modal
+	const [plusMenuOpen, setPlusMenuOpen] = useState(null); // 'landing' | 'builder' | null
+	const [chooseExistingOpen, setChooseExistingOpen] = useState(false);
+	const [chooseExistingSearch, setChooseExistingSearch] = useState('');
+	const [debouncedChooseSearch, setDebouncedChooseSearch] = useState('');
+
 	// Landing — template categories
 	const [selectedCategory, setSelectedCategory] = useState(null);
 	const [templatePage, setTemplatePage] = useState(0);
@@ -708,6 +715,23 @@ export default function WorkflowHome({ onRun }) {
 		return () => clearTimeout(timer);
 	}, [dsSearch]);
 
+	// Debounce choose-existing modal search
+	useEffect(() => {
+		const timer = setTimeout(
+			() => setDebouncedChooseSearch(chooseExistingSearch),
+			300,
+		);
+		return () => clearTimeout(timer);
+	}, [chooseExistingSearch]);
+
+	// Close plus menu on outside click
+	useEffect(() => {
+		if (!plusMenuOpen) return;
+		const handleClick = () => setPlusMenuOpen(null);
+		document.addEventListener('click', handleClick);
+		return () => document.removeEventListener('click', handleClick);
+	}, [plusMenuOpen]);
+
 	// Auto-switch right panel to Output Config on step 4
 	useEffect(() => {
 		if (activeStep === 4) {
@@ -724,7 +748,7 @@ export default function WorkflowHome({ onRun }) {
 
 	const refresh = () => setWorkflows(getWorkflows());
 
-	// Data sources for "Select from existing" section
+	// Data sources for "Select from existing" section (step 2 inline)
 	const {
 		dataSources,
 		isLoading: dsLoading,
@@ -732,6 +756,22 @@ export default function WorkflowHome({ onRun }) {
 	} = useDataSources({
 		enabled: activeStep === 2,
 		search: debouncedDsSearch || undefined,
+	});
+
+	// Data sources for the Choose Existing modal (from + menu)
+	const {
+		dataSources: modalDataSources,
+		isLoading: modalDsLoading,
+		Sentinel: ModalDsSentinel,
+		isFetchingNextPage: modalFetchingNext,
+	} = useDataSources({
+		enabled: chooseExistingOpen,
+		search: debouncedChooseSearch || undefined,
+	});
+	const modalFilteredDs = (modalDataSources || []).sort((a, b) => {
+		if (a.status === 'active' && b.status !== 'active') return -1;
+		if (a.status !== 'active' && b.status === 'active') return 1;
+		return 0;
 	});
 	const filteredDs = (dataSources || []).sort((a, b) => {
 		if (a.status === 'active' && b.status !== 'active') return -1;
@@ -748,6 +788,7 @@ export default function WorkflowHome({ onRun }) {
 		setWorkflow(null);
 		setActiveStep(1);
 		setUploadedFiles([]);
+		setSelectedDsSources([]);
 		setExpandedSchemas({});
 		setManualColMappings({});
 		setShowOutput(false);
@@ -826,10 +867,28 @@ export default function WorkflowHome({ onRun }) {
 		const files = Array.from(e.target.files ?? []).map((f) => ({
 			name: f.name,
 			type: f.name.endsWith('.pdf') ? 'pdf' : 'csv',
+			size: f.size,
 			inputId: null,
 		}));
 		setUploadedFiles((prev) => [...prev, ...files]);
 		addMsg('user', `Uploaded ${files.length} file(s)`);
+	};
+
+	const removeUploadedFile = (index) => {
+		setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+	};
+
+	const removeSelectedDs = (datasourceId) => {
+		setSelectedDsSources((prev) =>
+			prev.filter((s) => s.datasource_id !== datasourceId),
+		);
+	};
+
+	const formatFileSize = (bytes) => {
+		if (!bytes) return '';
+		if (bytes < 1024) return `${bytes} B`;
+		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 	};
 
 	const handleChangeFile = (inputId) => {
@@ -861,6 +920,15 @@ export default function WorkflowHome({ onRun }) {
 			inputId: null,
 		}));
 		setUploadedFiles((prev) => [...prev, ...files]);
+	};
+
+	const toggleDsSource = (ds) => {
+		setSelectedDsSources((prev) => {
+			const exists = prev.some((s) => s.datasource_id === ds.datasource_id);
+			if (exists)
+				return prev.filter((s) => s.datasource_id !== ds.datasource_id);
+			return [...prev, ds];
+		});
 	};
 
 	const handleVerify = () => {
@@ -1031,258 +1099,535 @@ export default function WorkflowHome({ onRun }) {
 		);
 
 		return (
-			<div className="flex flex-col h-full overflow-hidden bg-[#FBFBFD]">
-				{/* ── Page header: title + horizontal stepper ── */}
-				<div className="flex-shrink-0 bg-white border-b border-gray-100 px-8 py-4 flex items-center gap-6">
-					<div className="flex items-center gap-2.5 flex-shrink-0">
-						<div className="w-8 h-8 rounded-lg bg-violet-500/10 ring-1 ring-violet-500/20 flex items-center justify-center">
-							<Sparkles className="size-4 text-violet-600" />
+			<>
+				<div className="flex flex-col h-full overflow-hidden bg-[#FBFBFD]">
+					{/* ── Page header: title + horizontal stepper ── */}
+					<div className="flex-shrink-0 bg-white border-b border-gray-100 px-8 py-4 flex items-center gap-6">
+						<div className="flex items-center gap-2.5 flex-shrink-0">
+							<div className="w-8 h-8 rounded-lg bg-violet-500/10 ring-1 ring-violet-500/20 flex items-center justify-center">
+								<Sparkles className="size-4 text-violet-600" />
+							</div>
+							<span className="text-sm font-semibold text-gray-900">
+								Workflow Builder
+							</span>
 						</div>
-						<span className="text-sm font-semibold text-gray-900">
-							Workflow Builder
-						</span>
+
+						<div className="flex items-center gap-0 ml-auto">
+							{HSTEPS.map((step, i) => (
+								<div key={step.label} className="flex items-center">
+									<div
+										className="flex flex-col items-center"
+										style={{ minWidth: 60 }}
+									>
+										<div
+											className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold border transition-all duration-200 ${
+												i === 0
+													? 'bg-violet-600 border-violet-600 text-white'
+													: 'bg-white border-gray-300 text-gray-400'
+											}`}
+										>
+											{i + 1}
+										</div>
+										<span
+											className={`text-[9px] mt-1 text-center uppercase tracking-wide font-semibold whitespace-nowrap ${i === 0 ? 'text-violet-600' : 'text-gray-400'}`}
+										>
+											{step.label}
+										</span>
+									</div>
+									{i < HSTEPS.length - 1 && (
+										<div className="w-6 h-px bg-gray-200 mx-0.5 mb-3 flex-shrink-0" />
+									)}
+								</div>
+							))}
+						</div>
 					</div>
 
-					<div className="flex items-center gap-0 ml-auto">
-						{HSTEPS.map((step, i) => (
-							<div key={step.label} className="flex items-center">
-								<div
-									className="flex flex-col items-center"
-									style={{ minWidth: 60 }}
-								>
-									<div
-										className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-semibold border transition-all duration-200 ${
-											i === 0
-												? 'bg-violet-600 border-violet-600 text-white'
-												: 'bg-white border-gray-300 text-gray-400'
-										}`}
-									>
-										{i + 1}
+					{/* ── Scrollable body ── */}
+					<div className="flex-1 overflow-y-auto">
+						{/* Hero */}
+						<div className="px-10 pt-10 pb-6 text-center">
+							<h1 className="text-6xl font-extrabold leading-tight mb-3 tracking-tight">
+								<span className="text-slate-900">
+									Audit smarter.{' '}
+								</span>
+								<span className="bg-gradient-to-r from-violet-600 to-blue-500 bg-clip-text text-transparent">
+									Not harder.
+								</span>
+							</h1>
+							<p className="text-base text-gray-400">
+								Your AI copilot already knows what to look for. Just
+								ask.
+							</p>
+						</div>
+
+						{/* Input card */}
+						<div className="px-[20%] pb-8">
+							<div className="ai-glow bg-white border border-gray-200 rounded-2xl p-5 flex flex-col gap-4">
+								{/* Attached file / data source pills */}
+								{(uploadedFiles.length > 0 ||
+									selectedDsSources.length > 0) && (
+									<div className="flex flex-wrap gap-2">
+										{uploadedFiles.map((f, i) => (
+											<div
+												key={`file-${i}`}
+												className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2"
+											>
+												<div className="w-8 h-8 rounded-md bg-gray-200/70 flex items-center justify-center flex-shrink-0">
+													{f.type === 'pdf' ? (
+														<span className="text-[10px] font-bold text-gray-500 uppercase">
+															PDF
+														</span>
+													) : (
+														<FileText className="size-4 text-gray-500" />
+													)}
+												</div>
+												<div className="min-w-0">
+													<p className="text-xs font-medium text-gray-700 truncate max-w-[180px]">
+														{f.name}
+													</p>
+													{f.size && (
+														<p className="text-[10px] text-gray-400">
+															{formatFileSize(f.size)}
+														</p>
+													)}
+												</div>
+												<button
+													onClick={() =>
+														removeUploadedFile(i)
+													}
+													className="p-0.5 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0"
+												>
+													<X className="size-3.5" />
+												</button>
+											</div>
+										))}
+										{selectedDsSources.map((ds) => (
+											<div
+												key={`ds-${ds.datasource_id}`}
+												className="flex items-center gap-2 bg-violet-50 border border-violet-200 rounded-lg px-3 py-2"
+											>
+												<div className="w-8 h-8 rounded-md bg-violet-100 flex items-center justify-center flex-shrink-0">
+													<Database className="size-4 text-violet-500" />
+												</div>
+												<div className="min-w-0">
+													<p className="text-xs font-medium text-gray-700 truncate max-w-[180px]">
+														{ds.name}
+													</p>
+													<p className="text-[10px] text-gray-400">
+														Data source
+													</p>
+												</div>
+												<button
+													onClick={() =>
+														removeSelectedDs(
+															ds.datasource_id,
+														)
+													}
+													className="p-0.5 rounded text-gray-400 hover:text-gray-600 hover:bg-violet-100 transition-colors flex-shrink-0"
+												>
+													<X className="size-3.5" />
+												</button>
+											</div>
+										))}
 									</div>
-									<span
-										className={`text-[9px] mt-1 text-center uppercase tracking-wide font-semibold whitespace-nowrap ${i === 0 ? 'text-violet-600' : 'text-gray-400'}`}
+								)}
+								<textarea
+									value={prompt}
+									onChange={(e) => {
+										setPrompt(e.target.value);
+									}}
+									onKeyDown={(e) => {
+										if (e.key === 'Enter' && !e.shiftKey) {
+											e.preventDefault();
+											handleLandingSubmit();
+										}
+									}}
+									placeholder="Describe a workflow and let Auditify do the rest…"
+									rows={3}
+									className="w-full bg-transparent resize-none text-sm text-slate-800 placeholder:text-slate-400 outline-none leading-relaxed font-normal"
+								/>
+								<div className="flex items-center justify-between pt-1 border-t border-gray-100">
+									<div className="flex items-center gap-1">
+										<div className="relative">
+											<button
+												onClick={(e) => {
+													e.stopPropagation();
+													setPlusMenuOpen(
+														plusMenuOpen === 'landing'
+															? null
+															: 'landing',
+													);
+												}}
+												className="p-2 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all duration-200"
+											>
+												<Plus className="size-4" />
+											</button>
+											{plusMenuOpen === 'landing' && (
+												<div
+													onClick={(e) =>
+														e.stopPropagation()
+													}
+													className="absolute bottom-full left-0 mb-2 w-52 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 z-50"
+												>
+													<button
+														onClick={() => {
+															setPlusMenuOpen(null);
+															fileInputRef.current?.click();
+														}}
+														className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors"
+													>
+														<CloudUpload className="size-4" />
+														Upload
+													</button>
+													<button
+														onClick={() => {
+															setPlusMenuOpen(null);
+															setChooseExistingSearch(
+																'',
+															);
+															setChooseExistingOpen(
+																true,
+															);
+														}}
+														className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors"
+													>
+														<Database className="size-4" />
+														Choose existing
+													</button>
+												</div>
+											)}
+										</div>
+										<input
+											ref={fileInputRef}
+											type="file"
+											multiple
+											className="hidden"
+											onChange={handleFileInput}
+										/>
+										<button
+											onClick={() => {
+												setGuidedTarget('landing');
+												setGuidedOpen(true);
+											}}
+											className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-violet-600 border border-violet-200 hover:bg-violet-50 transition-all duration-200"
+										>
+											<Sparkles className="size-3.5" />
+											Guide me
+										</button>
+									</div>
+									<button
+										onClick={handleLandingSubmit}
+										disabled={
+											!prompt.trim() &&
+											uploadedFiles.length === 0 &&
+											selectedDsSources.length === 0
+										}
+										className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none transition-all duration-200 shadow-none"
 									>
-										{step.label}
-									</span>
+										<Sparkles className="size-4" /> Audit on Chat
+									</button>
 								</div>
-								{i < HSTEPS.length - 1 && (
-									<div className="w-6 h-px bg-gray-200 mx-0.5 mb-3 flex-shrink-0" />
+							</div>
+						</div>
+
+						{/* Recent Workflows section */}
+						<div className="px-[20%] pb-10">
+							{/* Section header */}
+							<div className="flex items-start justify-between mb-4">
+								<div>
+									<h2 className="text-base font-semibold text-gray-900">
+										Recent Workflows
+									</h2>
+									<p className="text-sm text-gray-400 mt-0.5">
+										Pick up where you left off
+									</p>
+								</div>
+								{workflows.length > 0 && (
+									<span className="text-xs text-gray-400 mt-1">
+										{workflows.length} workflow
+										{workflows.length !== 1 ? 's' : ''}
+									</span>
 								)}
 							</div>
-						))}
+
+							{/* Empty state */}
+							{workflows.length === 0 ? (
+								<div className="border border-dashed border-gray-200 rounded-2xl bg-gray-50/50 py-14 flex flex-col items-center justify-center text-center">
+									<div className="w-14 h-14 rounded-2xl bg-violet-50 flex items-center justify-center mb-4">
+										<LayoutGrid className="size-7 text-violet-400" />
+									</div>
+									<p className="text-sm font-semibold text-gray-800 mb-1">
+										No recent workflows yet
+									</p>
+									<p className="text-xs text-gray-400">
+										Start by describing a workflow above
+									</p>
+								</div>
+							) : (
+								<div className="flex flex-col gap-3">
+									{workflows.map((wf) => {
+										const relTime = (() => {
+											const diffMs =
+												Date.now() -
+												new Date(wf.updatedAt).getTime();
+											const m = Math.floor(diffMs / 60000);
+											const h = Math.floor(m / 60);
+											const d = Math.floor(h / 24);
+											if (m < 1) return 'Just now';
+											if (m < 60) return `${m}m ago`;
+											if (h < 24) return `${h}h ago`;
+											if (d === 1) return 'Yesterday';
+											if (d < 7) return `${d} days ago`;
+											return new Date(
+												wf.updatedAt,
+											).toLocaleDateString();
+										})();
+										return (
+											<div
+												key={wf.id}
+												className="group flex items-center gap-4 bg-white border border-gray-200 hover:border-violet-200 hover:shadow-md rounded-2xl px-5 py-4 transition-all duration-200 hover:-translate-y-px"
+											>
+												{/* Icon */}
+												<div className="w-9 h-9 rounded-lg bg-violet-50 group-hover:bg-violet-100 flex items-center justify-center flex-shrink-0 transition-colors">
+													<FileText className="size-4 text-violet-500" />
+												</div>
+
+												{/* Content */}
+												<div className="flex-1 min-w-0">
+													<div className="flex items-center gap-2 flex-wrap mb-0.5">
+														<span className="text-sm font-semibold text-gray-900 truncate">
+															{wf.name}
+														</span>
+														<Badge
+															variant="secondary"
+															className={
+																wf.status ===
+																'active'
+																	? 'bg-green-50 text-green-700 border border-green-200 text-[10px] px-2 py-0 font-medium'
+																	: 'bg-amber-50 text-amber-700 border border-amber-200 text-[10px] px-2 py-0 font-medium'
+															}
+														>
+															{wf.status === 'active'
+																? 'Active'
+																: 'Draft'}
+														</Badge>
+													</div>
+													<p className="text-xs text-gray-500 truncate mb-1.5">
+														{wf.description}
+													</p>
+													<div className="flex items-center gap-3 text-[11px] text-gray-400">
+														<span className="flex items-center gap-1">
+															<Clock className="size-3" />
+															{relTime}
+														</span>
+														<span className="flex items-center gap-1">
+															<FileInput className="size-3" />
+															{wf.inputs?.length ?? 0}{' '}
+															input
+															{(wf.inputs?.length ??
+																0) !== 1
+																? 's'
+																: ''}
+														</span>
+														{wf.runCount > 0 && (
+															<span className="flex items-center gap-1">
+																<BarChart3 className="size-3" />
+																{wf.runCount} run
+																{wf.runCount !== 1
+																	? 's'
+																	: ''}
+															</span>
+														)}
+													</div>
+												</div>
+
+												{/* Actions */}
+												<div className="flex items-center gap-2 flex-shrink-0">
+													<button
+														onClick={() =>
+															enterBuilder(wf.name)
+														}
+														className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50 transition-colors"
+													>
+														<Settings2 className="size-3.5" />
+														Configure
+													</button>
+													<button
+														onClick={() =>
+															handleRunTemplate(wf)
+														}
+														className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium transition-colors"
+													>
+														<Play className="size-3.5 fill-current" />
+														Run
+													</button>
+													<button
+														onClick={() =>
+															handleDeleteTemplate(
+																wf.id,
+															)
+														}
+														className="opacity-0 group-hover:opacity-100 inline-flex items-center justify-center h-8 w-8 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+													>
+														<Trash2 className="size-3.5" />
+													</button>
+												</div>
+											</div>
+										);
+									})}
+								</div>
+							)}
+						</div>
 					</div>
 				</div>
 
-				{/* ── Scrollable body ── */}
-				<div className="flex-1 overflow-y-auto">
-					{/* Hero */}
-					<div className="px-10 pt-10 pb-6 text-center">
-						<h1 className="text-6xl font-extrabold leading-tight mb-3 tracking-tight">
-							<span className="text-slate-900">Audit smarter. </span>
-							<span className="bg-gradient-to-r from-violet-600 to-blue-500 bg-clip-text text-transparent">
-								Not harder.
-							</span>
-						</h1>
-						<p className="text-base text-gray-400">
-							Your AI copilot already knows what to look for. Just ask.
-						</p>
-					</div>
-
-					{/* Input card */}
-					<div className="px-[20%] pb-8">
-						<div className="ai-glow bg-white border border-gray-200 rounded-2xl p-5 flex flex-col gap-4">
-							<textarea
-								value={prompt}
-								onChange={(e) => {
-									setPrompt(e.target.value);
-								}}
-								onKeyDown={(e) => {
-									if (e.key === 'Enter' && !e.shiftKey) {
-										e.preventDefault();
-										handleLandingSubmit();
-									}
-								}}
-								placeholder="Describe a workflow and let Auditify do the rest…"
-								rows={3}
-								className="w-full bg-transparent resize-none text-sm text-slate-800 placeholder:text-slate-400 outline-none leading-relaxed font-normal"
-							/>
-							<div className="flex items-center justify-between pt-1 border-t border-gray-100">
-								<div className="flex items-center gap-1">
-									<button className="p-2 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all duration-200">
-										<Paperclip className="size-4" />
-									</button>
-									<button className="p-2 rounded-lg text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-all duration-200">
-										<Plus className="size-4" />
-									</button>
-									<button
-										onClick={() => {
-											setGuidedTarget('landing');
-											setGuidedOpen(true);
-										}}
-										className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-violet-600 border border-violet-200 hover:bg-violet-50 transition-all duration-200"
-									>
-										<Sparkles className="size-3.5" />
-										Guide me
-									</button>
+				{/* Choose Existing Data Source modal (landing mode) */}
+				{chooseExistingOpen && (
+					<div
+						className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+						onClick={() => setChooseExistingOpen(false)}
+					>
+						<div
+							className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden"
+							onClick={(e) => e.stopPropagation()}
+						>
+							{/* Header */}
+							<div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+								<div>
+									<h2 className="text-lg font-semibold text-gray-900">
+										Choose Data Source
+									</h2>
+									<p className="text-sm text-gray-400 mt-0.5">
+										You can always change it later from the data
+										source page
+									</p>
 								</div>
 								<button
-									onClick={handleLandingSubmit}
-									disabled={!prompt.trim()}
-									className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-violet-600 text-white text-sm font-medium hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none transition-all duration-200 shadow-none"
+									onClick={() => setChooseExistingOpen(false)}
+									className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
 								>
-									<Sparkles className="size-4" /> Audit on Chat
+									<X className="size-5" />
+								</button>
+							</div>
+
+							{/* Search */}
+							<div className="px-6 py-4 border-b border-gray-100">
+								<div className="relative">
+									<Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+									<input
+										type="text"
+										placeholder="Search"
+										value={chooseExistingSearch}
+										onChange={(e) =>
+											setChooseExistingSearch(e.target.value)
+										}
+										className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-300 transition-all"
+									/>
+								</div>
+							</div>
+
+							{/* List */}
+							<div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+								{modalDsLoading ? (
+									<div className="space-y-3">
+										{Array.from({ length: 4 }).map((_, i) => (
+											<div
+												key={i}
+												className="h-14 bg-gray-100 animate-pulse rounded-lg"
+											/>
+										))}
+									</div>
+								) : modalFilteredDs.length === 0 ? (
+									<p className="text-center py-8 text-sm text-gray-400">
+										No data sources found
+									</p>
+								) : (
+									<>
+										{modalFilteredDs.map((ds) => {
+											const isProcessing =
+												ds.status !== 'active';
+											const isSelected =
+												selectedDsSources.some(
+													(s) =>
+														s.datasource_id ===
+														ds.datasource_id,
+												);
+											return (
+												<div
+													key={ds.datasource_id}
+													onClick={() =>
+														!isProcessing &&
+														toggleDsSource(ds)
+													}
+													className={`flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-all ${
+														isProcessing
+															? 'opacity-50 cursor-not-allowed border-gray-100'
+															: isSelected
+																? 'border-violet-500 bg-violet-50 ring-1 ring-violet-500'
+																: 'border-gray-200 hover:bg-violet-50 hover:border-violet-200'
+													}`}
+												>
+													<Database className="size-5 text-violet-500 flex-shrink-0" />
+													<div className="flex-1 min-w-0">
+														<p className="text-sm font-medium text-gray-900 truncate">
+															{ds.name}
+														</p>
+													</div>
+													<div className="flex-shrink-0">
+														<div
+															className={`size-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+																isSelected
+																	? 'border-violet-600 bg-violet-600'
+																	: 'border-gray-300'
+															}`}
+														>
+															{isSelected && (
+																<Check className="size-3 text-white" />
+															)}
+														</div>
+													</div>
+												</div>
+											);
+										})}
+										<ModalDsSentinel />
+										{modalFetchingNext && (
+											<p className="text-sm text-center text-gray-400 py-2">
+												Loading more...
+											</p>
+										)}
+									</>
+								)}
+							</div>
+
+							{/* Footer */}
+							<div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+								<button
+									onClick={() => setChooseExistingOpen(false)}
+									className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+								>
+									Cancel
+								</button>
+								<button
+									onClick={() => setChooseExistingOpen(false)}
+									disabled={selectedDsSources.length === 0}
+									className="px-5 py-2.5 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+								>
+									Continue
 								</button>
 							</div>
 						</div>
 					</div>
+				)}
 
-					{/* Recent Workflows section */}
-					<div className="px-[20%] pb-10">
-						{/* Section header */}
-						<div className="flex items-start justify-between mb-4">
-							<div>
-								<h2 className="text-base font-semibold text-gray-900">
-									Recent Workflows
-								</h2>
-								<p className="text-sm text-gray-400 mt-0.5">
-									Pick up where you left off
-								</p>
-							</div>
-							{workflows.length > 0 && (
-								<span className="text-xs text-gray-400 mt-1">
-									{workflows.length} workflow
-									{workflows.length !== 1 ? 's' : ''}
-								</span>
-							)}
-						</div>
-
-						{/* Empty state */}
-						{workflows.length === 0 ? (
-							<div className="border border-dashed border-gray-200 rounded-2xl bg-gray-50/50 py-14 flex flex-col items-center justify-center text-center">
-								<div className="w-14 h-14 rounded-2xl bg-violet-50 flex items-center justify-center mb-4">
-									<LayoutGrid className="size-7 text-violet-400" />
-								</div>
-								<p className="text-sm font-semibold text-gray-800 mb-1">
-									No recent workflows yet
-								</p>
-								<p className="text-xs text-gray-400">
-									Start by describing a workflow above
-								</p>
-							</div>
-						) : (
-							<div className="flex flex-col gap-3">
-								{workflows.map((wf) => {
-									const relTime = (() => {
-										const diffMs =
-											Date.now() -
-											new Date(wf.updatedAt).getTime();
-										const m = Math.floor(diffMs / 60000);
-										const h = Math.floor(m / 60);
-										const d = Math.floor(h / 24);
-										if (m < 1) return 'Just now';
-										if (m < 60) return `${m}m ago`;
-										if (h < 24) return `${h}h ago`;
-										if (d === 1) return 'Yesterday';
-										if (d < 7) return `${d} days ago`;
-										return new Date(
-											wf.updatedAt,
-										).toLocaleDateString();
-									})();
-									return (
-										<div
-											key={wf.id}
-											className="group flex items-center gap-4 bg-white border border-gray-200 hover:border-violet-200 hover:shadow-md rounded-2xl px-5 py-4 transition-all duration-200 hover:-translate-y-px"
-										>
-											{/* Icon */}
-											<div className="w-9 h-9 rounded-lg bg-violet-50 group-hover:bg-violet-100 flex items-center justify-center flex-shrink-0 transition-colors">
-												<FileText className="size-4 text-violet-500" />
-											</div>
-
-											{/* Content */}
-											<div className="flex-1 min-w-0">
-												<div className="flex items-center gap-2 flex-wrap mb-0.5">
-													<span className="text-sm font-semibold text-gray-900 truncate">
-														{wf.name}
-													</span>
-													<Badge
-														variant="secondary"
-														className={
-															wf.status === 'active'
-																? 'bg-green-50 text-green-700 border border-green-200 text-[10px] px-2 py-0 font-medium'
-																: 'bg-amber-50 text-amber-700 border border-amber-200 text-[10px] px-2 py-0 font-medium'
-														}
-													>
-														{wf.status === 'active'
-															? 'Active'
-															: 'Draft'}
-													</Badge>
-												</div>
-												<p className="text-xs text-gray-500 truncate mb-1.5">
-													{wf.description}
-												</p>
-												<div className="flex items-center gap-3 text-[11px] text-gray-400">
-													<span className="flex items-center gap-1">
-														<Clock className="size-3" />
-														{relTime}
-													</span>
-													<span className="flex items-center gap-1">
-														<FileInput className="size-3" />
-														{wf.inputs?.length ?? 0}{' '}
-														input
-														{(wf.inputs?.length ?? 0) !==
-														1
-															? 's'
-															: ''}
-													</span>
-													{wf.runCount > 0 && (
-														<span className="flex items-center gap-1">
-															<BarChart3 className="size-3" />
-															{wf.runCount} run
-															{wf.runCount !== 1
-																? 's'
-																: ''}
-														</span>
-													)}
-												</div>
-											</div>
-
-											{/* Actions */}
-											<div className="flex items-center gap-2 flex-shrink-0">
-												<button
-													onClick={() =>
-														enterBuilder(wf.name)
-													}
-													className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-gray-200 text-xs font-medium text-gray-600 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50 transition-colors"
-												>
-													<Settings2 className="size-3.5" />
-													Configure
-												</button>
-												<button
-													onClick={() =>
-														handleRunTemplate(wf)
-													}
-													className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium transition-colors"
-												>
-													<Play className="size-3.5 fill-current" />
-													Run
-												</button>
-												<button
-													onClick={() =>
-														handleDeleteTemplate(wf.id)
-													}
-													className="opacity-0 group-hover:opacity-100 inline-flex items-center justify-center h-8 w-8 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
-												>
-													<Trash2 className="size-3.5" />
-												</button>
-											</div>
-										</div>
-									);
-								})}
-							</div>
-						)}
-					</div>
-				</div>
-			</div>
+				<GuidedPromptModal
+					isOpen={guidedOpen}
+					onClose={() => setGuidedOpen(false)}
+					onInsert={(generatedPrompt) => {
+						setPrompt(generatedPrompt);
+						setGuidedOpen(false);
+					}}
+				/>
+			</>
 		);
 	}
 
@@ -1296,7 +1641,7 @@ export default function WorkflowHome({ onRun }) {
 		return false;
 	};
 
-	const filesReady = uploadedFiles.length > 0;
+	const filesReady = uploadedFiles.length > 0 || selectedDsSources.length > 0;
 
 	return (
 		<>
@@ -1447,6 +1792,70 @@ export default function WorkflowHome({ onRun }) {
 
 					{/* Chat input */}
 					<div className="p-4 border-t border-gray-100 bg-white flex-shrink-0">
+						{/* Attached file / data source pills */}
+						{(uploadedFiles.length > 0 ||
+							selectedDsSources.length > 0) && (
+							<div className="flex flex-wrap gap-1.5 mb-2">
+								{uploadedFiles.map((f, i) => (
+									<div
+										key={`file-${i}`}
+										className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5"
+									>
+										<div className="w-6 h-6 rounded bg-gray-200/70 flex items-center justify-center flex-shrink-0">
+											{f.type === 'pdf' ? (
+												<span className="text-[8px] font-bold text-gray-500 uppercase">
+													PDF
+												</span>
+											) : (
+												<FileText className="size-3 text-gray-500" />
+											)}
+										</div>
+										<div className="min-w-0">
+											<p className="text-[11px] font-medium text-gray-700 truncate max-w-[140px]">
+												{f.name}
+											</p>
+											{f.size && (
+												<p className="text-[9px] text-gray-400 leading-none">
+													{formatFileSize(f.size)}
+												</p>
+											)}
+										</div>
+										<button
+											onClick={() => removeUploadedFile(i)}
+											className="p-0.5 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0"
+										>
+											<X className="size-3" />
+										</button>
+									</div>
+								))}
+								{selectedDsSources.map((ds) => (
+									<div
+										key={`ds-${ds.datasource_id}`}
+										className="flex items-center gap-1.5 bg-violet-50 border border-violet-200 rounded-lg px-2.5 py-1.5"
+									>
+										<div className="w-6 h-6 rounded bg-violet-100 flex items-center justify-center flex-shrink-0">
+											<Database className="size-3 text-violet-500" />
+										</div>
+										<div className="min-w-0">
+											<p className="text-[11px] font-medium text-gray-700 truncate max-w-[140px]">
+												{ds.name}
+											</p>
+											<p className="text-[9px] text-gray-400 leading-none">
+												Data source
+											</p>
+										</div>
+										<button
+											onClick={() =>
+												removeSelectedDs(ds.datasource_id)
+											}
+											className="p-0.5 rounded text-gray-400 hover:text-gray-600 hover:bg-violet-100 transition-colors flex-shrink-0"
+										>
+											<X className="size-3" />
+										</button>
+									</div>
+								))}
+							</div>
+						)}
 						<div className="flex gap-2 items-end">
 							<textarea
 								value={chatInput}
@@ -1464,7 +1873,9 @@ export default function WorkflowHome({ onRun }) {
 							<button
 								onClick={handleBuilderSend}
 								disabled={
-									!chatInput.trim() ||
+									(!chatInput.trim() &&
+										uploadedFiles.length === 0 &&
+										selectedDsSources.length === 0) ||
 									isGenerating ||
 									!!clarifyOptions
 								}
@@ -1474,13 +1885,50 @@ export default function WorkflowHome({ onRun }) {
 							</button>
 						</div>
 						<div className="flex items-center gap-1.5 mt-2">
-							<button
-								onClick={() => chatFileInputRef.current?.click()}
-								className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200"
-								title="Attach files"
-							>
-								<Paperclip className="size-3.5" />
-							</button>
+							<div className="relative">
+								<button
+									onClick={(e) => {
+										e.stopPropagation();
+										setPlusMenuOpen(
+											plusMenuOpen === 'builder'
+												? null
+												: 'builder',
+										);
+									}}
+									className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all duration-200"
+									title="Add files"
+								>
+									<Plus className="size-3.5" />
+								</button>
+								{plusMenuOpen === 'builder' && (
+									<div
+										onClick={(e) => e.stopPropagation()}
+										className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 z-50"
+									>
+										<button
+											onClick={() => {
+												setPlusMenuOpen(null);
+												chatFileInputRef.current?.click();
+											}}
+											className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors"
+										>
+											<CloudUpload className="size-3.5" />
+											Upload
+										</button>
+										<button
+											onClick={() => {
+												setPlusMenuOpen(null);
+												setChooseExistingSearch('');
+												setChooseExistingOpen(true);
+											}}
+											className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs text-gray-700 hover:bg-violet-50 hover:text-violet-700 transition-colors"
+										>
+											<Database className="size-3.5" />
+											Choose existing
+										</button>
+									</div>
+								)}
+							</div>
 							<input
 								ref={chatFileInputRef}
 								type="file"
@@ -1624,6 +2072,30 @@ export default function WorkflowHome({ onRun }) {
 									)}
 								</div>
 
+								{/* Uploaded / selected file pills */}
+								{filesReady && (
+									<div className="flex flex-wrap gap-2">
+										{uploadedFiles.map((f, i) => (
+											<span
+												key={`file-${i}`}
+												className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-1.5 rounded-full"
+											>
+												<CheckCircle2 className="size-3" />{' '}
+												{f.name}
+											</span>
+										))}
+										{selectedDsSources.map((ds) => (
+											<span
+												key={`ds-${ds.datasource_id}`}
+												className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-1.5 rounded-full"
+											>
+												<CheckCircle2 className="size-3" />{' '}
+												{ds.name}
+											</span>
+										))}
+									</div>
+								)}
+
 								{/* Drop zone */}
 								<div
 									onDragOver={(e) => e.preventDefault()}
@@ -1651,21 +2123,6 @@ export default function WorkflowHome({ onRun }) {
 										onChange={handleFileInput}
 									/>
 								</div>
-
-								{/* Uploaded file pills */}
-								{filesReady && (
-									<div className="flex flex-wrap gap-2">
-										{uploadedFiles.map((f, i) => (
-											<span
-												key={i}
-												className="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium px-3 py-1.5 rounded-full"
-											>
-												<CheckCircle2 className="size-3" />{' '}
-												{f.name}
-											</span>
-										))}
-									</div>
-								)}
 
 								{/* OR separator */}
 								<div className="flex items-center gap-3 py-1">
@@ -1715,27 +2172,45 @@ export default function WorkflowHome({ onRun }) {
 									) : (
 										<>
 											<div className="grid grid-cols-2 gap-3">
-												{filteredDs.map((ds) => (
-													<div
-														key={ds.datasource_id}
-														className="border border-gray-200 hover:bg-violet-50 rounded-lg py-2 px-3 flex items-center gap-3 cursor-pointer transition-all"
-													>
-														<Database className="size-4 text-violet-600 flex-shrink-0" />
-														<div className="flex-1 truncate">
-															<div className="text-sm font-medium truncate">
-																{ds.name}
+												{filteredDs.map((ds) => {
+													const isDsSelected =
+														selectedDsSources.some(
+															(s) =>
+																s.datasource_id ===
+																ds.datasource_id,
+														);
+													return (
+														<div
+															key={ds.datasource_id}
+															onClick={() =>
+																toggleDsSource(ds)
+															}
+															className={`border rounded-lg py-2 px-3 flex items-center gap-3 cursor-pointer transition-all ${isDsSelected ? 'border-violet-500 bg-violet-50 ring-1 ring-violet-500' : 'border-gray-200 hover:bg-violet-50'}`}
+														>
+															<Database className="size-4 text-violet-600 flex-shrink-0" />
+															<div className="flex-1 truncate">
+																<div className="text-sm font-medium truncate">
+																	{ds.name}
+																</div>
+																<div className="text-xs text-gray-400">
+																	Last synced:{' '}
+																	{ds.updated_at
+																		? new Date(
+																				ds.updated_at,
+																			).toLocaleString()
+																		: 'N/A'}
+																</div>
 															</div>
-															<div className="text-xs text-gray-400">
-																Last synced:{' '}
-																{ds.updated_at
-																	? new Date(
-																			ds.updated_at,
-																		).toLocaleString()
-																	: 'N/A'}
-															</div>
+															{isDsSelected && (
+																<div className="flex-shrink-0">
+																	<div className="size-5 bg-violet-600 rounded flex items-center justify-center">
+																		<Check className="size-3 text-white" />
+																	</div>
+																</div>
+															)}
 														</div>
-													</div>
-												))}
+													);
+												})}
 											</div>
 											<DsSentinel />
 										</>
@@ -3928,6 +4403,141 @@ export default function WorkflowHome({ onRun }) {
 					setGuidedOpen(false);
 				}}
 			/>
+
+			{/* Choose Existing Data Source modal */}
+			{chooseExistingOpen && (
+				<div
+					className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+					onClick={() => setChooseExistingOpen(false)}
+				>
+					<div
+						className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden"
+						onClick={(e) => e.stopPropagation()}
+					>
+						{/* Header */}
+						<div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+							<div>
+								<h2 className="text-lg font-semibold text-gray-900">
+									Choose Data Source
+								</h2>
+								<p className="text-sm text-gray-400 mt-0.5">
+									You can always change it later from the data
+									source page
+								</p>
+							</div>
+							<button
+								onClick={() => setChooseExistingOpen(false)}
+								className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+							>
+								<X className="size-5" />
+							</button>
+						</div>
+
+						{/* Search */}
+						<div className="px-6 py-4 border-b border-gray-100">
+							<div className="relative">
+								<Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+								<input
+									type="text"
+									placeholder="Search"
+									value={chooseExistingSearch}
+									onChange={(e) =>
+										setChooseExistingSearch(e.target.value)
+									}
+									className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg bg-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-300 transition-all"
+								/>
+							</div>
+						</div>
+
+						{/* List */}
+						<div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+							{modalDsLoading ? (
+								<div className="space-y-3">
+									{Array.from({ length: 4 }).map((_, i) => (
+										<div
+											key={i}
+											className="h-14 bg-gray-100 animate-pulse rounded-lg"
+										/>
+									))}
+								</div>
+							) : modalFilteredDs.length === 0 ? (
+								<p className="text-center py-8 text-sm text-gray-400">
+									No data sources found
+								</p>
+							) : (
+								<>
+									{modalFilteredDs.map((ds) => {
+										const isProcessing = ds.status !== 'active';
+										const isSelected = selectedDsSources.some(
+											(s) =>
+												s.datasource_id === ds.datasource_id,
+										);
+										return (
+											<div
+												key={ds.datasource_id}
+												onClick={() =>
+													!isProcessing &&
+													toggleDsSource(ds)
+												}
+												className={`flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-all ${
+													isProcessing
+														? 'opacity-50 cursor-not-allowed border-gray-100'
+														: isSelected
+															? 'border-violet-500 bg-violet-50 ring-1 ring-violet-500'
+															: 'border-gray-200 hover:bg-violet-50 hover:border-violet-200'
+												}`}
+											>
+												<Database className="size-5 text-violet-500 flex-shrink-0" />
+												<div className="flex-1 min-w-0">
+													<p className="text-sm font-medium text-gray-900 truncate">
+														{ds.name}
+													</p>
+												</div>
+												<div className="flex-shrink-0">
+													<div
+														className={`size-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+															isSelected
+																? 'border-violet-600 bg-violet-600'
+																: 'border-gray-300'
+														}`}
+													>
+														{isSelected && (
+															<Check className="size-3 text-white" />
+														)}
+													</div>
+												</div>
+											</div>
+										);
+									})}
+									<ModalDsSentinel />
+									{modalFetchingNext && (
+										<p className="text-sm text-center text-gray-400 py-2">
+											Loading more...
+										</p>
+									)}
+								</>
+							)}
+						</div>
+
+						{/* Footer */}
+						<div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+							<button
+								onClick={() => setChooseExistingOpen(false)}
+								className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+							>
+								Cancel
+							</button>
+							<button
+								onClick={() => setChooseExistingOpen(false)}
+								disabled={selectedDsSources.length === 0}
+								className="px-5 py-2.5 text-sm font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+							>
+								Continue
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</>
 	);
 }
