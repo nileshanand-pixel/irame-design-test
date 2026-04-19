@@ -127,7 +127,7 @@ const Builder = ({ editId, onSaved }) => {
 							<div
 								className={`max-w-[85%] px-3.5 py-2.5 rounded-xl text-xs leading-relaxed ${
 									m.role === 'user'
-										? 'bg-gray-900 text-white rounded-tr-sm'
+										? 'bg-gray-50 border border-gray-100 text-gray-800 rounded-tr-sm'
 										: 'bg-gray-50 border border-gray-100 text-gray-800 rounded-tl-sm'
 								}`}
 							>

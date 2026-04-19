@@ -9,6 +9,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ToastContainer } from '@/lib/toast';
+import { NavigationGuardProvider } from '@/contexts/NavigationGuardContext';
 import { logError } from '@/lib/logger';
 
 function AppProvider({ children }) {
@@ -32,7 +33,7 @@ function AppProvider({ children }) {
 						FallbackComponent={ErrorFallback}
 						onError={handleError}
 					>
-						{children}
+						<NavigationGuardProvider>{children}</NavigationGuardProvider>
 						<ToastContainer />
 					</ErrorBoundary>
 				</Router>

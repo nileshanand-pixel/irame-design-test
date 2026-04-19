@@ -362,33 +362,60 @@ export const UploadManager = ({
 		<div className="flex flex-col gap-4 pb-4">
 			<ConfirmationDialog />
 
-			{/* Uploaded files — shown above the dropzone */}
-			{items.length > 0 && (
-				<>
-					<input
-						type="file"
-						multiple
-						ref={fileInputRef}
-						style={{ display: 'none' }}
-						onChange={handleFilesListInput}
-						accept={getAcceptString(allowedFileTypes)}
-					/>
-					<FilesList
-						files={items}
-						progress={progress}
-						datasourceId={datasourceId}
-						onUpload={handleFilesListUpload}
-						onDelete={handleDelete}
-						onBulkDelete={handleBulkDelete}
-						onDeleteSheet={handleDeleteSheet}
-						selectedDataSources={selectedDataSources}
-						onChooseExisting={handleChooseExisting}
-						creatingDS={isCreating}
-						deletingSheets={deletingSheets}
-						highlightErrors={highlightErrors}
-					/>
-				</>
-			)}
+			{/* Your Files section */}
+			<div>
+				<div className="flex items-center gap-2 mb-3">
+					<p className="text-xs font-semibold text-primary40 tracking-wider uppercase">
+						Your Files
+					</p>
+					<span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-md bg-primary10 text-xs font-semibold text-primary60">
+						{items.length}
+					</span>
+				</div>
+
+				{items.length > 0 ? (
+					<>
+						<input
+							type="file"
+							multiple
+							ref={fileInputRef}
+							style={{ display: 'none' }}
+							onChange={handleFilesListInput}
+							accept={getAcceptString(allowedFileTypes)}
+						/>
+						<FilesList
+							files={items}
+							progress={progress}
+							datasourceId={datasourceId}
+							onUpload={handleFilesListUpload}
+							onDelete={handleDelete}
+							onBulkDelete={handleBulkDelete}
+							onDeleteSheet={handleDeleteSheet}
+							selectedDataSources={selectedDataSources}
+							onChooseExisting={handleChooseExisting}
+							creatingDS={isCreating}
+							deletingSheets={deletingSheets}
+							highlightErrors={highlightErrors}
+						/>
+					</>
+				) : (
+					<div className="rounded-lg bg-[#F9FAFB] border border-gray-100 py-4 px-5">
+						<p className="text-sm text-gray-400 text-center">
+							No files added yet. Upload from your desktop or link an
+							existing data source below.
+						</p>
+					</div>
+				)}
+			</div>
+
+			{/* ADD FILES section divider */}
+			<div className="flex items-center gap-3 py-1">
+				<div className="flex-1 border-t border-gray-200" />
+				<span className="text-xs font-semibold text-primary40 tracking-wider uppercase px-1">
+					Add Files
+				</span>
+				<div className="flex-1 border-t border-gray-200" />
+			</div>
 
 			{/* Drop zone — always visible */}
 			<DropZone
@@ -399,15 +426,14 @@ export const UploadManager = ({
 			{/* OR separator */}
 			<div className="flex items-center gap-3 py-1">
 				<div className="flex-1 border-t border-gray-200" />
-				<span className="text-sm text-primary40 font-medium px-1">OR</span>
+				<span className="text-xs font-semibold text-primary40 tracking-wider uppercase px-1">
+					Or Link From Existing Data Source
+				</span>
 				<div className="flex-1 border-t border-gray-200" />
 			</div>
 
 			{/* Choose from existing datasets — always inline */}
 			<div>
-				<p className="text-sm font-semibold text-primary80 mb-3">
-					Select From Existing Data Source
-				</p>
 				<ChooseExistingInline
 					onChooseExisting={handleChooseExisting}
 					selectedDataSources={selectedDataSources}

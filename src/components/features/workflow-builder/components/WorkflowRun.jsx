@@ -8,6 +8,7 @@ import {
 	Loader2,
 	ArrowRight,
 	RotateCcw,
+	BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -68,7 +69,7 @@ function makeDummyFile(input) {
 	});
 }
 
-const WorkflowRun = ({ workflowId, onBack }) => {
+const WorkflowRun = ({ workflowId, onBack, onViewAnalytics }) => {
 	const [workflow, setWorkflow] = useState(null);
 	const [step, setStep] = useState('map_files'); // map_files | run
 	const [fileMap, setFileMap] = useState({});
@@ -504,8 +505,8 @@ const WorkflowRun = ({ workflowId, onBack }) => {
 							</div>
 						)}
 
-						{/* Run again */}
-						<div className="flex justify-center pt-2">
+						{/* Actions */}
+						<div className="flex items-center justify-center gap-4 pt-2">
 							<button
 								onClick={() => {
 									setResult(null);
@@ -516,6 +517,15 @@ const WorkflowRun = ({ workflowId, onBack }) => {
 								<RotateCcw className="size-3.5" /> Run again with
 								different files
 							</button>
+							{onViewAnalytics && (
+								<Button
+									onClick={onViewAnalytics}
+									className="bg-purple-100 hover:bg-[#5a0fb0] text-white rounded-xl gap-2"
+								>
+									<BarChart3 className="size-4" />
+									View Analytics
+								</Button>
+							)}
 						</div>
 					</div>
 				)}

@@ -48,6 +48,7 @@ import homeIcon from '@/assets/icons/home.svg';
 import sidenavIcon from '@/assets/icons/sidenav.svg';
 import chevronDownIcon from '@/assets/icons/chevron-down.svg';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigationGuard } from '@/contexts/NavigationGuardContext';
 
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
@@ -60,6 +61,7 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 	const sessionId = useSessionId();
 	const [ConfirmationDialog, confirm] = useConfirmDialog();
 	const [teamSearchQuery, setTeamSearchQuery] = useState('');
+	const { getGuard } = useNavigationGuard();
 
 	const { pathname, navigate } = useRouter();
 	const utilReducer = useSelector((state) => state.utilReducer);
@@ -838,7 +840,20 @@ const SideNav = ({ isSideNavOpen, toggleSideNav }) => {
 									<Link
 										to={option.link}
 										key={optionKey}
-										onClick={() => {
+										onClick={(e) => {
+											const guard = getGuard();
+											if (guard) {
+												e.preventDefault();
+												guard(option.link, () => {
+													setActiveTab(
+														option.link.split('?')[0],
+													);
+													option?.trackingCall &&
+														option.trackingCall();
+													navigate(option.link);
+												});
+												return;
+											}
 											setActiveTab(option.link.split('?')[0]);
 											option?.trackingCall &&
 												option.trackingCall();
